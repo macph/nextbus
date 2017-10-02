@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Postcode {{ postcode.postcode }}{% endblock %}
+{% block content %}
+    <h1>Bus/tram stops near {{ postcode.postcode }}</h1>
+    <ul id="stops">
+        <p>{{ "%d"|format(list_stops|length) }} stop{{ 's' if list_stops|length != 1 else '' }} found.</p>
+        {% for stop, distance in list_stops %}
+            <li>{{ "%.0f m"|format(distance) }} <a href="{{ url_for('bus_stop_naptan', naptan_code=stop.naptan_code) }}">{{ stop.desc_indicator.upper() if stop.desc_indicator is not none else '' }} {{ stop.desc_common if stop.desc_short is none else stop.desc_short }}</a></li>
+        {% endfor %}
+        </ul>
+{% endblock %}

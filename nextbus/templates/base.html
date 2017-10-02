@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <link href="https://fonts.googleapis.com/css?family=Work+Sans" rel="stylesheet">
+        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css')}}"/>
+        <title>{% block title %}{% endblock %} - NextBus</title>
+        {% endblock %}
+    </head>
+    <body>
+        <div id="content">{% block content %}{% endblock %}</div>
+        <div id="footer">
+            {% block footer %}
+            &copy; Ewan Macpherson | <a href="{{ url_for('about') }}">About this website</a>
+            {% endblock %}
+        </div>
+    </body>
+</html>

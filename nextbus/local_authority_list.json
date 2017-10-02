@@ -1,0 +1,2282 @@
+[
+  {
+    "la_name": "City of London",
+    "la_code": "E09000001",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Barking and Dagenham",
+    "la_code": "E09000002",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Barnet",
+    "la_code": "E09000003",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Bexley",
+    "la_code": "E09000004",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Brent",
+    "la_code": "E09000005",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Bromley",
+    "la_code": "E09000006",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Camden",
+    "la_code": "E09000007",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Croydon",
+    "la_code": "E09000008",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Ealing",
+    "la_code": "E09000009",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Enfield",
+    "la_code": "E09000010",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Sunderland",
+    "la_code": "E08000024",
+    "admin_area_code": "103",
+    "atco_area_code": "410"
+  },
+  {
+    "la_name": "Greenwich",
+    "la_code": "E09000011",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Hackney",
+    "la_code": "E09000012",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Birmingham",
+    "la_code": "E08000025",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Stevenage",
+    "la_code": "E07000243",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Coventry",
+    "la_code": "E08000026",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Hammersmith and Fulham",
+    "la_code": "E09000013",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Haringey",
+    "la_code": "E09000014",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Dudley",
+    "la_code": "E08000027",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Three Rivers",
+    "la_code": "E07000102",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Sandwell",
+    "la_code": "E08000028",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Harrow",
+    "la_code": "E09000015",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Watford",
+    "la_code": "E07000103",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Thurrock",
+    "la_code": "E06000034",
+    "admin_area_code": "059",
+    "atco_area_code": "159"
+  },
+  {
+    "la_name": "Solihull",
+    "la_code": "E08000029",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Havering",
+    "la_code": "E09000016",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Medway",
+    "la_code": "E06000035",
+    "admin_area_code": "029",
+    "atco_area_code": "249"
+  },
+  {
+    "la_name": "Welwyn Hatfield",
+    "la_code": "E07000241",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Hillingdon",
+    "la_code": "E09000017",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Walsall",
+    "la_code": "E08000030",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Bracknell Forest",
+    "la_code": "E06000036",
+    "admin_area_code": "006",
+    "atco_area_code": "038"
+  },
+  {
+    "la_name": "North East Derbyshire",
+    "la_code": "E07000038",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "South Derbyshire",
+    "la_code": "E07000039",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "West Berkshire",
+    "la_code": "E06000037",
+    "admin_area_code": "064",
+    "atco_area_code": "030"
+  },
+  {
+    "la_name": "Wolverhampton",
+    "la_code": "E08000031",
+    "admin_area_code": "105",
+    "atco_area_code": "430"
+  },
+  {
+    "la_name": "Ashford",
+    "la_code": "E07000105",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Hounslow",
+    "la_code": "E09000018",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "East Devon",
+    "la_code": "E07000040",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Canterbury",
+    "la_code": "E07000106",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Islington",
+    "la_code": "E09000019",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Bradford",
+    "la_code": "E08000032",
+    "admin_area_code": "107",
+    "atco_area_code": "450"
+  },
+  {
+    "la_name": "Reading",
+    "la_code": "E06000038",
+    "admin_area_code": "046",
+    "atco_area_code": "039"
+  },
+  {
+    "la_name": "Exeter",
+    "la_code": "E07000041",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Dartford",
+    "la_code": "E07000107",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Calderdale",
+    "la_code": "E08000033",
+    "admin_area_code": "107",
+    "atco_area_code": "450"
+  },
+  {
+    "la_name": "Kensington and Chelsea",
+    "la_code": "E09000020",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Slough",
+    "la_code": "E06000039",
+    "admin_area_code": "050",
+    "atco_area_code": "037"
+  },
+  {
+    "la_name": "Mid Devon",
+    "la_code": "E07000042",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Dover",
+    "la_code": "E07000108",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Kirklees",
+    "la_code": "E08000034",
+    "admin_area_code": "107",
+    "atco_area_code": "450"
+  },
+  {
+    "la_name": "Kingston upon Thames",
+    "la_code": "E09000021",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Windsor and Maidenhead",
+    "la_code": "E06000040",
+    "admin_area_code": "065",
+    "atco_area_code": "036"
+  },
+  {
+    "la_name": "North Devon",
+    "la_code": "E07000043",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Gravesham",
+    "la_code": "E07000109",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Leeds",
+    "la_code": "E08000035",
+    "admin_area_code": "107",
+    "atco_area_code": "450"
+  },
+  {
+    "la_name": "Lambeth",
+    "la_code": "E09000022",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Wokingham",
+    "la_code": "E06000041",
+    "admin_area_code": "066",
+    "atco_area_code": "035"
+  },
+  {
+    "la_name": "South Hams",
+    "la_code": "E07000044",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Wakefield",
+    "la_code": "E08000036",
+    "admin_area_code": "107",
+    "atco_area_code": "450"
+  },
+  {
+    "la_name": "Maidstone",
+    "la_code": "E07000110",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Lewisham",
+    "la_code": "E09000023",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Teignbridge",
+    "la_code": "E07000045",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Sevenoaks",
+    "la_code": "E07000111",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Merton",
+    "la_code": "E09000024",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Hartlepool",
+    "la_code": "E06000001",
+    "admin_area_code": "022",
+    "atco_area_code": "075"
+  },
+  {
+    "la_name": "Torridge",
+    "la_code": "E07000046",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Milton Keynes",
+    "la_code": "E06000042",
+    "admin_area_code": "032",
+    "atco_area_code": "049"
+  },
+  {
+    "la_name": "Shepway",
+    "la_code": "E07000112",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "West Devon",
+    "la_code": "E07000047",
+    "admin_area_code": "076",
+    "atco_area_code": "110"
+  },
+  {
+    "la_name": "Swale",
+    "la_code": "E07000113",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Arun",
+    "la_code": "E07000224",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "Brighton and Hove",
+    "la_code": "E06000043",
+    "admin_area_code": "008",
+    "atco_area_code": "149"
+  },
+  {
+    "la_name": "Middlesbrough",
+    "la_code": "E06000002",
+    "admin_area_code": "031",
+    "atco_area_code": "079"
+  },
+  {
+    "la_name": "Newham",
+    "la_code": "E09000025",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Chichester",
+    "la_code": "E07000225",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "Thanet",
+    "la_code": "E07000114",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Christchurch",
+    "la_code": "E07000048",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Portsmouth",
+    "la_code": "E06000044",
+    "admin_area_code": "044",
+    "atco_area_code": "199"
+  },
+  {
+    "la_name": "Crawley",
+    "la_code": "E07000226",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "East Dorset",
+    "la_code": "E07000049",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Tonbridge and Malling",
+    "la_code": "E07000115",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Craven",
+    "la_code": "E07000163",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Southampton",
+    "la_code": "E06000045",
+    "admin_area_code": "052",
+    "atco_area_code": "198"
+  },
+  {
+    "la_name": "Redbridge",
+    "la_code": "E09000026",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Redcar and Cleveland",
+    "la_code": "E06000003",
+    "admin_area_code": "047",
+    "atco_area_code": "078"
+  },
+  {
+    "la_name": "North Dorset",
+    "la_code": "E07000050",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Tunbridge Wells",
+    "la_code": "E07000116",
+    "admin_area_code": "086",
+    "atco_area_code": "240"
+  },
+  {
+    "la_name": "Horsham",
+    "la_code": "E07000227",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "Hambleton",
+    "la_code": "E07000164",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Stockton-on-Tees",
+    "la_code": "E06000004",
+    "admin_area_code": "054",
+    "atco_area_code": "077"
+  },
+  {
+    "la_name": "Isle of Wight",
+    "la_code": "E06000046",
+    "admin_area_code": "025",
+    "atco_area_code": "230"
+  },
+  {
+    "la_name": "Purbeck",
+    "la_code": "E07000051",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Richmond upon Thames",
+    "la_code": "E09000027",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Burnley",
+    "la_code": "E07000117",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Mid Sussex",
+    "la_code": "E07000228",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "Chorley",
+    "la_code": "E07000118",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Isle of Anglesey",
+    "la_code": "W06000001",
+    "admin_area_code": "024",
+    "atco_area_code": "541"
+  },
+  {
+    "la_name": "Southwark",
+    "la_code": "E09000028",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "West Dorset",
+    "la_code": "E07000052",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Darlington",
+    "la_code": "E06000005",
+    "admin_area_code": "015",
+    "atco_area_code": "076"
+  },
+  {
+    "la_name": "Harrogate",
+    "la_code": "E07000165",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Worthing",
+    "la_code": "E07000229",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  },
+  {
+    "la_name": "Sutton",
+    "la_code": "E09000029",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Fylde",
+    "la_code": "E07000119",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "County Durham",
+    "la_code": "E06000047",
+    "admin_area_code": "078",
+    "atco_area_code": "130"
+  },
+  {
+    "la_name": "Weymouth and Portland",
+    "la_code": "E07000053",
+    "admin_area_code": "077",
+    "atco_area_code": "120"
+  },
+  {
+    "la_name": "Gwynedd",
+    "la_code": "W06000002",
+    "admin_area_code": "020",
+    "atco_area_code": "540"
+  },
+  {
+    "la_name": "Richmondshire",
+    "la_code": "E07000166",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Bromsgrove",
+    "la_code": "E07000234",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Conwy",
+    "la_code": "W06000003",
+    "admin_area_code": "014",
+    "atco_area_code": "513"
+  },
+  {
+    "la_name": "Hyndburn",
+    "la_code": "E07000120",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Ryedale",
+    "la_code": "E07000167",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Eastbourne",
+    "la_code": "E07000061",
+    "admin_area_code": "079",
+    "atco_area_code": "140"
+  },
+  {
+    "la_name": "Northumberland",
+    "la_code": "E06000057",
+    "admin_area_code": "094",
+    "atco_area_code": "310"
+  },
+  {
+    "la_name": "Tower Hamlets",
+    "la_code": "E09000030",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Malvern Hills",
+    "la_code": "E07000235",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Denbighshire",
+    "la_code": "W06000004",
+    "admin_area_code": "016",
+    "atco_area_code": "511"
+  },
+  {
+    "la_name": "Lancaster",
+    "la_code": "E07000121",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Hastings",
+    "la_code": "E07000062",
+    "admin_area_code": "079",
+    "atco_area_code": "140"
+  },
+  {
+    "la_name": "Waltham Forest",
+    "la_code": "E09000031",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Scarborough",
+    "la_code": "E07000168",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Cheshire East",
+    "la_code": "E06000049",
+    "admin_area_code": "072",
+    "atco_area_code": "060"
+  },
+  {
+    "la_name": "Redditch",
+    "la_code": "E07000236",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Flintshire",
+    "la_code": "W06000005",
+    "admin_area_code": "019",
+    "atco_area_code": "512"
+  },
+  {
+    "la_name": "Pendle",
+    "la_code": "E07000122",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Lewes",
+    "la_code": "E07000063",
+    "admin_area_code": "079",
+    "atco_area_code": "140"
+  },
+  {
+    "la_name": "Wandsworth",
+    "la_code": "E09000032",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Selby",
+    "la_code": "E07000169",
+    "admin_area_code": "092",
+    "atco_area_code": "320"
+  },
+  {
+    "la_name": "Halton",
+    "la_code": "E06000006",
+    "admin_area_code": "021",
+    "atco_area_code": "068"
+  },
+  {
+    "la_name": "Worcester",
+    "la_code": "E07000237",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Wrexham",
+    "la_code": "W06000006",
+    "admin_area_code": "067",
+    "atco_area_code": "514"
+  },
+  {
+    "la_name": "Rother",
+    "la_code": "E07000064",
+    "admin_area_code": "079",
+    "atco_area_code": "140"
+  },
+  {
+    "la_name": "Westminster",
+    "la_code": "E09000033",
+    "admin_area_code": "082",
+    "atco_area_code": "490"
+  },
+  {
+    "la_name": "Preston",
+    "la_code": "E07000123",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Ashfield",
+    "la_code": "E07000170",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Warrington",
+    "la_code": "E06000007",
+    "admin_area_code": "063",
+    "atco_area_code": "069"
+  },
+  {
+    "la_name": "Powys",
+    "la_code": "W06000023",
+    "admin_area_code": "045",
+    "atco_area_code": "561"
+  },
+  {
+    "la_name": "Wychavon",
+    "la_code": "E07000238",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Wealden",
+    "la_code": "E07000065",
+    "admin_area_code": "079",
+    "atco_area_code": "140"
+  },
+  {
+    "la_name": "Ribble Valley",
+    "la_code": "E07000124",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Cheshire West and Chester",
+    "la_code": "E06000050",
+    "admin_area_code": "152",
+    "atco_area_code": "061"
+  },
+  {
+    "la_name": "Bolton",
+    "la_code": "E08000001",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Bassetlaw",
+    "la_code": "E07000171",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Ceredigion",
+    "la_code": "W06000008",
+    "admin_area_code": "013",
+    "atco_area_code": "523"
+  },
+  {
+    "la_name": "Rossendale",
+    "la_code": "E07000125",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Wyre Forest",
+    "la_code": "E07000239",
+    "admin_area_code": "109",
+    "atco_area_code": "200"
+  },
+  {
+    "la_name": "Blackburn with Darwen",
+    "la_code": "E06000008",
+    "admin_area_code": "002",
+    "atco_area_code": "258"
+  },
+  {
+    "la_name": "Basildon",
+    "la_code": "E07000066",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Bury",
+    "la_code": "E08000002",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Broxtowe",
+    "la_code": "E07000172",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Pembrokeshire",
+    "la_code": "W06000009",
+    "admin_area_code": "040",
+    "atco_area_code": "521"
+  },
+  {
+    "la_name": "Clackmannanshire",
+    "la_code": "S12000005",
+    "admin_area_code": "116",
+    "atco_area_code": "668"
+  },
+  {
+    "la_name": "Blackpool",
+    "la_code": "E06000009",
+    "admin_area_code": "003",
+    "atco_area_code": "259"
+  },
+  {
+    "la_name": "Braintree",
+    "la_code": "E07000067",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Manchester",
+    "la_code": "E08000003",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "South Ribble",
+    "la_code": "E07000126",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Gedling",
+    "la_code": "E07000173",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Carmarthenshire",
+    "la_code": "W06000010",
+    "admin_area_code": "012",
+    "atco_area_code": "522"
+  },
+  {
+    "la_name": "Dumfries and Galloway",
+    "la_code": "S12000006",
+    "admin_area_code": "118",
+    "atco_area_code": "680"
+  },
+  {
+    "la_name": "Brentwood",
+    "la_code": "E07000068",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Kingston upon Hull, City of",
+    "la_code": "E06000010",
+    "admin_area_code": "026",
+    "atco_area_code": "229"
+  },
+  {
+    "la_name": "Mansfield",
+    "la_code": "E07000174",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "West Lancashire",
+    "la_code": "E07000127",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Oldham",
+    "la_code": "E08000004",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Swansea",
+    "la_code": "W06000011",
+    "admin_area_code": "056",
+    "atco_area_code": "581"
+  },
+  {
+    "la_name": "East Ayrshire",
+    "la_code": "S12000008",
+    "admin_area_code": "120",
+    "atco_area_code": "618"
+  },
+  {
+    "la_name": "Neath Port Talbot",
+    "la_code": "W06000012",
+    "admin_area_code": "034",
+    "atco_area_code": "582"
+  },
+  {
+    "la_name": "Castle Point",
+    "la_code": "E07000069",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "East Riding of Yorkshire",
+    "la_code": "E06000011",
+    "admin_area_code": "018",
+    "atco_area_code": "220"
+  },
+  {
+    "la_name": "Wyre",
+    "la_code": "E07000128",
+    "admin_area_code": "087",
+    "atco_area_code": "250"
+  },
+  {
+    "la_name": "Newark and Sherwood",
+    "la_code": "E07000175",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Rochdale",
+    "la_code": "E08000005",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "East Lothian",
+    "la_code": "S12000010",
+    "admin_area_code": "122",
+    "atco_area_code": "627"
+  },
+  {
+    "la_name": "North East Lincolnshire",
+    "la_code": "E06000012",
+    "admin_area_code": "036",
+    "atco_area_code": "228"
+  },
+  {
+    "la_name": "Blaby",
+    "la_code": "E07000129",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Chelmsford",
+    "la_code": "E07000070",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Rushcliffe",
+    "la_code": "E07000176",
+    "admin_area_code": "095",
+    "atco_area_code": "330"
+  },
+  {
+    "la_name": "Salford",
+    "la_code": "E08000006",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Bridgend",
+    "la_code": "W06000013",
+    "admin_area_code": "007",
+    "atco_area_code": "551"
+  },
+  {
+    "la_name": "North Lincolnshire",
+    "la_code": "E06000013",
+    "admin_area_code": "037",
+    "atco_area_code": "227"
+  },
+  {
+    "la_name": "East Renfrewshire",
+    "la_code": "S12000011",
+    "admin_area_code": "123",
+    "atco_area_code": "612"
+  },
+  {
+    "la_name": "Charnwood",
+    "la_code": "E07000130",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Colchester",
+    "la_code": "E07000071",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Cherwell",
+    "la_code": "E07000177",
+    "admin_area_code": "096",
+    "atco_area_code": "340"
+  },
+  {
+    "la_name": "Stockport",
+    "la_code": "E08000007",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Vale of Glamorgan",
+    "la_code": "W06000014",
+    "admin_area_code": "062",
+    "atco_area_code": "572"
+  },
+  {
+    "la_name": "Na h-Eileanan Siar",
+    "la_code": "S12000013",
+    "admin_area_code": "142",
+    "atco_area_code": "601"
+  },
+  {
+    "la_name": "Oxford",
+    "la_code": "E07000178",
+    "admin_area_code": "096",
+    "atco_area_code": "340"
+  },
+  {
+    "la_name": "Harborough",
+    "la_code": "E07000131",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Rhondda Cynon Taf",
+    "la_code": "W06000016",
+    "admin_area_code": "048",
+    "atco_area_code": "552"
+  },
+  {
+    "la_name": "Epping Forest",
+    "la_code": "E07000072",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Tameside",
+    "la_code": "E08000008",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "York",
+    "la_code": "E06000014",
+    "admin_area_code": "068",
+    "atco_area_code": "329"
+  },
+  {
+    "la_name": "Falkirk",
+    "la_code": "S12000014",
+    "admin_area_code": "125",
+    "atco_area_code": "669"
+  },
+  {
+    "la_name": "Merthyr Tydfil",
+    "la_code": "W06000024",
+    "admin_area_code": "030",
+    "atco_area_code": "553"
+  },
+  {
+    "la_name": "Harlow",
+    "la_code": "E07000073",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Trafford",
+    "la_code": "E08000009",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Hinckley and Bosworth",
+    "la_code": "E07000132",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Derby",
+    "la_code": "E06000015",
+    "admin_area_code": "017",
+    "atco_area_code": "109"
+  },
+  {
+    "la_name": "South Oxfordshire",
+    "la_code": "E07000179",
+    "admin_area_code": "096",
+    "atco_area_code": "340"
+  },
+  {
+    "la_name": "Fife",
+    "la_code": "S12000015",
+    "admin_area_code": "126",
+    "atco_area_code": "650"
+  },
+  {
+    "la_name": "Caerphilly",
+    "la_code": "W06000018",
+    "admin_area_code": "010",
+    "atco_area_code": "554"
+  },
+  {
+    "la_name": "Maldon",
+    "la_code": "E07000074",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Melton",
+    "la_code": "E07000133",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Leicester",
+    "la_code": "E06000016",
+    "admin_area_code": "027",
+    "atco_area_code": "269"
+  },
+  {
+    "la_name": "Vale of White Horse",
+    "la_code": "E07000180",
+    "admin_area_code": "096",
+    "atco_area_code": "340"
+  },
+  {
+    "la_name": "Wigan",
+    "la_code": "E08000010",
+    "admin_area_code": "083",
+    "atco_area_code": "180"
+  },
+  {
+    "la_name": "Highland",
+    "la_code": "S12000017",
+    "admin_area_code": "128",
+    "atco_area_code": "670"
+  },
+  {
+    "la_name": "Rutland",
+    "la_code": "E06000017",
+    "admin_area_code": "049",
+    "atco_area_code": "268"
+  },
+  {
+    "la_name": "Rochford",
+    "la_code": "E07000075",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "West Oxfordshire",
+    "la_code": "E07000181",
+    "admin_area_code": "096",
+    "atco_area_code": "340"
+  },
+  {
+    "la_name": "North West Leicestershire",
+    "la_code": "E07000134",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Knowsley",
+    "la_code": "E08000011",
+    "admin_area_code": "090",
+    "atco_area_code": "280"
+  },
+  {
+    "la_name": "Blaenau Gwent",
+    "la_code": "W06000019",
+    "admin_area_code": "004",
+    "atco_area_code": "532"
+  },
+  {
+    "la_name": "Inverclyde",
+    "la_code": "S12000018",
+    "admin_area_code": "129",
+    "atco_area_code": "613"
+  },
+  {
+    "la_name": "Nottingham",
+    "la_code": "E06000018",
+    "admin_area_code": "039",
+    "atco_area_code": "339"
+  },
+  {
+    "la_name": "Tendring",
+    "la_code": "E07000076",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Liverpool",
+    "la_code": "E08000012",
+    "admin_area_code": "090",
+    "atco_area_code": "280"
+  },
+  {
+    "la_name": "Torfaen",
+    "la_code": "W06000020",
+    "admin_area_code": "061",
+    "atco_area_code": "534"
+  },
+  {
+    "la_name": "Oadby and Wigston",
+    "la_code": "E07000135",
+    "admin_area_code": "088",
+    "atco_area_code": "260"
+  },
+  {
+    "la_name": "Mendip",
+    "la_code": "E07000187",
+    "admin_area_code": "098",
+    "atco_area_code": "360"
+  },
+  {
+    "la_name": "Midlothian",
+    "la_code": "S12000019",
+    "admin_area_code": "130",
+    "atco_area_code": "628"
+  },
+  {
+    "la_name": "Herefordshire, County of",
+    "la_code": "E06000019",
+    "admin_area_code": "023",
+    "atco_area_code": "209"
+  },
+  {
+    "la_name": "Uttlesford",
+    "la_code": "E07000077",
+    "admin_area_code": "080",
+    "atco_area_code": "150"
+  },
+  {
+    "la_name": "Sedgemoor",
+    "la_code": "E07000188",
+    "admin_area_code": "098",
+    "atco_area_code": "360"
+  },
+  {
+    "la_name": "Boston",
+    "la_code": "E07000136",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "St. Helens",
+    "la_code": "E08000013",
+    "admin_area_code": "090",
+    "atco_area_code": "280"
+  },
+  {
+    "la_name": "Monmouthshire",
+    "la_code": "W06000021",
+    "admin_area_code": "033",
+    "atco_area_code": "533"
+  },
+  {
+    "la_name": "Moray",
+    "la_code": "S12000020",
+    "admin_area_code": "131",
+    "atco_area_code": "638"
+  },
+  {
+    "la_name": "Telford and Wrekin",
+    "la_code": "E06000020",
+    "admin_area_code": "058",
+    "atco_area_code": "359"
+  },
+  {
+    "la_name": "Cheltenham",
+    "la_code": "E07000078",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "East Lindsey",
+    "la_code": "E07000137",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "Sefton",
+    "la_code": "E08000014",
+    "admin_area_code": "090",
+    "atco_area_code": "280"
+  },
+  {
+    "la_name": "South Somerset",
+    "la_code": "E07000189",
+    "admin_area_code": "098",
+    "atco_area_code": "360"
+  },
+  {
+    "la_name": "Newport",
+    "la_code": "W06000022",
+    "admin_area_code": "035",
+    "atco_area_code": "531"
+  },
+  {
+    "la_name": "North Ayrshire",
+    "la_code": "S12000021",
+    "admin_area_code": "132",
+    "atco_area_code": "617"
+  },
+  {
+    "la_name": "Shropshire",
+    "la_code": "E06000051",
+    "admin_area_code": "097",
+    "atco_area_code": "350"
+  },
+  {
+    "la_name": "Lincoln",
+    "la_code": "E07000138",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "Wirral",
+    "la_code": "E08000015",
+    "admin_area_code": "090",
+    "atco_area_code": "280"
+  },
+  {
+    "la_name": "Cotswold",
+    "la_code": "E07000079",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "Cardiff",
+    "la_code": "W06000015",
+    "admin_area_code": "011",
+    "atco_area_code": "571"
+  },
+  {
+    "la_name": "Taunton Deane",
+    "la_code": "E07000190",
+    "admin_area_code": "098",
+    "atco_area_code": "360"
+  },
+  {
+    "la_name": "Orkney Islands",
+    "la_code": "S12000023",
+    "admin_area_code": "134",
+    "atco_area_code": "602"
+  },
+  {
+    "la_name": "Stoke-on-Trent",
+    "la_code": "E06000021",
+    "admin_area_code": "055",
+    "atco_area_code": "389"
+  },
+  {
+    "la_name": "Forest of Dean",
+    "la_code": "E07000080",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "Barnsley",
+    "la_code": "E08000016",
+    "admin_area_code": "099",
+    "atco_area_code": "370"
+  },
+  {
+    "la_name": "North Kesteven",
+    "la_code": "E07000139",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "West Somerset",
+    "la_code": "E07000191",
+    "admin_area_code": "098",
+    "atco_area_code": "360"
+  },
+  {
+    "la_name": "Aylesbury Vale",
+    "la_code": "E07000004",
+    "admin_area_code": "070",
+    "atco_area_code": "040"
+  },
+  {
+    "la_name": "Perth and Kinross",
+    "la_code": "S12000024",
+    "admin_area_code": "135",
+    "atco_area_code": "648"
+  },
+  {
+    "la_name": "Bath and North East Somerset",
+    "la_code": "E06000022",
+    "admin_area_code": "001",
+    "atco_area_code": "018"
+  },
+  {
+    "la_name": "Gloucester",
+    "la_code": "E07000081",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "Doncaster",
+    "la_code": "E08000017",
+    "admin_area_code": "099",
+    "atco_area_code": "370"
+  },
+  {
+    "la_name": "South Holland",
+    "la_code": "E07000140",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "Cannock Chase",
+    "la_code": "E07000192",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "Chiltern",
+    "la_code": "E07000005",
+    "admin_area_code": "070",
+    "atco_area_code": "040"
+  },
+  {
+    "la_name": "Scottish Borders",
+    "la_code": "S12000026",
+    "admin_area_code": "115",
+    "atco_area_code": "690"
+  },
+  {
+    "la_name": "Stroud",
+    "la_code": "E07000082",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "Bristol, City of",
+    "la_code": "E06000023",
+    "admin_area_code": "009",
+    "atco_area_code": "010"
+  },
+  {
+    "la_name": "Rotherham",
+    "la_code": "E08000018",
+    "admin_area_code": "099",
+    "atco_area_code": "370"
+  },
+  {
+    "la_name": "East Staffordshire",
+    "la_code": "E07000193",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "South Kesteven",
+    "la_code": "E07000141",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "South Bucks",
+    "la_code": "E07000006",
+    "admin_area_code": "070",
+    "atco_area_code": "040"
+  },
+  {
+    "la_name": "Shetland Islands",
+    "la_code": "S12000027",
+    "admin_area_code": "137",
+    "atco_area_code": "603"
+  },
+  {
+    "la_name": "West Lindsey",
+    "la_code": "E07000142",
+    "admin_area_code": "089",
+    "atco_area_code": "270"
+  },
+  {
+    "la_name": "Wycombe",
+    "la_code": "E07000007",
+    "admin_area_code": "070",
+    "atco_area_code": "040"
+  },
+  {
+    "la_name": "Sheffield",
+    "la_code": "E08000019",
+    "admin_area_code": "099",
+    "atco_area_code": "370"
+  },
+  {
+    "la_name": "Tewkesbury",
+    "la_code": "E07000083",
+    "admin_area_code": "081",
+    "atco_area_code": "160"
+  },
+  {
+    "la_name": "Lichfield",
+    "la_code": "E07000194",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "North Somerset",
+    "la_code": "E06000024",
+    "admin_area_code": "038",
+    "atco_area_code": "019"
+  },
+  {
+    "la_name": "South Ayrshire",
+    "la_code": "S12000028",
+    "admin_area_code": "138",
+    "atco_area_code": "619"
+  },
+  {
+    "la_name": "Breckland",
+    "la_code": "E07000143",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Cambridge",
+    "la_code": "E07000008",
+    "admin_area_code": "071",
+    "atco_area_code": "050"
+  },
+  {
+    "la_name": "Basingstoke and Deane",
+    "la_code": "E07000084",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Gateshead",
+    "la_code": "E08000037",
+    "admin_area_code": "103",
+    "atco_area_code": "410"
+  },
+  {
+    "la_name": "Newcastle-under-Lyme",
+    "la_code": "E07000195",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "South Gloucestershire",
+    "la_code": "E06000025",
+    "admin_area_code": "051",
+    "atco_area_code": "017"
+  },
+  {
+    "la_name": "South Lanarkshire",
+    "la_code": "S12000029",
+    "admin_area_code": "139",
+    "atco_area_code": "615"
+  },
+  {
+    "la_name": "Broadland",
+    "la_code": "E07000144",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "East Cambridgeshire",
+    "la_code": "E07000009",
+    "admin_area_code": "071",
+    "atco_area_code": "050"
+  },
+  {
+    "la_name": "Cornwall",
+    "la_code": "E06000052",
+    "admin_area_code": "073",
+    "atco_area_code": "080"
+  },
+  {
+    "la_name": "East Hampshire",
+    "la_code": "E07000085",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "South Staffordshire",
+    "la_code": "E07000196",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "Newcastle upon Tyne",
+    "la_code": "E08000021",
+    "admin_area_code": "103",
+    "atco_area_code": "410"
+  },
+  {
+    "la_name": "Stirling",
+    "la_code": "S12000030",
+    "admin_area_code": "140",
+    "atco_area_code": "660"
+  },
+  {
+    "la_name": "Stafford",
+    "la_code": "E07000197",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "Eastleigh",
+    "la_code": "E07000086",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "North Tyneside",
+    "la_code": "E08000022",
+    "admin_area_code": "103",
+    "atco_area_code": "410"
+  },
+  {
+    "la_name": "Great Yarmouth",
+    "la_code": "E07000145",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Fenland",
+    "la_code": "E07000010",
+    "admin_area_code": "071",
+    "atco_area_code": "050"
+  },
+  {
+    "la_name": "Isles of Scilly",
+    "la_code": "E06000053",
+    "admin_area_code": "073",
+    "atco_area_code": "080"
+  },
+  {
+    "la_name": "Aberdeen City",
+    "la_code": "S12000033",
+    "admin_area_code": "111",
+    "atco_area_code": "639"
+  },
+  {
+    "la_name": "Staffordshire Moorlands",
+    "la_code": "E07000198",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "Fareham",
+    "la_code": "E07000087",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "South Tyneside",
+    "la_code": "E08000023",
+    "admin_area_code": "103",
+    "atco_area_code": "410"
+  },
+  {
+    "la_name": "King's Lynn and West Norfolk",
+    "la_code": "E07000146",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Huntingdonshire",
+    "la_code": "E07000011",
+    "admin_area_code": "071",
+    "atco_area_code": "050"
+  },
+  {
+    "la_name": "Plymouth",
+    "la_code": "E06000026",
+    "admin_area_code": "042",
+    "atco_area_code": "118"
+  },
+  {
+    "la_name": "Aberdeenshire",
+    "la_code": "S12000034",
+    "admin_area_code": "112",
+    "atco_area_code": "630"
+  },
+  {
+    "la_name": "Tamworth",
+    "la_code": "E07000199",
+    "admin_area_code": "100",
+    "atco_area_code": "380"
+  },
+  {
+    "la_name": "South Cambridgeshire",
+    "la_code": "E07000012",
+    "admin_area_code": "071",
+    "atco_area_code": "050"
+  },
+  {
+    "la_name": "North Norfolk",
+    "la_code": "E07000147",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Gosport",
+    "la_code": "E07000088",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Torbay",
+    "la_code": "E06000027",
+    "admin_area_code": "060",
+    "atco_area_code": "119"
+  },
+  {
+    "la_name": "Argyll and Bute",
+    "la_code": "S12000035",
+    "admin_area_code": "114",
+    "atco_area_code": "607"
+  },
+  {
+    "la_name": "Babergh",
+    "la_code": "E07000200",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "Norwich",
+    "la_code": "E07000148",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Allerdale",
+    "la_code": "E07000026",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "Hart",
+    "la_code": "E07000089",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Bournemouth",
+    "la_code": "E06000028",
+    "admin_area_code": "005",
+    "atco_area_code": "129"
+  },
+  {
+    "la_name": "City of Edinburgh",
+    "la_code": "S12000036",
+    "admin_area_code": "124",
+    "atco_area_code": "620"
+  },
+  {
+    "la_name": "Forest Heath",
+    "la_code": "E07000201",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "South Norfolk",
+    "la_code": "E07000149",
+    "admin_area_code": "091",
+    "atco_area_code": "290"
+  },
+  {
+    "la_name": "Poole",
+    "la_code": "E06000029",
+    "admin_area_code": "043",
+    "atco_area_code": "128"
+  },
+  {
+    "la_name": "Havant",
+    "la_code": "E07000090",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Barrow-in-Furness",
+    "la_code": "E07000027",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "Renfrewshire",
+    "la_code": "S12000038",
+    "admin_area_code": "136",
+    "atco_area_code": "614"
+  },
+  {
+    "la_name": "Corby",
+    "la_code": "E07000150",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Ipswich",
+    "la_code": "E07000202",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "Carlisle",
+    "la_code": "E07000028",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "New Forest",
+    "la_code": "E07000091",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Swindon",
+    "la_code": "E06000030",
+    "admin_area_code": "057",
+    "atco_area_code": "468"
+  },
+  {
+    "la_name": "West Dunbartonshire",
+    "la_code": "S12000039",
+    "admin_area_code": "117",
+    "atco_area_code": "608"
+  },
+  {
+    "la_name": "Daventry",
+    "la_code": "E07000151",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Mid Suffolk",
+    "la_code": "E07000203",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "Rushmoor",
+    "la_code": "E07000092",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Copeland",
+    "la_code": "E07000029",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "Wiltshire",
+    "la_code": "E06000054",
+    "admin_area_code": "108",
+    "atco_area_code": "460"
+  },
+  {
+    "la_name": "West Lothian",
+    "la_code": "S12000040",
+    "admin_area_code": "141",
+    "atco_area_code": "629"
+  },
+  {
+    "la_name": "St Edmundsbury",
+    "la_code": "E07000204",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "East Northamptonshire",
+    "la_code": "E07000152",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Test Valley",
+    "la_code": "E07000093",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Eden",
+    "la_code": "E07000030",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "Peterborough",
+    "la_code": "E06000031",
+    "admin_area_code": "041",
+    "atco_area_code": "059"
+  },
+  {
+    "la_name": "Angus",
+    "la_code": "S12000041",
+    "admin_area_code": "113",
+    "atco_area_code": "649"
+  },
+  {
+    "la_name": "Kettering",
+    "la_code": "E07000153",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Suffolk Coastal",
+    "la_code": "E07000205",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "South Lakeland",
+    "la_code": "E07000031",
+    "admin_area_code": "074",
+    "atco_area_code": "090"
+  },
+  {
+    "la_name": "Winchester",
+    "la_code": "E07000094",
+    "admin_area_code": "084",
+    "atco_area_code": "190"
+  },
+  {
+    "la_name": "Luton",
+    "la_code": "E06000032",
+    "admin_area_code": "028",
+    "atco_area_code": "029"
+  },
+  {
+    "la_name": "Dundee City",
+    "la_code": "S12000042",
+    "admin_area_code": "119",
+    "atco_area_code": "640"
+  },
+  {
+    "la_name": "Northampton",
+    "la_code": "E07000154",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Waveney",
+    "la_code": "E07000206",
+    "admin_area_code": "101",
+    "atco_area_code": "390"
+  },
+  {
+    "la_name": "Bedford",
+    "la_code": "E06000055",
+    "admin_area_code": "069",
+    "atco_area_code": "020"
+  },
+  {
+    "la_name": "Broxbourne",
+    "la_code": "E07000095",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Amber Valley",
+    "la_code": "E07000032",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "North Lanarkshire",
+    "la_code": "S12000044",
+    "admin_area_code": "133",
+    "atco_area_code": "616"
+  },
+  {
+    "la_name": "Elmbridge",
+    "la_code": "E07000207",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "South Northamptonshire",
+    "la_code": "E07000155",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "Dacorum",
+    "la_code": "E07000096",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Central Bedfordshire",
+    "la_code": "E06000056",
+    "admin_area_code": "151",
+    "atco_area_code": "021"
+  },
+  {
+    "la_name": "Bolsover",
+    "la_code": "E07000033",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "East Dunbartonshire",
+    "la_code": "S12000045",
+    "admin_area_code": "121",
+    "atco_area_code": "611"
+  },
+  {
+    "la_name": "Wellingborough",
+    "la_code": "E07000156",
+    "admin_area_code": "093",
+    "atco_area_code": "300"
+  },
+  {
+    "la_name": "East Hertfordshire",
+    "la_code": "E07000242",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Southend-on-Sea",
+    "la_code": "E06000033",
+    "admin_area_code": "053",
+    "atco_area_code": "158"
+  },
+  {
+    "la_name": "Chesterfield",
+    "la_code": "E07000034",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "Epsom and Ewell",
+    "la_code": "E07000208",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Glasgow City",
+    "la_code": "S12000046",
+    "admin_area_code": "127",
+    "atco_area_code": "609"
+  },
+  {
+    "la_name": "Hertsmere",
+    "la_code": "E07000098",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Derbyshire Dales",
+    "la_code": "E07000035",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "Guildford",
+    "la_code": "E07000209",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "North Hertfordshire",
+    "la_code": "E07000099",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "Mole Valley",
+    "la_code": "E07000210",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Erewash",
+    "la_code": "E07000036",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "St Albans",
+    "la_code": "E07000240",
+    "admin_area_code": "085",
+    "atco_area_code": "210"
+  },
+  {
+    "la_name": "High Peak",
+    "la_code": "E07000037",
+    "admin_area_code": "075",
+    "atco_area_code": "100"
+  },
+  {
+    "la_name": "Reigate and Banstead",
+    "la_code": "E07000211",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Runnymede",
+    "la_code": "E07000212",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Spelthorne",
+    "la_code": "E07000213",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Surrey Heath",
+    "la_code": "E07000214",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Tandridge",
+    "la_code": "E07000215",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Waverley",
+    "la_code": "E07000216",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "Woking",
+    "la_code": "E07000217",
+    "admin_area_code": "102",
+    "atco_area_code": "400"
+  },
+  {
+    "la_name": "North Warwickshire",
+    "la_code": "E07000218",
+    "admin_area_code": "104",
+    "atco_area_code": "420"
+  },
+  {
+    "la_name": "Nuneaton and Bedworth",
+    "la_code": "E07000219",
+    "admin_area_code": "104",
+    "atco_area_code": "420"
+  },
+  {
+    "la_name": "Rugby",
+    "la_code": "E07000220",
+    "admin_area_code": "104",
+    "atco_area_code": "420"
+  },
+  {
+    "la_name": "Stratford-on-Avon",
+    "la_code": "E07000221",
+    "admin_area_code": "104",
+    "atco_area_code": "420"
+  },
+  {
+    "la_name": "Warwick",
+    "la_code": "E07000222",
+    "admin_area_code": "104",
+    "atco_area_code": "420"
+  },
+  {
+    "la_name": "Adur",
+    "la_code": "E07000223",
+    "admin_area_code": "106",
+    "atco_area_code": "440"
+  }
+]

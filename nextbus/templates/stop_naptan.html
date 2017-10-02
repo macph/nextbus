@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Bus Stop{% endblock %}
+{% block content %}
+    {% if stop is not none %}
+    <h1>Bus stop &mdash; {{ naptan_code }}</h1>
+    <p>
+        This is the page for the bus stop '{{ stop.desc_common if stop.desc_short is none else stop.desc_short }}, {{ stop.desc_indicator.upper() }}', located in {{ locality }}, {{ district }}.
+    </p>
+    {% else %}
+    <h1>Bus stop not found</h1>
+    <p>No bus stop exists with NaPTAN code '{{ naptan_code }}'. Try again?</p>
+    {% endif %}
+{% endblock %}

@@ -2,6 +2,7 @@
 The nextbus package for live bus times in the UK.
 """
 import os
+import click
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -23,8 +24,8 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 
-import click
-from nextbus import views, models, populate
+from nextbus import views, models
+from nextbus.populate import commit_naptan_data, commit_nspl_data
 
 
 @app.cli.command(help='Populate NaPTAN, NPTG and NSPL data.')
@@ -40,19 +41,17 @@ from nextbus import views, models, populate
 def populate(atco, naptan_files, nspl_file):
     """ Calls the populate functions for filling the static database with data.
     """
-    if (len(naptan_files) == 2 and naptan_files[0] is not None
-            and naptan_files[1] is not None and nspl_file is not None):
-        populate.commit_naptan_data(atco, naptan_file=naptan_files[1],
-                                    nptg_file=naptan_files[0])
-        populate.commit_nspl_data(atco, nspl_file=nspl_file)
+    if (len(naptan_files) == 2 and nspl_file is not None):
+        commit_naptan_data(atco, naptan_file=naptan_files[1],
+                           nptg_file=naptan_files[0])
+        commit_nspl_data(atco, nspl_file=nspl_file)
 
-    elif (len(naptan_files) == 2 and naptan_files[0] is not None
-          and naptan_files[1] is not None):
-        populate.commit_naptan_data(atco, naptan_file=naptan_files[1],
-                                    nptg_file=naptan_files[0])
+    elif len(naptan_files) == 2:
+        commit_naptan_data(atco, naptan_file=naptan_files[1],
+                           nptg_file=naptan_files[0])
 
     elif nspl_file is not None:
-        populate.commit_nspl_data(atco, nspl_file=nspl_file)
+        commit_nspl_data(atco, nspl_file=nspl_file)
 
     else:
         click.echo('Must specify either both of the NPTG and NaPTAN files, or '

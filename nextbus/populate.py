@@ -272,9 +272,9 @@ def commit_nspl_data(atco_code=None, nspl_file=None, token=None):
 
 
 if __name__ == "__main__":
-    NAPTAN = os.path.join(ROOT_DIR, "temp/Naptan.xml")
-    NPTG = os.path.join(ROOT_DIR, "temp/NPTG.xml")
-    NSPL = os.path.join(ROOT_DIR, "temp/nspl.csv")
+    NAPTAN = os.path.join(ROOT_DIR, "temp/data/Naptan.xml")
+    NPTG = os.path.join(ROOT_DIR, "temp/data/NPTG.xml")
+    NSPL = os.path.join(ROOT_DIR, "temp/data/nspl.csv")
     with app.app_context():
         commit_naptan_data(nptg_file=NPTG, naptan_file=NAPTAN)
         commit_nspl_data(nspl_file=NSPL)

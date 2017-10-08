@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Stops by location{% endblock %}
 {% block content %}
-    <h1>Bus/tram stops near location ({{ lat }}, {{ long }})</h1>
+    <h1>Bus/tram stops near location ({{ coord[0] }}, {{ coord[1] }})</h1>
     <ul id="stops">
         <p>{{ "%d"|format(list_stops|length) }} stop{{ 's' if list_stops|length != 1 else '' }} found.</p>
         {% for stop, distance in list_stops %}

@@ -16,9 +16,10 @@ app.config.update(
                              + os.path.join(ROOT_DIR, 'nextbus.db')),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     WTF_CSRF_ENABLED=True,
-    SECRET_KEY=os.environ.get("FLASK_SECRET_KEY"),
+    SECRET_KEY="sup3r sekr3t k3y",
     DEBUG=True
 )
+app.config.from_envvar('APP_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

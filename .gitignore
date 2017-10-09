@@ -86,3 +86,6 @@ venv.bak/
 
 # Databases
 *.db
+
+# Configuration for testing, with keys
+config*.py

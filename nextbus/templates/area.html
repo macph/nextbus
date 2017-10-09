@@ -1,0 +1,15 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}{{ area.area_name }} area{% endblock %}
+{% block content %}
+    {% set region = area.region %}
+    {% if not area.districts %}
+        <h1>Localities in {{ area.area_name }}</h1>
+        <p><a href="{{ url_for('list_regions') }}">{{ region.region_name }}</a> > {{ area.area_name }}</p>
+        {{ f.print_localities(area.localities) }}
+    {% else %}
+        <h1>Districts in {{ area.area_name }}</h1>
+        <p><a href="{{ url_for('list_regions') }}">{{ region.region_name }}</a> > {{ area.area_name }}</p>
+        {{ f.print_districts(area.districts) }}
+    {% endif %}
+{% endblock %}

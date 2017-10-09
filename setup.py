@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 setup(
     name='nextbus',
     packages=['nextbus'],
@@ -8,6 +9,9 @@ setup(
         'click',
         'flask',
         'flask_migrate',
-        'flask_sqlalchemy'
+        'flask_sqlalchemy',
+        'flask_wtf',
+        'lxml',
+        'requests'
     ],
 )

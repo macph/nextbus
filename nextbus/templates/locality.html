@@ -1,0 +1,11 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}{{ locality.locality_name }} locality{% endblock %}
+{% block content %}
+    {% set area = locality.admin_area %}
+    {% set district = locality.district %}
+    {% set region = area.region %}
+    <h1>Bus/tram stops in {{ locality.locality_name }}{{ ', %s'|format(district.district_name) if district is not none }}</h1>
+    <p><a href="{{ url_for('list_regions') }}">{{ region.region_name }}</a> > <a href="{{ url_for('list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a> {% if district is not none %} > <a href="{{ url_for('list_localities_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a>{% endif %} > {{ locality.locality_name }}</p>
+    {{ f.print_stops(locality.stop_points) }}
+{% endblock %}

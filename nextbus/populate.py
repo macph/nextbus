@@ -12,7 +12,7 @@ from nextbus import app, db, models
 
 # TODO: What about dates; when was the data last updated?
 # TODO: Data sources - APIs and downloaded files. wget, requests or urllib?
-# TODO: Would it be worth it converting these into a class? There is a lot to go through.
+# TODO: Get ability to update data; compare dates, check if data is same
 
 
 def _xpath_text(element, path, namespaces=None):
@@ -35,7 +35,7 @@ def _progress_bar(iterable, **kwargs):
                              show_pos=True, width=64, **kwargs)
 
 
-def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
+def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
     """ Convert NPTG data (regions admin areas, districts and localities) and
         NaPTAN data (stop points and areas) to database objects and commit them
         to the application database.
@@ -45,12 +45,13 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
     naptan_data = et.parse(naptan_file)
     ns = {'n': nptg_data.xpath("namespace-uri(.)"),
           's': naptan_data.xpath("namespace-uri(.)")}
+    filter_atco_codes = bool(atco_codes)
 
-    if atco_code:
+    if filter_atco_codes:
         # Filter lists of regions, admin areas and localities
         list_admin_areas = []
         invalid_codes = []
-        for code in atco_code:
+        for code in atco_codes:
             area = nptg_data.xpath(f"//n:AdministrativeArea"
                                    f"[n:AtcoAreaCode='{code}']",
                                    namespaces=ns)
@@ -58,10 +59,9 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
                 list_admin_areas.append(area[0])
             else:
                 invalid_codes.append(code)
-
         if invalid_codes:
             raise click.BadOptionUsage("The following ATCO codes cannot be found:\n"
-                                       "\n".join(repr(i) for i in invalid_codes))
+                                       ", ".join(repr(i) for i in invalid_codes))
 
         list_aa_codes = [_xpath_text(aa, "n:AdministrativeAreaCode", ns)
                          for aa in list_admin_areas]
@@ -135,7 +135,7 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
             list_objects.append(obj_locality)
 
     # Filter by admin area code for XPath queries if required
-    if atco_code:
+    if filter_atco_codes:
         # add 147 for trams
         list_aa_codes = [_xpath_text(aa, "n:AdministrativeAreaCode", ns)
                          for aa in list_admin_areas]
@@ -162,8 +162,8 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
     set_stop_area_codes = set([])
     with _progress_bar(stop_points, label="Parsing NaPTAN stop points") as it_points:
         for point in it_points:
-            if atco_code and (_xpath_text(point, "s:Place/s:NptgLocalityRef", ns)
-                              not in list_locality_codes):
+            if filter_atco_codes and (_xpath_text(point, "s:Place/s:NptgLocalityRef", ns)
+                                      not in list_locality_codes):
                 # Skip over
                 continue
             paths = {
@@ -194,8 +194,8 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
 
     with _progress_bar(stop_areas, label="Parsing NaPTAN stop areas") as it_areas:
         for area in it_areas:
-            if atco_code and (_xpath_text(area, "s:StopAreaCode", ns)
-                              not in set_stop_area_codes):
+            if filter_atco_codes and (_xpath_text(area, "s:StopAreaCode", ns)
+                                      not in set_stop_area_codes):
                 # Skip over
                 continue
             paths = {
@@ -217,17 +217,18 @@ def commit_naptan_data(atco_code=None, nptg_file=None, naptan_file=None):
     db.session.commit()
 
 
-def commit_nspl_data(atco_code=None, nspl_file=None, token=None):
+def commit_nspl_data(atco_codes=None, nspl_file=None, token=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
     """
     la_file = os.path.join(ROOT_DIR, "nextbus/local_authority_list.json")
     with open(la_file, 'r') as jf:
         data = json.load(jf)
+    filter_atco_codes = bool(atco_codes)
 
-    if atco_code:
+    if filter_atco_codes:
         dict_la = {loc_auth.pop("la_code"): loc_auth for loc_auth in data
-                   if loc_auth["admin_area_code"] in atco_code}
+                   if loc_auth["admin_area_code"] in atco_codes}
     else:
         dict_la = {loc_auth.pop("la_code"): loc_auth for loc_auth in data}
 
@@ -242,7 +243,7 @@ def commit_nspl_data(atco_code=None, nspl_file=None, token=None):
     with _progress_bar(csv.DictReader(cf), label="Parsing postcode data",
                        length=len_lines) as it_postcodes:
         for row in it_postcodes:
-            if atco_code and row["Local Authority Code"] not in dict_la:
+            if filter_atco_codes and row["Local Authority Code"] not in dict_la:
                 # Filter by ATCO area code if it applies
                 continue
             if row["Country Code"] not in ['E92000001', 'S92000003', 'W92000004']:

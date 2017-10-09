@@ -1,0 +1,32 @@
+{% macro print_stops(list) -%}
+    <ul id="stops">
+        <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
+        {% for stop in list if stop.naptan_code is not none %}
+            <li><a href="{{ url_for('bus_stop_naptan', naptan_code=stop.naptan_code) }}">{{ stop.desc_common if stop.desc_short is none else stop.desc_short }}{{ ' (%s)'|format(stop.desc_indicator) if stop.desc_indicator is not none else '' }}</a></li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+{% macro print_stops_dist(list) -%}
+    <ul id="stops">
+        <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
+        {% for stop, distance in list if stop.naptan_code is not none %}
+            <li>{{ '%.0f m'|format(distance) }} <a href="{{ url_for('bus_stop_naptan', naptan_code=stop.naptan_code) }}">{{ stop.desc_common if stop.desc_short is none else stop.desc_short }}{{ ' (%s)'|format(stop.desc_indicator) if stop.desc_indicator is not none else '' }}</a></li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+{% macro print_districts(list) -%}
+    <ul id="districts">
+        <p>{{ "%d"|format(list|length) }} district{{ 's' if list|length != 1 else '' }} found.</p>
+        {% for district in list|sort(attribute='district_name') %}
+            <li><a href="{{ url_for('list_localities_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+{% macro print_localities(list) -%}
+<ul id="localitites">
+    <p>{{ "%d"|format(list|length) }} localit{{ 'ies' if list|length != 1 else 'y' }} found.</p>
+    {% for locality in list|sort(attribute='locality_name') %}
+        <li><a href="{{ url_for('list_stops_in_locality', locality_code=locality.nptg_locality_code) }}">{{ locality.locality_name }}</a></li>
+    {% endfor %}
+</ul>
+{%- endmacro %}

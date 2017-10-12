@@ -5,16 +5,49 @@
     <style type="text/css">
         .important { color: #336699; }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        function ls(...strings) {
+            var str = '<ul>';
+            for (i of strings)
+                str += `<li>${i}</li>`;
+            return str + '</ul>';
+        }
+        function getLocation() {
+            var output = document.getElementById("output");
+            if (!navigator.geolocation) {
+                output.innerHTML = ls("Geolocation not supported; try searching by postcode.");
+                return;
+            }
+            var success = function(position) {
+                var lat = position.coords.latitude.toFixed(6);
+                var long = position.coords.longitude.toFixed(6);
+                output.innerHTML = ls(`Your position is ${lat}, ${long}. I know where you live now.`);
+            }
+            var error = function(err) {
+                output.innerHTML = ls("Unable to retrieve your location.");
+            }
+            navigator.geolocation.getCurrentPosition(success, error);
+        }
+    </script>
 {% endblock %}
 {% block content %}
     <h1>index</h1>
     <p class="important">This is the NextBus website.</p>
     <form action="" method="post" name="login">
         {{ form_naptan.hidden_tag() }}
-        Search for a bus stop: {{ form_naptan.code(size=16) }}<input type="submit" value="Search">
+        Search for a bus stop with SMS code: {{ form_naptan.code(size=16, placeholder="SMS code") }}<input type="submit" name="submit_code" value="Search">
+        {% if form_naptan.code.errors %}
+            <ul class="errors">{% for error in form_naptan.code.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
     </form>
     <form action="" method="post" name="login">
-        {{ form_naptan.hidden_tag() }}
-        Search with a postcode: {{ form_postcode.postcode(size=16) }}<input type="submit" value="Search">
+        {{ form_postcode.hidden_tag() }}
+        Search with a postcode: {{ form_postcode.postcode(size=16, placeholder="Postcode") }}<input type="submit" name="submit_postcode" value="Search">
+        {% if form_postcode.postcode.errors %}
+        <ul class="errors">{% for error in form_postcode.postcode.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
     </form>
+    <p>Use your location: <input onclick="getLocation()" type="submit" value="Press butan"><span id="output"></span></p>
+    <p><a href="{{ url_for('list_regions') }}">List of all regions/areas</a></p>
 {% endblock %}

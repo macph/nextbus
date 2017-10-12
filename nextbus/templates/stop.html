@@ -1,0 +1,41 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}{{ f.stop_name(stop) }}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='live.js') }}"></script>
+{% endblock %}
+{% block content %}
+{% set locality = stop.locality %}
+{% set district = locality.district if locality.district is not none else none %}
+{% set stop_area = stop.stop_area %}
+<h1>Stop &mdash; {{ f.stop_name(stop) }}</h1>
+{% if locality is not none %}
+<h3>
+    {% if district is not none %}
+    <a href="{{ url_for('list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a>
+    {% else %}
+    <a href="{{ url_for('list_in_area', area_code=stop.admin_area_code) }}">{{ stop.admin_area.area_name }}</a>
+    {% endif %}
+    > <a href="{{ url_for('list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a>
+    
+</h3>
+{% endif %}
+<p>NaPTAN code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
+<p id="countdown"></p>
+<div id="services"><p>Retrieving live data...</p></div>
+<script>
+    var ld = new LiveData(
+        "{{ stop.atco_code }}",
+        "{{ url_for('stop_get_times') }}",
+        document.getElementById("services"),
+        document.getElementById("countdown")
+    )
+    ld.initialise();
+</script>
+{% if stop_area is not none %}
+<h2>Other stops nearby</h2>
+{{ f.print_stops(stop_area.stop_points|reject('equalto', stop)|list, count=false) }}
+{% endif %}
+{% endblock %}

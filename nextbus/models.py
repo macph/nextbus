@@ -58,7 +58,6 @@ class Locality(db.Model):
     longitude = db.Column(db.Float)
     latitude = db.Column(db.Float)
     stop_points = db.relationship('StopPoint', backref='locality')
-    
 
     def __repr__(self):
         return f'<Locality({self.nptg_locality_code!r}, {self.locality_name!r})>'

@@ -42,7 +42,7 @@ from nextbus.populate import commit_naptan_data, commit_nspl_data
 def populate(atco, naptan_files, nspl_file):
     """ Calls the populate functions for filling the static database with data.
     """
-    if (len(naptan_files) == 2 and nspl_file is not None):
+    if len(naptan_files) == 2 and nspl_file is not None:
         commit_naptan_data(atco, naptan_file=naptan_files[1],
                            nptg_file=naptan_files[0])
         commit_nspl_data(atco, nspl_file=nspl_file)

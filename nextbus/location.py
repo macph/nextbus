@@ -29,7 +29,7 @@ def bounding_box(coord, distance):
     return min_lat, min_long, max_lat, max_long
 
 
-def distance(coord_1, coord_2):
+def get_dist(coord_1, coord_2):
     """ Calculates distance in metres between two lat/long coordinates. Uses
         the Haversine formula and the mean radius for the WGS84 ellipsoid.
         https://en.wikipedia.org/wiki/Great-circle_distance

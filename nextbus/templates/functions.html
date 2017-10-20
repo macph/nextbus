@@ -1,5 +1,11 @@
 {% macro stop_name(stop) -%}
-    {{ stop.desc_common if stop.desc_short is none else stop.desc_short }}{{ ' (%s)'|format(stop.desc_indicator) if stop.desc_indicator is not none }}
+{{ stop.desc_common if stop.desc_short is none else stop.desc_short }}
+{%- endmacro %}
+{% macro stop_indicator(stop) -%}
+{{ stop.desc_indicator if stop.desc_indicator is not none }}
+{%- endmacro %}
+{% macro stop_full_name(stop) -%}
+{{ stop_name(stop) }}{{ " (%s)"|format(stop.desc_indicator) if stop.desc_indicator is not none }}
 {%- endmacro %}
 {% macro print_stops(list, count=true) -%}
     <ul id="stops">
@@ -7,7 +13,7 @@
             <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
         {% endif %}
         {% for stop in list %}
-            <li><a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_name(stop) }}</a></li>
+            <li><a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}
@@ -15,7 +21,7 @@
     <ul id="stops">
         <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
         {% for stop, distance in list %}
-            <li>{{ '%.0f m'|format(distance) }} <a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_name(stop) }}</a></li>
+            <li>{{ '%.0f m'|format(distance) }} <a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}

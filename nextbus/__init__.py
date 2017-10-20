@@ -34,8 +34,8 @@ from nextbus.populate import commit_naptan_data, commit_nspl_data
               help='Restricts data to a specific admin area, eg 370.')
 @click.option('--naptan_files', '-n', default=None, nargs=2,
               envvar='NAPTAN_FILES', type=click.Path(exists=True),
-              help=('Add NPTG and NaPTAN from the two specified XML files in '
-                    'that order.'))
+              help=('Add NPTG and NaPTAN data from the two specified XML files'
+                    ' in that order (ie, NPTG.xml then Naptan.xml).'))
 @click.option('--nspl_file', '-p', envvar='NSPL_FILE', default=None,
               type=click.Path(exists=True),
               help='Add NSPL data from specified CSV file.')

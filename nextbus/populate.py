@@ -1,29 +1,27 @@
 """
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
-import click
 import csv
+import datetime as dt
 import json
-import lxml.etree as et
 import os.path
+import lxml.etree as et
+import click
 
 from definitions import ROOT_DIR
 from nextbus import app, db, models
 
-# TODO: What about dates; when was the data last updated?
-# TODO: Data sources - APIs and downloaded files. wget, requests or urllib?
-# TODO: Get ability to update data; compare dates, check if data is same
+# TODO: Implement some sort of date system; may need to add to table.
 
 
 def _xpath_text(element, path, namespaces=None):
     """ Takes the first node from list provided by an element's XPath query and
         returns the text value.
     """
-    list_nodes = element.xpath(path, namespaces=namespaces)
-    elements = len(list_nodes)
-    if elements == 1:
-        return list_nodes[0].text
-    elif elements > 1:
+    nodes = element.xpath(path, namespaces=namespaces)
+    if len(nodes) == 1:
+        return nodes[0] if isinstance(nodes[0], str) else nodes[0].text
+    elif len(nodes) > 1:
         raise ValueError("Multiple elements matching XPath query.")
     else:
         return None
@@ -40,7 +38,7 @@ def _progress_bar(iterable, **kwargs):
         iterable=iterable,
         bar_template="%(label)-32s [%(bar)s] %(info)s",
         show_pos=True,
-        width=64,
+        width=50,
         **kwargs
     )
 
@@ -50,12 +48,11 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
         NaPTAN data (stop points and areas) to database objects and commit them
         to the application database.
     """
-    click.echo("Opening files %r and %r..." % (nptg_file, naptan_file))
-    nptg_data = et.parse(nptg_file)
-    naptan_data = et.parse(naptan_file)
-    ns = {'n': nptg_data.xpath("namespace-uri(.)"),
-          's': naptan_data.xpath("namespace-uri(.)")}
     filter_atco_codes = bool(atco_codes)
+    ns = {}
+    click.echo("Opening NPTG file %r..." % nptg_file)
+    nptg_data = et.parse(nptg_file)
+    ns['n'] = nptg_data.xpath("namespace-uri(.)")
 
     if filter_atco_codes:
         # Filter lists of regions, admin areas and localities
@@ -94,6 +91,7 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
         list_districts = nptg_data.xpath("n:Regions//n:NptgDistrict", namespaces=ns)
         list_localities = nptg_data.xpath("n:NptgLocalities/n:NptgLocality", namespaces=ns)
         list_locality_codes = []
+        list_aa_codes = []
 
     list_objects = []
     region_paths = {
@@ -144,28 +142,35 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
             obj_locality = models.Locality(**_xpath_args(locality, ns, locality_paths))
             list_objects.append(obj_locality)
 
+    # no longer needed
+    del nptg_data, list_regions, list_admin_areas, list_districts, list_localities
+    click.echo("Opening NaPTAN data %r..." % naptan_file)
+    naptan_data = et.parse(naptan_file)
+    ns['s'] = naptan_data.xpath("namespace-uri(.)")
+
     # Filter by admin area code for XPath queries if required
     if filter_atco_codes:
         # add 147 for trams
-        list_aa_codes = [_xpath_text(aa, "n:AdministrativeAreaCode", ns)
-                         for aa in list_admin_areas]
         list_aa_codes.append('147')
         aa_query = ' or '.join(".='%s'" % a for a in list_aa_codes)
-        q = "(s:AdministrativeAreaRef[%s])" % aa_query + ' and '
+        xpath_query = "(s:AdministrativeAreaRef[%s])" % aa_query + ' and '
     else:
-        q = ''
+        xpath_query = ''
 
+    click.echo("Getting list of stop points and stop areas...")
     # Put together XPath queries - filter to active stops and of certain types
-    l1 = ' or '.join(".='%s'" % t for t in ['BCT', 'BCS', 'PLT'])
+    stop_types = ' or '.join(".='%s'" % t for t in ['BCT', 'BCS', 'PLT'])
     stop_point_path = ("s:StopPoints/s:StopPoint"
                        "[@Status='active']"
-                       "[%s(s:StopClassification/s:StopType[%s])]" % (q, l1))
+                       "[%s(s:StopClassification/s:StopType[%s])]"
+                       % (xpath_query, stop_types))
     stop_points = naptan_data.xpath(stop_point_path, namespaces=ns)
 
-    l2 = ' or '.join(".='%s'" % t for t in ['GBPS', 'GCLS', 'GBCS', 'GTMU'])
+    area_types = ' or '.join(".='%s'" % t for t in ['GBPS', 'GCLS', 'GBCS', 'GTMU'])
     stop_area_path = ("s:StopAreas/s:StopArea"
                       "[@Status='active']"
-                      "[%s(s:StopAreaType[%s])]" % (q, l2))
+                      "[%s(s:StopAreaType[%s])]"
+                      % (xpath_query, area_types))
     stop_areas = naptan_data.xpath(stop_area_path, namespaces=ns)
 
     stop_point_paths = {
@@ -187,7 +192,8 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
         "stop_type":            "s:StopClassification/s:StopType",
         "bearing":              ".//s:CompassPoint",
         "stop_area_code":       "s:StopAreas/s:StopAreaRef",
-        "admin_area_code":      "s:AdministrativeAreaRef"
+        "admin_area_code":      "s:AdministrativeAreaRef",
+        "last_modified":        "@ModificationDateTime"
     }
     stop_area_paths = {
         "stop_area_code":       "s:StopAreaCode",
@@ -200,6 +206,7 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
         "latitude":             "s:Location/s:Translation/s:Latitude"
     }
     # Want all points and areas that are active
+    list_naptan_codes = set([])
     set_stop_area_codes = set([])
     with _progress_bar(stop_points, label="Parsing NaPTAN stop points") as iter_points:
         for point in iter_points:
@@ -207,10 +214,27 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
                                       not in list_locality_codes):
                 # Skip over if filtering by ATCO area code
                 continue
-            if _xpath_text(point, "s:NaptanCode", ns) is None:
+            obj_point = models.StopPoint(**_xpath_args(point, ns, stop_point_paths))
+            if obj_point.naptan_code is None:
                 # Skip over if stop point does not have a NaPTAN code
                 continue
-            obj_point = models.StopPoint(**_xpath_args(point, ns, stop_point_paths))
+            if obj_point.naptan_code in list_naptan_codes:
+                # Duplicate found.
+                for obj in list_objects:
+                    if getattr(obj, 'naptan_code') == obj_point.naptan_code:
+                        obj_duplicate = obj
+                        break
+                if obj_duplicate.last_modified > obj_point.last_modified:
+                    continue # Existing point is newer
+                else:
+                    list_objects.remove(obj_duplicate) # Remove the duplicate
+            else:
+                list_naptan_codes.add(obj_point.naptan_code)
+            # '/' was not allowed in the NaPTAN database; it was simply removed
+            if obj_point.desc_common is not None:
+                obj_point.desc_common = obj_point.desc_common.replace('  ', ' / ')
+            if obj_point.desc_short is not None:
+                obj_point.desc_short = obj_point.desc_short.replace('  ', ' / ')
             # Get all stop areas that satisfy above conditions
             set_stop_area_codes.add(_xpath_text(point, stop_point_paths["stop_area_code"], ns))
             list_objects.append(obj_point)
@@ -230,11 +254,11 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
     db.session.commit()
 
 
-def commit_nspl_data(atco_codes=None, nspl_file=None, token=None):
+def commit_nspl_data(atco_codes=None, nspl_file=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
     """
-    la_file = os.path.join(ROOT_DIR, "nextbus/local_authority_list.json")
+    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
     with open(la_file, 'r') as jf:
         data = json.load(jf)
     filter_atco_codes = bool(atco_codes)
@@ -271,6 +295,7 @@ def commit_nspl_data(atco_codes=None, nspl_file=None, token=None):
                 postcode_2=''.join(row["Postcode 3"].split()),
                 local_authority_code=row["Local Authority Code"],
                 admin_area_code=local_authority["admin_area_code"],
+                district_code=local_authority["nptg_district_code"],
                 easting=row["Easting"],
                 northing=row["Northing"],
                 longitude=row["Longitude"],

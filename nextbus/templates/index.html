@@ -34,14 +34,14 @@
 {% block content %}
     <h1>index</h1>
     <p class="important">This is the NextBus website.</p>
-    <form action="" method="post" name="login">
+    <form action="" method="post" name="sms">
         {{ form_naptan.hidden_tag() }}
         Search for a bus stop with SMS code: {{ form_naptan.code(size=16, placeholder="SMS code") }}<input type="submit" name="submit_code" value="Search">
         {% if form_naptan.code.errors %}
             <ul class="errors">{% for error in form_naptan.code.errors %}<li>{{ error }}</li>{% endfor %}</ul>
         {% endif %}
     </form>
-    <form action="" method="post" name="login">
+    <form action="" method="post" name="postcode">
         {{ form_postcode.hidden_tag() }}
         Search with a postcode: {{ form_postcode.postcode(size=16, placeholder="Postcode") }}<input type="submit" name="submit_postcode" value="Search">
         {% if form_postcode.postcode.errors %}

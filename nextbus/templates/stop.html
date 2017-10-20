@@ -10,7 +10,7 @@
 {% set locality = stop.locality %}
 {% set district = locality.district if locality.district is not none else none %}
 {% set stop_area = stop.stop_area %}
-<h1>Stop &mdash; {{ f.stop_name(stop) }}</h1>
+<h1>Stop &mdash; {{ f.stop_full_name(stop) }}</h1>
 {% if locality is not none %}
 <h3>
     {% if district is not none %}

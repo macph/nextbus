@@ -4,12 +4,12 @@
 {% block content %}
     {% set region = area.region %}
     {% if not area.districts %}
+        <nav><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a> > {{ area.area_name }}</nav>
         <h1>Localities in {{ area.area_name }}</h1>
-        <h3><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a> > {{ area.area_name }}</h3>
         {{ f.print_localities(area.localities) }}
     {% else %}
+        <nav><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a> > {{ area.area_name }}</nav>
         <h1>Districts in {{ area.area_name }}</h1>
-        <h3><a href="{{ url_for('list_regions') }}">{{ region.region_name }}</a> > {{ area.area_name }}</h3>
         {{ f.print_districts(area.districts) }}
     {% endif %}
 {% endblock %}

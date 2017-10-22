@@ -4,7 +4,7 @@
 {% block content %}
     {% set area = district.admin_area %}
     {% set region = area.region %}
+    <nav><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a> > <a href="{{ url_for('list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a> > {{ district.district_name }}</nav>
     <h1>Localities in {{ district.district_name }}</h1>
-    <h3><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a> > <a href="{{ url_for('list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a> > {{ district.district_name }}</h3>
     {{ f.print_localities(district.localities) }}
 {% endblock %}

@@ -1,11 +1,6 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ f.stop_name(stop) }}{% endblock %}
-{% block head %}
-    {{ super() }}
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='live.js') }}"></script>
-{% endblock %}
 {% block content %}
 {% set locality = stop.locality %}
 {% set district = locality.district if locality.district is not none else none %}
@@ -17,13 +12,14 @@
     {% else %}
     <a href="{{ url_for('list_in_area', area_code=stop.admin_area_code) }}">{{ stop.admin_area.area_name }}</a>
     {% endif %}
-    > <a href="{{ url_for('list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a> >
+    &rsaquo; <a href="{{ url_for('list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a> &rsaquo;
 </nav>
 {% endif %}
 <h1>Stop &mdash; {{ f.stop_full_name(stop) }}</h1>
 <p>NaPTAN code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
 <p id="countdown"></p>
 <div id="services"><p>Retrieving live data...</p></div>
+<script type="text/javascript" src="{{ url_for('static', filename='live.js') }}"></script>
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",

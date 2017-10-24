@@ -5,7 +5,6 @@
     <style type="text/css">
         .important { color: #336699; }
     </style>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script>
         function ls(...strings) {
             var str = '<ul>';
@@ -16,6 +15,7 @@
         function getLocation() {
             var output = document.getElementById("output");
             if (!navigator.geolocation) {
+                console.log("Browser does not support geolocation.");
                 output.innerHTML = ls("Geolocation not supported; try searching by postcode.");
                 return;
             }
@@ -25,6 +25,7 @@
                 output.innerHTML = ls(`Your position is ${lat}, ${long}. I know where you live now.`);
             }
             var error = function(err) {
+                console.log("Geolocation error: " + err);
                 output.innerHTML = ls("Unable to retrieve your location.");
             }
             navigator.geolocation.getCurrentPosition(success, error);

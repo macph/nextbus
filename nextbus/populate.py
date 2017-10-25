@@ -2,9 +2,9 @@
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
 import csv
-from datetime import datetime
+import datetime as dt
 import json
-import os.path
+import os
 import lxml.etree as et
 import click
 
@@ -20,9 +20,9 @@ def _xpath_text(element, path, namespaces=None):
     """
     nodes = element.xpath(path, namespaces=namespaces)
     if len(nodes) == 1:
-        return nodes[0] if isinstance(nodes[0], str) else nodes[0].text
+        return getattr(nodes[0], 'text', nodes[0])
     elif len(nodes) > 1:
-        raise ValueError("Multiple elements matching XPath query.")
+        raise ValueError("Multiple elements matching XPath query %r." % path)
     else:
         return None
 
@@ -195,12 +195,12 @@ def _parse_naptan_data(naptan_file, list_admin_area_codes=None, list_locality_co
                 # Skip over if filtering by ATCO area code
                 continue
             obj_point = models.StopPoint(**_xpath_args(point, ns, stop_point_paths))
-            if obj_point.last_modified is not None:
-                obj_point.last_modified = datetime.strptime(obj_point.last_modified,
-                                                            "%Y-%m-%dT%H:%M:%S")
             if obj_point.naptan_code is None:
                 # Skip over if stop point does not have a NaPTAN code
                 continue
+            if obj_point.last_modified is not None:
+                obj_point.last_modified = dt.datetime.strptime(obj_point.last_modified,
+                                                               "%Y-%m-%dT%H:%M:%S")
             if obj_point.naptan_code in list_naptan_codes:
                 # Duplicate found.
                 for obj in list_objects:

@@ -13,6 +13,71 @@ from nextbus import app, db, models
 
 # TODO: Implement some sort of date system; may need to add to table.
 
+PATHS_REGION = {
+    "region_code":          "n:RegionCode",
+    "region_name":          "n:Name",
+    "country":              "n:Country"
+}
+
+PATH_ADMIN_AREA = {
+    "admin_area_code":      "n:AdministrativeAreaCode",
+    "region_code":          "ancestor::n:Region/n:RegionCode",
+    "atco_area_code":       "n:AtcoAreaCode",
+    "area_name":            "n:Name",
+    "area_short_name":      "n:ShortName"
+}
+
+PATHS_DISTRICT = {
+    "nptg_district_code":   "n:NptgDistrictCode",
+    "admin_area_code":      "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
+    "district_name":        "n:Name"
+}
+
+PATHS_LOCALITY = {
+    "nptg_locality_code":   "n:NptgLocalityCode",
+    "locality_name":        "n:Descriptor/n:LocalityName",
+    "admin_area_code":      "n:AdministrativeAreaRef",
+    "nptg_district_code":   "n:NptgDistrictRef",
+    "easting":              "n:Location/n:Translation/n:Easting",
+    "northing":             "n:Location/n:Translation/n:Northing",
+    "longitude":            "n:Location/n:Translation/n:Longitude",
+    "latitude":             "n:Location/n:Translation/n:Latitude"
+}
+
+PATHS_STOP_POINT = {
+    "atco_code":            "s:AtcoCode",
+    "naptan_code":          "s:NaptanCode",
+    "desc_common":          "s:Descriptor/s:CommonName",
+    "desc_short":           "s:Descriptor/s:ShortCommonName",
+    "desc_landmark":        "s:Descriptor/s:Landmark",
+    "desc_street":          "s:Descriptor/s:Street",
+    "desc_crossing":        "s:Descriptor/s:Crossing",
+    "desc_indicator":       "s:Descriptor/s:Indicator",
+    "nptg_locality_code":   "s:Place/s:NptgLocalityRef",
+    "suburb":               "s:Place/s:Suburb",
+    "town":                 "s:Place/s:Town",
+    "easting":              "s:Place/s:Location/s:Translation/s:Easting",
+    "northing":             "s:Place/s:Location/s:Translation/s:Northing",
+    "longitude":            "s:Place/s:Location/s:Translation/s:Longitude",
+    "latitude":             "s:Place/s:Location/s:Translation/s:Latitude",
+    "stop_type":            "s:StopClassification/s:StopType",
+    "bearing":              ".//s:CompassPoint",
+    "stop_area_code":       "s:StopAreas/s:StopAreaRef",
+    "admin_area_code":      "s:AdministrativeAreaRef",
+    "last_modified":        "@ModificationDateTime"
+}
+
+PATHS_STOP_AREA = {
+    "stop_area_code":       "s:StopAreaCode",
+    "stop_area_name":       "s:Name",
+    "admin_area_code":      "s:AdministrativeAreaRef",
+    "stop_area_type":       "s:StopAreaType",
+    "easting":              "s:Location/s:Translation/s:Easting",
+    "northing":             "s:Location/s:Translation/s:Northing",
+    "longitude":            "s:Location/s:Translation/s:Longitude",
+    "latitude":             "s:Location/s:Translation/s:Latitude"
+}
+ 
 
 def _xpath_text(element, path, namespaces=None):
     """ Takes the first node from list provided by an element's XPath query and
@@ -25,6 +90,7 @@ def _xpath_text(element, path, namespaces=None):
         raise ValueError("Multiple elements matching XPath query %r." % path)
     else:
         return None
+
 
 def _xpath_args(data, namespace, dict_args):
     """ Returns a new dict with XPath queries for all arguments. """
@@ -54,10 +120,12 @@ def _parse_nptg_data(nptg_file, list_admin_areas=None):
         list_aa_codes = [_xpath_text(aa, "n:AdministrativeAreaCode", ns)
                          for aa in list_admin_areas]
         aa_query = ' or '.join(".='%s'" % a for a in list_aa_codes)
-        list_regions = nptg_data.xpath("n:Regions/n:Region[.//n:AdministrativeAreaCode[%s]]"
+        list_regions = nptg_data.xpath("n:Regions/n:Region"
+                                       "[.//n:AdministrativeAreaCode[%s]]"
                                        % aa_query, namespaces=ns)
         list_districts = nptg_data.xpath("n:Regions//n:AdministrativeArea"
-                                         "[n:AdministrativeAreaCode[%s]]//n:NptgDistrict"
+                                         "[n:AdministrativeAreaCode[%s]]"
+                                         "//n:NptgDistrict"
                                          % aa_query, namespaces=ns)
         list_localities = nptg_data.xpath("n:NptgLocalities/n:NptgLocality"
                                           "[n:AdministrativeAreaRef[%s]]"
@@ -70,52 +138,24 @@ def _parse_nptg_data(nptg_file, list_admin_areas=None):
         list_localities = nptg_data.xpath("n:NptgLocalities/n:NptgLocality", namespaces=ns)
 
     list_objects = []
-    region_paths = {
-        "region_code":          "n:RegionCode",
-        "region_name":          "n:Name",
-        "country":              "n:Country"
-    }
-    area_paths = {
-        "admin_area_code":      "n:AdministrativeAreaCode",
-        "region_code":          "ancestor::n:Region/n:RegionCode",
-        "atco_area_code":       "n:AtcoAreaCode",
-        "area_name":            "n:Name",
-        "area_short_name":      "n:ShortName"
-    }
-    district_paths = {
-        "nptg_district_code":   "n:NptgDistrictCode",
-        "admin_area_code":      "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
-        "district_name":        "n:Name"
-    }
-    locality_paths = {
-        "nptg_locality_code":   "n:NptgLocalityCode",
-        "locality_name":        "n:Descriptor/n:LocalityName",
-        "admin_area_code":      "n:AdministrativeAreaRef",
-        "nptg_district_code":   "n:NptgDistrictRef",
-        "easting":              "n:Location/n:Translation/n:Easting",
-        "northing":             "n:Location/n:Translation/n:Northing",
-        "longitude":            "n:Location/n:Translation/n:Longitude",
-        "latitude":             "n:Location/n:Translation/n:Latitude"
-    }
-
     with _progress_bar(list_regions, label="Parsing NPTG regions") as iter_regions:
         for region in iter_regions:
-            obj_region = models.Region(**_xpath_args(region, ns, region_paths))
+            obj_region = models.Region(**_xpath_args(region, ns, PATHS_REGION))
             list_objects.append(obj_region)
 
     with _progress_bar(list_admin_areas, label="Parsing NPTG admin areas") as iter_areas:
         for area in iter_areas:
-            obj_area = models.AdminArea(**_xpath_args(area, ns, area_paths))
+            obj_area = models.AdminArea(**_xpath_args(area, ns, PATH_ADMIN_AREA))
             list_objects.append(obj_area)
 
     with _progress_bar(list_districts, label="Parsing NPTG districts") as iter_districts:
         for district in iter_districts:
-            obj_district = models.District(**_xpath_args(district, ns, district_paths))
+            obj_district = models.District(**_xpath_args(district, ns, PATHS_DISTRICT))
             list_objects.append(obj_district)
 
     with _progress_bar(list_localities, label="Parsing NPTG localities") as iter_localities:
         for locality in iter_localities:
-            obj_locality = models.Locality(**_xpath_args(locality, ns, locality_paths))
+            obj_locality = models.Locality(**_xpath_args(locality, ns, PATHS_LOCALITY))
             list_objects.append(obj_locality)
 
     return list_objects
@@ -143,58 +183,23 @@ def _parse_naptan_data(naptan_file, list_admin_area_codes=None, list_locality_co
     stop_types = ' or '.join(".='%s'" % t for t in ['BCT', 'BCS', 'PLT'])
     stop_point_path = ("s:StopPoints/s:StopPoint"
                        "[@Status='active']"
-                       "[%s(s:StopClassification/s:StopType[%s])]"
-                       % (xpath_query, stop_types))
+                       "[%s(s:StopClassification/s:StopType[%s])]" % (xpath_query, stop_types))
     stop_points = naptan_data.xpath(stop_point_path, namespaces=ns)
 
     area_types = ' or '.join(".='%s'" % t for t in ['GBPS', 'GCLS', 'GBCS', 'GTMU'])
-    stop_area_path = ("s:StopAreas/s:StopArea[@Status='active'][%s(s:StopAreaType[%s])]"
-                      % (xpath_query, area_types))
+    stop_area_path = ("s:StopAreas/s:StopArea"
+                      "[@Status='active']"
+                      "[%s(s:StopAreaType[%s])]" % (xpath_query, area_types))
     stop_areas = naptan_data.xpath(stop_area_path, namespaces=ns)
-
-    stop_point_paths = {
-        "atco_code":            "s:AtcoCode",
-        "naptan_code":          "s:NaptanCode",
-        "desc_common":          "s:Descriptor/s:CommonName",
-        "desc_short":           "s:Descriptor/s:ShortCommonName",
-        "desc_landmark":        "s:Descriptor/s:Landmark",
-        "desc_street":          "s:Descriptor/s:Street",
-        "desc_crossing":        "s:Descriptor/s:Crossing",
-        "desc_indicator":       "s:Descriptor/s:Indicator",
-        "nptg_locality_code":   "s:Place/s:NptgLocalityRef",
-        "suburb":               "s:Place/s:Suburb",
-        "town":                 "s:Place/s:Town",
-        "easting":              "s:Place/s:Location/s:Translation/s:Easting",
-        "northing":             "s:Place/s:Location/s:Translation/s:Northing",
-        "longitude":            "s:Place/s:Location/s:Translation/s:Longitude",
-        "latitude":             "s:Place/s:Location/s:Translation/s:Latitude",
-        "stop_type":            "s:StopClassification/s:StopType",
-        "bearing":              ".//s:CompassPoint",
-        "stop_area_code":       "s:StopAreas/s:StopAreaRef",
-        "admin_area_code":      "s:AdministrativeAreaRef",
-        "last_modified":        "@ModificationDateTime"
-    }
-    stop_area_paths = {
-        "stop_area_code":       "s:StopAreaCode",
-        "stop_area_name":       "s:Name",
-        "admin_area_code":      "s:AdministrativeAreaRef",
-        "stop_area_type":       "s:StopAreaType",
-        "easting":              "s:Location/s:Translation/s:Easting",
-        "northing":             "s:Location/s:Translation/s:Northing",
-        "longitude":            "s:Location/s:Translation/s:Longitude",
-        "latitude":             "s:Location/s:Translation/s:Latitude"
-    }
     # Want all points and areas that are active
     list_objects = []
     list_naptan_codes = set([])
     set_stop_area_codes = set([])
     with _progress_bar(stop_points, label="Parsing NaPTAN stop points") as iter_points:
         for point in iter_points:
-            if list_admin_area_codes and (_xpath_text(point, "s:Place/s:NptgLocalityRef", ns)
-                                          not in list_locality_codes):
-                # Skip over if filtering by ATCO area code
+            obj_point = models.StopPoint(**_xpath_args(point, ns, PATHS_STOP_POINT))
+            if list_admin_area_codes and obj_point.nptg_locality_code not in list_locality_codes:
                 continue
-            obj_point = models.StopPoint(**_xpath_args(point, ns, stop_point_paths))
             if obj_point.naptan_code is None:
                 # Skip over if stop point does not have a NaPTAN code
                 continue
@@ -202,15 +207,16 @@ def _parse_naptan_data(naptan_file, list_admin_area_codes=None, list_locality_co
                 obj_point.last_modified = dt.datetime.strptime(obj_point.last_modified,
                                                                "%Y-%m-%dT%H:%M:%S")
             if obj_point.naptan_code in list_naptan_codes:
-                # Duplicate found.
+                # Duplicate found; find it
                 for obj in list_objects:
                     if getattr(obj, 'naptan_code') == obj_point.naptan_code:
                         obj_duplicate = obj
                         break
+                # Check dates; keep the newest
                 if obj_duplicate.last_modified > obj_point.last_modified:
-                    continue # Existing point is newer
+                    continue
                 else:
-                    list_objects.remove(obj_duplicate) # Remove the duplicate
+                    list_objects.remove(obj_duplicate)
             else:
                 list_naptan_codes.add(obj_point.naptan_code)
             # '/' was not allowed in the NaPTAN database; it was simply removed
@@ -224,12 +230,9 @@ def _parse_naptan_data(naptan_file, list_admin_area_codes=None, list_locality_co
 
     with _progress_bar(stop_areas, label="Parsing NaPTAN stop areas") as iter_areas:
         for area in iter_areas:
-            if list_admin_area_codes and (_xpath_text(area, "s:StopAreaCode", ns)
-                                          not in set_stop_area_codes):
-                # Skip over
-                continue
-            obj_area = models.StopArea(**_xpath_args(area, ns, stop_area_paths))
-            list_objects.append(obj_area)
+            obj_area = models.StopArea(**_xpath_args(area, ns, PATHS_STOP_AREA))
+            if not list_admin_area_codes or obj_area.stop_area_code in set_stop_area_codes:
+                list_objects.append(obj_area)
 
     return list_objects
 
@@ -260,7 +263,7 @@ def commit_naptan_data(atco_codes=None, nptg_file=None, naptan_file=None):
 
         list_aa_codes = [_xpath_text(aa, "n:AdministrativeAreaCode", ns)
                          for aa in list_admin_areas]
-        aa_query = ' or '.join(f".='{a}'" for a in list_aa_codes)
+        aa_query = ' or '.join(".='%s'" % a for a in list_aa_codes)
         list_localities = nptg_data.xpath("n:NptgLocalities/n:NptgLocality"
                                           "[n:AdministrativeAreaRef[%s]]"
                                           % aa_query, namespaces=ns)

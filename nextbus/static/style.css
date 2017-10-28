@@ -1,3 +1,33 @@
-html * {
+html {
     font-family: "Source Sans Pro", sans-serif;
+    /* font-size: 10px; */
+    background: gainsboro;
+}
+
+body {
+    display: grid;
+    grid-template-areas: "header" "section" "footer";
+    grid-template-rows: 32px 1fr 32px;
+    width: 100%;
+    height: 100vh;
+}
+
+#divContent {
+    min-width: 320px;
+    max-width: 720px;
+    width: 100%;
+    margin: 0px auto;
+    padding: 10px;
+    background: white;
+}
+
+#divContent {
+    background: white;
+}
+
+#divHeader, #divFooter {
+    display: block;
+    width: 100%;
+    
+    background: crimson;
 }

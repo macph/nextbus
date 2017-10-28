@@ -8,18 +8,22 @@
         {% endblock %}
     </head>
     <body>
-        <div id="header">
-            {% block header %}
-            <a href="{{ url_for('index') }}">NextBus home</a>
-            {% endblock %}
+        <div id="divHeader">
+            <div id=divHeaderText>
+                {% block header %}
+                <a href="{{ url_for('index') }}">NextBus home</a>
+                {% endblock %}
+            </div>
         </div>
-        <div id="content">
+        <div id="divContent">
             {% block content %}{% endblock %}
-         </div>
-        <div id="footer">
-            {% block footer %}
-            &copy; Ewan Macpherson | <a href="{{ url_for('about') }}">About this website</a>
-            {% endblock %}
+        </div>
+        <div id="divFooter">
+            <div id=divFooterText>
+                {% block footer %}
+                &copy; Ewan Macpherson | <a href="{{ url_for('about') }}">About this website</a>
+                {% endblock %}
+            </div>
         </div>
     </body>
 </html>

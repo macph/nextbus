@@ -26,7 +26,7 @@ migrate = Migrate(app, db)
 
 
 from nextbus import views, models
-from nextbus.populate import commit_naptan_data, commit_nspl_data
+from nextbus.pop import commit_naptan_data, commit_nspl_data
 
 
 @app.cli.command(help='Populate NaPTAN, NPTG and NSPL data.')
@@ -43,13 +43,13 @@ def populate(atco, naptan_files, nspl_file):
     """ Calls the populate functions for filling the static database with data.
     """
     if len(naptan_files) == 2 and nspl_file is not None:
-        commit_naptan_data(atco, naptan_file=naptan_files[1],
-                           nptg_file=naptan_files[0])
+        commit_naptan_data(naptan_file=naptan_files[1],
+                           nptg_file=naptan_files[0], atco_codes=atco)
         commit_nspl_data(atco, nspl_file=nspl_file)
 
     elif len(naptan_files) == 2:
-        commit_naptan_data(atco, naptan_file=naptan_files[1],
-                           nptg_file=naptan_files[0])
+        commit_naptan_data(naptan_file=naptan_files[1],
+                           nptg_file=naptan_files[0], atco_codes=atco)
 
     elif nspl_file is not None:
         commit_nspl_data(atco, nspl_file=nspl_file)

@@ -1,0 +1,131 @@
+﻿<NaPTAN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" CreationDateTime="2017-10-25T01:27:36" ModificationDateTime="2017-10-25T01:27:36" Modification="new" RevisionNumber="0" FileName="NaPTAN370.xml" SchemaVersion="2.1" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NaPTAN.xsd">
+    <StopPoints>
+        <StopPoint CreationDateTime="1993-06-06T12:00:00" ModificationDateTime="2011-04-06T09:44:28" RevisionNumber="0" Status="active">
+            <AtcoCode>370020362</AtcoCode>
+            <NaptanCode>37020362</NaptanCode>
+            <PlateCode>37020362</PlateCode>
+            <Descriptor>
+                <CommonName>Rockingham Street</CommonName>
+                <ShortCommonName>Rockingham Street</ShortCommonName>
+                <Landmark>Job Centre</Landmark>
+                <Street>West Street</Street>
+                <Crossing>Rockingham Street</Crossing>
+                <Indicator>adj</Indicator>
+            </Descriptor>
+            <Place>
+                <NptgLocalityRef>E0057890</NptgLocalityRef>
+                <Suburb>Sheffield Centre</Suburb>
+                <Town>Sheffield</Town>
+                <LocalityCentre>1</LocalityCentre>
+                <Location>
+                    <Translation>
+                        <GridType>UKOS</GridType>
+                        <Easting>434990</Easting>
+                        <Northing>387264</Northing>
+                        <Longitude>-1.47545448212</Longitude>
+                        <Latitude>53.38107470245</Latitude>
+                    </Translation>
+                </Location>
+            </Place>
+            <StopClassification>
+                <StopType>BCT</StopType>
+                <OnStreet>
+                    <Bus>
+                        <BusStopType>MKD</BusStopType>
+                        <TimingStatus>OTH</TimingStatus>
+                        <MarkedPoint>
+                            <Bearing>
+                                <CompassPoint>NE</CompassPoint>
+                                <Degrees>45</Degrees>
+                            </Bearing>
+                        </MarkedPoint>
+                    </Bus>
+                </OnStreet>
+            </StopClassification>
+            <StopAreas>
+                <StopAreaRef RevisionNumber="0">370G100952</StopAreaRef>
+            </StopAreas>
+            <AdministrativeAreaRef>099</AdministrativeAreaRef>
+            <PlusbusZones>
+                <PlusbusZoneRef CreationDateTime="1993-06-06T00:00:00" ModificationDateTime="2011-04-06T09:44:28" Modification="new" RevisionNumber="0" Status="active">SHEFFLD</PlusbusZoneRef>
+            </PlusbusZones>
+        </StopPoint>
+        <StopPoint CreationDateTime="1993-06-06T12:00:00" ModificationDateTime="2012-04-12T12:15:07" RevisionNumber="0" Status="active">
+            <AtcoCode>370023697</AtcoCode>
+            <NaptanCode>37023697</NaptanCode>
+            <PlateCode>37023697</PlateCode>
+            <Descriptor>
+                <CommonName>City Hall</CommonName>
+                <ShortCommonName>City Hall CH3</ShortCommonName>
+                <Landmark>City Hall</Landmark>
+                <Street>West Street</Street>
+                <Crossing>City Hall</Crossing>
+                <Indicator>CH3</Indicator>
+            </Descriptor>
+            <AlternativeDescriptors>
+                <Descriptor CreationDateTime="1993-06-06T12:00:00" ModificationDateTime="2012-04-12T12:15:07" RevisionNumber="0" Status="active">
+                    <CommonName>City Hall</CommonName>
+                    <ShortCommonName>City Hall CH3</ShortCommonName>
+                    <Landmark>City Hall</Landmark>
+                    <Street>West Street</Street>
+                    <Crossing>City Hall</Crossing>
+                    <Indicator>CH3</Indicator>
+                </Descriptor>
+            </AlternativeDescriptors>
+            <Place>
+                <NptgLocalityRef>E0057890</NptgLocalityRef>
+                <Suburb>Sheffield Centre</Suburb>
+                <Town>Sheffield</Town>
+                <LocalityCentre>1</LocalityCentre>
+                <Location>
+                    <Translation>
+                        <GridType>UKOS</GridType>
+                        <Easting>435086</Easting>
+                        <Northing>387286</Northing>
+                        <Longitude>-1.47400893136</Longitude>
+                        <Latitude>53.38126609691</Latitude>
+                    </Translation>
+                </Location>
+            </Place>
+            <StopClassification>
+                <StopType>BCT</StopType>
+                <OnStreet>
+                    <Bus>
+                        <BusStopType>MKD</BusStopType>
+                        <TimingStatus>OTH</TimingStatus>
+                        <MarkedPoint>
+                            <Bearing>
+                                <CompassPoint>W</CompassPoint>
+                                <Degrees>270</Degrees>
+                            </Bearing>
+                        </MarkedPoint>
+                    </Bus>
+                </OnStreet>
+            </StopClassification>
+            <StopAreas>
+                <StopAreaRef RevisionNumber="0">370G100952</StopAreaRef>
+            </StopAreas>
+            <AdministrativeAreaRef>099</AdministrativeAreaRef>
+            <PlusbusZones>
+                <PlusbusZoneRef CreationDateTime="1993-06-06T00:00:00" ModificationDateTime="2012-04-12T00:15:08" Modification="new" RevisionNumber="0" Status="active">SHEFFLD</PlusbusZoneRef>
+            </PlusbusZones>
+        </StopPoint>
+    </StopPoints>
+    <StopAreas>
+        <StopArea CreationDateTime="2008-10-03T12:00:00" ModificationDateTime="2010-11-15T12:00:00" Modification="revise" RevisionNumber="1" Status="active">
+            <StopAreaCode>370G100952</StopAreaCode>
+            <Name>West Street - Holly Street</Name>
+            <AdministrativeAreaRef>099</AdministrativeAreaRef>
+            <StopAreaType>GPBS</StopAreaType>
+            <Location>
+                <Translation>
+                    <GridType>UKOS</GridType>
+                    <Easting>435037</Easting>
+                    <Northing>387276</Northing>
+                    <Longitude>-1.47474663028</Longitude>
+                    <Latitude>53.38117945619</Latitude>
+                </Translation>
+            </Location>
+        </StopArea>
+    </StopAreas>
+</NaPTAN>

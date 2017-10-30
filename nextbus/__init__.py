@@ -52,7 +52,7 @@ def populate(atco, naptan_files, nspl_file):
                            nptg_file=naptan_files[0], atco_codes=atco)
 
     elif nspl_file is not None:
-        commit_nspl_data(atco, nspl_file=nspl_file)
+        commit_nspl_data(nspl_file, atco)
 
     else:
         click.echo('Must specify either both of the NPTG and NaPTAN files, or '

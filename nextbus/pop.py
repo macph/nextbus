@@ -1,19 +1,23 @@
 """
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
-import csv
-import datetime as dt
-import json
 import os
-import lxml.etree as et
-import click
+import csv
+import json
+import datetime
+import collections
+import itertools
 import multiprocessing
+import lxml.etree
+import click
 
 from definitions import ROOT_DIR
 from nextbus import app, db, models
 
 # TODO: Implement some sort of date system; may need to add to table.
+# TODO: Check with existing elements and modify as needed?
 # TODO: Multiprocessing module. May need to take out the NaPTAN code checking
+# See https://stackoverflow.com/questions/31164731/python-chunking-csv-file-multiproccessing
 
 PATHS_REGION = {
     "region_code":          "n:RegionCode",
@@ -102,14 +106,13 @@ class _XPath(object):
         self.namespace[prefix] = self.element.xpath("namespace-uri(.)")
 
     def __call__(self, path, element=None):
+        """ Calls XPath query for a path. """
         element = self.element if element is None else element
         return element.xpath(path, namespaces=self.namespace)
 
     def text(self, path, element=None):
         """ Calls a XPath query and returns the text contained within the first
-            element if it is the only matching result. Returns None if the
-            there is no matching element, and raise a ValueError if there are
-            multiple matching elements.
+            element if it is the only matching result.
         """
         nodes = self(path, element)
         if len(nodes) == 1:
@@ -124,7 +127,8 @@ class _XPath(object):
 
     def iter_text(self, path, elements):
         """ Iterates over a list of elements with the same XPath query,
-            returning a list of text values. """
+            returning a list of text values.
+        """
         return [self.text(path, element=node) for node in elements]
 
     def dict_text(self, dict_paths, element=None):
@@ -165,13 +169,10 @@ class _DBEntries(object):
                 obj = db_model(**self.xpath.dict_text(args, element=element))
                 if func:
                     try:
-                        new_obj = func(self.entries, obj)
+                        func(self.entries, obj)
                     except TypeError as err:
                         raise TypeError("Filter function must receive two arguments: list of "
                                         "existing objects and the current object.") from err
-                    else:
-                        if new_obj:
-                            self.entries.append(new_obj)
                 else:
                     self.entries.append(obj)
 
@@ -183,72 +184,13 @@ class _DBEntries(object):
         db.session.commit()
 
 
-class _NaPTANStops(object):
-    """ Filters NaPTAN stop points and areas by checking duplicates and
-        ensuring only stop areas belonging to stop points within specified
-        ATCO areas are filtered.
-    """
-    def __init__(self, list_admin_area_codes=None, list_locality_codes=None):
-        self.naptan_codes = set([])
-        self.area_codes = set([])
-        self.admin_codes = list_admin_area_codes
-        self.locality_codes = list_locality_codes
-
-    def filter_points(self, list_objects, obj_point):
-        """ Filters stop points. """
-        try:
-            if obj_point.naptan_code is None:
-                # Skip over if stop point does not have a NaPTAN code
-                return
-        except AttributeError as error:
-            raise AttributeError("StopPoint objects accepted only.") from error
-
-        if self.admin_codes:
-            if (obj_point.admin_area_code not in self.admin_codes
-                    or obj_point.nptg_locality_code not in self.locality_codes):
-                return
-        if obj_point.last_modified is not None:
-            obj_point.last_modified = dt.datetime.strptime(obj_point.last_modified,
-                                                           "%Y-%m-%dT%H:%M:%S")
-        if obj_point.naptan_code in self.naptan_codes:
-            # Duplicate found; find it
-            for obj in list_objects:
-                if getattr(obj, 'naptan_code') == obj_point.naptan_code:
-                    obj_duplicate = obj
-                    break
-            # Check dates; keep the newest
-            if obj_duplicate.last_modified > obj_point.last_modified:
-                return
-            else:
-                list_objects.remove(obj_duplicate)
-        else:
-            self.naptan_codes.add(obj_point.naptan_code)
-        # '/' was not allowed in the NaPTAN database; it was simply removed
-        if obj_point.desc_common is not None:
-            obj_point.desc_common = obj_point.desc_common.replace('  ', ' / ')
-        if obj_point.desc_short is not None:
-            obj_point.desc_short = obj_point.desc_short.replace('  ', ' / ')
-        # Filter stop areas depending on stop points found
-        self.area_codes.add(obj_point.stop_area_code)
-
-        return obj_point
-
-    def filter_areas(self, list_objects, obj_area):
-        """ Filters stop areas. """
-        try:
-            if not self.admin_codes or obj_area.stop_area_code in self.area_codes:
-                return obj_area
-        except AttributeError as error:
-            raise AttributeError("StopArea objects accepted only.") from error
-
-
 def _get_nptg_data(nptg_file, atco_codes=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
         if atco_codes is None).
     """
     click.echo("Opening NPTG file %r..." % nptg_file)
-    nptg_data = et.parse(nptg_file)
+    nptg_data = lxml.etree.parse(nptg_file)
     nxp = _XPath(nptg_data, 'n')
 
     if atco_codes:
@@ -286,18 +228,78 @@ def _get_nptg_data(nptg_file, atco_codes=None):
     return nxp, admin_areas, regions, districts, localities
 
 
+class _NaPTANStops(object):
+    """ Filters NaPTAN stop points and areas by checking duplicates and
+        ensuring only stop areas belonging to stop points within specified
+        ATCO areas are filtered.
+    """
+    def __init__(self, list_admin_area_codes=None, list_locality_codes=None):
+        self.naptan_codes = set([])
+        self.area_codes = set([])
+        self.admin_codes = list_admin_area_codes
+        self.locality_codes = list_locality_codes
+
+    def filter_points(self, list_objects, obj_point):
+        """ Filters stop points. """
+        try:
+            if obj_point.naptan_code is None:
+                # Skip over if stop point does not have a NaPTAN code
+                return
+        except AttributeError as error:
+            raise AttributeError("StopPoint objects accepted only.") from error
+
+        if self.admin_codes:
+            if (obj_point.admin_area_code not in self.admin_codes
+                    or obj_point.nptg_locality_code not in self.locality_codes):
+                return
+        if obj_point.last_modified is not None:
+            obj_point.last_modified = datetime.datetime.strptime(obj_point.last_modified,
+                                                                 "%Y-%m-%dT%H:%M:%S")
+        if obj_point.naptan_code in self.naptan_codes:
+            # Duplicate found; find it
+            for obj in list_objects:
+                if getattr(obj, 'naptan_code') == obj_point.naptan_code:
+                    obj_duplicate = obj
+                    break
+            # Check dates; keep the newest
+            if obj_duplicate.last_modified > obj_point.last_modified:
+                return
+            else:
+                list_objects.remove(obj_duplicate)
+        else:
+            self.naptan_codes.add(obj_point.naptan_code)
+        # '/' is not allowed in NaPTAN strings; was simply removed
+        if obj_point.desc_common is not None:
+            obj_point.desc_common = obj_point.desc_common.replace('  ', ' / ')
+        if obj_point.desc_short is not None:
+            obj_point.desc_short = obj_point.desc_short.replace('  ', ' / ')
+        # Add stop area code to set for filtering
+        if self.admin_codes:
+            self.area_codes.add(obj_point.stop_area_code)
+
+        list_objects.append(obj_point)
+
+    def filter_areas(self, list_objects, obj_area):
+        """ Filters stop areas. """
+        try:
+            if not self.admin_codes or obj_area.stop_area_code in self.area_codes:
+                list_objects.append(obj_area)
+        except AttributeError as error:
+            raise AttributeError("StopArea objects accepted only.") from error
+
+
 def _get_naptan_data(naptan_file, list_area_codes=None):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
     """
     click.echo("Opening NaPTAN file %r..." % naptan_file)
-    naptan_data = et.parse(naptan_file)
+    naptan_data = lxml.etree.parse(naptan_file)
     sxp = _XPath(naptan_data, 's')
 
     if list_area_codes:
         # add 147 for trams/metro
-        list_aa_codes = list_area_codes + ['147']
-        aa_query = ' or '.join(".='%s'" % a for a in list_aa_codes)
+        list_area_codes.add('147')
+        aa_query = ' or '.join(".='%s'" % a for a in list_area_codes)
         any_area_query = "(s:AdministrativeAreaRef[%s])" % aa_query + ' and '
     else:
         any_area_query = ''
@@ -328,7 +330,6 @@ def commit_naptan_data(nptg_file, naptan_file, atco_codes=None):
     nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas")
     nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts")
     nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities")
-    nptg.commit()
 
     if atco_codes:
         area_codes = set(nxp.iter_text("n:AdministrativeAreaCode", admin_areas))
@@ -344,35 +345,39 @@ def commit_naptan_data(nptg_file, naptan_file, atco_codes=None):
                eval_stops.filter_points)
     naptan.add(stop_areas, models.StopArea, PATHS_STOP_AREA, "Parsing NaPTAN stop areas",
                eval_stops.filter_areas)
+
+    # Commit changes to database
+    nptg.commit()
     naptan.commit()
 
 
-def commit_nspl_data(atco_codes=None, nspl_file=None):
-    """ Converts NSPL data (postcodes) to database objects and commit them
-        to the working database.
-    """
-    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
-    with open(la_file, 'r') as jf:
-        data = json.load(jf)
+class _IterChunk(object):
+    """ Generator for an iterator object returning lists at a time. """
+    def __init__(self, iterator, chunk_size):
+        self.iter = iterator
+        self.chunk = chunk_size
 
-    if atco_codes:
-        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data
-                   if local_auth["admin_area_code"] in atco_codes}
-    else:
-        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data}
+    def __next__(self):
+        chunk = list(itertools.islice(self.iter, self.chunk))
+        if chunk:
+            return chunk
+        else:
+            raise StopIteration
 
-    click.echo("Opening file %r..." % nspl_file)
-    cf = open(nspl_file, 'r')
-    # Find number of rows in CSV file
-    len_lines = sum(1 for r in csv.reader(cf)) - 1
-    # reset read location
-    cf.seek(0)
+    def __iter__(self):
+        return self
 
-    list_postcodes = []
-    with _progress_bar(csv.DictReader(cf), label="Parsing postcode data",
-                       length=len_lines) as iter_postcodes:
-        for row in iter_postcodes:
-            if atco_codes and row["Local Authority Code"] not in dict_la:
+
+class _NSPLData(object):
+    """ Helper class for processing NSPL postcode data. """
+    def __init__(self, atco_codes, dict_local_auth):
+        self.atco_codes = atco_codes
+        self.local_auth = dict_local_auth
+
+    def __call__(self, rows):
+        list_objects = []
+        for row in rows:
+            if self.atco_codes and row["Local Authority Code"] not in self.local_auth:
                 # Filter by ATCO area code if it applies
                 continue
             if row["Country Code"] not in ['E92000001', 'S92000003', 'W92000004']:
@@ -381,20 +386,58 @@ def commit_nspl_data(atco_codes=None, nspl_file=None):
             if row["Positional Quality"] in [8, 9]:
                 # Low accuracy; just skip row
                 continue
-            local_authority = dict_la[row["Local Authority Code"]]
-            postcode = models.Postcode(
-                postcode=row["Postcode 3"],
-                postcode_2=''.join(row["Postcode 3"].split()),
-                local_authority_code=row["Local Authority Code"],
-                admin_area_code=local_authority["admin_area_code"],
-                district_code=local_authority["nptg_district_code"],
-                easting=row["Easting"],
-                northing=row["Northing"],
-                longitude=row["Longitude"],
-                latitude=row["Latitude"]
-            )
-            list_postcodes.append(postcode)
-    cf.close()
+            local_authority = self.local_auth[row["Local Authority Code"]]
+            dict_psc = {
+                "postcode":             row["Postcode 3"],
+                "postcode_2":           ''.join(row["Postcode 3"].split()),
+                "local_authority_code": row["Local Authority Code"],
+                "admin_area_code":      local_authority["admin_area_code"],
+                "district_code":        local_authority["nptg_district_code"],
+                "easting":              row["Easting"],
+                "northing":             row["Northing"],
+                "longitude":            row["Longitude"],
+                "latitude":             row["Latitude"]
+            }
+            list_objects.append(models.Postcode(**dict_psc))
+
+        return list_objects
+
+
+def commit_nspl_data(nspl_file, atco_codes=None):
+    """ Converts NSPL data (postcodes) to database objects and commit them
+        to the working database.
+    """
+    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
+    with open(la_file, 'r') as json_file:
+        data = json.load(json_file)
+
+    if atco_codes:
+        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data
+                   if int(local_auth["atco_area_code"]) in atco_codes}
+    else:
+        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data}
+
+    click.echo("Opening file %r..." % nspl_file)
+    with open(nspl_file, 'r') as csv_file:
+        # Find number of rows in CSV file, then reset read position
+        len_lines = sum(1 for r in csv.reader(csv_file)) - 1
+        csv_file.seek(0)
+
+        chunk_size = 10000
+        cores = multiprocessing.cpu_count()
+        iter_postcodes = _IterChunk(csv.DictReader(csv_file), chunk_size * cores)
+
+        list_postcodes = []
+        filter_psc = _NSPLData(atco_codes, dict_la)
+        timer = datetime.datetime.now()
+        with _progress_bar(None, label="Parsing postcode data",
+                           length=len_lines) as prog, multiprocessing.Pool(cores) as pool:
+            for rows in iter_postcodes:
+                pieces = list(_IterChunk(iter(rows), chunk_size))
+                for piece in pool.map(filter_psc, pieces):
+                    list_postcodes.extend(piece)
+                prog.update(len(rows))
+        click.echo((datetime.datetime.now() - timer).seconds)
 
     click.echo("Adding %d postcodes..." % len(list_postcodes))
     db.session.add_all(list_postcodes)

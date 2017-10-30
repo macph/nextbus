@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import lxml.etree as et
 
-from nextbus.pop import _XPath
+from nextbus.pop import _IterChunk, _XPath
 
 HOME_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -54,7 +54,7 @@ class XPathTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Multiple elements") as are:
             text = self.xp.text("n:StopPoints/n:StopPoint")
 
-    def test_iter_list(self):
+    def test_over_list(self):
         nodes = self.xp("n:StopPoints/n:StopPoint")
         output = self.xp.iter_text("n:AtcoCode", nodes)
 
@@ -79,3 +79,35 @@ class XPathTests(unittest.TestCase):
 
         expected = {"naptan_code": "37020362", "name": None}
         self.assertDictEqual(output, expected)
+
+class IterChunkTests(unittest.TestCase):
+
+    def setUp(self):
+        self.iter = iter(range(500))
+
+    def tearDown(self):
+        del self.iter
+
+    def test_iter_mid(self):
+        chunks = _IterChunk(self.iter, 100)
+        next(chunks)
+        next(chunks)
+        self.assertListEqual(next(chunks), list(range(200, 300)))
+
+    def test_iter_end(self):
+        chunks = _IterChunk(self.iter, 100)
+        next(chunks)
+        next(chunks)
+        next(chunks)
+        next(chunks)
+        next(chunks)
+        with self.assertRaises(StopIteration) as ar:
+            next(chunks)
+    
+    def test_iter_whole(self):
+        chunks = _IterChunk(self.iter, 500)
+        self.assertListEqual(next(chunks), list(range(500)))
+    
+    def test_iter_larger(self):
+        chunks = _IterChunk(self.iter, 600)
+        self.assertListEqual(next(chunks), list(range(500)))

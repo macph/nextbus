@@ -13,7 +13,7 @@
             <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
         {% endif %}
         {% for stop in list %}
-            <li><a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
+            <li><a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}
@@ -21,7 +21,7 @@
     <ul id="stops">
         <p>{{ "%d"|format(list|length) }} stop{{ 's' if list|length != 1 else '' }} found.</p>
         {% for stop, distance in list %}
-            <li>{{ '%.0f m'|format(distance) }} <a href="{{ url_for('stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
+            <li>{{ '%.0f m'|format(distance) }} <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">{{ stop_full_name(stop) }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}
@@ -29,7 +29,7 @@
     <ul id="districts">
         <p>{{ "%d"|format(list|length) }} district{{ 's' if list|length != 1 else '' }} found.</p>
         {% for district in list|sort(attribute='district_name') %}
-            <li><a href="{{ url_for('list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
+            <li><a href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}
@@ -37,7 +37,7 @@
     <ul id="localitites">
         <p>{{ "%d"|format(list|length) }} localit{{ 'ies' if list|length != 1 else 'y' }} found.</p>
         {% for locality in list|sort(attribute='locality_name') %}
-            <li><a href="{{ url_for('list_in_locality', locality_code=locality.nptg_locality_code) }}">{{ locality.locality_name }}</a></li>
+            <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.nptg_locality_code) }}">{{ locality.locality_name }}</a></li>
         {% endfor %}
     </ul>
 {%- endmacro %}

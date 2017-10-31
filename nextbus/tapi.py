@@ -3,7 +3,7 @@ Interacts with Transport API to retrieve live bus times data.
 """
 import json
 import requests
-from nextbus import app
+from flask import current_app
 
 
 def _get_nextbus_times(atco_code, nextbuses=True, strip_key=True):
@@ -22,8 +22,8 @@ def _get_nextbus_times(atco_code, nextbuses=True, strip_key=True):
         'group': 'no',
         'nextbuses': 'yes' if nextbuses else 'no',
         'limit': 30,
-        'app_id': app.config.get('TRANSPORT_API_ID'),
-        'app_key': app.config.get('TRANSPORT_API_KEY')
+        'app_id': current_app.config.get('TRANSPORT_API_ID'),
+        'app_key': current_app.config.get('TRANSPORT_API_KEY')
     }
     req = requests.get(url_live_json % atco_code, params=parameters)
     req.raise_for_status()

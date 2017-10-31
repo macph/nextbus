@@ -10,9 +10,10 @@ import itertools
 import multiprocessing
 import lxml.etree
 import click
+from flask import current_app
 
 from definitions import ROOT_DIR
-from nextbus import app, db, models
+from nextbus import db, models
 
 # TODO: Implement some sort of date system; may need to add to table.
 # TODO: Check with existing elements and modify as needed?
@@ -453,6 +454,6 @@ if __name__ == "__main__":
     NAPTAN = os.path.join(ROOT_DIR, "temp/data/Naptan.xml")
     NPTG = os.path.join(ROOT_DIR, "temp/data/NPTG.xml")
     NSPL = os.path.join(ROOT_DIR, "temp/data/nspl.csv")
-    with app.app_context():
+    with current_app.app_context():
         commit_naptan_data(nptg_file=NPTG, naptan_file=NAPTAN)
         commit_nspl_data(nspl_file=NSPL)

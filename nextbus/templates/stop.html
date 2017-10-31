@@ -9,11 +9,11 @@
 <nav>
     <ul class="breadcrumbs">
         {% if district is not none %}
-        <li><a href="{{ url_for('list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
         {% else %}
-        <li><a href="{{ url_for('list_in_area', area_code=stop.admin_area_code) }}">{{ stop.admin_area.area_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_area', area_code=stop.admin_area_code) }}">{{ stop.admin_area.area_name }}</a></li>
         {% endif %}
-        <li><a href="{{ url_for('list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a></li>
     </ul>
 </nav>
 {% endif %}
@@ -25,7 +25,7 @@
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",
-        "{{ url_for('stop_get_times') }}",
+        "{{ url_for('page.stop_get_times') }}",
         document.getElementById("services"),
         document.getElementById("countdown")
     )

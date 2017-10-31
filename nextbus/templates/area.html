@@ -5,7 +5,7 @@
     {% set region = area.region %}
     <nav>
         <ul class="breadcrumbs">
-            <li><a href="{{ url_for('list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a></li>
+            <li><a href="{{ url_for('page.list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a></li>
             <li>{{ area.area_name }}</li>
         </ul>
     </nav>

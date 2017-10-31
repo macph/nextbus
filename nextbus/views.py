@@ -3,14 +3,16 @@ Views for the nextbus website.
 """
 import re
 from requests import HTTPError
-from flask import abort, jsonify, render_template, redirect, request
-from nextbus import app, forms, location, models, tapi
+from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
+from nextbus import forms, location, models, tapi
 
 MAX_DISTANCE = 500
 FIND_POSTCODE = re.compile(r"^([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)[+\s]*"
                            r"(\d[A-Za-z]{2})$")
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
                         r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
+
+page = Blueprint('page', __name__, template_folder='templates')
 
 
 class EntityNotFound(Exception):
@@ -43,7 +45,7 @@ def _find_stops_in_range(coord):
     return sorted(filter_stops, key=lambda x: x[1])
 
 
-@app.route('/', methods=['GET', 'POST'])
+@page.route('/', methods=['GET', 'POST'])
 def index():
     """ The home page. """
     f_naptan = forms.FindStop()
@@ -58,13 +60,13 @@ def index():
                            form_postcode=f_postcode)
 
 
-@app.route('/about')
+@page.route('/about')
 def about():
     """ The about page. """
     return "About me: Uhm. Check later?"
 
 
-@app.route('/list/')
+@page.route('/list/')
 def list_regions():
     """ Shows list of all regions. """
     regions = (models.Region.query
@@ -73,7 +75,7 @@ def list_regions():
     return render_template('regions.html', regions=regions)
 
 
-@app.route('/list/area/<area_code>')
+@page.route('/list/area/<area_code>')
 def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
@@ -85,7 +87,7 @@ def list_in_area(area_code):
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
 
 
-@app.route('/list/district/<district_code>')
+@page.route('/list/district/<district_code>')
 def list_in_district(district_code):
     """ Shows list of localities in district. """
     district = models.District.query.get(district_code)
@@ -96,7 +98,7 @@ def list_in_district(district_code):
                              % district_code)
 
 
-@app.route('/list/locality/<locality_code>')
+@page.route('/list/locality/<locality_code>')
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
     lty = models.Locality.query.get(locality_code)
@@ -114,7 +116,7 @@ def list_in_locality(locality_code):
     return render_template('locality.html', locality=lty)
 
 
-@app.route('/near/postcode/<postcode>')
+@page.route('/near/postcode/<postcode>')
 def list_nr_postcode(postcode):
     """ Show stops within range of postcode. """
     str_psc = postcode.replace('+', ' ')
@@ -135,7 +137,7 @@ def list_nr_postcode(postcode):
     return render_template('postcode.html', postcode=psc, list_stops=stops)
 
 
-@app.route('/near/location/<lat_long>')
+@page.route('/near/location/<lat_long>')
 def list_nr_location(lat_long):
     """ Show stops within range of a GPS coordinate. """
     sr_m = FIND_COORD.match(lat_long)
@@ -153,7 +155,7 @@ def list_nr_location(lat_long):
     return render_template('location.html', coord=coord, list_stops=stops)
 
 
-@app.route('/stop/naptan/<naptan_code>')
+@page.route('/stop/naptan/<naptan_code>')
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
     s_pt = models.StopPoint.query.filter_by(naptan_code=naptan_code).scalar()
@@ -170,7 +172,7 @@ def stop_naptan(naptan_code):
     return render_template('stop.html', stop=s_pt, times=nxb)
 
 
-@app.route('/stop/atco/<atco_code>')
+@page.route('/stop/atco/<atco_code>')
 def stop_atco(atco_code):
     """ Shows stop with NaPTAN code. """
     s_pt = models.StopPoint.query.get(atco_code)
@@ -187,7 +189,7 @@ def stop_atco(atco_code):
     return render_template('stop.html', stop=s_pt, times=nxb)
 
 
-@app.route('/stop/get/<atco_code>')
+@page.route('/stop/get/<atco_code>')
 def stop_get_data(atco_code):
     """ Request and retrieve bus times using GET requests. """
     s_pt = models.StopPoint.query.get(atco_code)
@@ -198,7 +200,7 @@ def stop_get_data(atco_code):
     return jsonify(nxb)
 
 
-@app.route('/stop/get', methods=['POST'])
+@page.route('/stop/get', methods=['POST'])
 def stop_get_times():
     """ Requests and retrieve bus times. """
     if request.method == 'POST':
@@ -218,8 +220,8 @@ def stop_get_times():
     return jsonify(nxb)
 
 
-@app.errorhandler(404)
-@app.errorhandler(EntityNotFound)
+@page.errorhandler(404)
+@page.errorhandler(EntityNotFound)
 def not_found_msg(error):
     """ Returned in case of an invalid URL, with message. Can be called with
         EntityNotFound, eg if the correct URL is used but the wrong value is

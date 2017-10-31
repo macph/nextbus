@@ -1,11 +1,11 @@
 """
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
+import re
 import os
 import csv
 import json
 import datetime
-import collections
 import itertools
 import multiprocessing
 import lxml.etree
@@ -98,17 +98,23 @@ def _progress_bar(iterable, **kwargs):
 
 class _XPath(object):
     """ Helper class for XPath queries in a dataset, with the assumption that
-        all sub elements have the same namespace.
+        all sub elements have the same namespace. Adds prefixes to each XPath
+        query automatically.
     """
-    def __init__(self, element, prefix):
+    # Ignores all words enclosed in quotes, spaces or prefixed with ':' or '@'.
+    re_prefix = re.compile(r"(?<![:\"'@\s])(\b\w+\b)(?![:\"'\s])")
+
+    def __init__(self, element, prefix='a'):
         self.element = element
-        self.namespace = {}
-        self.namespace[prefix] = self.element.xpath("namespace-uri(.)")
+        self.prefix = prefix
+        namespace = self.element.xpath("namespace-uri(.)")
+        self.namespace = {self.prefix: namespace} if namespace else None
 
     def __call__(self, path, element=None):
-        """ Calls XPath query for a path. """
+        """ Calls XPath query for a path, adding prefixes if necessary """
+        new_path = self.re_prefix.sub(lambda s: self.prefix + ':' + s.group(), path)
         element = self.element if element is None else element
-        return element.xpath(path, namespaces=self.namespace)
+        return element.xpath(new_path, namespaces=self.namespace)
 
     def text(self, path, element=None):
         """ Calls a XPath query and returns the text contained within the first
@@ -429,7 +435,6 @@ def commit_nspl_data(nspl_file, atco_codes=None):
 
         list_postcodes = []
         filter_psc = _NSPLData(atco_codes, dict_la)
-        timer = datetime.datetime.now()
         with _progress_bar(None, label="Parsing postcode data",
                            length=len_lines) as prog, multiprocessing.Pool(cores) as pool:
             for rows in iter_postcodes:
@@ -437,7 +442,6 @@ def commit_nspl_data(nspl_file, atco_codes=None):
                 for piece in pool.map(filter_psc, pieces):
                     list_postcodes.extend(piece)
                 prog.update(len(rows))
-        click.echo((datetime.datetime.now() - timer).seconds)
 
     click.echo("Adding %d postcodes..." % len(list_postcodes))
     db.session.add_all(list_postcodes)

@@ -27,17 +27,26 @@ class XPathTests(unittest.TestCase):
         nodes = self.xp("n:StopPoints/n:StopPoint")
         self.assertEqual(len(nodes), 2)
 
+    def test_query_no_prefix(self):
+        nodes = self.xp("StopPoints/StopPoint")
+        self.assertEqual(len(nodes), 2)
+
     def test_text(self):
         atco_code = "370023697"
-        text = self.xp.text("n:StopPoints/n:StopPoint[n:AtcoCode='%s']/n:AtcoCode"
+        text = self.xp.text("n:StopPoints/n:StopPoint[n:AtcoCode='%s' or AtcoCode='496346433']/n:AtcoCode"
+                            % atco_code)
+        self.assertEqual(text, atco_code)
+
+    def test_text_no_prefix(self):
+        atco_code = "370023697"
+        text = self.xp.text("StopPoints/StopPoint[AtcoCode='%s' or AtcoCode='496346433']/AtcoCode"
                             % atco_code)
         self.assertEqual(text, atco_code)
 
     def test_text_attribute(self):
         atco_code = "370023697"
-        text = self.xp.text("n:StopPoints/n:StopPoint[n:AtcoCode='%s']/@Status"
+        text = self.xp.text("StopPoints/StopPoint[AtcoCode='%s']/@Status"
                             % atco_code)
-
         self.assertEqual(text, "active")
 
     def test_subelement_text(self):
@@ -45,11 +54,11 @@ class XPathTests(unittest.TestCase):
         node = self.xp("n:StopPoints/n:StopPoint[n:AtcoCode='%s']" % atco_code)[0]
         text = self.xp.text("n:AtcoCode", element=node)
         self.assertEqual(text, atco_code)
-    
+
     def test_text_not_found(self):
         with self.assertRaisesRegex(ValueError, "No elements") as are:
             text = self.xp.text("n:Locality")
-    
+
     def test_multiple_text(self):
         with self.assertRaisesRegex(ValueError, "Multiple elements") as are:
             text = self.xp.text("n:StopPoints/n:StopPoint")
@@ -70,6 +79,15 @@ class XPathTests(unittest.TestCase):
         expected = {"naptan_code": "37023697", "name": "City Hall CH3"}
         self.assertDictEqual(output, expected)
 
+    def test_dict_no_prefix(self):
+        atco_code = "370023697"
+        node = self.xp("n:StopPoints/n:StopPoint[n:AtcoCode='%s']" % atco_code)[0]
+        ls = {"naptan_code": "NaptanCode", "name": "Descriptor/ShortCommonName"}
+        output = self.xp.dict_text(ls, element=node)
+
+        expected = {"naptan_code": "37023697", "name": "City Hall CH3"}
+        self.assertDictEqual(output, expected)
+
     def test_dict_missing(self):
         atco_code = "370020362"
         node = self.xp("n:StopPoints/n:StopPoint[n:AtcoCode='%s']" % atco_code)[0]
@@ -83,31 +101,24 @@ class XPathTests(unittest.TestCase):
 class IterChunkTests(unittest.TestCase):
 
     def setUp(self):
-        self.iter = iter(range(500))
+        self.range = iter(range(500))
+        self.iter = _IterChunk(self.range, 100)
 
     def tearDown(self):
+        del self.range
         del self.iter
 
     def test_iter_mid(self):
-        chunks = _IterChunk(self.iter, 100)
-        next(chunks)
-        next(chunks)
-        self.assertListEqual(next(chunks), list(range(200, 300)))
+        next(self.iter)
+        next(self.iter)
+        self.assertListEqual(next(self.iter), list(range(200, 300)))
 
-    def test_iter_end(self):
-        chunks = _IterChunk(self.iter, 100)
-        next(chunks)
-        next(chunks)
-        next(chunks)
-        next(chunks)
-        next(chunks)
-        with self.assertRaises(StopIteration) as ar:
-            next(chunks)
-    
-    def test_iter_whole(self):
-        chunks = _IterChunk(self.iter, 500)
-        self.assertListEqual(next(chunks), list(range(500)))
-    
+    def test_iter_loop(self):
+        new_list = []
+        for chunk in self.iter:
+            new_list.extend(chunk)
+        self.assertListEqual(new_list, list(range(500)))
+
     def test_iter_larger(self):
-        chunks = _IterChunk(self.iter, 600)
+        chunks = _IterChunk(self.range, 600)
         self.assertListEqual(next(chunks), list(range(500)))

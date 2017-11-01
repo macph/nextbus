@@ -17,27 +17,19 @@
 - `/search/<string>` **Search**: Find an area, district, locality or stop name
 
 ## What else?
-- How to retrieve lat/long data? Set up a JS function, and have it operate upon
-pressing a button.
 - Settings per user (eg with cookies) - may want to start tracking once they
 set up favourites or such?
 - Get 2 database - static for all data such as postcodes and stops, and
 users/dynamic for users, eg tracking and cookies.
-- How to handle stop points without NaPTAN codes? Best solution would be to
-drop all entries with no NaPTAN codes.
 - Refine templates further such that the list of stops for localities,
 postcodes and locations all come from the same template, with a list of stop
 points as an object. Same goes for live times for ATCO and NaPTAN codes.
-- GET SOME TESTING DONE ::
-- Clicking on region in the breadcrumbs should lead to the correct heading in
-the region page; the `url_for()` function has a keyword argument `_anchor`
-which adds a fragment identifier (`#`). Need to find out how to make the jump
-to the correct heading -- use JS?
 - Set up caching functions to minimise generation, especially with more static
 webpages (eg locality navigation)
 - Add ability to request (or refuse) live NextBuses data; would be good idea to
 whitelist admin areas such that trams and specific areas will only get
 timetabled data  (and a warning that such info is not live).
+    - Do this by adding 'live_data' field to Admin areas.
 - Consider changing DB tables such that:
-    - We have separate columns for inward and outward codes for postcodes;
     - Short version of indicator for labelling.
+-

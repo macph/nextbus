@@ -124,9 +124,7 @@ function LiveData(atcoCode, postURL, tableElement, countdownElement) {
         var expDate;
         var reqDate = new Date(self.data.request_time);
         var strTable = "<p>Live bus times as of " + printDate(reqDate) + ":</p>"
-        strTable += '<table id="servicesTable">\
-            <tr><th>Bus</th><th>Destination</th><th>Expected</th><th></th>\
-            <th>Operator</th></tr>';
+        strTable += '<div class="list-services">'
         if (self.data.departures.all) {
             var count = 0;
             for (s of self.data.departures.all) {
@@ -148,13 +146,15 @@ function LiveData(atcoCode, postURL, tableElement, countdownElement) {
                 if (dueMins > 60)
                     break;
                 strTable += (
-                    `<tr><td>${s.line}</td><td>${s.direction}</td>`
-                    + `<td>${strDue}</td><td>${(live) ? 'Live' : ''}</td>`
-                    + `<td>${s.operator_name}</td></tr>`
+                    '<a class="row-service">'
+                    + `<div class="item-service-num">${s.line}</div>`
+                    + `<div class="item-service-dest">${s.direction}</div>`
+                    + `<div class="item-service-exp">${strDue}</div>`
+                    + `<div class="item-service-live">${(live) ? 'Live' : ''}</div></a>`
                 );
                 count++;
             }
-            strTable += '</table>';
+            strTable += '</div>';
             self.table.innerHTML = strTable;
             console.log(`Created table with ${count} services for stop '${self.atcoCode}'.`
             );
@@ -182,6 +182,57 @@ function LiveData(atcoCode, postURL, tableElement, countdownElement) {
             }, 1000);
         } else {
             self.cd.innerHTML = '';
+        }
+    }
+}
+
+var BUS = "bus-white.svg";
+var TRAM = "tram-white.svg";
+
+function resizeInd(className) {
+    for (elt of document.getElementsByClassName(className)) {
+        var ind = elt.innerHTML;
+        ind = ind.replace(/(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)/gi, "$2");
+        ind = ind.replace(/adjacent/gi, "adj");
+        ind = ind.replace(/after/gi, "aft");
+        ind = ind.replace(/before/gi, "pre");
+        ind = ind.replace(/([ENSW]+)[-\s]?bound/gi, ">$1");
+        ind = ind.replace(/Eastbound/gi, ">E");
+        ind = ind.replace(/Northbound/gi, ">N");
+        ind = ind.replace(/Southbound/gi, ">S");
+        ind = ind.replace(/Westbound/gi, ">W");
+        ind = ind.replace(/-&gt;([ENSW]+)/gi, ">$1");
+        ind = ind.replace(/near/gi, "nr");
+        ind = ind.replace(/opposite/gi, "opp");
+        ind = ind.replace(/outside/gi, "o/s");
+        ind = ind.replace(/(\w{6,})/, s => s.slice(0, 4) + '.');
+        ind = ind.replace(/(\w+.?) (\w+\.?) .*/, "$1 $2");
+        console.log("Converting indicator '" + elt.innerHTML + "' to '" + ind + "', length " + ind.length);
+        if (/(Bay|Stan\.|Stand|Stop)/gi.test(ind) || ind.trim().length == 0) {
+            fontSize = parseFloat(getComputedStyle(elt).fontSize);
+            imgSize = Math.round(2.8 * fontSize);
+            elt.innerHTML = `<img src=${BUS} width="${imgSize}px">`;
+        } else {
+            elt.innerHTML = ind;
+            var len = ind.replace(/(&#?\w+;)/, ' ').length;
+            switch(len) {
+            case 1:
+                elt.style.fontSize = "2.2em";
+                break;
+            case 2:
+                elt.style.fontSize = "1.8em";
+                break;
+            case 3:
+                elt.style.fontSize = "1.5em";
+                break;
+            case 4:
+                elt.style.fontSize = "1.3em";
+                elt.style.fontWeight = "bold";
+                break;
+            default:
+                elt.style.fontSize = "1.1em";
+                elt.style.fontWeight = "bold";
+            }
         }
     }
 }

@@ -4,9 +4,7 @@
 {% block content %}
     <h1>All regions</h1>
     {% for region in regions|sort(attribute='region_name') %}
-        <h3 id="{{ region.region_code }}">{{ region.region_name }}</h3>
-        {% for area in region.areas|sort(attribute='area_name') %}
-            <li><a href="{{ url_for('page.list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a></li>
-        {% endfor %}
+    <h2 id="{{ region.region_code }}">{{ region.region_name }}</h3>
+    {{ f.print_areas(region.areas) }}
     {% endfor %}
 {% endblock %}

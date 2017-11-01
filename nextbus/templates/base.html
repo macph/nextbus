@@ -2,28 +2,39 @@
 <html lang="en">
     <head>
         {% block head %}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#191970">
         <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,700" rel="stylesheet">
-        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css')}}"/>
+        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}"/>
+        <script type="text/javascript" src="{{ url_for('static', filename='nextbus.js') }}"></script>
+        <script>
+            BUS = "{{ url_for('static', filename='img/bus-white.svg') }}";
+            TRAM = "{{ url_for('static', filename='img/tram-white.svg') }}";
+        </script>
         <title>{% block title %}{% endblock %} - NextBus</title>
         {% endblock %}
     </head>
     <body>
         <div id="divHeader">
-            <div id=divHeaderText>
+        </div>
+        <div id=divHeaderText>
+            <header>
                 {% block header %}
-                <a href="{{ url_for('page.index') }}">NextBus home</a>
+                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a id="#aTitle" href="{{ url_for('page.index') }}">nextbus</a>
                 {% endblock %}
-            </div>
+            </header>
         </div>
         <div id="divContent">
             {% block content %}{% endblock %}
         </div>
         <div id="divFooter">
-            <div id=divFooterText>
+        </div>
+        <div id=divFooterText>
+            <footer>
                 {% block footer %}
-                &copy; Ewan Macpherson | <a href="{{ url_for('page.about') }}">About this website</a>
+                &copy; Ewan Macpherson, 2017. <a href="{{ url_for('page.about') }}">About this website</a>
                 {% endblock %}
-            </div>
+            </footer>
         </div>
     </body>
 </html>

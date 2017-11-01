@@ -1,33 +1,409 @@
 html {
     font-family: "Source Sans Pro", sans-serif;
-    /* font-size: 10px; */
+    font-size: 10px;
     background: gainsboro;
 }
 
+p {
+    margin: 10px;
+    font-size: 1.6rem;
+}
+
+a {
+    text-decoration: none;
+    color: midnightblue;
+}
+
+a:visited {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: underline;
+    text-decoration-skip: ink;
+}
+
+input {
+    font-family: "Source Sans Pro", sans-serif;
+}
+
+/* Page layout */
+
 body {
     display: grid;
-    grid-template-areas: "header" "section" "footer";
-    grid-template-rows: 32px 1fr 32px;
-    width: 100%;
+    grid-template-rows: 48px 1fr 48px;
+    grid-template-columns: 1fr minmax(320px, 720px) 1fr;
+    width: 1fr;
     height: 100vh;
 }
 
 #divContent {
-    min-width: 320px;
-    max-width: 720px;
+    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+    z-index: 2;
     width: 100%;
-    margin: 0px auto;
-    padding: 10px;
-    background: white;
-}
-
-#divContent {
+    margin: 0 auto;
+    padding: 10px 0;
+    box-sizing: border-box;
     background: white;
 }
 
 #divHeader, #divFooter {
-    display: block;
     width: 100%;
+}
+
+#divHeaderText, #divFooterText {
+    display: flex;
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+    align-content: center;
+}
+
+#divHeader {
+    grid-row: 1 / 2;
+    grid-column: 1 / -1;
+    z-index: 3;
+
+    background: midnightblue;
+    box-shadow: 0 0 8px 0 black;
+}
+
+#divFooter {
+    grid-row: 3 / 4;
+    grid-column: 1 / -1;
+    z-index: 1;
+
+    background: slategrey;
+}
+
+#divHeaderText {
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+    z-index: 4;
+}
+
+#divFooterText {
+    grid-row: 3 / 4;
+    grid-column: 2 / 3;
+    z-index: 2;
+}
+
+
+
+/* Header & Footer text */
+
+header {
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: white;
+}
+
+footer {
+    font-size: 1.6rem;
+    color: white;
+}
+
+header > a, footer > a {
+    color: inherit;
+}
+
+/* Breadcrumbs for lists of stops */
+
+ul.breadcrumbs {
+    display: inline-block;
+    margin: 0 10px;
+    padding: 5px 0px;
+    list-style-type: none;
+
+    font-size: 1.6rem;
+}
+
+ul.breadcrumbs > li {
+    display: inline;
+    white-space: nowrap;
+}
+
+ul.breadcrumbs > li:not(:first-child):before {
+    content: " > ";
+}
+
+#ulTrailing > li:last-child:after {
+    content: " > ";
+}
+
+/* headings */
+
+h1 {
+    display: flex;
+    margin: 20px 10px;
+
+    font-size: 3rem;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h1 > span {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+h1.head-stop {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+span.head-stop-ind {
+    flex: none;
+    height: 54px;
+    width: 54px;
+    margin: 10px 0;
+    background: midnightblue;
+    border-radius: 27px;
+
+    align-items: center;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+span.head-stop-name {
+    flex: auto;
+    margin: 3px 0 3px 10px;
+
+    font-size: 2em;
+}
+
+/* index search */
+
+#divSearch {
+    width: 360px;
+    margin: 5px auto;
+    padding: 1px 10px;
+    background: whitesmoke;
+}
+
+#formSMS, #formPS {
+    margin: 10px 0;
+    font-size: 1.6rem;
+}
+
+#formSMS > label, #formPS > label {
+    display: inline-block;
+    width: 100px;
+
+    text-align: right;
+}
+
+#formSMS > input[type="text"], #formPS > input[type="text"] {
+    height: 24px;
+    padding: 5px;
+    border: 1px solid white;
+    background: white;
+}
+
+#formSMS > input[type="text"]:focus, #formPS > input[type="text"]:focus {
+    outline: none;
+    border: 1px solid lightgrey;
+}
+
+input.form-submit {
+    height: 36px;
+    width: 36px;
+    border: none;
+    background: midnightblue;
+
+    color: white;
+}
+
+input.form-submit:hover {
+    background: slategrey;
+}
+
+input.form-submit:focus {
+    outline: none;
+    background: black;
+}
+
+#output {
+    font-size: 1.6rem;
+}
+
+/* Stop list style */
+
+div.list-stops-dist {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+a.row-stop-dist {
+    height: 40px;
+    width: 100%;
+    display: flex;
+
+    border-style: solid;
+    border-color: lightgrey;
+    border-width: 1px 0 0 0;
+    background: whitesmoke;
+
+    font-size: 1rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.row-stop-dist:hover {
+    background: gainsboro;
+}
+
+a.row-stop-dist:last-of-type {
+    border-width: 1px 0 1px 0;
+}
+
+a.row-stop-dist > div {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+div.item-stop-ind {
+    flex: none;
+    height: 36px;
+    width: 36px;
+    margin: 2px 5px;
+    background: midnightblue;
+    border-radius: 18px;
+
+    align-items: center;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+div.item-stop-name {
+    flex: auto;
+
+    text-align: left;
+    line-height: 1.2em;
+    font-size: 1.6em;
+    padding: 5px;
+}
+
+div.item-stop-dist {
+    flex: none;
+    width: 64px;
+    font-size: 1.4em;
+}
+
+/* Place list style */
+
+div.list-places {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+a.item-place {
+    display: grid;
+    padding: 5px;
     
-    background: crimson;
+    border-style: solid;
+    border-color: lightgrey;
+    border-width: 1px 0 0 0;
+    background: whitesmoke;
+    
+    font-size: 1.6rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.item-place:hover {
+    background: gainsboro;
+}
+
+/* List of services */
+
+div.list-services {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+a.row-service {
+    height: 36px;
+    width: 100%;
+    display: flex;
+  
+    border-style: solid;
+    border-color: lightgrey;
+    border-width: 1px 0 0 0;
+    background: whitesmoke;
+  
+    align-items: center;
+  
+    font-size: 1.6rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.row-service:last-of-type {
+    border-width: 1px 0 1px 0;
+}
+
+a.row-service > div {
+    margin: 0 5px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+div.item-service-num {
+    width: 48px;
+    height: 32px;
+    background: midnightblue;
+    text-align: center;
+
+    font-size: 1.25em;
+    color: white;
+}
+
+div.item-service-dest {
+    flex: auto;
+}
+
+div.item-service-exp {
+    flex: none;
+    width: 64px;
+
+    font-weight: 600;
+}
+
+div.item-service-live {
+    flex: none;
+    width: 48px;
+
+    font-size: 0.9em;
+}
+
+/* Adjusting for wider widths */
+
+@media (min-width: 700px) {
+    #divContent {
+        padding: 10px;
+    }
+    p, h1, ul.breadcrumbs {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }

@@ -63,7 +63,7 @@ def index():
 @page.route('/about')
 def about():
     """ The about page. """
-    return "About me: Uhm. Check later?"
+    return render_template('about.html')
 
 
 @page.route('/list/')

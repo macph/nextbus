@@ -1,27 +1,27 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
-{% block title %}{{ f.stop_name(stop) }}{% endblock %}
+{% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
 {% block content %}
 {% set locality = stop.locality %}
 {% set district = locality.district if locality.district is not none else none %}
+{% set region = stop.admin_area.region %}
 {% set stop_area = stop.stop_area %}
 {% if locality is not none %}
 <nav>
-    <ul class="breadcrumbs">
+    <ul class="breadcrumbs" id="ulTrailing">
+        <li>&middot;&middot;&middot;</li>
         {% if district is not none %}
         <li><a href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
-        {% else %}
-        <li><a href="{{ url_for('page.list_in_area', area_code=stop.admin_area_code) }}">{{ stop.admin_area.area_name }}</a></li>
         {% endif %}
         <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a></li>
     </ul>
 </nav>
 {% endif %}
-<h1>Stop &mdash; {{ f.stop_full_name(stop) }}</h1>
-<p>NaPTAN code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
+<h1 class=head-stop><span class="head-stop-ind">{{ f.stop_indicator(stop) }}</span> <span class="head-stop-name">{{ f.stop_name(stop) }}</span></h1>
+{{ f.resize_indicator("head-stop-ind") }}
+<p>SMS code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
 <p id="countdown"></p>
 <div id="services"><p>Retrieving live data...</p></div>
-<script type="text/javascript" src="{{ url_for('static', filename='live.js') }}"></script>
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",

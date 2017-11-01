@@ -2,15 +2,12 @@
 {% block title %}Index{% endblock %}
 {% block head %}
     {{ super() }}
-    <style type="text/css">
-        .important { color: #336699; }
-    </style>
     <script>
         function ls(...strings) {
-            var str = '<ul>';
+            str = '';
             for (i of strings)
                 str += `<li>${i}</li>`;
-            return str + '</ul>';
+            return str;
         }
         function getLocation() {
             var output = document.getElementById("output");
@@ -33,22 +30,34 @@
     </script>
 {% endblock %}
 {% block content %}
-    <h1>index</h1>
-    <p class="important">This is the NextBus website.</p>
-    <form action="" method="post" name="sms">
-        {{ form_naptan.hidden_tag() }}
-        Search for a bus stop with SMS code: {{ form_naptan.code(size=16, placeholder="SMS code") }}<input type="submit" name="submit_code" value="Search">
-        {% if form_naptan.code.errors %}
-            <ul class="errors">{% for error in form_naptan.code.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-        {% endif %}
-    </form>
-    <form action="" method="post" name="postcode">
-        {{ form_postcode.hidden_tag() }}
-        Search with a postcode: {{ form_postcode.postcode(size=16, placeholder="Postcode") }}<input type="submit" name="submit_postcode" value="Search">
-        {% if form_postcode.postcode.errors %}
-        <ul class="errors">{% for error in form_postcode.postcode.errors %}<li>{{ error }}</li>{% endfor %}</ul>
-        {% endif %}
-    </form>
-    <p>Use your location: <input onclick="getLocation()" type="submit" value="Press butan"><span id="output"></span></p>
-    <p><a href="{{ url_for('page.list_regions') }}">List of all regions/areas</a></p>
+    <div id="divSearch">
+        <h2>Search for a stop</h2>
+        <form id="formSMS" method="post" name="sms">
+            {{ form_naptan.hidden_tag() }}
+            <label>with SMS code </label>
+            {{ form_naptan.code(size=16, placeholder="eg 55677") }}
+            <input class="form-submit" type="submit" name="submit_code" value=">">
+        </form>
+        <form id="formPS" action="" method="post" name="postcode">
+            {{ form_postcode.hidden_tag() }}
+            <label>with postcode </label>
+            {{ form_postcode.postcode(size=16, placeholder="eg SW1A 0AA") }}
+            <input class="form-submit" type="submit" name="submit_postcode" value=">">
+        </form>
+        <p>Use your location: <input class="form-submit" onclick="getLocation()" type="submit" value="G"></p>
+        <p><a href="{{ url_for('page.list_regions') }}">Browse all regions and areas</a></p>
+        <ul id="output">
+            {% if form_naptan.code.errors %}
+            {% for error in form_naptan.code.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+            {% endif %}
+            {% if form_postcode.postcode.errors %}
+            {% for error in form_postcode.postcode.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+            {% endif %}
+        </ul>
+        
+    </div>
 {% endblock %}

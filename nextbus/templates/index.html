@@ -44,7 +44,7 @@
             {{ form_postcode.postcode(size=16, placeholder="eg SW1A 0AA") }}
             <input class="form-submit" type="submit" name="submit_postcode" value=">">
         </form>
-        <p>Use your location: <input class="form-submit" onclick="getLocation()" type="submit" value="G"></p>
+        <p>Use your location: <input class="form-submit" onclick="getLocation()" type="submit" value="go"></p><p>(note: won't work without HTTPS).</p>
         <p><a href="{{ url_for('page.list_regions') }}">Browse all regions and areas</a></p>
         <ul id="output">
             {% if form_naptan.code.errors %}

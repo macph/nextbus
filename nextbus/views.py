@@ -207,14 +207,17 @@ def stop_get_times():
         data = request.get_json()
     else:
         # Trying to access with something other than POST
+        current_app.logger.error("/stop/get was accessed with something other than POST")
         abort(405)
     try:
         nxb = tapi.get_nextbus_times(data['code'])
-    except (KeyError, ValueError):
+    except (KeyError, ValueError) as e:
         # Malformed request; no ATCO code
+        current_app.logger.error(e)
         abort(400)
     except HTTPError:
         # Problems with the API service
+        current_app.logger.warning("Can't access API service.")
         abort(503)
 
     return jsonify(nxb)

@@ -341,7 +341,7 @@ div.list-services {
 }
 
 a.row-service {
-    height: 36px;
+    min-height: 36px;
     width: 100%;
     display: flex;
   
@@ -363,17 +363,21 @@ a.row-service:last-of-type {
 
 a.row-service > div {
     margin: 0 5px;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
 }
 
 div.item-service-num {
-    width: 48px;
+    display: flex;
+    flex: none;
+    justify-content: center;
+    flex-direction: column;
+    min-width: 38px;
+    max-width: 96px;
+    padding: 0 5px;
     height: 32px;
     background: midnightblue;
+    
     text-align: center;
-
+    line-height: 0.9em;
     font-size: 1.25em;
     color: white;
 }
@@ -389,11 +393,15 @@ div.item-service-exp {
     font-weight: 600;
 }
 
-div.item-service-live {
+div.item-service-after {
     flex: none;
-    width: 48px;
+    width: 72px;
 
-    font-size: 0.9em;
+    font-size: 0.8em;
+}
+
+.text-green {
+    color: green;
 }
 
 /* Adjusting for wider widths */

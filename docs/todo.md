@@ -32,4 +32,6 @@ timetabled data  (and a warning that such info is not live).
     - Do this by adding 'live_data' field to Admin areas.
 - Consider changing DB tables such that:
     - Short version of indicator for labelling.
--
+    - Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.
+    - Harmonise names (mix of short and common names) - makes it easier to sort.
+    - Last modified dates are added such that we can compare entries and update as required.

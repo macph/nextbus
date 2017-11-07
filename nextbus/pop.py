@@ -9,6 +9,7 @@ import datetime
 import itertools
 import multiprocessing
 import lxml.etree
+import requests
 import click
 from flask import current_app
 
@@ -84,6 +85,17 @@ PATHS_STOP_AREA = {
     "longitude":            "s:Location/s:Translation/s:Longitude",
     "latitude":             "s:Location/s:Translation/s:Latitude"
 }
+
+LIST_COLUMNS = [
+    'postcode_3',
+    'local_authority_code',
+    'easting',
+    'northing',
+    'longitude',
+    'latitude'
+]
+
+LIST_COUNTRIES = ['E92000001', 'S92000003', 'W92000004']
 
 
 def _progress_bar(iterable, **kwargs):
@@ -375,6 +387,42 @@ class _IterChunk(object):
         return self
 
 
+def download_nspl_data(atco_codes=None):
+    """ Downloads NSPL data from Camden's Socrata API. Requires an app token,
+        which can be obtained from Camden's open data site. For more info, see
+        https://dev.socrata.com/foundry/opendata.camden.gov.uk/ry6e-hbqy
+
+        :param atco_codes: List of ATCO codes used to filter areas. If None,
+        all postcodes in Great Britain (outwith IoM, Channel Islands and
+        Northern Ireland).
+    """
+    api_url = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
+
+    dict_la = {}
+    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
+    with open(la_file, 'r') as laf:
+        for local_auth in json.load(laf):
+            if not atco_codes or int(local_auth["atco_area_code"]) in atco_codes:
+                dict_la[local_auth.pop("la_code")] = local_auth
+
+    if current_app.config.get('CAMDEN_API_TOKEN') is None:
+        raise ValueError("'CAMDEN_API_TOKEN' not set in Flask config; a token "
+                         "is required to access the NSPL API.")
+    headers = {'Accept': 'application/json',
+               'X-App-Token': current_app.config.get('CAMDEN_API_TOKEN')}
+
+    columns = ', '.join(LIST_COLUMNS)
+    if atco_codes:
+        codes = ' OR '.join("local_authority_code=%s" % a for a in dict_la)
+    else:
+        codes = ' OR '.join("country_code=%s" % c for c in LIST_COUNTRIES)
+
+    query = {'$query': "SELECT %s WHERE %s" % (columns, codes)}
+    req = requests.get(api_url, headers=headers, params=query)
+
+    return req
+
+
 class _NSPLData(object):
     """ Helper class for processing NSPL postcode data. """
     def __init__(self, atco_codes, dict_local_auth):
@@ -414,15 +462,12 @@ def commit_nspl_data(nspl_file, atco_codes=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
     """
+    dict_la = {}
     la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
-    with open(la_file, 'r') as json_file:
-        data = json.load(json_file)
-
-    if atco_codes:
-        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data
-                   if int(local_auth["atco_area_code"]) in atco_codes}
-    else:
-        dict_la = {local_auth.pop("la_code"): local_auth for local_auth in data}
+    with open(la_file, 'r') as laf:
+        for local_auth in json.load(laf):
+            if not atco_codes or int(local_auth["atco_area_code"]) in atco_codes:
+                dict_la[local_auth.pop("la_code")] = local_auth
 
     click.echo("Opening file %r..." % nspl_file)
     with open(nspl_file, 'r') as csv_file:

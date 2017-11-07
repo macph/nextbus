@@ -210,7 +210,7 @@ def stop_get_times():
         current_app.logger.error("/stop/get was accessed with something other than POST")
         abort(405)
     try:
-        nxb = tapi.get_nextbus_times(data['code'])
+        nxb = tapi.parse_nextbus_times(data['code'])
     except (KeyError, ValueError) as e:
         # Malformed request; no ATCO code
         current_app.logger.error(e)

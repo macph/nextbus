@@ -146,6 +146,8 @@ h1 {
 
 h2 {
     font-size: 2rem;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 h1 > span {
@@ -395,9 +397,13 @@ div.item-service-exp {
 
 div.item-service-after {
     flex: none;
-    width: 72px;
+    width: 64px;
 
     font-size: 0.8em;
+}
+
+div.item-service-after > span {
+    white-space:nowrap;
 }
 
 .text-green {
@@ -410,8 +416,11 @@ div.item-service-after {
     #divContent {
         padding: 10px;
     }
-    p, h1, ul.breadcrumbs {
+    p, h1, h2, ul.breadcrumbs {
         margin-left: 0;
         margin-right: 0;
+    }
+    div.item-service-after {
+        width: 96px;
     }
 }

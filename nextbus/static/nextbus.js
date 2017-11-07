@@ -1,34 +1,6 @@
 const INTERVAL = 60;
 const REFRESH = true;
-
-if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function(element) {
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === element) {
-                return i;
-            }
-        }
-        return -1;
-    }
-}
-
-function printDate(dateObj) {
-
-    var dayNames = [
-        'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
-        'Saturday'
-    ];
-    var monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June', 'July',
-        'August', 'September', 'October', 'November', 'December'
-    ];
-    var date = (
-        dateObj.getHours() + ':'
-        + dateObj.getMinutes() + ':'
-        + dateObj.getSeconds()
-    );
-    return date;
-}
+const TIME_LIMIT = 60;
 
 function ServicesFilter(callback, ...args) {
     var self = this;
@@ -83,21 +55,19 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     this.atcoCode = atcoCode;
     this.postURL = postURL;
     this.table = tableElement;
-    this.time = timeElement;
+    this.hTime = timeElement;
     this.cd = countdownElement;
     this.data = {};
     
     this.getData = _getData;
-    this.printData = _printGroupData;
+    this.printData = _printData;
     this.initialise = _initialise;
     this.filter = new ServicesFilter(_printData);
 
     this.getAllServices = function() {
         var listServices = [];
-        if (self.data.departures.all) {
-            for (s of self.data.departures.all) {
-                listServices.push(s.line);
-            }
+        if (self.data.services.length > 0) {
+            listServices = self.data.services.map(s => s.name);
         }
         return [...new Set(listServices)];
     }
@@ -118,128 +88,41 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         request.send(JSON.stringify({code: self.atcoCode}));
     }
 
-    function _printGroupData() {
-        var reqDate = new Date(self.data.request_time);
-        var listServices = [];
-        
-        function _getDateTime(service, currentDate) {
-            var expDate, isLive, dueMin, strDue, newService;
-            var arrDate = service.expected_departure_date;
-            var arrTime = service.expected_departure_time;
-            if (arrDate && arrTime) {
-                isLive = true;
-            } else {
-                isLive = false;
-                arrDate = service.date;
-                arrTime = service.aimed_departure_time;
-            }
-            expDate = new Date(arrDate + ' ' + arrTime);
-            dueMin = Math.round((expDate - currentDate) / 60000);
-            strDue = (dueMin < 2) ? "due" : (dueMin + " min");
-
-            newService = {
-                line: s.line,
-                dest: s.direction,
-                operator: s.operator,
-                name: s.operator_name,
-                arrivals: [{live: isLive, expected: expDate, due: strDue}]
-            }
-
-            return newService;
-        }
-
-        if (self.data.departures.all) {
-            for (s of self.data.departures.all) {
-                var ns = _getDateTime(s, reqDate);
-                var found = false;
-                for (t of listServices) {
-                    if (t.line === ns.line && t.dest === ns.dest) {
-                        t.arrivals.push(ns.arrivals[0]);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    listServices.push(ns);
-                }
-            }
-            self.time.innerHTML = `Live bus times as of ${printDate(reqDate)} - `;
+    function _printData() {
+        if (self.data.services.length > 0) {
+            self.hTime.innerHTML = `Live times at ${self.data.local_time}`;
             var strTable = '<div class="list-services">';
-            for (s of listServices) {
-                var clLive = (s.arrivals[0].live) ? " text-green" : "";
+            for (s of self.data.services) {
+                if (self.filter.exclude(s.name)) {
+                    continue;
+                }
+                let clLive = (s.expected[0].live) ? " text-green" : "";
                 strTable += (
                     '<a class="row-service">'
-                    + `<div class="item-service-num">${s.line}</div>`
-                    + `<div class="item-service-dest">${s.dest.split(' (')[0]}</div>`
-                    + `<div class="item-service-exp${clLive}">${s.arrivals[0].due}</div>`
+                    + `<div class="item-service-num">${s.name}</div>`
+                    + `<div class="item-service-dest">${s.dest}</div>`
+                    + `<div class="item-service-exp${clLive}">${s.expected[0].due}</div>`
                 )
-                if (s.arrivals.length == 1) {
+                if (s.expected.length == 1) {
                     strTable += '<div class="item-service-after"></div>';
-                } else if (s.arrivals.length == 2) {
-                    var clLive1 = (s.arrivals[1].live) ? ' class="text-green"' : '';
-                    strTable += `<div class="item-service-after"><span${clLive1}>${s.arrivals[1].due}</span></div>`;
+                } else if (s.expected.length == 2) {
+                    let clLive1 = (s.expected[1].live) ? ' class="text-green"' : '';
+                    strTable += `<div class="item-service-after"><span${clLive1}>${s.expected[1].due}</span></div>`;
                 } else {
-                    var first = s.arrivals[1].due;
-                    var firstMin = first.substr(0, first.indexOf(' '));
-                    var clLive1 = (s.arrivals[1].live) ? ' class="text-green"' : '';
-                    var clLive2 = (s.arrivals[2].live) ? ' class="text-green"' : '';
-                    strTable += `<div class="item-service-after"><span${clLive1}>${firstMin},</span> <span${clLive2}>${s.arrivals[2].due}</span></div>`;
+                    let first = s.expected[1].due;
+                    let firstMin = first.replace(' min', '');
+                    let clLive1 = (s.expected[1].live) ? ' class="text-green"' : '';
+                    let clLive2 = (s.expected[2].live) ? ' class="text-green"' : '';
+                    strTable += `<div class="item-service-after"><span${clLive1}>${firstMin} and</span> <span${clLive2}>${s.expected[2].due}</span></div>`;
                 }
                 strTable += '</a>';
             }
-            strTable += '</div>'
-            self.table.innerHTML = strTable;
-            console.log(`Created table with ${self.data.departures.all.length} services for stop '${self.atcoCode}'.`)
-        
-        } else {
-            self.time.innerHTML = `No buses expected at ${printDate(reqDate)} - `;
-            self.table.innerHTML = '';
-            console.log(`No services found for stop ${self.atcoCode}.`);
-        }
-
-
-        return listServices;
-    } 
-
-    function _printData() {
-        var expDate;
-        var reqDate = new Date(self.data.request_time);
-        var strTable = "<p>Live bus times as of " + printDate(reqDate) + ":</p>";
-        strTable += '<div class="list-services">'
-        if (self.data.departures.all) {
-            var count = 0;
-            for (s of self.data.departures.all) {
-                if (self.filter.exclude(s.line)) {
-                    continue; // blacklisted by filter
-                }
-                if (s.expected_departure_date || s.expected_departure_time) {
-                    clLive = " text-green";
-                    expDate = new Date(
-                        s.expected_departure_date + ' '
-                        + s.expected_departure_time
-                    );
-                } else {
-                    clLive = "";
-                    expDate = new Date(s.date + ' ' + s.aimed_departure_time);
-                }
-                var dueMins = Math.round((expDate - reqDate) / 60000);
-                var strDue = (dueMins < 2) ? "due" : (dueMins + " min");
-                if (dueMins > 60)
-                    break;
-                strTable += (
-                    '<a class="row-service">'
-                    + `<div class="item-service-num">${s.line}</div>`
-                    + `<div class="item-service-dest">${s.direction.split(' (')[0]}</div>`
-                    + `<div class="item-service-exp${clLive}">${strDue}</div></a>`
-                );
-                count++;
-            }
             strTable += '</div>';
             self.table.innerHTML = strTable;
-            console.log(`Created table with ${count} services for stop '${self.atcoCode}'.`
-            );
+            console.log(`Created table with ${self.data.services.length} services for stop '${self.atcoCode}'.`);
         } else {
-            self.table.innerHTML = "<p>No buses expected.</p>";
+            self.hTime.innerHTML = `No buses expected at ${printDate(reqDate)} - `;
+            self.table.innerHTML = '';
             console.log(`No services found for stop ${self.atcoCode}.`);
         }
     }
@@ -250,7 +133,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             var time = INTERVAL;
             window.setInterval(function() {
                 if (--time > 0) {
-                    var s = (time != 1) ? 's' : ''
+                    let s = (time != 1) ? 's' : ''
                     self.cd.innerHTML = `refreshing in ${time} second${s}...`
                 } else {
                     self.cd.innerHTML = 'refreshing now...';

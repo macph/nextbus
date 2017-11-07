@@ -12,6 +12,8 @@ setup(
         'flask_sqlalchemy',
         'flask_wtf',
         'lxml',
+        'python-dateutil',
+        'pytz',
         'requests'
     ],
 )

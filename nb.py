@@ -6,7 +6,9 @@ from nextbus import create_app
 
 app = create_app()
 
-from nextbus import models, pop, views
+from nextbus import models, views
+from nextbus.populate import naptan, nspl
+
 
 @app.cli.command(help='Populate NaPTAN, NPTG and NSPL data.')
 @click.option('--atco', '-a', default=None, type=int, multiple=True,
@@ -22,16 +24,16 @@ def populate(atco, naptan_files, nspl_file):
     """ Calls the populate functions for filling the static database with data.
     """
     if len(naptan_files) == 2 and nspl_file is not None:
-        pop.commit_naptan_data(naptan_file=naptan_files[1],
-                               nptg_file=naptan_files[0], atco_codes=atco)
-        pop.commit_nspl_data(nspl_file=nspl_file, atco_codes=atco)
+        naptan.commit_naptan_data(naptan_file=naptan_files[1],
+                                  nptg_file=naptan_files[0], atco_codes=atco)
+        nspl.commit_nspl_data(nspl_file=nspl_file, atco_codes=atco)
 
     elif len(naptan_files) == 2:
-        pop.commit_naptan_data(naptan_file=naptan_files[1],
-                               nptg_file=naptan_files[0], atco_codes=atco)
+        naptan.commit_naptan_data(naptan_file=naptan_files[1],
+                                  nptg_file=naptan_files[0], atco_codes=atco)
 
     elif nspl_file is not None:
-        pop.commit_nspl_data(nspl_file=nspl_file, atco_codes=atco)
+        nspl.commit_nspl_data(nspl_file=nspl_file, atco_codes=atco)
 
     else:
         click.echo('Must specify either both of the NPTG and NaPTAN files, or '

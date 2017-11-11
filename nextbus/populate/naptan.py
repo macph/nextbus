@@ -1,32 +1,28 @@
 """
-Populating database with data from NPTG, NaPTAN and NSPL.
+Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
-import re
 import os
-import csv
-import json
 import datetime
-import itertools
-import multiprocessing
 import lxml.etree
-import requests
 import click
 from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus import db, models
+from nextbus.populate import file_ops, progress_bar, XPath
 
 # TODO: Implement some sort of date system; may need to add to table.
 # TODO: Check with existing elements and modify as needed?
 # TODO: Multiprocessing module. May need to take out the NaPTAN code checking
 # See https://stackoverflow.com/questions/31164731/python-chunking-csv-file-multiproccessing
 
+NPTG_URL = r'http://naptan.app.dft.gov.uk/datarequest/nptg.ashx'
+NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
 PATHS_REGION = {
     "region_code":          "n:RegionCode",
     "region_name":          "n:Name",
     "country":              "n:Country"
 }
-
 PATH_ADMIN_AREA = {
     "admin_area_code":      "n:AdministrativeAreaCode",
     "region_code":          "ancestor::n:Region/n:RegionCode",
@@ -34,13 +30,11 @@ PATH_ADMIN_AREA = {
     "area_name":            "n:Name",
     "area_short_name":      "n:ShortName"
 }
-
 PATHS_DISTRICT = {
     "nptg_district_code":   "n:NptgDistrictCode",
     "admin_area_code":      "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
     "district_name":        "n:Name"
 }
-
 PATHS_LOCALITY = {
     "nptg_locality_code":   "n:NptgLocalityCode",
     "locality_name":        "n:Descriptor/n:LocalityName",
@@ -51,7 +45,6 @@ PATHS_LOCALITY = {
     "longitude":            "n:Location/n:Translation/n:Longitude",
     "latitude":             "n:Location/n:Translation/n:Latitude"
 }
-
 PATHS_STOP_POINT = {
     "atco_code":            "s:AtcoCode",
     "naptan_code":          "s:NaptanCode",
@@ -74,7 +67,6 @@ PATHS_STOP_POINT = {
     "admin_area_code":      "s:AdministrativeAreaRef",
     "last_modified":        "@ModificationDateTime"
 }
-
 PATHS_STOP_AREA = {
     "stop_area_code":       "s:StopAreaCode",
     "stop_area_name":       "s:Name",
@@ -86,87 +78,39 @@ PATHS_STOP_AREA = {
     "latitude":             "s:Location/s:Translation/s:Latitude"
 }
 
-LIST_COLUMNS = [
-    'postcode_3',
-    'local_authority_code',
-    'easting',
-    'northing',
-    'longitude',
-    'latitude'
-]
 
-LIST_COUNTRIES = ['E92000001', 'S92000003', 'W92000004']
+def download_naptan_data(atco_codes=None):
+    """ Downloads NaPTAN data from the DfT. Comes in a zipped file so the
+        NaPTAN XML data are extracted first.
 
-
-def _progress_bar(iterable, **kwargs):
-    """ Returns click.progressbar with specific options. """
-    return click.progressbar(
-        iterable=iterable,
-        bar_template="%(label)-32s [%(bar)s] %(info)s",
-        show_pos=True,
-        width=50,
-        **kwargs
-    )
-
-
-class _XPath(object):
-    """ Helper class for XPath queries in a dataset, with the assumption that
-        all sub elements have the same namespace. Adds prefixes to each XPath
-        query automatically.
+        :param atco_codes: List of ATCO codes used to filter areas. If None,
+        all data in Great Britain (outwith IoM, Channel Islands and Northern
+        Ireland) are retrieved.
     """
-    # Ignores all words enclosed in quotes, spaces or prefixed with ':' or '@'.
-    re_prefix = re.compile(r"(?<![:\"'@\s])(\b\w+\b)(?![:\"'\s])")
+    params = {'format': 'xml'}
+    temp_path = os.path.join(ROOT_DIR, 'temp')
 
-    def __init__(self, element, prefix='a'):
-        self.element = element
-        self.prefix = prefix
-        namespace = self.element.xpath("namespace-uri(.)")
-        self.namespace = {self.prefix: namespace} if namespace else None
+    if atco_codes:
+        # Add tram/metro options
+        params['LA'] = '|'.join(str(i) for i in atco_codes + [940])
+        files = None
+    else:
+        files = ['Naptan.xml']
 
-    def __call__(self, path, element=None):
-        """ Calls XPath query for a path, adding prefixes if necessary """
-        new_path = self.re_prefix.sub(lambda s: self.prefix + ':' + s.group(), path)
-        element = self.element if element is None else element
-        return element.xpath(new_path, namespaces=self.namespace)
+    new = file_ops.download_zip(NAPTAN_URL, files, directory=temp_path, params=params)
+    return new
 
-    def text(self, path, element=None):
-        """ Calls a XPath query and returns the text contained within the first
-            element if it is the only matching result.
-        """
-        nodes = self(path, element)
-        if len(nodes) == 1:
-            return getattr(nodes[0], 'text', nodes[0])
-        elif len(nodes) > 1:
-            element = self.element if element is None else element
-            raise ValueError("Multiple elements matching XPath query %r for "
-                             "element %r." % (path, element))
-        else:
-            raise ValueError("No elements match XPath query %r for element "
-                             "%r." % (path, element))
 
-    def iter_text(self, path, elements):
-        """ Iterates over a list of elements with the same XPath query,
-            returning a list of text values.
-        """
-        return [self.text(path, element=node) for node in elements]
+def download_nptg_data():
+    """ Downloads NPTG data from the DfT. Comes in a zipped file so the
+        NPTG XML file is extracted first.
+    """
+    params = {'format': 'xml'}
+    temp_path = os.path.join(ROOT_DIR, 'temp')
+    files = ['NPTG.xml']
 
-    def dict_text(self, dict_paths, element=None):
-        """ Returns a dict of text values obtained from processing a dict with
-            XPath queries as values for a single element. If a query returns no
-            elements, the key is assigned value None.
-        """
-        result = {}
-        for arg, path in dict_paths.items():
-            try:
-                text = self.text(path, element)
-            except ValueError as err:
-                if "No elements" in str(err):
-                    text = None
-                else:
-                    raise ValueError from err
-            result[arg] = text
-
-        return result
+    new = file_ops.download_zip(NPTG_URL, files, directory=temp_path, params=params)
+    return new
 
 
 class _DBEntries(object):
@@ -183,7 +127,7 @@ class _DBEntries(object):
             Filter functions must have two arguments: list of existing objects
             and the current object being evaluated.
         """
-        with _progress_bar(list_elements, label=label) as iter_elements:
+        with progress_bar(list_elements, label=label) as iter_elements:
             for element in iter_elements:
                 obj = db_model(**self.xpath.dict_text(args, element=element))
                 if func:
@@ -210,7 +154,7 @@ def _get_nptg_data(nptg_file, atco_codes=None):
     """
     click.echo("Opening NPTG file %r..." % nptg_file)
     nptg_data = lxml.etree.parse(nptg_file)
-    nxp = _XPath(nptg_data, 'n')
+    nxp = XPath(nptg_data, 'n')
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
@@ -313,7 +257,7 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
     """
     click.echo("Opening NaPTAN file %r..." % naptan_file)
     naptan_data = lxml.etree.parse(naptan_file)
-    sxp = _XPath(naptan_data, 's')
+    sxp = XPath(naptan_data, 's')
 
     if list_area_codes:
         # add 147 for trams/metro
@@ -370,135 +314,8 @@ def commit_naptan_data(nptg_file, naptan_file, atco_codes=None):
     naptan.commit()
 
 
-class _IterChunk(object):
-    """ Generator for an iterator object returning lists at a time. """
-    def __init__(self, iterator, chunk_size):
-        self.iter = iterator
-        self.chunk = chunk_size
-
-    def __next__(self):
-        chunk = list(itertools.islice(self.iter, self.chunk))
-        if chunk:
-            return chunk
-        else:
-            raise StopIteration
-
-    def __iter__(self):
-        return self
-
-
-def download_nspl_data(atco_codes=None):
-    """ Downloads NSPL data from Camden's Socrata API. Requires an app token,
-        which can be obtained from Camden's open data site. For more info, see
-        https://dev.socrata.com/foundry/opendata.camden.gov.uk/ry6e-hbqy
-
-        :param atco_codes: List of ATCO codes used to filter areas. If None,
-        all postcodes in Great Britain (outwith IoM, Channel Islands and
-        Northern Ireland).
-    """
-    api_url = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
-
-    dict_la = {}
-    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
-    with open(la_file, 'r') as laf:
-        for local_auth in json.load(laf):
-            if not atco_codes or int(local_auth["atco_area_code"]) in atco_codes:
-                dict_la[local_auth.pop("la_code")] = local_auth
-
-    if current_app.config.get('CAMDEN_API_TOKEN') is None:
-        raise ValueError("'CAMDEN_API_TOKEN' not set in Flask config; a token "
-                         "is required to access the NSPL API.")
-    headers = {'Accept': 'application/json',
-               'X-App-Token': current_app.config.get('CAMDEN_API_TOKEN')}
-
-    columns = ', '.join(LIST_COLUMNS)
-    if atco_codes:
-        codes = ' OR '.join("local_authority_code=%s" % a for a in dict_la)
-    else:
-        codes = ' OR '.join("country_code=%s" % c for c in LIST_COUNTRIES)
-
-    query = {'$query': "SELECT %s WHERE %s" % (columns, codes)}
-    req = requests.get(api_url, headers=headers, params=query)
-
-    return req
-
-
-class _NSPLData(object):
-    """ Helper class for processing NSPL postcode data. """
-    def __init__(self, atco_codes, dict_local_auth):
-        self.atco_codes = atco_codes
-        self.local_auth = dict_local_auth
-
-    def __call__(self, rows):
-        list_objects = []
-        for row in rows:
-            if self.atco_codes and row["Local Authority Code"] not in self.local_auth:
-                # Filter by ATCO area code if it applies
-                continue
-            if row["Country Code"] not in ['E92000001', 'S92000003', 'W92000004']:
-                # Don't need NI, IoM or the Channel Islands
-                continue
-            if row["Positional Quality"] in [8, 9]:
-                # Low accuracy; just skip row
-                continue
-            local_authority = self.local_auth[row["Local Authority Code"]]
-            dict_psc = {
-                "postcode":             row["Postcode 3"],
-                "postcode_2":           ''.join(row["Postcode 3"].split()),
-                "local_authority_code": row["Local Authority Code"],
-                "admin_area_code":      local_authority["admin_area_code"],
-                "district_code":        local_authority["nptg_district_code"],
-                "easting":              row["Easting"],
-                "northing":             row["Northing"],
-                "longitude":            row["Longitude"],
-                "latitude":             row["Latitude"]
-            }
-            list_objects.append(models.Postcode(**dict_psc))
-
-        return list_objects
-
-
-def commit_nspl_data(nspl_file, atco_codes=None):
-    """ Converts NSPL data (postcodes) to database objects and commit them
-        to the working database.
-    """
-    dict_la = {}
-    la_file = os.path.join(ROOT_DIR, "nextbus/local_authorities.json")
-    with open(la_file, 'r') as laf:
-        for local_auth in json.load(laf):
-            if not atco_codes or int(local_auth["atco_area_code"]) in atco_codes:
-                dict_la[local_auth.pop("la_code")] = local_auth
-
-    click.echo("Opening file %r..." % nspl_file)
-    with open(nspl_file, 'r') as csv_file:
-        # Find number of rows in CSV file, then reset read position
-        len_lines = sum(1 for r in csv.reader(csv_file)) - 1
-        csv_file.seek(0)
-
-        chunk_size = 10000
-        cores = multiprocessing.cpu_count()
-        iter_postcodes = _IterChunk(csv.DictReader(csv_file), chunk_size * cores)
-
-        list_postcodes = []
-        filter_psc = _NSPLData(atco_codes, dict_la)
-        with _progress_bar(None, label="Parsing postcode data",
-                           length=len_lines) as prog, multiprocessing.Pool(cores) as pool:
-            for rows in iter_postcodes:
-                pieces = list(_IterChunk(iter(rows), chunk_size))
-                for piece in pool.map(filter_psc, pieces):
-                    list_postcodes.extend(piece)
-                prog.update(len(rows))
-
-    click.echo("Adding %d postcodes..." % len(list_postcodes))
-    db.session.add_all(list_postcodes)
-    click.echo("Committing changes to database...")
-    db.session.commit()
-
-
 if __name__ == "__main__":
     NAPTAN = os.path.join(ROOT_DIR, "temp/data/Naptan.xml")
     NPTG = os.path.join(ROOT_DIR, "temp/data/NPTG.xml")
-    NSPL = os.path.join(ROOT_DIR, "temp/data/nspl.csv")
     with current_app.app_context():
         commit_naptan_data(nptg_file=NPTG, naptan_file=NAPTAN)
-        commit_nspl_data(nspl_file=NSPL)

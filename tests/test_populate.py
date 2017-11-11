@@ -6,15 +6,16 @@ import tempfile
 import unittest
 import lxml.etree as et
 
-from nextbus.pop import _IterChunk, _XPath
+from nextbus.populate import IterChunk, XPath
 
 HOME_DIR = os.path.dirname(os.path.realpath(__file__))
 
+
 class XPathTests(unittest.TestCase):
-    """ Tests the _XPath helper class. """
+    """ Tests the XPath helper class. """
     def setUp(self):
         self.data = et.parse(os.path.join(HOME_DIR, "NaPTAN_example.xml"))
-        self.xp = _XPath(self.data, 'n')
+        self.xp = XPath(self.data, 'n')
 
     def tearDown(self):
         del self.data
@@ -98,11 +99,12 @@ class XPathTests(unittest.TestCase):
         expected = {"naptan_code": "37020362", "name": None}
         self.assertDictEqual(output, expected)
 
+
 class IterChunkTests(unittest.TestCase):
 
     def setUp(self):
         self.range = iter(range(500))
-        self.iter = _IterChunk(self.range, 100)
+        self.iter = IterChunk(self.range, 100)
 
     def tearDown(self):
         del self.range
@@ -120,5 +122,5 @@ class IterChunkTests(unittest.TestCase):
         self.assertListEqual(new_list, list(range(500)))
 
     def test_iter_larger(self):
-        chunks = _IterChunk(self.range, 600)
+        chunks = IterChunk(self.range, 600)
         self.assertListEqual(next(chunks), list(range(500)))

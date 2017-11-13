@@ -30,7 +30,7 @@ def download(url, file_name, directory='.', *args, **kwargs):
             if chunk:
                 out_file.write(chunk)
 
-    return full_path
+    return full_path, req.headers
 
 
 def download_zip(url, files=None, directory='.', *args, **kwargs):
@@ -45,7 +45,7 @@ def download_zip(url, files=None, directory='.', *args, **kwargs):
         :param kwargs: Keyword arguments for requests.get().
     """
     temp_file = 'TEMP_%d.zip' % int(datetime.datetime.now().timestamp())
-    temp_path = download(url, temp_file, directory, *args, **kwargs)
+    temp_path, headers = download(url, temp_file, directory, *args, **kwargs)
     dir_path = os.path.abspath('.') if directory == '.' else directory
 
     try:
@@ -62,7 +62,7 @@ def download_zip(url, files=None, directory='.', *args, **kwargs):
         z_file.close()
         os.remove(temp_path)
 
-    return list_paths
+    return list_paths, headers
 
 
 if __name__ == "__main__":

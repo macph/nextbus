@@ -78,26 +78,6 @@ class Locality(db.Model):
         return '<Locality(%r, %r)>' % (self.locality_code, self.locality_name)
 
 
-class Postcode(db.Model):
-    """ Postcodes with coordinates, derived from the NSPL data. """
-    __tablename__ = 'Postcodes'
-    postcode_regex = r"^([a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?\s*\d{1}[a-zA-Z]{2})$"
-
-    id = db.Column(db.Integer, primary_key=True)
-    postcode = db.Column(db.VARCHAR(8), index=True, unique=True)
-    postcode_2 = db.Column(db.VARCHAR(7), index=True, unique=True)
-    local_authority_code = db.Column(db.VARCHAR(9))
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('AdminAreas.admin_area_code'))
-    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('Districts.district_code'))
-    easting = db.Column(db.Integer)
-    northing = db.Column(db.Integer)
-    longitude = db.Column(db.Float)
-    latitude = db.Column(db.Float)
-
-    def __repr__(self):
-        return '<Postcode(%r)>' % self.postcode
-
-
 class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = 'StopPoints'
@@ -146,3 +126,34 @@ class StopArea(db.Model):
 
     def __repr__(self):
         return '<StopArea(%r, %r)>' % (self.stop_area_code, self.stop_area_name)
+
+
+class Postcode(db.Model):
+    """ Postcodes with coordinates, derived from the NSPL data. """
+    __tablename__ = 'Postcodes'
+    postcode_regex = r"^([a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?\s*\d{1}[a-zA-Z]{2})$"
+
+    id = db.Column(db.Integer, primary_key=True)
+    postcode = db.Column(db.VARCHAR(8), index=True, unique=True)
+    postcode_2 = db.Column(db.VARCHAR(7), index=True, unique=True)
+    local_authority_code = db.Column(db.VARCHAR(9))
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('AdminAreas.admin_area_code'))
+    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('Districts.district_code'))
+    easting = db.Column(db.Integer)
+    northing = db.Column(db.Integer)
+    longitude = db.Column(db.Float)
+    latitude = db.Column(db.Float)
+
+    def __repr__(self):
+        return '<Postcode(%r)>' % self.postcode
+
+
+class Meta(db.Model):
+    """ Metadata, such as last updated dates. """
+    __tablename__ = 'Meta'
+
+    id = db.Column(db.Integer, primary_key=True)
+    atco_areas = db.Column(db.Text)
+    naptan_last_modified = db.Column(db.DateTime)
+    nptg_last_modified = db.Column(db.DateTime)
+    nspl_last_modified = db.Column(db.DateTime)

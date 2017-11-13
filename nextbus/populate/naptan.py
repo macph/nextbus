@@ -99,7 +99,8 @@ def download_naptan_data(atco_codes=None):
     else:
         files = ['Naptan.xml']
 
-    new = file_ops.download_zip(NAPTAN_URL, files, directory=temp_path, params=params)
+    new, _ = file_ops.download_zip(NAPTAN_URL, files, directory=temp_path, params=params)
+
     return new
 
 
@@ -111,7 +112,8 @@ def download_nptg_data():
     temp_path = os.path.join(ROOT_DIR, 'temp')
     files = ['NPTG.xml']
 
-    new = file_ops.download_zip(NPTG_URL, files, directory=temp_path, params=params)
+    new, _ = file_ops.download_zip(NPTG_URL, files, directory=temp_path, params=params)
+    
     return new
 
 

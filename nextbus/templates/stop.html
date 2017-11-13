@@ -11,9 +11,9 @@
     <ul class="breadcrumbs" id="ulTrailing">
         <li>&middot;&middot;&middot;</li>
         {% if district is not none %}
-        <li><a href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a></li>
         {% endif %}
-        <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.nptg_locality_code) }}">{{locality.locality_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.locality_code) }}">{{locality.locality_name }}</a></li>
     </ul>
 </nav>
 {% endif %}

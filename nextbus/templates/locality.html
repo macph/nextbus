@@ -10,7 +10,7 @@
             <li><a href="{{ url_for('page.list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a></li>
             <li><a href="{{ url_for('page.list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a></li>
             {% if district is not none %}
-            <li><a href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a></li>
+            <li><a href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a></li>
             {% endif %}
             <li>{{ locality.locality_name }}</li>
         </ul>

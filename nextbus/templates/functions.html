@@ -65,7 +65,7 @@
 {% if list|length > 0 %}
 <div class="list-places">
     {% for district in list|sort(attribute='district_name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.nptg_district_code) }}">{{ district.district_name }}</a>
+    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a>
     {% endfor %}
 </div>
 {% else %}
@@ -77,7 +77,7 @@
 {% if list|length > 0 %}
 <div class="list-places">
     {% for locality in list|sort(attribute='locality_name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.nptg_locality_code) }}">{{ locality.locality_name }}</a>
+    <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.locality_code) }}">{{ locality.locality_name }}</a>
     {% endfor %}
 </div>
 {% else %}

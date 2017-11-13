@@ -6,6 +6,7 @@ import datetime
 import lxml.etree
 import click
 from flask import current_app
+from sqlalchemy.inspection import inspect
 
 from definitions import ROOT_DIR
 from nextbus import db, models
@@ -21,29 +22,31 @@ NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
 PATHS_REGION = {
     "region_code":          "n:RegionCode",
     "region_name":          "n:Name",
-    "country":              "n:Country"
+    "last_modified":        "@ModificationDateTime"
 }
 PATH_ADMIN_AREA = {
     "admin_area_code":      "n:AdministrativeAreaCode",
     "region_code":          "ancestor::n:Region/n:RegionCode",
     "atco_area_code":       "n:AtcoAreaCode",
     "area_name":            "n:Name",
-    "area_short_name":      "n:ShortName"
+    "last_modified":        "@ModificationDateTime"
 }
 PATHS_DISTRICT = {
-    "nptg_district_code":   "n:NptgDistrictCode",
+    "district_code":        "n:NptgDistrictCode",
     "admin_area_code":      "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
-    "district_name":        "n:Name"
+    "district_name":        "n:Name",
+    "last_modified":        "@ModificationDateTime"
 }
 PATHS_LOCALITY = {
-    "nptg_locality_code":   "n:NptgLocalityCode",
+    "locality_code":        "n:NptgLocalityCode",
     "locality_name":        "n:Descriptor/n:LocalityName",
     "admin_area_code":      "n:AdministrativeAreaRef",
-    "nptg_district_code":   "n:NptgDistrictRef",
+    "district_code":        "n:NptgDistrictRef",
     "easting":              "n:Location/n:Translation/n:Easting",
     "northing":             "n:Location/n:Translation/n:Northing",
     "longitude":            "n:Location/n:Translation/n:Longitude",
-    "latitude":             "n:Location/n:Translation/n:Latitude"
+    "latitude":             "n:Location/n:Translation/n:Latitude",
+    "last_modified":        "@ModificationDateTime"
 }
 PATHS_STOP_POINT = {
     "atco_code":            "s:AtcoCode",
@@ -54,9 +57,7 @@ PATHS_STOP_POINT = {
     "desc_street":          "s:Descriptor/s:Street",
     "desc_crossing":        "s:Descriptor/s:Crossing",
     "desc_indicator":       "s:Descriptor/s:Indicator",
-    "nptg_locality_code":   "s:Place/s:NptgLocalityRef",
-    "suburb":               "s:Place/s:Suburb",
-    "town":                 "s:Place/s:Town",
+    "locality_code":        "s:Place/s:NptgLocalityRef",
     "easting":              "s:Place/s:Location/s:Translation/s:Easting",
     "northing":             "s:Place/s:Location/s:Translation/s:Northing",
     "longitude":            "s:Place/s:Location/s:Translation/s:Longitude",
@@ -75,7 +76,8 @@ PATHS_STOP_AREA = {
     "easting":              "s:Location/s:Translation/s:Easting",
     "northing":             "s:Location/s:Translation/s:Northing",
     "longitude":            "s:Location/s:Translation/s:Longitude",
-    "latitude":             "s:Location/s:Translation/s:Latitude"
+    "latitude":             "s:Location/s:Translation/s:Latitude",
+    "last_modified":        "@ModificationDateTime"
 }
 
 
@@ -147,6 +149,15 @@ class _DBEntries(object):
         db.session.commit()
 
 
+def _add_nptg_date(_, nptg_object):
+    """ Helper function to convert datetime string to object. """
+    if nptg_object.last_modified is not None:
+        dt_new = datetime.datetime.strptime(nptg_object.last_modified, "%Y-%m-%dT%H:%M:%S")
+        nptg_object.last_modified = dt_new
+
+    return nptg_object
+
+
 def _get_nptg_data(nptg_file, atco_codes=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
@@ -213,7 +224,7 @@ class _NaPTANStops(object):
 
         if self.admin_codes:
             if (obj_point.admin_area_code not in self.admin_codes
-                    or obj_point.nptg_locality_code not in self.locality_codes):
+                    or obj_point.locality_code not in self.locality_codes):
                 return
         if obj_point.last_modified is not None:
             obj_point.last_modified = datetime.datetime.strptime(obj_point.last_modified,
@@ -289,10 +300,12 @@ def commit_naptan_data(nptg_file, naptan_file, atco_codes=None):
     """
     nxp, admin_areas, regions, districts, localities = _get_nptg_data(nptg_file, atco_codes)
     nptg = _DBEntries(nxp)
-    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions")
-    nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas")
-    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts")
-    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities")
+    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions", _add_nptg_date)
+    nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas",
+             _add_nptg_date)
+    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts", _add_nptg_date)
+    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities",
+             _add_nptg_date)
 
     if atco_codes:
         area_codes = set(nxp.iter_text("n:AdministrativeAreaCode", admin_areas))

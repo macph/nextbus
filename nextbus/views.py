@@ -80,7 +80,7 @@ def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
     """
-    area = models.AdminArea.query.get(area_code)
+    area = models.AdminArea.query.filter_by(admin_area_code=area_code).scalar()
     if area is not None:
         return render_template('area.html', area=area)
     else:
@@ -90,7 +90,7 @@ def list_in_area(area_code):
 @page.route('/list/district/<district_code>')
 def list_in_district(district_code):
     """ Shows list of localities in district. """
-    district = models.District.query.get(district_code)
+    district = models.District.query.filter_by(district_code=district_code).scalar()
     if district is not None:
         return render_template('district.html', district=district)
     else:
@@ -101,13 +101,13 @@ def list_in_district(district_code):
 @page.route('/list/locality/<locality_code>')
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
-    lty = models.Locality.query.get(locality_code)
+    lty = models.Locality.query.filter_by(locality_code=locality_code).scalar()
     if lty is None:
         str_lty = locality_code.upper()
         new_lty = (models.Locality.query
-                   .filter_by(nptg_locality_code=str_lty).scalar())
+                   .filter_by(locality_code=str_lty).scalar())
         if new_lty is not None:
-            return redirect('/list/locality/%s' % new_lty.nptg_locality_code,
+            return redirect('/list/locality/%s' % new_lty.locality_code,
                             code=301)
         else:
             raise EntityNotFound("Locality with code '%s' does not exist."
@@ -120,7 +120,7 @@ def list_in_locality(locality_code):
 def list_nr_postcode(postcode):
     """ Show stops within range of postcode. """
     str_psc = postcode.replace('+', ' ')
-    psc = models.Postcode.query.get(str_psc)
+    psc = models.Postcode.query.filter_by(postcode=str_psc).scalar()
     if psc is None:
         new_str = ''.join(str_psc.split()).upper()
         new_psc = models.Postcode.query.filter_by(postcode_2=new_str).scalar()
@@ -167,15 +167,14 @@ def stop_naptan(naptan_code):
         else:
             raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
                                  % naptan_code)
-    nxb = tapi.get_nextbus_times(s_pt.atco_code)
 
-    return render_template('stop.html', stop=s_pt, times=nxb)
+    return render_template('stop.html', stop=s_pt)
 
 
 @page.route('/stop/atco/<atco_code>')
 def stop_atco(atco_code):
     """ Shows stop with NaPTAN code. """
-    s_pt = models.StopPoint.query.get(atco_code)
+    s_pt = models.StopPoint.query.filter_by(atco_code=atco_code).scalar()
     if s_pt is None:
         s_pt2 = models.StopPoint.query.filter(models.StopPoint.atco_code
                                               .ilike(atco_code)).scalar()
@@ -184,20 +183,8 @@ def stop_atco(atco_code):
         else:
             raise EntityNotFound("Bus stop with ATCO code %r does not exist"
                                  % atco_code)
-    nxb = tapi.get_nextbus_times(s_pt.atco_code)
 
-    return render_template('stop.html', stop=s_pt, times=nxb)
-
-
-@page.route('/stop/get/<atco_code>')
-def stop_get_data(atco_code):
-    """ Request and retrieve bus times using GET requests. """
-    s_pt = models.StopPoint.query.get(atco_code)
-    if s_pt is None:
-        abort(404)
-    nxb = tapi.get_nextbus_times(s_pt.atco_code)
-
-    return jsonify(nxb)
+    return render_template('stop.html', stop=s_pt)
 
 
 @page.route('/stop/get', methods=['POST'])

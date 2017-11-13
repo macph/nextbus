@@ -93,7 +93,7 @@ class _NSPLData(object):
                 "postcode_2":           ''.join(row["Postcode 3"].split()),
                 "local_authority_code": row["Local Authority Code"],
                 "admin_area_code":      local_authority["admin_area_code"],
-                "district_code":        local_authority["nptg_district_code"],
+                "district_code":        local_authority["district_code"],
                 "easting":              row["Easting"],
                 "northing":             row["Northing"],
                 "longitude":            row["Longitude"],

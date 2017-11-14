@@ -146,14 +146,3 @@ class Postcode(db.Model):
 
     def __repr__(self):
         return '<Postcode(%r)>' % self.postcode
-
-
-class Meta(db.Model):
-    """ Metadata, such as last updated dates. """
-    __tablename__ = 'Meta'
-
-    id = db.Column(db.Integer, primary_key=True)
-    atco_areas = db.Column(db.Text)
-    naptan_last_modified = db.Column(db.DateTime)
-    nptg_last_modified = db.Column(db.DateTime)
-    nspl_last_modified = db.Column(db.DateTime)

@@ -121,7 +121,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             self.table.innerHTML = strTable;
             console.log(`Created table with ${self.data.services.length} services for stop '${self.atcoCode}'.`);
         } else {
-            self.hTime.innerHTML = `No buses expected at ${printDate(reqDate)} - `;
+            self.hTime.innerHTML = `No buses expected at ${self.data.local_time}`;
             self.table.innerHTML = '';
             console.log(`No services found for stop ${self.atcoCode}.`);
         }
@@ -155,22 +155,6 @@ var TRAM = "tram-white.svg";
 function resizeInd(className) {
     for (elt of document.getElementsByClassName(className)) {
         var ind = elt.innerHTML;
-        ind = ind.replace(/(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)/gi, "$2");
-        ind = ind.replace(/adjacent/gi, "adj");
-        ind = ind.replace(/after/gi, "aft");
-        ind = ind.replace(/before/gi, "pre");
-        ind = ind.replace(/([ENSW]+)[-\s]?bound/gi, ">$1");
-        ind = ind.replace(/Eastbound/gi, ">E");
-        ind = ind.replace(/Northbound/gi, ">N");
-        ind = ind.replace(/Southbound/gi, ">S");
-        ind = ind.replace(/Westbound/gi, ">W");
-        ind = ind.replace(/-&gt;([ENSW]+)/gi, ">$1");
-        ind = ind.replace(/near/gi, "nr");
-        ind = ind.replace(/opposite/gi, "opp");
-        ind = ind.replace(/outside/gi, "o/s");
-        ind = ind.replace(/(\w{6,})/, s => s.slice(0, 4) + '.');
-        ind = ind.replace(/(\w+.?) (\w+\.?) .*/, "$1 $2");
-        console.log("Converting indicator '" + elt.innerHTML + "' to '" + ind + "', length " + ind.length);
         if (/(Bay|Stan\.|Stand|Stop)/gi.test(ind) || ind.trim().length == 0) {
             fontSize = parseFloat(getComputedStyle(elt).fontSize);
             imgSize = Math.round(2.8 * fontSize);

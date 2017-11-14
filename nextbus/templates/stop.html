@@ -17,7 +17,7 @@
     </ul>
 </nav>
 {% endif %}
-<h1 class=head-stop><span class="head-stop-ind">{{ f.stop_indicator(stop) }}</span> <span class="head-stop-name">{{ f.stop_name(stop) }}</span></h1>
+<h1 class=head-stop><span class="head-stop-ind">{{ f.stop_short_indicator(stop) }}</span> <span class="head-stop-name">{{ f.stop_name(stop) }}</span></h1>
 {{ f.resize_indicator("head-stop-ind") }}
 <p>SMS code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
 <h2 id="hTime"></h2>

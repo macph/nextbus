@@ -2,7 +2,8 @@
 Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import os
-import datetime
+import re
+import dateutil.parser
 import lxml.etree
 import click
 from flask import current_app
@@ -113,7 +114,7 @@ def download_nptg_data():
     files = ['NPTG.xml']
 
     new = file_ops.download_zip(NPTG_URL, files, directory=temp_path, params=params)
-    
+
     return new
 
 
@@ -138,8 +139,11 @@ class _DBEntries(object):
                     try:
                         func(self.entries, obj)
                     except TypeError as err:
-                        raise TypeError("Filter function must receive two arguments: list of "
-                                        "existing objects and the current object.") from err
+                        if 'positional argument' in str(err):
+                            raise TypeError("Filter function must receive two arguments: list of "
+                                            "existing objects and the current object.") from err
+                        else:
+                            raise
                 else:
                     self.entries.append(obj)
 
@@ -151,13 +155,37 @@ class _DBEntries(object):
         db.session.commit()
 
 
-def _add_nptg_date(_, nptg_object):
-    """ Helper function to convert datetime string to object. """
-    if nptg_object.last_modified is not None:
-        dt_new = datetime.datetime.strptime(nptg_object.last_modified, "%Y-%m-%dT%H:%M:%S")
-        nptg_object.last_modified = dt_new
+def _replace_db_object(new_obj, existing):
+    """ Helper function for replacing an SQLAlchemy ORM object with another,
+        retaining the ID.
+    """
+    mapper = inspect(new_obj).mapper
+    new_values = {c.key: getattr(new_obj, c.key) for c in mapper.column_attrs if c.key != 'id'}
+    update_query = type(existing).filter_by(id=existing.id).update(new_values)
 
-    return nptg_object
+    return update_query
+
+
+class _NPTGPlaces(object):
+    """ Helper class for NPTG areas """
+    def __init__(self, db_model, index):
+        self.model = db_model
+        self.index = index
+        click.echo("Checking existing database entries...")
+        self.existing_places = {getattr(p, index): p for p in db_model.query.all()}
+
+    def __call__(self, list_objects, new_obj):
+        if new_obj.last_modified is not None:
+            new_obj.last_modified = dateutil.parser.parse(new_obj.last_modified)
+
+        existing = self.existing_places.get(getattr(new_obj, self.index))
+        if existing is not None:
+            if new_obj.last_modified is None or existing.last_modified < new_obj.last_modified:
+                _replace_db_object(new_obj, existing)
+            else:
+                return
+        else:
+            list_objects.append(new_obj)
 
 
 def _get_nptg_data(nptg_file, atco_codes=None):
@@ -209,59 +237,99 @@ class _NaPTANStops(object):
         ensuring only stop areas belonging to stop points within specified
         ATCO areas are filtered.
     """
+    indicator_regex = [
+        (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
+        (re.compile(r"adjacent", re.I), "adj"),
+        (re.compile(r"after", re.I), "aft"),
+        (re.compile(r"before", re.I), "pre"),
+        (re.compile(r"^nr$", re.I), "near"),
+        (re.compile(r"opposite", re.I), "opp"),
+        (re.compile(r"outside", re.I), "o/s"),
+        (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
+        (re.compile(r"->([ENSW]+)", re.I), r">\1"),
+        (re.compile(r"(East|North|South|West)[-\s]?bound", re.I),
+         lambda m: ">" + m.group(0)[0].upper()),
+        (re.compile(r"(\w{6,})", re.I), lambda m: m.group(0)[:4] + '.'),
+        (re.compile(r"(\w+.?) (\w+\.?) .*", re.I), r"\1 \2")
+    ]
+
     def __init__(self, list_admin_area_codes=None, list_locality_codes=None):
         self.naptan_codes = set([])
         self.area_codes = set([])
         self.admin_codes = list_admin_area_codes
         self.locality_codes = list_locality_codes
+        click.echo("Checking existing database entries for stops and areas...")
+        self.existing_points = {sp.naptan_code: sp for sp in models.StopPoint.query.all()}
+        self.existing_areas = {sa.stop_area_code: sa for sa in models.StopArea.query.all()}
 
-    def filter_points(self, list_objects, obj_point):
+    def filter_points(self, list_objects, point):
         """ Filters stop points. """
-        try:
-            if obj_point.naptan_code is None:
-                # Skip over if stop point does not have a NaPTAN code
-                return
-        except AttributeError as error:
-            raise AttributeError("StopPoint objects accepted only.") from error
-
+        if point.naptan_code is None:
+            # Skip over if stop point does not have a NaPTAN code
+            return
         if self.admin_codes:
-            if (obj_point.admin_area_code not in self.admin_codes
-                    or obj_point.locality_code not in self.locality_codes):
+            if (point.admin_area_code not in self.admin_codes
+                    or point.locality_code not in self.locality_codes):
                 return
-        if obj_point.last_modified is not None:
-            obj_point.last_modified = datetime.datetime.strptime(obj_point.last_modified,
-                                                                 "%Y-%m-%dT%H:%M:%S")
-        if obj_point.naptan_code in self.naptan_codes:
-            # Duplicate found; find it
+
+        # Create short indicator for display
+        if point.desc_indicator is not None:
+            short_indicator = point.desc_indicator
+            for regex, repl in self.indicator_regex:
+                short_indicator = regex.sub(repl, short_indicator)
+            point.desc_short_ind = short_indicator
+        else:
+            point.desc_short_ind = None
+        # '/' is not allowed in NaPTAN strings; was simply removed
+        if point.desc_common is not None:
+            point.desc_common = point.desc_common.replace('  ', ' / ')
+        if point.desc_short is not None:
+            point.desc_short = point.desc_short.replace('  ', ' / ')
+
+        if point.last_modified is not None:
+            point.last_modified = dateutil.parser.parse(point.last_modified)
+
+        existing = self.existing_points.get(point.naptan_code)
+        if point.naptan_code in self.naptan_codes:
             for obj in list_objects:
-                if getattr(obj, 'naptan_code') == obj_point.naptan_code:
-                    obj_duplicate = obj
+                if getattr(obj, 'naptan_code') == point.naptan_code:
+                    duplicate = obj
                     break
-            # Check dates; keep the newest
-            if obj_duplicate.last_modified > obj_point.last_modified:
+            if (point.last_modified is not None and
+                    duplicate.last_modified >= point.last_modified):
                 return
             else:
-                list_objects.remove(obj_duplicate)
+                list_objects.remove(duplicate)
+                list_objects.append(point)
+        elif existing is not None:
+            if (point.last_modified is not None and
+                    existing.last_modified >= point.last_modified):
+                return
+            else:
+                _replace_db_object(point, existing)
         else:
-            self.naptan_codes.add(obj_point.naptan_code)
-        # '/' is not allowed in NaPTAN strings; was simply removed
-        if obj_point.desc_common is not None:
-            obj_point.desc_common = obj_point.desc_common.replace('  ', ' / ')
-        if obj_point.desc_short is not None:
-            obj_point.desc_short = obj_point.desc_short.replace('  ', ' / ')
+            self.naptan_codes.add(point.naptan_code)
+            list_objects.append(point)
+
         # Add stop area code to set for filtering
         if self.admin_codes:
-            self.area_codes.add(obj_point.stop_area_code)
+            self.area_codes.add(point.stop_area_code)
 
-        list_objects.append(obj_point)
-
-    def filter_areas(self, list_objects, obj_area):
+    def filter_areas(self, list_objects, area):
         """ Filters stop areas. """
-        try:
-            if not self.admin_codes or obj_area.stop_area_code in self.area_codes:
-                list_objects.append(obj_area)
-        except AttributeError as error:
-            raise AttributeError("StopArea objects accepted only.") from error
+        if self.admin_codes and area.stop_area_code not in self.area_codes:
+            return
+        area.last_modified = dateutil.parser.parse(area.last_modified)
+
+        existing = self.existing_areas.get(area.stop_area_code)
+        if existing is not None:
+            if (area.last_modified is not None and
+                    existing.last_modified >= area.last_modified):
+                return
+            else:
+                _replace_db_object(area, existing)
+        else:
+            list_objects.append(area)
 
 
 def _get_naptan_data(naptan_file, list_area_codes=None):
@@ -295,19 +363,28 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
     return sxp, stop_points, stop_areas
 
 
-def commit_naptan_data(nptg_file, naptan_file, atco_codes=None):
+def commit_naptan_data(nptg_file, naptan_file):
     """ Convert NPTG data (regions admin areas, districts and localities) and
         NaPTAN data (stop points and areas) to database objects and commit them
         to the application database.
     """
+    get_atco_codes = current_app.config.get('ATCO_CODES')
+    if get_atco_codes != 'all' and not isinstance(get_atco_codes, list):
+        raise ValueError("ATCO codes must be set to either 'all' or a list of "
+                         "codes to filter.")
+    else:
+        atco_codes = None if get_atco_codes == 'all' else get_atco_codes
+
     nxp, admin_areas, regions, districts, localities = _get_nptg_data(nptg_file, atco_codes)
     nptg = _DBEntries(nxp)
-    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions", _add_nptg_date)
+    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions",
+             _NPTGPlaces(models.Region, 'region_code'))
     nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas",
-             _add_nptg_date)
-    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts", _add_nptg_date)
+             _NPTGPlaces(models.AdminArea, 'admin_area_code'))
+    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts",
+             _NPTGPlaces(models.District, 'district_code'))
     nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities",
-             _add_nptg_date)
+             _NPTGPlaces(models.Locality, 'locality_code'))
 
     if atco_codes:
         area_codes = set(nxp.iter_text("n:AdministrativeAreaCode", admin_areas))

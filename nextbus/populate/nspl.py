@@ -3,8 +3,6 @@ Populate postcode data from NSPL.
 """
 import os
 import json
-import datetime
-import dateutil.parser
 import click
 from flask import current_app
 
@@ -63,16 +61,10 @@ def download_nspl_data(atco_codes=None, token=None):
         '$where': '(%s) AND (%s)' % (' OR '.join(codes), 'positional_quality < 8'),
         '$limit': 2000000
     }
-    new, info = file_ops.download(NSPL_API, "nspl.json", os.path.join(ROOT_DIR, "temp"),
-                                  headers=headers, params=params)
-    str_last_modified = info.get('Last-Modified')
-    if str_last_modified is not None:
-        tzi = {'GMT': datetime.timezone.utc}
-        dt_modified = dateutil.parser.parse(str_last_modified, tzinfos=tzi)
-    else:
-        dt_modified = None
+    new = file_ops.download(NSPL_API, "nspl.json", os.path.join(ROOT_DIR, "temp"),
+                            headers=headers, params=params)
 
-    return new, dt_modified
+    return new
 
 
 class _NSPLData(object):

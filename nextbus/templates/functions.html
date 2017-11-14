@@ -6,6 +6,10 @@
 {{ stop.desc_indicator if stop.desc_indicator is not none }}
 {%- endmacro %}
 
+{% macro stop_short_indicator(stop) -%}
+{{ stop.desc_short_ind if stop.desc_short_ind is not none }}
+{%- endmacro %}
+
 {% macro stop_full_name(stop) -%}
 {{ stop_name(stop) }}{{ " (%s)"|format(stop.desc_indicator) if stop.desc_indicator is not none }}
 {%- endmacro %}
@@ -21,7 +25,7 @@
 <div class="list-stops-dist">
     {% for stop in list %}
     <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop-dist>
-        <div class="item-stop-ind">{{ stop_indicator(stop) }}</div>
+        <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
         <div class="item-stop-name">{{ stop_name(stop) }}</div>
     </a>
     {% endfor %}
@@ -37,7 +41,7 @@
 <div class="list-stops-dist">
     {% for stop, distance in list %}
     <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop-dist>
-        <div class="item-stop-ind">{{ stop_indicator(stop) }}</div>
+        <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
         <div class="item-stop-name">{{ stop_name(stop) }}</div>
         <div class="item-stop-dist">{{ '%.0f m'|format(distance) }}</div>
     </a>

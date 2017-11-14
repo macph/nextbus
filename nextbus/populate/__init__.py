@@ -1,10 +1,12 @@
 """
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
+import os
 import itertools
 import json
 import re
 import click
+from definitions import ROOT_DIR
 from nextbus import db, models
 
 
@@ -96,36 +98,54 @@ class IterChunk(object):
         return self
 
 
-def modify_data(json_file_name='data_modifications.json'):
-    """ Modifies data after populating. Reads a JSON file as a list of dicts
-        with keys {model, id, attr, old, new}, and modifies
-        each entry. Checks each primary key, not old value, so data that
-        has already been updated will not be touched.
+def modify_data(file_name=None):
+    """ Modifies data after populating. Reads a JSON file with 'modify' and
+        'delete' keys, each a list of entries, and modifies each entry.
     """
-    with open(json_file_name, 'r') as json_file:
-        ls_modify = json.load(json_file)
+    m, d = 0, 0
+    if file_name is None:
+        path = os.path.join(ROOT_DIR, 'nextbus/populate/modifications.json')
+    else:
+        path = file_name
+    with open(path, 'r') as json_file:
+        data = json.load(json_file)
 
-    count = 0
-    for mod in ls_modify:
+    click.echo("Making modifications...")
+    for entry in data.get('modify', []):
         try:
-            model = getattr(models, mod['model'], None)
+            model = getattr(models, entry['model'], None)
             if model is None:
                 raise ValueError("Model name %r does not exist. Use the "
                                  "Python class name, not the DB table name."
-                                 % mod['model'])
-            entry = model.query.get(mod['id'])
-            if entry is None:
-                raise ValueError("Entry with id %r does not exist for model "
-                                 "%r" % (mod['model'], mod['id']))
-            col_value = getattr(entry, mod['column'], None)
-            if col_value is None:
-                raise ValueError("Entry %r has no column %r."
-                                 % (mod['model'], mod['column']))
-            if col_value == mod['old_value']:
-                col_value = mod['new_value']
-                count += 1
+                                 % entry['model'])
+            old_values = {entry['attr']: entry['old']}
+            new_values = {entry['attr']: entry['new']}
+            entry = model.query.filter_by(**old_values).update(new_values)
+            if entry > 0:
+                m += 1
         except KeyError as err:
             raise ValueError("Each modification entry must be a dict with "
-                             "keys {model, id, attr, old, new}.") from err
-    if count > 0:
-        db.session.commit()
+                             "keys {model, attr, old, new}.") from err
+
+    for entry in data.get('delete', []):
+        try:
+            model = getattr(models, entry['model'], None)
+            if model is None:
+                raise ValueError("Model name %r does not exist. Use the "
+                                 "Python class name, not the DB table name."
+                                 % entry['model'])
+            values = {entry['attr']: entry['value']}
+            entry = model.query.filter_by(**values).delete()
+            if entry > 0:
+                d += 1
+        except KeyError as err:
+            raise ValueError("Each delete entry must be a dict with "
+                             "keys {model, attr, value}.") from err
+
+    if m + d > 0:
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+    click.echo("%s record%s modified and %s record%s deleted." %
+               (m, '' if m == 1 else 's', d, '' if d == 1 else 's'))

@@ -133,6 +133,12 @@ def commit_nspl_data(nspl_file=None):
     except:
         db.session.rollback()
         raise
+    
+    if nspl_file is None:
+        click.echo("NSPL population done. The file 'nspl.json' is saved in the Temp "
+                   "directory.")
+    else:
+        click.echo("NSPL population done.")
 
 
 if __name__ == "__main__":

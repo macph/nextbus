@@ -2,24 +2,23 @@
 {% extends "base.html" %}
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
 {% block content %}
-{% set locality = stop.locality %}
-{% set district = locality.district if locality.district is not none else none %}
-{% set region = stop.admin_area.region %}
-{% set stop_area = stop.stop_area %}
-{% if locality is not none %}
+{% set district = stop.locality.district|default(none) %}
+{% if stop.locality is not none %}
 <nav>
     <ul class="breadcrumbs" id="ulTrailing">
         <li>&middot;&middot;&middot;</li>
         {% if district is not none %}
         <li><a href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a></li>
+        {% else %}
+        <li><a href="{{ url_for('page.list_in_area', area_code=stop.admin_area.admin_area_code) }}">{{ stop.admin_area.area_name }}</a></li>
         {% endif %}
-        <li><a href="{{ url_for('page.list_in_locality', locality_code=locality.locality_code) }}">{{locality.locality_name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.locality_code) }}">{{stop.locality.locality_name }}</a></li>
     </ul>
 </nav>
 {% endif %}
 <h1 class=head-stop><span class="head-stop-ind">{{ f.stop_short_indicator(stop) }}</span> <span class="head-stop-name">{{ f.stop_name(stop) }}</span></h1>
 {{ f.resize_indicator("head-stop-ind") }}
-<p>SMS code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
+<p><strong>{{ stop.desc_street }}</strong>; SMS code <strong>{{ stop.naptan_code if stop.naptan_code is not none else 'N/A' }}</strong>, ATCO code <strong>{{ stop.atco_code }}</strong></p>
 <h2 id="hTime"></h2>
 <p id="countdown"></p>
 <div id="services"><p>Retrieving live data...</p></div>
@@ -34,8 +33,8 @@
     )
     ld.initialise();
 </script>
-{% if stop_area is not none %}
+{% if stop.stop_area is not none %}
 <h2>Other stops nearby</h2>
-{{ f.print_stops(stop_area.stop_points|reject('equalto', stop)|list, count=false) }}
+{{ f.print_stops(stop.stop_area.stop_points|reject('equalto', stop)|list, count=false) }}
 {% endif %}
 {% endblock %}

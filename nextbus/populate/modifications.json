@@ -1,9 +1,40 @@
-[
-    {
-        "model": "District",
-        "id": "308",
-        "attr": "district_name",
-        "old": "Westminster City of",
-        "new": "City of Westminster"
-    }
-]
+{
+    "modify": [
+        {
+            "model": "Region",
+            "attr": "region_name",
+            "old": "London",
+            "new": "Greater London"
+        },
+        {
+            "model": "AdminArea",
+            "attr": "area_name",
+            "old": "Greater London",
+            "new": "London"
+        },
+        {
+            "model": "District",
+            "attr": "district_name",
+            "old": "Westminster City of",
+            "new": "City of Westminster"
+        },
+        {
+            "model": "AdminArea",
+            "attr": "area_name",
+            "old": "Durham",
+            "new": "County Durham"
+        }
+    ],
+    "delete": [
+        {
+            "model": "District",
+            "attr": "admin_area_code",
+            "value": "078"
+        },
+        {
+            "model": "District",
+            "attr": "admin_area_code",
+            "value": "094"
+        }
+    ]
+}

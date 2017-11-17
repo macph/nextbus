@@ -22,6 +22,7 @@ a:visited {
 a:hover {
     text-decoration: underline;
     text-decoration-skip: ink;
+    -webkit-text-decoration-skip: skip;
 }
 
 input {
@@ -241,14 +242,19 @@ input.form-submit:focus {
 
 /* Stop list style */
 
-div.list-stops-dist {
+div.list-stops {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-a.row-stop-dist {
+div.list-stops-dist {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+a.row-stop {
     height: 40px;
     width: 100%;
     display: flex;
@@ -263,15 +269,15 @@ a.row-stop-dist {
     color: inherit;
 }
 
-a.row-stop-dist:hover {
+a.row-stop:hover {
     background: gainsboro;
 }
 
-a.row-stop-dist:last-of-type {
+/* a.row-stop:last-of-type {
     border-width: 1px 0 1px 0;
-}
+} */
 
-a.row-stop-dist > div {
+a.row-stop > div {
     display: flex;
     justify-content: center;
     flex-direction: column;

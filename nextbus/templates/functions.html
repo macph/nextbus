@@ -1,5 +1,5 @@
 {% macro stop_name(stop) -%}
-{{ stop.desc_common if stop.desc_short is none else stop.desc_short }}
+{{ stop.desc_common if stop.desc_common is not none else stop.desc_short }}
 {%- endmacro %}
 
 {% macro stop_indicator(stop) -%}
@@ -22,9 +22,9 @@
 
 {% macro print_stops(list, count=true) -%}
 {% if list|length > 0 %}
-<div class="list-stops-dist">
+<div class="list-stops">
     {% for stop in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop-dist>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop>
         <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
         <div class="item-stop-name">{{ stop_name(stop) }}</div>
     </a>
@@ -40,7 +40,7 @@
 {% if list|length > 0 %}
 <div class="list-stops-dist">
     {% for stop, distance in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop-dist>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop>
         <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
         <div class="item-stop-name">{{ stop_name(stop) }}</div>
         <div class="item-stop-dist">{{ '%.0f m'|format(distance) }}</div>

@@ -242,6 +242,30 @@ class _NaPTANStops(object):
         self.admin_codes = list_admin_area_codes
         self.locality_codes = list_locality_codes
 
+    def _replace_ind(self, ind_text):
+        """ Shortens indicator text to fit inside sign. """
+        if ind_text is not None:
+            short_indicator = ind_text
+            for regex, repl in self.indicator_regex:
+                short_indicator = regex.sub(repl, short_indicator)
+        else:
+            short_indicator = None
+
+        return short_indicator
+
+    @staticmethod
+    def _capitalise(string):
+        """ Capitalises every word in a string, include these enclosed withi
+            brackets and excluding apostrophes.
+        """
+        list_words = string.lower().split()
+        for w, word in enumerate(list_words):
+            for c, char in enumerate(word):
+                if char.isalpha():
+                    list_words[w] = word[:c] + char.upper() + word[c+1:]
+                    break
+        return ' '.join(list_words)
+
     def filter_points(self, list_objects, point):
         """ Filters stop points. """
         if point.naptan_code is None:
@@ -253,30 +277,22 @@ class _NaPTANStops(object):
                 return
 
         # Create short indicator for display
-        if point.desc_indicator is not None:
-            short_indicator = point.desc_indicator
-            for regex, repl in self.indicator_regex:
-                short_indicator = regex.sub(repl, short_indicator)
-            point.desc_short_ind = short_indicator
-        else:
-            point.desc_short_ind = None
+        point.desc_short_ind = self._replace_ind(point.desc_indicator)
         # '/' is not allowed in NaPTAN strings; was simply removed
         if point.desc_common is not None:
             point.desc_common = point.desc_common.replace('  ', ' / ')
         if point.desc_short is not None:
             point.desc_short = point.desc_short.replace('  ', ' / ')
-        if point.desc_street is not None:
-            if self.regex_no_word.match(point.desc_street):
-                point.desc_street = None
-            else:
-                # Capitalize words properly
-                list_w = point.desc_street.lower().split()
-                for i, word in enumerate(list_w):
-                    for j, char in enumerate(word):
-                        if char.isalpha():
-                            list_w[i] = word[:j] + char.upper() + word[j+1:]
-                            break
-                point.desc_street = ' '.join(list_w)
+        # Replace non-word values (eg '---') with None for descriptors
+        for desc in ['desc_street', 'desc_crossing', 'desc_landmark']:
+            point_desc = getattr(point, desc)
+            if point_desc is not None:
+                if self.regex_no_word.match(point_desc) or point_desc.lower() == 'none':
+                    setattr(point, desc, None)
+                elif not any(i.islower() for i in point_desc):
+                    # Capitalise descriptors that were in all capitals
+                    setattr(point, desc, self._capitalise(point_desc))
+
         if point.last_modified is not None:
             point.last_modified = dateutil.parser.parse(point.last_modified)
 

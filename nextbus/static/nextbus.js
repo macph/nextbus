@@ -78,12 +78,13 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         request.open('POST', self.postURL, true);
         request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
         request.onreadystatechange = function() {
-            if(request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+            if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
                 console.log(`Request for stop '${self.atcoCode}' successful`);
                 self.data = JSON.parse(request.responseText)
                 self.filter.services = self.getAllServices();
                 self.printData(self.data)
             }
+            // Add responses for errors (eg 400 and 500).
         }
         request.send(JSON.stringify({code: self.atcoCode}));
     }
@@ -133,10 +134,9 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             var time = INTERVAL;
             window.setInterval(function() {
                 if (--time > 0) {
-                    let s = (time != 1) ? 's' : ''
-                    self.cd.innerHTML = `refreshing in ${time} second${s}...`
+                    self.cd.innerHTML = `${time}s`
                 } else {
-                    self.cd.innerHTML = 'refreshing now...';
+                    self.cd.innerHTML = 'now';
                 }
                 if (time <= 0) {
                     self.getData();

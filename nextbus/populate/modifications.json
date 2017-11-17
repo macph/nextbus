@@ -35,6 +35,11 @@
             "model": "District",
             "attr": "admin_area_code",
             "value": "094"
+        },
+        {
+            "model": "District",
+            "attr": "admin_area_code",
+            "value": "097"
         }
     ]
 }

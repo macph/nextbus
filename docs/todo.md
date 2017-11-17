@@ -21,15 +21,25 @@
 set up favourites or such?
 - Get 2 database - static for all data such as postcodes and stops, and
 users/dynamic for users, eg tracking and cookies.
-- Refine templates further such that the list of stops for localities,
-postcodes and locations all come from the same template, with a list of stop
-points as an object. Same goes for live times for ATCO and NaPTAN codes.
 - Set up caching functions to minimise generation, especially with more static
 webpages (eg locality navigation)
-- Add ability to request (or refuse) live NextBuses data; would be good idea to
-whitelist admin areas such that trams and specific areas will only get
-timetabled data  (and a warning that such info is not live).
-    - Do this by adding 'live_data' field to Admin areas.
 - Consider changing DB tables such that:
     - Harmonise names (mix of short and common names) - makes it easier to sort.
-    - Remove districts from the NE; they do not work for some reason. Also the SW?
+    - Add fields for colour - background and text/logo. See table.
+    - Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)
+- Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc
+- Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.
+- Change titling such that we have indicator & common name with street and landmark as subtitles. Some places will look weird, especially with city centre stops in South Yorkshire, but it should look better for most areas.
+
+### Admin area colours
+| ATCO code | Area code | Area name  | Stop colour   | Text colour   |
+| --------- | --------- | ---------- | ------------- | ------------- |
+| 180       | 083       | Manchester | Dark grey     |               |
+| 259       | 003       | Blackpool  | Grey          | Bright yellow |
+| 280       | 090       | Merseyside | Bright yellow | Grey          |
+| 339       | 039       | Nottingham | Turquoise     |               |
+| 450       | 107       | West Yorks | Blue          |               |
+| 490       | 082       | London     | TfL red       |               |
+| 571       | 011       | Cardiff    | Dark green    |               |
+| 609       | 127       | Glasgow    | Orange        |               |
+| 620       | 124       | Edinburgh  | Maroon        |               |

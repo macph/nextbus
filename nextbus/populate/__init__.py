@@ -102,7 +102,7 @@ def modify_data(file_name=None):
     """ Modifies data after populating. Reads a JSON file with 'modify' and
         'delete' keys, each a list of entries, and modifies each entry.
     """
-    m, d = 0, 0
+    count_m, count_d = 0, 0
     if file_name is None:
         path = os.path.join(ROOT_DIR, 'nextbus/populate/modifications.json')
     else:
@@ -122,7 +122,7 @@ def modify_data(file_name=None):
             new_values = {entry['attr']: entry['new']}
             entry = model.query.filter_by(**old_values).update(new_values)
             if entry > 0:
-                m += 1
+                count_m += 1
         except KeyError as err:
             raise ValueError("Each modification entry must be a dict with "
                              "keys {model, attr, old, new}.") from err
@@ -137,15 +137,16 @@ def modify_data(file_name=None):
             values = {entry['attr']: entry['value']}
             entry = model.query.filter_by(**values).delete()
             if entry > 0:
-                d += 1
+                count_d += 1
         except KeyError as err:
             raise ValueError("Each delete entry must be a dict with "
                              "keys {model, attr, value}.") from err
 
-    if m + d > 0:
+    if count_m + count_d > 0:
         try:
             db.session.commit()
         except:
             db.session.rollback()
     click.echo("%s record%s modified and %s record%s deleted." %
-               (m, '' if m == 1 else 's', d, '' if d == 1 else 's'))
+               (count_m, '' if count_m == 1 else 's',
+                count_d, '' if count_d == 1 else 's'))

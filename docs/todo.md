@@ -27,9 +27,14 @@ webpages (eg locality navigation)
     - Harmonise names (mix of short and common names) - makes it easier to sort.
     - Add fields for colour - background and text/logo. See table.
     - Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)
-- Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc
+- Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc. This would allow the bus/tram icons to be of different colours without having to use JS to modify the SVG colours.
 - Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.
+    - Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.
 - Change titling such that we have indicator & common name with street and landmark as subtitles. Some places will look weird, especially with city centre stops in South Yorkshire, but it should look better for most areas.
+- Add a stop area page with either:
+    - list of stops within area
+    - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
+    - The TLNDS would be really useful in getting list of services for each stop.
 
 ### Admin area colours
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |

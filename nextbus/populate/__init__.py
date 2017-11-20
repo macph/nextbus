@@ -97,6 +97,18 @@ class IterChunk(object):
     def __iter__(self):
         return self
 
+def capitalise(string):
+    """ Capitalises every word in a string, include these enclosed withi
+        brackets and excluding apostrophes.
+    """
+    list_words = string.lower().split()
+    for w, word in enumerate(list_words):
+        for c, char in enumerate(word):
+            if char.isalpha():
+                list_words[w] = word[:c] + char.upper() + word[c+1:]
+                break
+    return ' '.join(list_words)
+
 
 def modify_data(file_name=None):
     """ Modifies data after populating. Reads a JSON file with 'modify' and

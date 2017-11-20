@@ -10,12 +10,8 @@ from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import file_ops, progress_bar, XPath
+from nextbus.populate import capitalise, file_ops, progress_bar, XPath
 
-# TODO: Implement some sort of date system; may need to add to table.
-# TODO: Check with existing elements and modify as needed?
-# TODO: Multiprocessing module. May need to take out the NaPTAN code checking
-# See https://stackoverflow.com/questions/31164731/python-chunking-csv-file-multiproccessing
 
 NPTG_URL = r'http://naptan.app.dft.gov.uk/datarequest/nptg.ashx'
 NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
@@ -253,19 +249,6 @@ class _NaPTANStops(object):
 
         return short_indicator
 
-    @staticmethod
-    def _capitalise(string):
-        """ Capitalises every word in a string, include these enclosed withi
-            brackets and excluding apostrophes.
-        """
-        list_words = string.lower().split()
-        for w, word in enumerate(list_words):
-            for c, char in enumerate(word):
-                if char.isalpha():
-                    list_words[w] = word[:c] + char.upper() + word[c+1:]
-                    break
-        return ' '.join(list_words)
-
     def filter_points(self, list_objects, point):
         """ Filters stop points. """
         if point.naptan_code is None:
@@ -291,7 +274,7 @@ class _NaPTANStops(object):
                     setattr(point, desc, None)
                 elif not any(i.islower() for i in point_desc):
                     # Capitalise descriptors that were in all capitals
-                    setattr(point, desc, self._capitalise(point_desc))
+                    setattr(point, desc, capitalise(point_desc))
 
         if point.last_modified is not None:
             point.last_modified = dateutil.parser.parse(point.last_modified)

@@ -16,5 +16,5 @@
         </ul>
     </nav>
     <h1>Bus/tram stops in {{ locality.locality_name }}{{ ', %s'|format(district.district_name) if district is not none }}</h1>
-    {{ f.print_stops(locality.stop_points) }}
+    {{ f.print_stops(list_stops) }}
 {% endblock %}

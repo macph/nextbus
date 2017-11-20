@@ -12,5 +12,8 @@
         </ul>
     </nav>
     <h1>Localities in {{ district.district_name }}</h1>
-    {{ f.print_localities(district.localities) }}
+    {% for group in localities|dictsort %}
+    <h2>{{ group[0] }}</h2>
+    {{ f.print_localities(group[1]) }}
+    {% endfor %}
 {% endblock %}

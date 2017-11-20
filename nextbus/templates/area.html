@@ -10,10 +10,13 @@
         </ul>
     </nav>
     {% if not area.districts %}
-        <h1>Localities in {{ area.area_name }}</h1>
-        {{ f.print_localities(area.localities) }}
+    <h1>Localities in {{ area.area_name }}</h1>
+    {% for group in localities|dictsort %}
+    <h2>{{ group[0] }}</h2>
+    {{ f.print_localities(group[1]) }}
+    {% endfor %}
     {% else %}
-        <h1>Districts in {{ area.area_name }}</h1>
-        {{ f.print_districts(area.districts) }}
+    <h1>Districts in {{ area.area_name }}</h1>
+    {{ f.print_districts(area.districts) }}
     {% endif %}
 {% endblock %}

@@ -43,7 +43,7 @@
     ld.initialise();
 </script>
 {% if stop.stop_area is not none and stop.stop_area.stop_points|length %}
-<h2>Other stops nearby</h2>
+<h2>Other stops at {{ stop.stop_area.stop_area_name }}</h2>
 {{ f.print_stops(stop.stop_area.stop_points|reject('equalto', stop)|list, count=false) }}
 {% endif %}
 {% endblock %}

@@ -15,7 +15,7 @@ def _stop_point_exists(form, field):
                               "or 8 characters elsewhere.")
     # Add query object to FlaskForm instance for use by view
     form.query = StopPoint.query.filter(StopPoint.naptan_code
-                                        .ilike(field.data)).scalar()
+                                        .ilike(field.data)).one_or_none()
     if form.query is None:
         raise ValidationError(("Bus/tram stop with NaPTAN code %r does not "
                                "exist.") % field.data)
@@ -28,7 +28,7 @@ def _postcode_exists(form, field):
         raise ValidationError("Postcodes should be between 6 and 8 letters "
                               "long.")
     # Add query object to FlaskForm instance for use by view
-    form.query = Postcode.query.filter_by(postcode_2=new_postcode).scalar()
+    form.query = Postcode.query.filter_by(postcode_2=new_postcode).one_or_none()
     if form.query is None:
         raise ValidationError("Postcode %r does not exist." % field.data)
 

@@ -80,50 +80,80 @@ def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
     """
-    area = models.AdminArea.query.filter_by(admin_area_code=area_code).scalar()
-    if area is not None:
-        return render_template('area.html', area=area)
-    else:
+    area = models.AdminArea.query.filter_by(admin_area_code=area_code).one_or_none()
+    if area is None:
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
+
+    list_local = area.localities
+    if area.districts:
+        dict_local = None
+    elif len(list_local) < 72:
+        dict_local = {'A-Z': list_local}
+    else:
+        dict_local = {}
+        for local in area.localities:
+            letter = local.locality_name[0].upper()
+            if letter in dict_local:
+                dict_local[letter].append(local)
+            else:
+                dict_local[letter] = [local]
+
+    return render_template('area.html', area=area, localities=dict_local)
 
 
 @page.route('/list/district/<district_code>')
 def list_in_district(district_code):
     """ Shows list of localities in district. """
-    district = models.District.query.filter_by(district_code=district_code).scalar()
-    if district is not None:
-        return render_template('district.html', district=district)
+    district = models.District.query.filter_by(district_code=district_code).one_or_none()
+    if district is None:
+        raise EntityNotFound("District with code '%s' does not exist." % district_code)
+
+    list_local = district.localities
+    if len(list_local) < 72:
+        dict_local = {'A-Z': list_local}
     else:
-        raise EntityNotFound("District with code '%s' does not exist."
-                             % district_code)
+        dict_local = {}
+        for local in list_local:
+            letter = local.locality_name[0].upper()
+            if letter in dict_local:
+                dict_local[letter].append(local)
+            else:
+                dict_local[letter] = [local]
+
+    return render_template('district.html', district=district, localities=dict_local)
 
 
 @page.route('/list/locality/<locality_code>')
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
-    lty = models.Locality.query.filter_by(locality_code=locality_code).scalar()
+    lty = models.Locality.query.filter_by(locality_code=locality_code).one_or_none()
     if lty is None:
         str_lty = locality_code.upper()
         new_lty = (models.Locality.query
-                   .filter_by(locality_code=str_lty).scalar())
+                   .filter_by(locality_code=str_lty).one_or_none())
         if new_lty is not None:
             return redirect('/list/locality/%s' % new_lty.locality_code,
                             code=301)
         else:
             raise EntityNotFound("Locality with code '%s' does not exist."
                                  % locality_code)
+    # Sort stops by common name then short indicator label
+    short_indicator = lambda sp: sp.desc_short_ind if sp.desc_short_ind is not None else ''
+    common_name = lambda sp: sp.desc_common
+    stops_sorted = sorted(lty.stop_points, key=short_indicator)
+    stops_sorted = sorted(stops_sorted, key=common_name)
 
-    return render_template('locality.html', locality=lty)
+    return render_template('locality.html', locality=lty, list_stops=stops_sorted)
 
 
 @page.route('/near/postcode/<postcode>')
 def list_nr_postcode(postcode):
     """ Show stops within range of postcode. """
     str_psc = postcode.replace('+', ' ')
-    psc = models.Postcode.query.filter_by(postcode=str_psc).scalar()
+    psc = models.Postcode.query.filter_by(postcode=str_psc).one_or_none()
     if psc is None:
         new_str = ''.join(str_psc.split()).upper()
-        new_psc = models.Postcode.query.filter_by(postcode_2=new_str).scalar()
+        new_psc = models.Postcode.query.filter_by(postcode_2=new_str).one_or_none()
         if new_psc is not None:
             # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
             return redirect('/near/postcode/%s'
@@ -155,13 +185,29 @@ def list_nr_location(lat_long):
     return render_template('location.html', coord=coord, list_stops=stops)
 
 
+@page.route('/stop/area/<stop_area_code>')
+def stop_area(stop_area_code):
+    """ Show stops in stop area, eg pair of tram platforms. """
+    s_area = models.StopArea.query.filter_by(stop_area_code=stop_area_code).one_or_none()
+    if s_area is None:
+        s_area2 = models.StopArea.query.filter(models.StopArea.stop_area_code
+                                               .ilike(stop_area_code)).one_or_none()
+        if s_area2 is not None:
+            return redirect('/stop/naptan/%s' % s_area2.stop_area_code, code=301)
+        else:
+            raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
+                                 % stop_area_code)
+
+    return render_template('stop_area.html', stop_area=s_area)
+
+
 @page.route('/stop/naptan/<naptan_code>')
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
-    s_pt = models.StopPoint.query.filter_by(naptan_code=naptan_code).scalar()
+    s_pt = models.StopPoint.query.filter_by(naptan_code=naptan_code).one_or_none()
     if s_pt is None:
         s_pt2 = models.StopPoint.query.filter(models.StopPoint.naptan_code
-                                              .ilike(naptan_code)).scalar()
+                                              .ilike(naptan_code)).one_or_none()
         if s_pt2 is not None:
             return redirect('/stop/naptan/%s' % s_pt2.naptan_code, code=301)
         else:
@@ -174,10 +220,10 @@ def stop_naptan(naptan_code):
 @page.route('/stop/atco/<atco_code>')
 def stop_atco(atco_code):
     """ Shows stop with NaPTAN code. """
-    s_pt = models.StopPoint.query.filter_by(atco_code=atco_code).scalar()
+    s_pt = models.StopPoint.query.filter_by(atco_code=atco_code).one_or_none()
     if s_pt is None:
         s_pt2 = models.StopPoint.query.filter(models.StopPoint.atco_code
-                                              .ilike(atco_code)).scalar()
+                                              .ilike(atco_code)).one_or_none()
         if s_pt2 is not None:
             return redirect('/stop/atco/%s' % s_pt2.atco_code, code=301)
         else:
@@ -198,9 +244,9 @@ def stop_get_times():
         abort(405)
     try:
         nxb = tapi.parse_nextbus_times(data['code'])
-    except (KeyError, ValueError) as e:
+    except (KeyError, ValueError) as err:
         # Malformed request; no ATCO code
-        current_app.logger.error(e)
+        current_app.logger.error(err)
         abort(400)
     except HTTPError:
         # Problems with the API service

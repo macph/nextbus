@@ -1,0 +1,7 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}{{ stop_area.stop_area_name }}{% endblock %}
+{% block content %}
+<h1>{{ stop_area.stop_area_name }}</h1>
+{{ f.print_stops(stop_area.stop_points) }}
+{% endblock %}

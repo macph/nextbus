@@ -218,3 +218,11 @@ def not_found_msg(error):
         given.
     """
     return render_template('not_found.html', message=error), 404
+
+
+@page.errorhandler(500)
+def error_msg(error):
+    """ Returned in case an internal server error (500) occurs, with message.
+        Note that this page does not appear in debug mode.
+    """
+    return render_template('error.html', message=error), 500

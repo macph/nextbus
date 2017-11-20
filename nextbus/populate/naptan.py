@@ -415,17 +415,14 @@ def commit_naptan_data(nptg_file=None, naptan_file=None):
     nptg.commit()
     naptan.commit()
 
+    message = "Population done."
     if nptg_dl and naptan_dl:
-        click.echo("Population done. The files 'NPTG.xml' and 'Naptan.xml' are saved "
-                   "in the Temp directory.")
+        message += " The files 'NPTG.xml' and 'Naptan.xml' are saved in the Temp directory."
     elif nptg_dl:
-        click.echo("NaPTAN/NPTG population done. The file 'NPTG.xml' is saved in the Temp "
-                   "directory.")
+        message += " The file 'NPTG.xml' is saved in the Temp directory."
     elif naptan_dl:
-        click.echo("NaPTAN/NPTG population done. The file 'Naptan.xml' is saved in the Temp "
-                   "directory.")
-    else:
-        click.echo("NaPTAN/NPTG population done.")
+        message += "The file 'Naptan.xml' is saved in the Temp directory."
+    click.echo(message)
 
 
 if __name__ == "__main__":

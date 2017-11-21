@@ -416,6 +416,10 @@ div.item-service-after > span {
     color: green;
 }
 
+.text-red {
+    color: red;
+}
+
 /* Adjusting for wider widths */
 
 @media (min-width: 700px) {

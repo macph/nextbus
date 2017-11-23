@@ -2,7 +2,6 @@
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
 import os
-import itertools
 import json
 import re
 import click
@@ -81,24 +80,8 @@ class XPath(object):
         return result
 
 
-class IterChunk(object):
-    """ Generator for an iterator object returning lists at a time. """
-    def __init__(self, iterator, chunk_size):
-        self.iter = iterator
-        self.chunk = chunk_size
-
-    def __next__(self):
-        chunk = list(itertools.islice(self.iter, self.chunk))
-        if chunk:
-            return chunk
-        else:
-            raise StopIteration
-
-    def __iter__(self):
-        return self
-
 def capitalise(string):
-    """ Capitalises every word in a string, include these enclosed withi
+    """ Capitalises every word in a string, include these enclosed within
         brackets and excluding apostrophes.
     """
     list_words = string.lower().split()
@@ -119,8 +102,8 @@ def modify_data(file_name=None):
         path = os.path.join(ROOT_DIR, 'nextbus/populate/modifications.json')
     else:
         path = file_name
-    with open(path, 'r') as json_file:
-        data = json.load(json_file)
+    with open(path, 'r') as jf:
+        data = json.load(jf)
 
     click.echo("Making modifications...")
     for entry in data.get('modify', []):

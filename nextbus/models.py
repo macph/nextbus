@@ -3,7 +3,6 @@ Models for the nextbus database.
 """
 from nextbus import db
 
-
 class Region(db.Model):
     """ NPTG region. """
     __tablename__ = 'Regions'
@@ -37,7 +36,8 @@ class AdminArea(db.Model):
     stop_areas = db.relationship('StopArea', backref='admin_area')
 
     def __repr__(self):
-        return '<Area(%r, %r, %r)>' % (self.admin_area_code, self.atco_area_code, self.area_name)
+        return '<AdminArea(%r, %r, %r)>' % (self.admin_area_code, self.atco_area_code,
+                                            self.area_name)
 
 
 class District(db.Model):
@@ -64,6 +64,7 @@ class Locality(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     locality_code = db.Column(db.VARCHAR(7), index=True, unique=True)
     locality_name = db.Column(db.Text, index=True)
+    parent_locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('Localities.locality_code'))
     admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('AdminAreas.admin_area_code'))
     district_code = db.Column(db.VARCHAR(3), db.ForeignKey('Districts.district_code'))
     easting = db.Column(db.Integer)
@@ -73,6 +74,8 @@ class Locality(db.Model):
     last_modified = db.Column(db.DateTime)
 
     stop_points = db.relationship('StopPoint', backref='locality')
+    locality_backref = db.backref('parent_locality', remote_side=[locality_code])
+    child_localities = db.relationship('Locality', backref=locality_backref)
 
     def __repr__(self):
         return '<Locality(%r, %r)>' % (self.locality_code, self.locality_name)

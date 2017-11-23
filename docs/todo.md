@@ -2,20 +2,20 @@
 
 ## Set up the website
 
-`/` & `/home` **Home page**: search for bus stop, route, etc
-- `/about` **About**: Stuff about me, github page, APIs used, framework used
-- `/list` **List of regions**: List of all regions and their (admin) areas.
-    - `/list/area/<code>` **List of districts/localities**: List of districts *or* localities in an area
-        - `/list/district/<code>` **List of localities**: List of localities in an district
-- `/near` Placeholder
-    - `/near/locality/<code>` **List of stops**: List of stops in a locality
-    - `/near/postcode/<psc>` **List of stops**: List of stops around a postcode
-    - `/near/location/<lat,long>` **List of stops**: List of stops around a GPS coordinate
-- `/stop` Placeholder
-    - `/stop/naptan/<code>` **Stop info**: Stop with NaPTAN code
-    - `/stop/atco/<code>` **Stop info**: Stop with ATCO code
-    - `/stop/area/<code>` **Stop info for area**: Stops in stop area with stop area code
-- `/search/<string>` **Search**: Find an area, district, locality or stop name
+- `/` & `/home` **Home page**: search for bus stop, route, etc
+    - `/about` **About**: Stuff about me, github page, APIs used, framework used
+    - `/list` **List of regions**: List of all regions and their (admin) areas.
+        - `/list/area/<code>` **List of districts/localities**: List of districts *or* localities in an area
+            - `/list/district/<code>` **List of localities**: List of localities in an district
+    - `/near` Placeholder
+        - `/near/locality/<code>` **List of stops**: List of stops in a locality
+        - `/near/postcode/<psc>` **List of stops**: List of stops around a postcode
+        - `/near/location/<lat,long>` **List of stops**: List of stops around a GPS coordinate
+    - `/stop` Placeholder
+        - `/stop/naptan/<code>` **Stop info**: Stop with NaPTAN code
+        - `/stop/atco/<code>` **Stop info**: Stop with ATCO code
+        - `/stop/area/<code>` **Stop info for area**: Stops in stop area with stop area code
+    - `/search/<string>` **Search**: Find an area, district, locality or stop name
 
 ### Changes to area list
 Do we move to a setup where we have a list of regions only, maybe with map, and each region has list of areas and districts combined - for example Yorkshire would have a list of all districts _and_ the areas which do not have any districts (marked with *):
@@ -38,6 +38,12 @@ Do we move to a setup where we have a list of regions only, maybe with map, and 
 - Sheffield
 - Wakefield
 - York *
+
+In this case:
+- `/list` **List of regions**: List of all regions.
+    - `/list/region/<code>` **List of areas/districts**: List of areas and districts in a region
+        - `/list/area/<code>` **List of localities**: List of localities in an area
+        - `/list/district/<code>` **List of localities**: List of localities in an district
 
 ## Migrate to PostgreSQL
 Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.

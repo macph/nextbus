@@ -36,6 +36,7 @@ PATHS_DISTRICT = {
 PATHS_LOCALITY = {
     "locality_code":        "n:NptgLocalityCode",
     "locality_name":        "n:Descriptor/n:LocalityName",
+    "parent_locality_code": "n:ParentNptgLocalityRef",
     "admin_area_code":      "n:AdministrativeAreaRef",
     "district_code":        "n:NptgDistrictRef",
     "easting":              "n:Location/n:Translation/n:Easting",

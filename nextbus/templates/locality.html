@@ -1,20 +1,20 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
-{% block title %}{{ locality.locality_name }} locality{% endblock %}
+{% block title %}{{ locality.name }} locality{% endblock %}
 {% block content %}
     {% set area = locality.admin_area %}
     {% set district = locality.district %}
     {% set region = area.region %}
     <nav>
         <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a></li>
-            <li><a href="{{ url_for('page.list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a></li>
+            <li><a href="{{ url_for('page.list_regions', _anchor=region.code) }}">{{ region.name }}</a></li>
+            <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
             {% if district is not none %}
-            <li><a href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a></li>
+            <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
             {% endif %}
-            <li>{{ locality.locality_name }}</li>
+            <li>{{ locality.name }}</li>
         </ul>
     </nav>
-    <h1>Bus/tram stops in {{ locality.locality_name }}{{ ', %s'|format(district.district_name) if district is not none }}</h1>
+    <h1>Bus/tram stops in {{ locality.name }}{{ ', %s'|format(district.name) if district is not none }}</h1>
     {{ f.print_stops(list_stops) }}
 {% endblock %}

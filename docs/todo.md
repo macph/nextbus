@@ -50,14 +50,14 @@ Consider switching over to a PostgreSQL DB for compatibility with cloud provider
 - Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.
 - Use extra features provided by PostgreSQL, such as `ON CONFLICT`:
 ```sql
-INSERT INTO StopPoints (atco_code, naptan_code, last_modified ...)
-VALUES ('490008978N1', '75463', '2017-11-21 16:53:00' ...)
-ON CONFLICT stop_codes
-DO UPDATE SET atco_code='490008978N1',
-              naptan_code='75463',
-              last_modified='2017-11-21 16:53:00',
-              ...
-WHERE StopPoints.last_modified < '2017-11-21 16:53:00';
+INSERT INTO stop_point AS sp (atco_code, naptan_code, modified ...)
+     VALUES ('490008978N1', '75463', '2017-11-21 16:53:00' ...)
+ON CONFLICT (atco_code) /* or 'ON CONSTRAINT constraint' instead of '(sp.atco_code)'. */
+            DO UPDATE SET atco_code='490008978N1',
+                          naptan_code='75463',
+                          modified='2017-11-21 16:53:00',
+                          ...
+      WHERE sp.modified < '2017-11-21 16:53:00'; /* must prefix with table name */
 ```
 - Consider getting 2 databases - static for all data such as postcodes and stops, and users/dynamic for users, eg tracking and cookies.
 - Settings per user (eg with cookies) - may want to start tracking once they
@@ -98,7 +98,16 @@ set up favourites or such?
     - list of stops within area
     - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
     - The TLNDS would be really useful in getting list of services for each stop.
+    - Add breadcrumbs. Requires working out which locality from list of stops within area, eg
+```sql
+SELECT DISTINCT loc.code
+           FROM locality AS loc
+                INNER JOIN stop_point AS sp
+                        ON sp.locality_code = loc.code
+          WHERE sp.stop_area_code='370G105082';
+```
 - Sort out response handling for:
     - `stop_get_times()` POST response; need to pass on any errors from retrieving data to the JS
     - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
     - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
+- What to do about deleted stops??

@@ -12,6 +12,7 @@ from nextbus.populate import file_ops, progress_bar
 
 
 NSPL_API = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
+
 LIST_COLUMNS = [
     'postcode_3',
     'local_authority_code',
@@ -20,6 +21,7 @@ LIST_COLUMNS = [
     'longitude',
     'latitude'
 ]
+
 LIST_COUNTRIES = [
     'E92000001',
     'S92000003',
@@ -81,8 +83,8 @@ class _NSPLData(object):
     def __call__(self, row):
         local_authority = self.local_auth[row["local_authority_code"]]
         dict_psc = {
-            'postcode':             row['postcode_3'],
-            'postcode_2':           ''.join(row['postcode_3'].split()),
+            'index':                ''.join(row['postcode_3'].split()),
+            'text':                 row['postcode_3'],
             'local_authority_code': row['local_authority_code'],
             'admin_area_code':      local_authority['admin_area_code'],
             'district_code':        local_authority['district_code'],
@@ -114,7 +116,7 @@ def commit_nspl_data(nspl_file=None):
     else:
         nspl_path = nspl_file
 
-    click.echo("Opening file %r..." % nspl_file)
+    click.echo("Opening file %r..." % nspl_path)
     with open(nspl_path, 'r') as json_file:
         data = json.load(json_file)
         list_postcodes = []
@@ -133,10 +135,10 @@ def commit_nspl_data(nspl_file=None):
     except:
         db.session.rollback()
         raise
-    
+
     if nspl_file is None:
-        click.echo("NSPL population done. The file 'nspl.json' is saved in the Temp "
-                   "directory.")
+        click.echo("NSPL population done. The file 'nspl.json' is saved in "
+                   "the Temp directory.")
     else:
         click.echo("NSPL population done.")
 

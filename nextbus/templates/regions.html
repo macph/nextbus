@@ -3,8 +3,8 @@
 {% block title %}Regions{% endblock %}
 {% block content %}
     <h1>All regions</h1>
-    {% for region in regions|sort(attribute='region_name') %}
-    <h2 id="{{ region.region_code }}">{{ region.region_name }}</h3>
+    {% for region in regions|sort(attribute='name') %}
+    <h2 id="{{ region.code }}">{{ region.name }}</h3>
     {{ f.print_areas(region.areas) }}
     {% endfor %}
 {% endblock %}

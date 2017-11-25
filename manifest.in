@@ -1,0 +1,3 @@
+recursive-include nextbus/static *
+recursive-include nextbus/templates *
+recursive-include nextbus/tests *

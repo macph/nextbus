@@ -15,66 +15,72 @@ from nextbus.populate import capitalise, file_ops, progress_bar, XPath
 
 NPTG_URL = r'http://naptan.app.dft.gov.uk/datarequest/nptg.ashx'
 NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
+
 PATHS_REGION = {
-    "region_code":          "n:RegionCode",
-    "region_name":          "n:Name",
-    "last_modified":        "@ModificationDateTime"
+    "code":             "n:RegionCode",
+    "name":             "n:Name",
+    "modified":         "@ModificationDateTime"
 }
+
 PATH_ADMIN_AREA = {
-    "admin_area_code":      "n:AdministrativeAreaCode",
-    "region_code":          "ancestor::n:Region/n:RegionCode",
-    "atco_area_code":       "n:AtcoAreaCode",
-    "area_name":            "n:Name",
-    "last_modified":        "@ModificationDateTime"
+    "code":             "n:AdministrativeAreaCode",
+    "region_code":      "ancestor::n:Region/n:RegionCode",
+    "atco_code":        "n:AtcoAreaCode",
+    "name":             "n:Name",
+    "modified":         "@ModificationDateTime"
 }
+
 PATHS_DISTRICT = {
-    "district_code":        "n:NptgDistrictCode",
-    "admin_area_code":      "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
-    "district_name":        "n:Name",
-    "last_modified":        "@ModificationDateTime"
+    "code":             "n:NptgDistrictCode",
+    "admin_area_code":  "ancestor::n:AdministrativeArea/n:AdministrativeAreaCode",
+    "name":             "n:Name",
+    "modified":         "@ModificationDateTime"
 }
+
 PATHS_LOCALITY = {
-    "locality_code":        "n:NptgLocalityCode",
-    "locality_name":        "n:Descriptor/n:LocalityName",
-    "parent_locality_code": "n:ParentNptgLocalityRef",
-    "admin_area_code":      "n:AdministrativeAreaRef",
-    "district_code":        "n:NptgDistrictRef",
-    "easting":              "n:Location/n:Translation/n:Easting",
-    "northing":             "n:Location/n:Translation/n:Northing",
-    "longitude":            "n:Location/n:Translation/n:Longitude",
-    "latitude":             "n:Location/n:Translation/n:Latitude",
-    "last_modified":        "@ModificationDateTime"
+    "code":             "n:NptgLocalityCode",
+    "name":             "n:Descriptor/n:LocalityName",
+    "parent_code":      "n:ParentNptgLocalityRef",
+    "admin_area_code":  "n:AdministrativeAreaRef",
+    "district_code":    "n:NptgDistrictRef",
+    "easting":          "n:Location/n:Translation/n:Easting",
+    "northing":         "n:Location/n:Translation/n:Northing",
+    "longitude":        "n:Location/n:Translation/n:Longitude",
+    "latitude":         "n:Location/n:Translation/n:Latitude",
+    "modified":         "@ModificationDateTime"
 }
+
 PATHS_STOP_POINT = {
-    "atco_code":            "s:AtcoCode",
-    "naptan_code":          "s:NaptanCode",
-    "desc_common":          "s:Descriptor/s:CommonName",
-    "desc_short":           "s:Descriptor/s:ShortCommonName",
-    "desc_landmark":        "s:Descriptor/s:Landmark",
-    "desc_street":          "s:Descriptor/s:Street",
-    "desc_crossing":        "s:Descriptor/s:Crossing",
-    "desc_indicator":       "s:Descriptor/s:Indicator",
-    "locality_code":        "s:Place/s:NptgLocalityRef",
-    "easting":              "s:Place/s:Location/s:Translation/s:Easting",
-    "northing":             "s:Place/s:Location/s:Translation/s:Northing",
-    "longitude":            "s:Place/s:Location/s:Translation/s:Longitude",
-    "latitude":             "s:Place/s:Location/s:Translation/s:Latitude",
-    "stop_type":            "s:StopClassification/s:StopType",
-    "bearing":              ".//s:CompassPoint",
-    "stop_area_code":       "s:StopAreas/s:StopAreaRef",
-    "admin_area_code":      "s:AdministrativeAreaRef",
-    "last_modified":        "@ModificationDateTime"
+    "atco_code":        "s:AtcoCode",
+    "naptan_code":      "s:NaptanCode",
+    "common_name":      "s:Descriptor/s:CommonName",
+    "short_name":       "s:Descriptor/s:ShortCommonName",
+    "landmark":         "s:Descriptor/s:Landmark",
+    "street":           "s:Descriptor/s:Street",
+    "crossing":         "s:Descriptor/s:Crossing",
+    "indicator":        "s:Descriptor/s:Indicator",
+    "locality_code":    "s:Place/s:NptgLocalityRef",
+    "easting":          "s:Place/s:Location/s:Translation/s:Easting",
+    "northing":         "s:Place/s:Location/s:Translation/s:Northing",
+    "longitude":        "s:Place/s:Location/s:Translation/s:Longitude",
+    "latitude":         "s:Place/s:Location/s:Translation/s:Latitude",
+    "stop_type":        "s:StopClassification/s:StopType",
+    "bearing":          ".//s:CompassPoint",
+    "stop_area_code":   "s:StopAreas/s:StopAreaRef",
+    "admin_area_code":  "s:AdministrativeAreaRef",
+    "modified":         "@ModificationDateTime"
 }
+
 PATHS_STOP_AREA = {
-    "stop_area_code":       "s:StopAreaCode",
-    "stop_area_name":       "s:Name",
-    "admin_area_code":      "s:AdministrativeAreaRef",
-    "stop_area_type":       "s:StopAreaType",
-    "easting":              "s:Location/s:Translation/s:Easting",
-    "northing":             "s:Location/s:Translation/s:Northing",
-    "longitude":            "s:Location/s:Translation/s:Longitude",
-    "latitude":             "s:Location/s:Translation/s:Latitude",
-    "last_modified":        "@ModificationDateTime"
+    "code":             "s:StopAreaCode",
+    "name":             "s:Name",
+    "admin_area_code":  "s:AdministrativeAreaRef",
+    "stop_area_type":   "s:StopAreaType",
+    "easting":          "s:Location/s:Translation/s:Easting",
+    "northing":         "s:Location/s:Translation/s:Northing",
+    "longitude":        "s:Location/s:Translation/s:Longitude",
+    "latitude":         "s:Location/s:Translation/s:Latitude",
+    "modified":         "@ModificationDateTime"
 }
 
 
@@ -90,7 +96,7 @@ def download_naptan_data(atco_codes=None):
     temp_path = os.path.join(ROOT_DIR, 'temp')
 
     if atco_codes:
-        # Add tram/metro options
+        # Add tram/metro options (ATCO area code 940)
         params['LA'] = '|'.join(str(i) for i in atco_codes + [940])
         files = None
     else:
@@ -102,8 +108,8 @@ def download_naptan_data(atco_codes=None):
 
 
 def download_nptg_data():
-    """ Downloads NPTG data from the DfT. Comes in a zipped file so the
-        NPTG XML file is extracted first.
+    """ Downloads NPTG data from the DfT. Comes in a zipped file so the NPTG
+        XML file is extracted first.
     """
     params = {'format': 'xml'}
     temp_path = os.path.join(ROOT_DIR, 'temp')
@@ -142,8 +148,9 @@ class _DBEntries(object):
                     func(self.entries, obj)
                 except TypeError as err:
                     if 'positional argument' in str(err):
-                        raise TypeError("Filter function must receive two arguments: list of "
-                                        "existing objects and the current object.") from err
+                        raise TypeError("Filter function must receive two "
+                                        "arguments: list of existing objects "
+                                        "and the current object.") from err
                     else:
                         raise
 
@@ -157,12 +164,12 @@ class _DBEntries(object):
 
 class _NPTGPlaces(object):
     """ Helper class for NPTG areas """
-    def __init__(self, index):
-        self.index = index
+    def __init__(self):
+        pass
 
     def __call__(self, list_objects, new_obj):
-        if new_obj.last_modified is not None:
-            new_obj.last_modified = dateutil.parser.parse(new_obj.last_modified)
+        if new_obj.modified is not None:
+            new_obj.modified = dateutil.parser.parse(new_obj.modified)
         list_objects.append(new_obj)
 
 
@@ -261,14 +268,14 @@ class _NaPTANStops(object):
                 return
 
         # Create short indicator for display
-        point.desc_short_ind = self._replace_ind(point.desc_indicator)
+        point.short_ind = self._replace_ind(point.indicator)
         # '/' is not allowed in NaPTAN strings; was simply removed
-        if point.desc_common is not None:
-            point.desc_common = point.desc_common.replace('  ', ' / ')
-        if point.desc_short is not None:
-            point.desc_short = point.desc_short.replace('  ', ' / ')
+        if point.common_name is not None:
+            point.common_name = point.common_name.replace('  ', ' / ')
+        if point.short_name is not None:
+            point.short_name = point.short_name.replace('  ', ' / ')
         # Replace non-word values (eg '---') with None for descriptors
-        for desc in ['desc_street', 'desc_crossing', 'desc_landmark']:
+        for desc in ['street', 'crossing', 'landmark']:
             point_desc = getattr(point, desc)
             if point_desc is not None:
                 if self.regex_no_word.match(point_desc) or point_desc.lower() == 'none':
@@ -277,16 +284,16 @@ class _NaPTANStops(object):
                     # Capitalise descriptors that were in all capitals
                     setattr(point, desc, capitalise(point_desc))
 
-        if point.last_modified is not None:
-            point.last_modified = dateutil.parser.parse(point.last_modified)
+        if point.modified is not None:
+            point.modified = dateutil.parser.parse(point.modified)
 
         if point.naptan_code in self.naptan_codes:
             for obj in list_objects:
                 if getattr(obj, 'naptan_code') == point.naptan_code:
                     duplicate = obj
                     break
-            if (point.last_modified is not None and
-                    duplicate.last_modified >= point.last_modified):
+            if (point.modified is not None and
+                    duplicate.modified >= point.modified):
                 return
             else:
                 list_objects.remove(duplicate)
@@ -301,10 +308,10 @@ class _NaPTANStops(object):
 
     def filter_areas(self, list_objects, area):
         """ Filters stop areas. """
-        if self.admin_codes and area.stop_area_code not in self.area_codes:
+        if self.admin_codes and area.code not in self.area_codes:
             return
-        if area.last_modified is not None:
-            area.last_modified = dateutil.parser.parse(area.last_modified)
+        if area.modified is not None:
+            area.modified = dateutil.parser.parse(area.modified)
         list_objects.append(area)
 
 
@@ -371,14 +378,11 @@ def commit_naptan_data(nptg_file=None, naptan_file=None):
 
     nxp, admin_areas, regions, districts, localities = _get_nptg_data(nptg_path, atco_codes)
     nptg = _DBEntries(nxp)
-    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions",
-             _NPTGPlaces('region_code'))
+    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions", _NPTGPlaces())
     nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas",
-             _NPTGPlaces('admin_area_code'))
-    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts",
-             _NPTGPlaces('district_code'))
-    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities",
-             _NPTGPlaces('locality_code'))
+             _NPTGPlaces())
+    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts", _NPTGPlaces())
+    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities", _NPTGPlaces())
 
     if atco_codes:
         area_codes = set(nxp.iter_text("n:AdministrativeAreaCode", admin_areas))

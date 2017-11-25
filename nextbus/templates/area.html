@@ -1,22 +1,22 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
-{% block title %}{{ area.area_name }} area{% endblock %}
+{% block title %}{{ area.name }} area{% endblock %}
 {% block content %}
     {% set region = area.region %}
     <nav>
         <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions', _anchor=region.region_code) }}">{{ region.region_name }}</a></li>
-            <li>{{ area.area_name }}</li>
+            <li><a href="{{ url_for('page.list_regions', _anchor=region.code) }}">{{ region.name }}</a></li>
+            <li>{{ area.name }}</li>
         </ul>
     </nav>
     {% if not area.districts %}
-    <h1>Localities in {{ area.area_name }}</h1>
+    <h1>Localities in {{ area.name }}</h1>
     {% for group in localities|dictsort %}
     <h2>{{ group[0] }}</h2>
     {{ f.print_localities(group[1]) }}
     {% endfor %}
     {% else %}
-    <h1>Districts in {{ area.area_name }}</h1>
+    <h1>Districts in {{ area.name }}</h1>
     {{ f.print_districts(area.districts) }}
     {% endif %}
 {% endblock %}

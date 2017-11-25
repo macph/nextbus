@@ -5,6 +5,7 @@ setup(
     name='nextbus',
     packages=['nextbus'],
     include_package_data=True,
+    zip_safe=False,
     install_requires=[
         'click',
         'flask',
@@ -12,8 +13,9 @@ setup(
         'flask_sqlalchemy',
         'flask_wtf',
         'lxml',
+        'psycopg2',
         'python-dateutil',
         'pytz',
         'requests'
-    ],
+    ]
 )

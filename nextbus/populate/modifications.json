@@ -2,25 +2,25 @@
     "modify": [
         {
             "model": "Region",
-            "attr": "region_name",
+            "attr": "name",
             "old": "London",
             "new": "Greater London"
         },
         {
             "model": "AdminArea",
-            "attr": "area_name",
+            "attr": "name",
             "old": "Greater London",
             "new": "London"
         },
         {
             "model": "District",
-            "attr": "district_name",
+            "attr": "name",
             "old": "Westminster City of",
             "new": "City of Westminster"
         },
         {
             "model": "AdminArea",
-            "attr": "area_name",
+            "attr": "name",
             "old": "Durham",
             "new": "County Durham"
         }

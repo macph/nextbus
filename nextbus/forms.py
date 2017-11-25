@@ -28,7 +28,7 @@ def _postcode_exists(form, field):
         raise ValidationError("Postcodes should be between 6 and 8 letters "
                               "long.")
     # Add query object to FlaskForm instance for use by view
-    form.query = Postcode.query.filter_by(postcode_2=new_postcode).one_or_none()
+    form.query = Postcode.query.filter_by(index=new_postcode).one_or_none()
     if form.query is None:
         raise ValidationError("Postcode %r does not exist." % field.data)
 

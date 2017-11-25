@@ -1,17 +1,17 @@
 {% macro stop_name(stop) -%}
-{{ stop.desc_common if stop.desc_common is not none else stop.desc_short }}
+{{ stop.common_name if stop.common_name is not none else stop.short_name }}
 {%- endmacro %}
 
 {% macro stop_indicator(stop) -%}
-{{ stop.desc_indicator if stop.desc_indicator is not none }}
+{{ stop.indicator if stop.indicator is not none }}
 {%- endmacro %}
 
 {% macro stop_short_indicator(stop) -%}
-{{ stop.desc_short_ind if stop.desc_short_ind is not none }}
+{{ stop.short_ind if stop.short_ind is not none }}
 {%- endmacro %}
 
 {% macro stop_full_name(stop) -%}
-{{ stop_name(stop) }}{{ " (%s)"|format(stop.desc_indicator) if stop.desc_indicator is not none }}
+{{ stop_name(stop) }}{{ " (%s)"|format(stop.indicator) if stop.indicator is not none }}
 {%- endmacro %}
 
 {% macro resize_indicator(class_name) %}
@@ -56,8 +56,8 @@
 {% macro print_areas(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for area in list|sort(attribute='area_name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=area.admin_area_code) }}">{{ area.area_name }}</a>
+    {% for area in list|sort(attribute='name') %}
+    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a>
     {% endfor %}
 </div>
 {% elif warning %}
@@ -68,8 +68,8 @@
 {% macro print_districts(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for district in list|sort(attribute='district_name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.district_code) }}">{{ district.district_name }}</a>
+    {% for district in list|sort(attribute='name') %}
+    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a>
     {% endfor %}
 </div>
 {% elif warning %}
@@ -80,8 +80,8 @@
 {% macro print_localities(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for locality in list|sort(attribute='locality_name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.locality_code) }}">{{ locality.locality_name }}</a>
+    {% for locality in list|sort(attribute='name') %}
+    <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}</a>
     {% endfor %}
 </div>
 {% elif warning %}

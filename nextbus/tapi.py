@@ -78,13 +78,20 @@ class _Services(object):
         live_dt = (service['expected_departure_date'], service['expected_departure_time'])
         is_live = live_dt[0] is not None and live_dt[1] is not None
 
-        exp_date = GB_TZ.localize(dateutil.parser.parse('T'.join(exp_dt)))
+        if exp_dt[0] is not None and exp_dt[1] is not None:
+            exp_date = GB_TZ.localize(dateutil.parser.parse('T'.join(exp_dt)))
+        else:
+            exp_date = None
+
         if is_live:
             live_date = GB_TZ.localize(dateutil.parser.parse('T'.join(live_dt)))
             exp_sec = (live_date - self.req_date).seconds
-        else:
+        elif exp_date is not None:
             live_date = None
             exp_sec = (exp_date - self.req_date).seconds
+        else:
+            # Record has no live or timetabled times?
+            return
 
         if self.CUT_OFF_MIN and exp_sec > self.CUT_OFF_MIN * 60:
             # Don't need services any further out than 60 minutes
@@ -95,8 +102,7 @@ class _Services(object):
             'live': is_live,
             'sec': exp_sec,
             'live_date': None if live_date is None else live_date.isoformat(),
-            'exp_date': exp_date.isoformat(),
-            'local_time': exp_date.strftime("%H:%M")
+            'exp_date': None if exp_date is None else exp_date.isoformat()
         }
 
         for new_sv in self.list:
@@ -143,7 +149,12 @@ def parse_nextbus_times(atco_code, **kwargs):
     services = _Services(req_date)
     for line, group in data['departures'].items():
         for sv in group:
-            services.add(line, sv)
+            try:
+                services.add(line, sv)
+            except:
+                with open('temp/error.json', 'w') as jf:
+                    json.dump(data, jf, indent=4)
+                raise
 
     new_data = {
         'atco_code': data['atcocode'],

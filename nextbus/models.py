@@ -3,6 +3,10 @@ Models for the nextbus database.
 """
 from nextbus import db
 
+
+MIN_GROUPED = 72
+
+
 class Region(db.Model):
     """ NPTG region. """
     __tablename__ = 'region'
@@ -11,10 +15,21 @@ class Region(db.Model):
     name = db.Column(db.Text, index=True)
     modified = db.Column(db.DateTime)
 
-    areas = db.relationship('AdminArea', backref='region')
+    areas = db.relationship('AdminArea', backref='region', order_by='AdminArea.name')
 
     def __repr__(self):
         return '<Region(%r, %r)>' % (self.code, self.name)
+
+    def list_areas_districts(self):
+        """ Gets flat list of all admin areas and districts within region. """
+        result_list = []
+        for area in self.areas:
+            if area.districts:
+                result_list.extend(area.districts)
+            else:
+                result_list.append(area)
+
+        return sorted(result_list, key=lambda a: a.name)
 
 
 class AdminArea(db.Model):
@@ -27,14 +42,33 @@ class AdminArea(db.Model):
     region_code = db.Column(db.VARCHAR(2), db.ForeignKey('region.code'))
     modified = db.Column(db.DateTime)
 
-    districts = db.relationship('District', backref='admin_area')
-    localities = db.relationship('Locality', backref='admin_area')
-    postcodes = db.relationship('Postcode', backref='admin_area')
-    stop_points = db.relationship('StopPoint', backref='admin_area')
-    stop_areas = db.relationship('StopArea', backref='admin_area')
+    districts = db.relationship('District', backref='admin_area', order_by='District.name')
+    localities = db.relationship('Locality', backref='admin_area', order_by='Locality.name')
+    postcodes = db.relationship('Postcode', backref='admin_area', order_by='Postcode.text')
+    stop_points = db.relationship('StopPoint', backref='admin_area',
+                                  order_by='StopPoint.common_name, StopPoint.short_ind')
+    stop_areas = db.relationship('StopArea', backref='admin_area', order_by='StopArea.name')
 
     def __repr__(self):
         return '<AdminArea(%r, %r, %r)>' % (self.code, self.atco_code, self.name)
+
+    def localities_grouped(self):
+        """ Returns a dict with localities grouped by first letter, if total
+            exceeds MIN_GROUPED.
+        """
+        list_local = self.localities
+        if len(list_local) < MIN_GROUPED:
+            dict_local = {'A-Z': list_local}
+        else:
+            dict_local = {}
+            for local in list_local:
+                letter = local.name[0].upper()
+                if letter in dict_local:
+                    dict_local[letter].append(local)
+                else:
+                    dict_local[letter] = [local]
+
+        return dict_local
 
 
 class District(db.Model):
@@ -46,11 +80,29 @@ class District(db.Model):
     admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
     modified = db.Column(db.DateTime)
 
-    localities = db.relationship('Locality', backref='district')
-    postcodes = db.relationship('Postcode', backref='district')
+    localities = db.relationship('Locality', backref='district', order_by='Locality.name')
+    postcodes = db.relationship('Postcode', backref='district', order_by='Postcode.text')
 
     def __repr__(self):
         return '<District(%r, %r)>' % (self.code, self.name)
+
+    def localities_grouped(self):
+        """ Returns a dict with localities grouped by first letter, if total
+            exceeds MIN_GROUPED.
+        """
+        list_local = self.localities
+        if len(list_local) < MIN_GROUPED:
+            dict_local = {'A-Z': list_local}
+        else:
+            dict_local = {}
+            for local in list_local:
+                letter = local.name[0].upper()
+                if letter in dict_local:
+                    dict_local[letter].append(local)
+                else:
+                    dict_local[letter] = [local]
+
+        return dict_local
 
 
 class Locality(db.Model):
@@ -68,8 +120,10 @@ class Locality(db.Model):
     latitude = db.Column(db.Float)
     modified = db.Column(db.DateTime)
 
-    stop_points = db.relationship('StopPoint', backref='locality')
-    children = db.relationship('Locality', backref=db.backref('parent', remote_side=[code]))
+    stop_points = db.relationship('StopPoint', backref='locality',
+                                  order_by='StopPoint.common_name, StopPoint.short_ind')
+    children = db.relationship('Locality', backref=db.backref('parent', remote_side=[code]),
+                               order_by='Locality.name')
 
     def __repr__(self):
         return '<Locality(%r, %r)>' % (self.code, self.name)
@@ -117,7 +171,8 @@ class StopArea(db.Model):
     latitude = db.Column(db.Float)
     modified = db.Column(db.DateTime)
 
-    stop_points = db.relationship('StopPoint', backref='stop_area')
+    stop_points = db.relationship('StopPoint', backref='stop_area',
+                                  order_by='StopPoint.common_name, StopPoint.short_ind')
 
     def __repr__(self):
         return '<StopArea(%r, %r)>' % (self.code, self.name)

@@ -1,0 +1,12 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}{{ region.name }} region{% endblock %}
+{% block content %}
+    <nav>
+        <ul class="breadcrumbs">
+            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        </ul>
+    </nav>
+    <h1>Areas in {{ region.name }}</h1>
+    {{ f.print_areas_districts(region.list_areas_districts()) }}
+{% endblock %}

@@ -5,13 +5,14 @@
     {% set region = area.region %}
     <nav>
         <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions', _anchor=region.code) }}">{{ region.name }}</a></li>
+            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+            <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
             <li>{{ area.name }}</li>
         </ul>
     </nav>
     {% if not area.districts %}
     <h1>Localities in {{ area.name }}</h1>
-    {% for group in localities|dictsort %}
+    {% for group in area.localities_grouped()|dictsort %}
     <h2>{{ group[0] }}</h2>
     {{ f.print_localities(group[1]) }}
     {% endfor %}

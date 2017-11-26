@@ -7,7 +7,8 @@
     {% set region = area.region %}
     <nav>
         <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions', _anchor=region.code) }}">{{ region.name }}</a></li>
+            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+            <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
             <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
             {% if district is not none %}
             <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
@@ -16,5 +17,5 @@
         </ul>
     </nav>
     <h1>Bus/tram stops in {{ locality.name }}{{ ', %s'|format(district.name) if district is not none }}</h1>
-    {{ f.print_stops(list_stops) }}
+    {{ f.print_stops(locality.stop_points) }}
 {% endblock %}

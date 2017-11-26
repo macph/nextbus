@@ -31,8 +31,7 @@ def _find_stops_in_range(coord):
         models.StopPoint.latitude > lat_0,
         models.StopPoint.latitude < lat_1,
         models.StopPoint.longitude > long_0,
-        models.StopPoint.longitude < long_1,
-        models.StopPoint.naptan_code.isnot(None)
+        models.StopPoint.longitude < long_1
     )
     filter_stops = []
     for stop in query_nearby_stops.all():
@@ -51,11 +50,9 @@ def index():
     if f_naptan.submit_code.data and f_naptan.validate():
         return redirect('/stop/naptan/%s' % f_naptan.query.naptan_code)
     if f_postcode.submit_postcode.data and f_postcode.validate():
-        return redirect('/near/postcode/%s'
-                        % f_postcode.query.text.replace(' ', '+'))
+        return redirect('/near/postcode/%s' % f_postcode.query.text.replace(' ', '+'))
 
-    return render_template('index.html', form_naptan=f_naptan,
-                           form_postcode=f_postcode)
+    return render_template('index.html', form_naptan=f_naptan, form_postcode=f_postcode)
 
 
 @page.route('/about')
@@ -67,9 +64,23 @@ def about():
 @page.route('/list/')
 def list_regions():
     """ Shows list of all regions. """
-    regions = models.Region.query.filter(models.Region.code != 'GB').all()
+    regions = (models.Region.query.filter(models.Region.code != 'GB')
+               .order_by(models.Region.name).all())
 
-    return render_template('regions.html', regions=regions)
+    return render_template('all_regions.html', regions=regions)
+
+
+@page.route('/list/region/<region_code>')
+def list_in_region(region_code):
+    """ Shows list of administrative areas and districts in a region.
+        Administrative areas with districts are excluded in favour of listing
+        districts.
+    """
+    region = models.Region.query.get(region_code)
+    if region is None:
+        raise EntityNotFound("Region with code '%s' does not exist." % region_code)
+
+    return render_template('region.html', region=region)
 
 
 @page.route('/list/area/<area_code>')
@@ -81,21 +92,7 @@ def list_in_area(area_code):
     if area is None:
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
 
-    list_local = area.localities
-    if area.districts:
-        dict_local = None
-    elif len(list_local) < 72:
-        dict_local = {'A-Z': list_local}
-    else:
-        dict_local = {}
-        for locality in area.localities:
-            letter = locality.name[0].upper()
-            if letter in dict_local:
-                dict_local[letter].append(locality)
-            else:
-                dict_local[letter] = [locality]
-
-    return render_template('area.html', area=area, localities=dict_local)
+    return render_template('area.html', area=area)
 
 
 @page.route('/list/district/<district_code>')
@@ -105,19 +102,7 @@ def list_in_district(district_code):
     if district is None:
         raise EntityNotFound("District with code '%s' does not exist." % district_code)
 
-    list_local = district.localities
-    if len(list_local) < 72:
-        dict_local = {'A-Z': list_local}
-    else:
-        dict_local = {}
-        for local in list_local:
-            letter = local.name[0].upper()
-            if letter in dict_local:
-                dict_local[letter].append(local)
-            else:
-                dict_local[letter] = [local]
-
-    return render_template('district.html', district=district, localities=dict_local)
+    return render_template('district.html', district=district)
 
 
 @page.route('/list/locality/<locality_code>')
@@ -132,12 +117,8 @@ def list_in_locality(locality_code):
                             code=301)
         else:
             raise EntityNotFound("Locality with code '%s' does not exist." % locality_code)
-    # Sort stops by common name then short indicator label
-    short_indicator = lambda sp: sp.short_ind if sp.short_ind is not None else ''
-    stops_sorted = sorted(lty.stop_points, key=short_indicator)
-    stops_sorted = sorted(stops_sorted, key=lambda sp: sp.common_name)
 
-    return render_template('locality.html', locality=lty, list_stops=stops_sorted)
+    return render_template('locality.html', locality=lty)
 
 
 @page.route('/near/postcode/<postcode>')
@@ -150,8 +131,7 @@ def list_nr_postcode(postcode):
         new_psc = models.Postcode.query.filter_by(index=new_str).one_or_none()
         if new_psc is not None:
             # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
-            return redirect('/near/postcode/%s'
-                            % new_psc.text.replace(' ', '+'), code=301)
+            return redirect('/near/postcode/%s' % new_psc.text.replace(' ', '+'), code=301)
         else:
             raise EntityNotFound("Postcode '%s' does not exist." % postcode)
 

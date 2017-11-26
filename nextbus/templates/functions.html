@@ -53,22 +53,26 @@
 {% endif %}
 {%- endmacro %}
 
-{% macro print_areas(list, warning=true) -%}
+{% macro print_areas_districts(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for area in list|sort(attribute='name') %}
-    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a>
+    {% for ad in list %}
+    {% if ad.__tablename__ == 'admin_area' %}
+    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
+    {% elif ad.__tablename__ == 'district' %}
+    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=ad.code) }}">{{ ad.name }}</a>
+    {% endif %}
     {% endfor %}
 </div>
 {% elif warning %}
-<p>No areas found.</p>
+<p>No areas or districts found.</p>
 {% endif %}
 {%- endmacro %}
 
 {% macro print_districts(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for district in list|sort(attribute='name') %}
+    {% for district in list %}
     <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a>
     {% endfor %}
 </div>
@@ -77,10 +81,22 @@
 {% endif %}
 {%- endmacro %}
 
+{% macro print_regions(list, warning=true) -%}
+{% if list|length > 0 %}
+<div class="list-places">
+    {% for region in list %}
+    <a class="item-place" href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a>
+    {% endfor %}
+</div>
+{% elif warning %}
+<p>No regions found.</p>
+{% endif %}
+{%- endmacro %}
+
 {% macro print_localities(list, warning=true) -%}
 {% if list|length > 0 %}
 <div class="list-places">
-    {% for locality in list|sort(attribute='name') %}
+    {% for locality in list %}
     <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}</a>
     {% endfor %}
 </div>

@@ -1,0 +1,7 @@
+{% import 'functions.html' as f %}
+{% extends "base.html" %}
+{% block title %}Regions{% endblock %}
+{% block content %}
+    <h1>All regions</h1>
+    {{ f.print_regions(regions) }}
+{% endblock %}

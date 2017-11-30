@@ -2,10 +2,16 @@
 
 ## Set up the website
 
+- ~~Find out more about SQLite or PostgresSQL and convert NaPTAN data over to a SQL database for use by the website.~~
+- ~~Implement the NaPTAN and NPTG data in a SQLite database. Set up a script for doing this work.~~
+- ~~Integrate NSPL data with NPTG, if that's possible.~~
+- ~~Set up the website.~~
+
+Set up the routing as such:
 - `/` & `/home` **Home page**: search for bus stop, route, etc
-    - `/about` **About**: Stuff about me, github page, APIs used, framework used
-    - `/list` **List of regions**: List of all regions and their (admin) areas.
-        - `/list/area/<code>` **List of districts/localities**: List of districts *or* localities in an area
+    - `/list` **List of regions**: List of all regions.
+        - `/list/region/<code>` **List of areas/districts**: List of areas and districts in a region
+            - `/list/area/<code>` **List of localities**: List of localities in an area
             - `/list/district/<code>` **List of localities**: List of localities in an district
     - `/near` Placeholder
         - `/near/locality/<code>` **List of stops**: List of stops in a locality
@@ -17,7 +23,7 @@
         - `/stop/area/<code>` **Stop info for area**: Stops in stop area with stop area code
     - `/search/<string>` **Search**: Find an area, district, locality or stop name
 
-### Changes to area list
+### ~~Changes to area list~~
 Do we move to a setup where we have a list of regions only, maybe with map, and each region has list of areas and districts combined - for example Yorkshire would have a list of all districts _and_ the areas which do not have any districts (marked with *):
 - Barnsley
 - Bradford
@@ -64,12 +70,17 @@ ON CONFLICT (atco_code) /* or 'ON CONSTRAINT constraint' instead of '(sp.atco_co
 set up favourites or such?
 - Consider changing DB tables such that:
     - Harmonise names (mix of short and common names) - makes it easier to sort.
+    - ~~Short version of indicator for labelling.~~
+    - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
     - Add fields for colour - background and text/logo. See table.
     - Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)
 - With PSQL implemented, add proper search fields
 
 ## Styling website
 - Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc. This would allow the bus/tram icons to be of different colours without having to use JS to modify the SVG colours.
+- ~~Refine templates further such that the list of stops for localities, postcodes and locations all come from the same template, with a list of stop points as an object. Same goes for live times for ATCO and NaPTAN codes.~~
+- Add info panel for more details about stop; by default only show street & SMS code
+- Add map - for now, do a simple embed for stop. Later, can do markers for each stop in stop area or locality.
 
 ### Admin area colours
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |
@@ -84,18 +95,46 @@ set up favourites or such?
 | 609       | 127       | Glasgow    | Orange        |               |
 | 620       | 124       | Edinburgh  | Maroon        |               |
 
+How would the colours be encoded?
+- Pair of columns for background and text colour, with colours as integers, eg TfL red:
+    - `rgb(220, 36, 31)`
+    - `#DC241F`
+    - `14427167`
+    - Would need to set up functions to get the string value, eg
+```python
+def int_to_rgb(integer):
+    """ Converts an integer (up to 2^24) to RGB values in the form #FFFFFF. """
+    if not 0 < integer <= 2 ^ 24:
+        raise ValueError("Integer must be in range [0, 2^24).")
+    b, no_b = integer % 256, integer // 256
+    g, r = no_b % 256, no_b // 256
+    return "#%2X%2X%2X" % (r, g, b)
+```
+- One column for a text value for class name, so for TfL red:
+```css
+div.scheme-tfl-red {
+    background: #DC241F;
+    color: #FFF;
+}
+```
+
 ## Responses for requests
 - Change JS to report on live data status (timed out, server unavailable, can't reach API, etc)
 - If no response is received:
     - Display message (timed out, unavailable, etc)
-    - Change the time remaining by cutting off a minute off and any live times could be changed to timetabled alternative, or simulated with red text to indicate they are not tracked at present. This requires including _both_ live and timetabled times - use ISO formats and let JS do the minute calculations?
+    - ~~Change the time remaining by cutting off a minute off and any live times could be changed to timetabled alternative, or simulated with red text to indicate they are not tracked at present. This requires including _both_ live and timetabled times - use ISO formats and let JS do the minute calculations?~~
 
 
 ## What else?
+- ~~Set up TransportAPI querying, convert to data to be used by the website. Make a distinction between live and timetabled times.~~
+- ~~Should we set up the URLs such that we have `/stop?naptan=51201` or `/list?postcode=W1A 1AA`, instead of `/naptan/51201` or `/postcode/W1A 1AA`?~~
+- ~~How to retrieve lat/long data? Set up a JS function, and have it operate upon pressing a button.~~
+- ~~Check why the lat/long->OS grid calculations are off; try direct geodesic calculations instead?~~
+- ~~How to handle stop points without NaPTAN codes? Best solution would be to drop all entries with no NaPTAN codes.~~
 - Set up caching functions to minimise generation, especially with more static webpages (eg locality navigation)
-- Change titling such that we have indicator & common name with street and landmark as subtitles. Some places will look weird, especially with city centre stops in South Yorkshire, but it should look better for most areas.
+- ~~Change titling such that we have indicator & common name with street and landmark as subtitles. Some places will look weird, especially with city centre stops in South Yorkshire, but it should look better for most areas.~~
 - Add a stop area page with either:
-    - list of stops within area
+    - ~~list of stops within area~~
     - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
     - The TLNDS would be really useful in getting list of services for each stop.
     - Add breadcrumbs. Requires working out which locality from list of stops within area, eg
@@ -111,3 +150,4 @@ SELECT DISTINCT loc.code
     - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
     - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
 - What to do about deleted stops??
+- Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.

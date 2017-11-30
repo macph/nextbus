@@ -1,50 +1,60 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
-{% block content %}
 {% set district = stop.locality.district|default(none) %}
+
+{% block nav %}
 {% if stop.locality is not none %}
-<nav>
-    <ul class="breadcrumbs" id="ulTrailing">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        <li>&middot;&middot;&middot;</li>
-        {% if district is not none %}
-        <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
-        {% else %}
-        <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
-        {% endif %}
-        <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{stop.locality.name }}</a></li>
-    </ul>
-</nav>
-{% endif %}
-<h1 class=head-stop><span class="head-stop-ind">{{ f.stop_short_indicator(stop) }}</span> <span class="head-stop-name">{{ f.stop_name(stop) }}</span></h1>
-{{ f.resize_indicator("head-stop-ind") }}
-<p>
-    {% if stop.street is not none and stop.landmark is not none %}
-    <strong>{{ stop.street }}</strong>, {{ stop.landmark }},
-    {% elif stop.street is not none %}
-    <strong>{{ stop.street }}</strong>,
-    {% elif stop.landmark is not none %}
-    {{ stop.landmark }},
+<ul class="breadcrumbs trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    <li>&middot;&middot;&middot;</li>
+    {% if district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
+    {% else %}
+    <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
     {% endif %}
-    SMS code <strong>{{ stop.naptan_code }}</strong>
+    <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{stop.locality.name }}</a></li>
+</ul>
+{% endif %}
+{% endblock %}
+
+{% block heading %}
+<div class="heading-stop">
+    <div class="heading-stop-indicator">
+        <div class="stop-indicator">
+            <span>{{ f.stop_short_indicator(stop) }}</span>
+        </div>
+    </div>
+    <h1>{{ f.stop_name(stop) }}</h1>
+</div>
+<p>
+    {% set pipe = joiner() %}
+    {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+ -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
 </p>
-<h2 id="hTime"></h2>
-<p id="countdown"></p>
-<div id="services"><p>Retrieving live data...</p></div>
+{% endblock %}
+
+{% block content %}
+<div class="heading-live">
+        <h2 id="liveTime">Retrieving live data...</h2>
+        <span id="liveCountdown"></span>
+</div>
+<div id="services"></div>
 <p><span class="text-green">Live times are in green,</span> otherwise they are retrieved from timetables.</p>
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",
         "{{ url_for('page.stop_get_times') }}",
         document.getElementById("services"),
-        document.getElementById("hTime"),
-        document.getElementById("countdown")
+        document.getElementById("liveTime"),
+        document.getElementById("liveCountdown")
     )
     ld.initialise();
 </script>
 {% if stop.stop_area is not none and stop.stop_area.stop_points|length %}
-<h2>Other stops at {{ stop.stop_area.name }}</h2>
+<h2>Other stops</h2>
 {{ f.print_stops(stop.stop_area.stop_points|reject('equalto', stop)|list, count=false) }}
+<p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">View all stops around {{ stop.stop_area.name }}</a></p>
 {% endif %}
+{{ f.resize_indicator("stop-indicator") }}
 {% endblock %}

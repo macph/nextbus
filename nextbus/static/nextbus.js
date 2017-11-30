@@ -164,7 +164,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
 
         if (self.data.services.length > 0) {
             console.log(`Found ${self.data.services.length} services for stop '${self.atcoCode}'.`);
-            self.hTime.innerHTML = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
+            self.hTime.textContent = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
 
             var table = document.createElement('div');
             table.className = 'list-services';
@@ -176,23 +176,25 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 row.className = 'row-service';
 
                 let cellNumber = document.createElement('div');
-                cellNumber.className = 'item-service-num';
+                cellNumber.className = 'row-service-line';
                 cellNumber.appendChild(document.createTextNode(s.name));
 
                 let cellDest = document.createElement('div');
-                cellDest.className = 'item-service-dest';
+                cellDest.className = 'row-service-dest';
                 cellDest.appendChild(document.createTextNode(s.dest));
 
                 let cellExp = document.createElement('div');
+                cellExp.className = 'row-service-exp';
+
+                let cellExpNext = document.createElement('span');
                 if (s.expected[0].live) {
-                    cellExp.className = 'item-service-exp ' + clLive;
-                } else {
-                    cellExp.className = 'item-service-exp'
+                    cellExpNext.className = clLive;
                 }
-                cellExp.appendChild(document.createTextNode(strDue(s.expected[0].sec)));
+                cellExpNext.appendChild(document.createTextNode(strDue(s.expected[0].sec)));
+                cellExp.appendChild(cellExpNext);
 
                 let cellAfter = document.createElement('div');
-                cellAfter.className = 'item-service-after';
+                cellAfter.className = 'row-service-after';
 
                 if (s.expected.length == 2) {
                     let firstMin = document.createElement('span');
@@ -217,11 +219,10 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                     cellAfter.appendChild(secondMin);
                 }
 
-                row.appendChild(cellNumber);
-                row.appendChild(cellDest);
-                row.appendChild(cellExp);
-                row.appendChild(cellAfter);
-                table.appendChild(row);
+                table.appendChild(cellNumber);
+                table.appendChild(cellDest);
+                table.appendChild(cellExp);
+                table.appendChild(cellAfter);
             }
             // Remove all existing elements
             let last = self.table.lastChild;
@@ -295,34 +296,38 @@ var TRAM = "tram-white.svg";
 /**
  * Resizes text within boxes
  * @param {string} className - name of class to modify data in
+ * @param {string} busImage - link to bus logo SVG
+ * @param {string} tramImage - link to tram logo SVG
  */
-function resizeInd(className) {
+function resizeInd(className, busImage, tramImage) {
     for (elt of document.getElementsByClassName(className)) {
-        var ind = elt.innerHTML;
+        var text = elt.getElementsByTagName('span')[0];
+        if (!text) {
+          return;
+        }
+        var ind = text.textContent;
         if (/(Bay|Stan\.|Stand|Stop)/gi.test(ind) || ind.trim().length == 0) {
             fontSize = parseFloat(getComputedStyle(elt).fontSize);
             imgSize = Math.round(2.8 * fontSize);
-            elt.innerHTML = `<img src=${BUS} width="${imgSize}px">`;
+            elt.innerHTML = `<img src=${busImage} width="${imgSize}px">`;
         } else {
-            elt.innerHTML = ind;
+            text.textContent = ind;
             var len = ind.replace(/(&#?\w+;)/, ' ').length;
             switch(len) {
             case 1:
-                elt.style.fontSize = "2.2em";
+                text.className = "ind-len1";
                 break;
             case 2:
-                elt.style.fontSize = "1.8em";
+                text.className = "ind-len2";
                 break;
             case 3:
-                elt.style.fontSize = "1.5em";
+                text.className = "ind-len3";
                 break;
             case 4:
-                elt.style.fontSize = "1.3em";
-                elt.style.fontWeight = "bold";
+                text.className = "ind-len4";
                 break;
             default:
-                elt.style.fontSize = "1.1em";
-                elt.style.fontWeight = "bold";
+                text.className = "";
             }
         }
     }

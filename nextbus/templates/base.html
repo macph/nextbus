@@ -8,29 +8,35 @@
         <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,700" rel="stylesheet">
         <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}"/>
         <script type="text/javascript" src="{{ url_for('static', filename='nextbus.js') }}"></script>
-        <script>
-            BUS = "{{ url_for('static', filename='img/bus-white.svg') }}";
-            TRAM = "{{ url_for('static', filename='img/tram-white.svg') }}";
-        </script>
         <title>{% block title %}{% endblock %} - NextBus</title>
         {% endblock %}
     </head>
     <body>
-        <div id="divHeader">
+        <div id="divHeaderOuter">
         </div>
-        <div id=divHeaderText>
+        <div id="divHeader">
             <header>
                 {% block header %}
-                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a id="#aTitle" href="{{ url_for('page.index') }}">nextbus</a>
+                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a href="{{ url_for('page.index') }}">nextbus</a>
                 {% endblock %}
             </header>
+        </div>
+        <div id="divHeadingOuter">
+        </div>
+        <div id="divHeading">
+            <nav>
+                {% block nav %}{% endblock %}
+            </nav>
+            {% block heading %}{% endblock %}
+        </div>
+        <div id="divContentOuter">
         </div>
         <div id="divContent">
             {% block content %}{% endblock %}
         </div>
-        <div id="divFooter">
+        <div id="divFooterOuter">
         </div>
-        <div id=divFooterText>
+        <div id=divFooter>
             <footer>
                 {% block footer %}
                 &copy; Ewan Macpherson, 2017. <a href="{{ url_for('page.about') }}">About this website</a>

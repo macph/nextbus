@@ -16,7 +16,11 @@
 
 {% macro resize_indicator(class_name) %}
 <script>
-    resizeInd("{{ class_name }}");
+    resizeInd(
+        "{{ class_name }}",
+        "{{ url_for('static', filename='img/bus-white.svg') }}",
+        "{{ url_for('static', filename='img/tram-white.svg') }}"
+    );
 </script>
 {%- endmacro %}
 
@@ -24,13 +28,13 @@
 {% if list|length > 0 %}
 <div class="list-stops">
     {% for stop in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop>
-        <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
-        <div class="item-stop-name">{{ stop_name(stop) }}</div>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=item-stop>
+        <div class="stop-indicator"><span>{{ stop_short_indicator(stop) }}</span></div>
+        <div class="stop-name">{{ stop_name(stop) }}</div>
     </a>
     {% endfor %}
 </div>
-{{ resize_indicator("item-stop-ind") }}
+{{ resize_indicator("stop-indicator") }}
 {% else %}
 <p>No stops found.</p>
 {% endif %}
@@ -40,56 +44,16 @@
 {% if list|length > 0 %}
 <div class="list-stops-dist">
     {% for stop, distance in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=row-stop>
-        <div class="item-stop-ind">{{ stop_short_indicator(stop) }}</div>
-        <div class="item-stop-name">{{ stop_name(stop) }}</div>
-        <div class="item-stop-dist">{{ '%.0f m'|format(distance) }}</div>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=item-stop-dist>
+        <div class="stop-indicator"><span>{{ stop_short_indicator(stop) }}</span></div>
+        <div class="stop-name">{{ stop_name(stop) }}</div>
+        <div class="stop-dist">{{ '%.0f m'|format(distance) }}</div>
     </a>
     {% endfor %}
 </div>
-{{ resize_indicator("item-stop-ind") }}
+{{ resize_indicator("stop-indicator") }}
 {% else %}
 <p>No stops nearby.</p>
-{% endif %}
-{%- endmacro %}
-
-{% macro print_areas_districts(list, warning=true) -%}
-{% if list|length > 0 %}
-<div class="list-places">
-    {% for ad in list %}
-    {% if ad.__tablename__ == 'admin_area' %}
-    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
-    {% elif ad.__tablename__ == 'district' %}
-    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=ad.code) }}">{{ ad.name }}</a>
-    {% endif %}
-    {% endfor %}
-</div>
-{% elif warning %}
-<p>No areas or districts found.</p>
-{% endif %}
-{%- endmacro %}
-
-{% macro print_districts(list, warning=true) -%}
-{% if list|length > 0 %}
-<div class="list-places">
-    {% for district in list %}
-    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a>
-    {% endfor %}
-</div>
-{% elif warning %}
-<p>No districts found.</p>
-{% endif %}
-{%- endmacro %}
-
-{% macro print_regions(list, warning=true) -%}
-{% if list|length > 0 %}
-<div class="list-places">
-    {% for region in list %}
-    <a class="item-place" href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a>
-    {% endfor %}
-</div>
-{% elif warning %}
-<p>No regions found.</p>
 {% endif %}
 {%- endmacro %}
 

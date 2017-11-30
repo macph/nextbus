@@ -3,7 +3,11 @@
 {% block head %}
     {{ super() }}
 {% endblock %}
+
+{% block heading %}
+<h1>Welp.</h1>
+{% endblock %}
+
 {% block content %}
-    <h1>Welp.</h1>
-    <p>{{ message }}</p>
+<p>{{ message }}</p>
 {% endblock %}

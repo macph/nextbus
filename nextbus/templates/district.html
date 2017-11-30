@@ -1,20 +1,25 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ district.name }} district{% endblock %}
+{% set area = district.admin_area %}
+{% set region = area.region %}
+
+{% block nav %}
+<ul class="breadcrumbs">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
+    <li>{{ district.name }}</li>
+</ul>
+{% endblock %}
+
+{% block heading %}
+<h1>{{ district.name }}</h1>
+{% endblock %}
+
 {% block content %}
-    {% set area = district.admin_area %}
-    {% set region = area.region %}
-    <nav>
-        <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-            <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
-            <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
-            <li>{{ district.name }}</li>
-        </ul>
-    </nav>
-    <h1>Localities in {{ district.name }}</h1>
-    {% for group in district.localities_grouped()|dictsort %}
-    <h2>{{ group[0] }}</h2>
-    {{ f.print_localities(group[1]) }}
-    {% endfor %}
+{% for group in district.localities_grouped()|dictsort %}
+<h2 id="{{ group[0] }}">{{ group[0] }}</h2>
+{{ f.print_localities(group[1]) }}
+{% endfor %}
 {% endblock %}

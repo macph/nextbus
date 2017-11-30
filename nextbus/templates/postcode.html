@@ -1,8 +1,13 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}Postcode {{ postcode.text }}{% endblock %}
+
+{% block heading %}
+{% set location = [postcode.text, postcode.district.name|d(postcode.admin_area.name)] %}
+<h1>{{ location|join(', ') }}</h1>
+{% endblock %}
+
 {% block content %}
-    {% set location = [postcode.text, postcode.district.name|d(postcode.admin_area.name)] %}
-    <h1>Stops near {{ location|join(', ') }}</h1>
-    {{ f.print_stops_dist(list_stops) }}
+<h2>Stops</h2>
+{{ f.print_stops_dist(list_stops) }}
 {% endblock %}

@@ -1,12 +1,30 @@
-{% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ region.name }} region{% endblock %}
+
+{% block nav %}
+<ul class="breadcrumbs">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+</ul>
+{% endblock %}
+
+{% block heading %}
+<h1>{{ region.name }}</h1>
+{% endblock %}
+
 {% block content %}
-    <nav>
-        <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        </ul>
-    </nav>
-    <h1>Areas in {{ region.name }}</h1>
-    {{ f.print_areas_districts(region.list_areas_districts()) }}
+{% set list = region.list_areas_districts() %}
+{% if list|length > 0 %}
+<h2>Areas</h2>
+<div class="list-places">
+    {% for ad in list %}
+    {% if ad.__tablename__ == 'admin_area' %}
+    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
+    {% elif ad.__tablename__ == 'district' %}
+    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=ad.code) }}">{{ ad.name }}</a>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<p>No areas or districts found.</p>
+{% endif %}
 {% endblock %}

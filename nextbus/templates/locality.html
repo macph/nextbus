@@ -1,21 +1,27 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ locality.name }} locality{% endblock %}
+{% set area = locality.admin_area %}
+{% set district = locality.district %}
+{% set region = area.region %}
+
+{% block nav %}
+<ul class="breadcrumbs">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
+    {% if district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
+    {% endif %}
+    <li>{{ locality.name }}</li>
+</ul>
+{% endblock %}
+
+{% block heading %}
+<h1>{{ locality.name }}{{ ', %s'|format(district.name) if district is not none }}</h1>
+{% endblock %}
+
 {% block content %}
-    {% set area = locality.admin_area %}
-    {% set district = locality.district %}
-    {% set region = area.region %}
-    <nav>
-        <ul class="breadcrumbs">
-            <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-            <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
-            <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
-            {% if district is not none %}
-            <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
-            {% endif %}
-            <li>{{ locality.name }}</li>
-        </ul>
-    </nav>
-    <h1>Bus/tram stops in {{ locality.name }}{{ ', %s'|format(district.name) if district is not none }}</h1>
-    {{ f.print_stops(locality.stop_points) }}
+<h2>Stops</h2>
+{{ f.print_stops(locality.stop_points) }}
 {% endblock %}

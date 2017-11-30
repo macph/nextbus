@@ -58,7 +58,7 @@ class AdminArea(db.Model):
         """
         list_local = self.localities
         if len(list_local) < MIN_GROUPED:
-            dict_local = {'A-Z': list_local}
+            dict_local = {'Places': list_local}
         else:
             dict_local = {}
             for local in list_local:
@@ -92,7 +92,7 @@ class District(db.Model):
         """
         list_local = self.localities
         if len(list_local) < MIN_GROUPED:
-            dict_local = {'A-Z': list_local}
+            dict_local = {'Places': list_local}
         else:
             dict_local = {}
             for local in list_local:
@@ -132,6 +132,8 @@ class Locality(db.Model):
 class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = 'stop_point'
+    _text = {'E': 'east', 'N': 'north', 'NE': 'northeast', 'NW': 'northwest',
+              'S': 'south', 'SE': 'southeast', 'SW': 'southwest', 'W': 'west'}
 
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
     naptan_code = db.Column(db.VARCHAR(8), index=True, unique=True)
@@ -156,6 +158,10 @@ class StopPoint(db.Model):
     def __repr__(self):
         return '<StopPoint(%r, %r, %r)>' % (self.atco_code, self.naptan_code, self.common_name)
 
+    @property
+    def direction(self):
+        """ Prints bearing in full (eg 'NW' returns 'northwest'). """
+        return self._text.get(self.bearing.upper())
 
 class StopArea(db.Model):
     """ NaPTAN stop areas, eg bus interchanges. """

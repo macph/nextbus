@@ -1,7 +1,17 @@
-{% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}Regions{% endblock %}
+{% block heading %}
+<h1>Great Britain</h1>
+{% endblock %}
 {% block content %}
-    <h1>All regions</h1>
-    {{ f.print_regions(regions) }}
+{% if regions|length > 0 %}
+<h2>Regions</h2>
+<div class="list-places">
+    {% for region in regions %}
+    <a class="item-place" href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a>
+    {% endfor %}
+</div>
+{% else %}
+<p>No regions found.</p>
+{% endif %}
 {% endblock %}

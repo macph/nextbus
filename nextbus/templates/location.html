@@ -1,7 +1,12 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}Stops by location{% endblock %}
+
+{% block heading %}
+<h1>Location ({{ coord[0] }}, {{ coord[1] }})</h1>
+{% endblock %}
+
 {% block content %}
-    <h1>Bus/tram stops near location ({{ coord[0] }}, {{ coord[1] }})</h1>
-    {{ f.print_stops_dist(list_stops) }}
+<h2>Stops</h2>
+{{ f.print_stops_dist(list_stops) }}
 {% endblock %}

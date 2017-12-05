@@ -1,34 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Index{% endblock %}
-{% block head %}
-    {{ super() }}
-    <script>
-        function ls(...strings) {
-            str = '';
-            for (i of strings)
-                str += `<li>${i}</li>`;
-            return str;
-        }
-        function getLocation() {
-            var output = document.getElementById("output");
-            if (!navigator.geolocation) {
-                console.log("Browser does not support geolocation.");
-                output.innerHTML = ls("Geolocation not supported; try searching by postcode.");
-                return;
-            }
-            var success = function(position) {
-                var lat = position.coords.latitude.toFixed(6);
-                var long = position.coords.longitude.toFixed(6);
-                output.innerHTML = ls(`Your position is ${lat}, ${long}. I know where you live now.`);
-            }
-            var error = function(err) {
-                console.log("Geolocation error: " + err);
-                output.innerHTML = ls("Unable to retrieve your location.");
-            }
-            navigator.geolocation.getCurrentPosition(success, error);
-        }
-    </script>
-{% endblock %}
 
 {% block heading %}
 <h1>Live bus times</h1>

@@ -7,7 +7,52 @@
 {% endblock %}
 
 {% block content %}
+<div class="heading-inline">
+    <h2>Map</h2>
+    <button id="buttonShowMap" type="button" onclick="" value="show">show</button>
+</div>
+<div class="google-maps-js" id="divMap"></div>
 <h2>Stops</h2>
 {{ f.print_stops(stop_area.stop_points) }}
 {{ f.resize_indicator("stop-indicator") }}
+<script>
+    var showButton = document.getElementById("buttonShowMap");
+    var mapDiv = document.getElementById("divMap");
+    var map = new MultiStopMap(
+        mapDiv,
+        {{ area_info|tojson }},
+        {{ list_stops|tojson }}
+    );
+
+    /* Checks animations, from Modernizr */
+    function whichTransitionEvent(el) {
+        var transitions = {
+            'transition': 'transitionend',
+            'OTransition': 'oTransitionEnd',
+            'MozTransition': 'transitionend',
+            'WebkitTransition': 'webkitTransitionEnd'
+        };
+    
+        for (var t in transitions) {
+            if (transitions.hasOwnProperty(t) && el.style[t] !== undefined) {
+                return transitions[t];
+            }
+        }
+    }
+    showButton.onclick = function() {
+        showButton.textContent = "loading";
+        mapDiv.style.paddingBottom = "56.25%";
+        this.onclick = null;
+    };
+    /* Uses whichTransitionEvent to detect which transition to use, then listens out for it */
+    let transitionEnd = whichTransitionEvent(mapDiv);
+    var transitionEndCallback = function() {
+        mapDiv.removeEventListener(transitionEnd, transitionEndCallback);
+        showButton.style.display = "none";
+        map.create(); 
+        console.log("Map created for stop area with " + map.markers.length + " stops.");
+    }
+    mapDiv.addEventListener(transitionEnd, transitionEndCallback);
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4z8yZknfpA57bRuTky5jC1rKtS_Phd-0&callback=map.setReady"></script>
 {% endblock %}

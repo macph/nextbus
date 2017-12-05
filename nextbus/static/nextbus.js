@@ -6,7 +6,93 @@ const INTERVAL = 60;
 const REFRESH = true;
 const TIME_LIMIT = 60;
 
-/** Filters services in list
+/**
+ * Retrieves location.
+ * @param {string} elementId - element ID to output to
+ */
+function getLocation(elementId) {
+    var output = document.getElementById(elementId);
+    if (!navigator.geolocation) {
+        console.log("Browser does not support geolocation.");
+        output.innerHTML = "Geolocation not supported; try searching by postcode.";
+        return;
+    }
+    var success = function(position) {
+        var lat = position.coords.latitude.toFixed(6);
+        var long = position.coords.longitude.toFixed(6);
+        output.innerHTML = `Your position is ${lat}, ${long}. I know where you live now.`;
+    }
+    var error = function(err) {
+        console.log("Geolocation error: " + err);
+        output.innerHTML = "Unable to retrieve your location.";
+    }
+    navigator.geolocation.getCurrentPosition(success, error);
+}
+
+/**
+ * Creates a Google Maps with the JS API, with marked stops.
+ * @constructor
+ * @param {string} mapElement - The <div> element to insert map in
+ * @param {object} stopArea - Current area, with name, lat and long
+ * @param {array} listStops - The list of stops with required attributes
+ * @param {boolean} isReady - Used to set up once external script finishes loading
+ */
+function MultiStopMap(mapElement, stopArea, listStops, isReady) {
+    var self = this;
+    this.mapElement = mapElement;
+    this.stopArea = stopArea;
+    this.listStops = listStops;
+    if (isReady !== undefined && isReady) {
+        this.ready = true;
+    } else {
+        this.ready = false;
+    }
+
+    this.setReady = function() {
+        if (!self.ready) {
+            self.ready = true;
+        }
+    }
+
+    this.create = function() {
+        if (!self.ready) {
+            return;
+        }
+        self.map = new google.maps.Map(mapElement, {
+            center: {lat: self.stopArea.latitude, lng: self.stopArea.longitude},
+        });
+        self.bounds = new google.maps.LatLngBounds();
+    
+        self.info = [];
+        self.markers = [];
+        for (stop of listStops) {
+            let coord = {lat: stop.latitude, lng: stop.longitude}
+            let marker = new google.maps.Marker({
+                position: coord,
+                map: self.map,
+                title: `${stop.common_name} (${stop.indicator})`,
+                label: {
+                    fontFamily: "Source Sans Pro, sans-serif",
+                    fontWeight: "600",
+                    text: stop.short_ind
+                }
+            });
+            // Add coordinates to boundary
+            self.bounds.extend(coord);
+            self.markers.push(marker);
+        }
+        // Fit all coordinates within map
+        self.map.fitBounds(self.bounds);
+        // Zooms out to 18 if zoomed in too much
+        var listener = google.maps.event.addListener(self.map, "zoom_changed", function() {
+            if (self.map.getZoom() > 18) self.map.setZoom(18);
+            google.maps.event.removeListener(listener); 
+        });
+    };
+}
+
+/**
+ * Filters services in list
  * @constructor
  * @param {Object} callback - Function called to redraw list
  * @param {string} args - List of services to add at start
@@ -31,7 +117,7 @@ function ServicesFilter(callback, ...args) {
         } else {
             console.log(`Service '${s}' is already in filtered list.`);
         }
-    }
+    };
 
     /**
      * Removes a service from whitelist, refreshing table
@@ -46,7 +132,7 @@ function ServicesFilter(callback, ...args) {
         } else {
             console.log(`Service '${s}' is not in filtered list.`);
         }
-    }
+    };
 
     /**
      * Resets filter list, refreshing table
@@ -59,7 +145,7 @@ function ServicesFilter(callback, ...args) {
         } else {
             console.log(`Filtered list is empty.`);
         }
-    }
+    };
 
     /**
      * Checks if whitelist is active & service is not in list, therefore excluding
@@ -67,7 +153,7 @@ function ServicesFilter(callback, ...args) {
      */
     this.exclude = function(s) {
         return (self.filterList.length > 0 && self.filterList.indexOf(s) === -1);
-    }
+    };
 
     /**
      * Checks if whitelist is inactive or service is in list, therefore including
@@ -75,7 +161,7 @@ function ServicesFilter(callback, ...args) {
      */
     this.include = function(s) {
         return (self.filterList.length === 0 || self.filterList.indexOf(s) > -1);
-    }
+    };
 }
 
 /**
@@ -96,12 +182,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     this.cd = countdownElement;
     this.data = null;
     this.isLive = true;
-    
-    this.getData = _getData;
-    this.printData = _printData;
-    this.updateData = _updateData;
-    this.initialise = _initialise;
-    this.filter = new ServicesFilter(_printData);
+    this.filter = new ServicesFilter(this.printData);
 
     /**
      * Get list of all services to pass on to filtering class
@@ -112,12 +193,12 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             listServices = self.data.services.map(s => s.name);
         }
         return [...new Set(listServices)];
-    }
+    };
 
     /**
      * Gets data from server, refreshing table
      */
-    function _getData() {
+    this.getData = function() {
         console.log(`Sending POST request to ${self.postURL} with code='${self.atcoCode}'`);
         var request = new XMLHttpRequest();
         request.open('POST', self.postURL, true);
@@ -142,12 +223,12 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         }
 
         request.send(JSON.stringify({code: self.atcoCode}));
-    }
+    };
 
     /**
      * Draws table from data
      */
-    function _printData() {
+    this.printData = function() {
         var clLive;
         if (self.isLive) {
             clLive = 'text-green';
@@ -176,8 +257,13 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 row.className = 'row-service';
 
                 let cellNumber = document.createElement('div');
+                let cellNumberInner = document.createElement('div');
                 cellNumber.className = 'row-service-line';
-                cellNumber.appendChild(document.createTextNode(s.name));
+                if (s.name.length > 6) {
+                    cellNumberInner.className = 'text-line-small';
+                }
+                cellNumberInner.appendChild(document.createTextNode(s.name));
+                cellNumber.appendChild(cellNumberInner);
 
                 let cellDest = document.createElement('div');
                 cellDest.className = 'row-service-dest';
@@ -238,12 +324,12 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             self.hTime.innerHTML = `No buses expected at ${self.data.local_time}`;
             console.log(`No services found for stop ${self.atcoCode}.`);
         }
-    }
+    };
 
     /**
      * Updates seconds remaining with current date/time if no data received
      */
-    function _updateData() {
+    this.updateData = function() {
         var dtNow = new Date();
         for (s of self.data.services) {
             for (e of s.expected) {
@@ -264,16 +350,16 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         var dtReq = new Date(self.data.iso_date);
         var overDue = Math.round((dtNow - dtReq) / 1000);
         console.log(`Simulated time remaining as live date overdue ${overDue} seconds.`);
-    }
+    };
 
     /**
      * Starts up the class with interval for refreshing
      */
-    function _initialise() {
+    this.startLoop = function() {
         self.getData();
         if (REFRESH) {
             var time = INTERVAL;
-            window.setInterval(function() {
+            self.interval = setInterval(function() {
                 if (--time > 0) {
                     self.cd.innerHTML = `${time}s`
                 } else {
@@ -287,7 +373,16 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         } else {
             self.cd.innerHTML = '';
         }
-    }
+    };
+
+    /**
+     * Stops the interval, leaving it paused. Can be restarted with startLoop() again
+     */
+    this.stopLoop = function() {
+        if (self.interval) {
+            clearInterval(self.interval);
+        }
+    };
 }
 
 var BUS = "bus-white.svg";

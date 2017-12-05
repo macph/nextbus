@@ -201,6 +201,21 @@ class StopArea(db.Model):
     def __repr__(self):
         return '<StopArea(%r, %r)>' % (self.code, self.name)
 
+    def serialise_data(self):
+        """ Pass data on each stop point in serialised form. """
+        attrs = [
+            "atco_code",
+            "common_name",
+            "indicator",
+            "short_ind",
+            "latitude",
+            "longitude"
+        ]
+        list_stops = []
+        for stop in self.stop_points:
+            list_stops.append({i: getattr(stop, i) for i in attrs})
+
+        return list_stops
 
 class Postcode(db.Model):
     """ Postcodes with coordinates, derived from the NSPL data. """

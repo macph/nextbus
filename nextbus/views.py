@@ -4,7 +4,7 @@ Views for the nextbus website.
 import re
 from requests import HTTPError
 from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
-from nextbus import forms, location, models, tapi
+from nextbus import db, forms, location, models, tapi
 
 MAX_DISTANCE = 500
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
@@ -172,7 +172,25 @@ def stop_area(stop_area_code):
             raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
                                  % stop_area_code)
 
-    return render_template('stop_area.html', stop_area=s_area)
+    area_info = db.session.query(
+        models.StopArea.name,
+        models.StopArea.latitude,
+        models.StopArea.longitude,
+    ).filter_by(code=s_area.code).one()._asdict()
+
+    query_stops = db.session.query(
+        models.StopPoint.atco_code,
+        models.StopPoint.common_name,
+        models.StopPoint.indicator,
+        models.StopPoint.short_ind,
+        models.StopPoint.street,
+        models.StopPoint.latitude,
+        models.StopPoint.longitude
+    ).filter_by(stop_area_code=s_area.code).all()
+    list_stops = list(map(lambda i: i._asdict(), query_stops))
+
+    return render_template('stop_area.html', stop_area=s_area, area_info=area_info,
+                           list_stops=list_stops)
 
 
 @page.route('/stop/naptan/<naptan_code>')

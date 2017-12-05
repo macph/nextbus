@@ -82,8 +82,10 @@ set up favourites or such?
 - ~~Refine templates further such that the list of stops for localities, postcodes and locations all come from the same template, with a list of stop points as an object. Same goes for live times for ATCO and NaPTAN codes.~~
 - Add info panel for more details about stop; by default only show street & SMS code
 - Add maps for easier navigation.
-    - For stops do a simple embed, perhaps with streetview?
-    - For places, stop areas, postcodes and GPS: show stops with indicators.
+    - Only load when required (eg 'Show location' button) - limits requests & reduce load on phones
+    - For stops do a simple embed. (Embed API)
+    - With streetview, set it up so that it points in right direction. (Embed API?)
+    - For places, stop areas, postcodes and GPS: show stops with indicators. (JS API)
     - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
 - Set up stop area page such that
     - Info about area
@@ -152,13 +154,17 @@ div.scheme-tfl-red {
     - ~~list of stops within area~~
     - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
     - The TLNDS would be really useful in getting list of services for each stop.
-    - Add breadcrumbs. Requires working out which locality from list of stops within area, eg
+    - Add breadcrumbs. Requires working out which locality from list of stops within area, eg (this would be easier to do during population instead of live data retrieval)
 ```sql
-SELECT DISTINCT loc.code
-           FROM locality AS loc
-                INNER JOIN stop_point AS sp
-                        ON sp.locality_code = loc.code
-          WHERE sp.stop_area_code='370G105082';
+  SELECT stop_area_code, locality_code, MAX(count)
+    FROM (
+          SELECT stop_area_code, locality_code, COUNT(locality_code) AS count
+            FROM stop_point
+        GROUP BY stop_area_code, locality_code
+    )
+GROUP BY stop_area_code;
 ```
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
+- Move the `populate` command to a separate module and import it into the package somehow. Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
+- Add SQLAlchemy logging; this would help with optimising SQL queries.

@@ -48,6 +48,16 @@ input {
     font-family: inherit;
 }
 
+button {
+    border: none;
+    /* required as Safari has its own default appearance */
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    -webkit-appearance: none;
+
+    font-family: inherit;
+}
+
 
 /* Page sections */
 #divHeaderOuter, #divHeadingOuter, #divContentOuter, #divFooterOuter {
@@ -172,19 +182,37 @@ div.heading-stop-indicator {
     font-size: 1.5em;
 }
 
-/* Subheading with countdown */
-div.heading-live {
+/* Subheading with inline elements */
+div.heading-inline {
     margin: 16px 10px;
 }
 
-div.heading-live > h2 {
+div.heading-inline > h2 {
     display: inline;
     margin: 0;
     margin-right: 10px;
 }
 
-div.heading-live > span {
+div.heading-inline > span {
     font-size: 1.6rem;
+}
+
+div.heading-inline > button {
+    display: inline-block;
+    padding: 5px 6px;
+    box-sizing: border-box;
+    background: gainsboro;
+
+    font-size: 1.6rem;
+}
+
+div.heading-inline > button:hover {
+    background: lightgrey;
+}
+
+div.heading-inline > button:focus {
+    background: midnightblue;
+    color: white;
 }
 
 /* list of places */
@@ -329,15 +357,31 @@ div.list-services > div {
 
 div.row-service-line {
     max-width: 96px;
-    padding: 0 10px;
-    background: midnightblue;
-    justify-content: center;
+}
 
-    line-height: 1.0em;
+div.row-service-line > div {
+    display: flex;
+    width: 100%;
+    min-height: 32px;
+    padding: 5px 10px;
+    box-sizing: border-box;
+
+    justify-content: center;
+    align-items: center;
     text-align: center;
 
+    background: midnightblue;
+
+    line-height: 1.0em;
+    text-transform: capitalize;
+    word-wrap: break-word;
     color: white;
     font-size: 2rem;
+}
+
+div.row-service-line > div.text-line-small {
+    font-size: 1.75rem;
+    font-weight: 600;
 }
 
 div.row-service-dest {
@@ -458,4 +502,29 @@ div.search-error > p {
     text-align: center;
     font-size: 1.4rem;
     color: red;
+}
+
+/* Responsive container for maps */
+div.google-maps-embed {
+    position: relative;
+    height: 0;
+    overflow: hidden;
+    /* Height is given by padding-bottom -> 56.25% */
+    transition: padding-bottom 0.5s ease-out;
+}
+
+div.google-maps-embed > iframe {
+    /* Fills up the container */
+    position: absolute;
+    top:0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+div.google-maps-js {
+    width: 100%;
+    height: 0;
+    /* Height is given by padding-bottom -> 56.25% */
+    transition: padding-bottom 0.5s ease-out;
 }

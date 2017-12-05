@@ -22,6 +22,9 @@
 {% endblock %}
 
 {% block content %}
-<h2>Stops</h2>
-{{ f.print_stops(locality.stop_points) }}
+{% for group in locality.stops_grouped()|dictsort %}
+<h2 id="{{ group[0] }}">{{ group[0] }}</h2>
+{{ f.print_stops(group[1]) }}
+{% endfor %}
+{{ f.resize_indicator("stop-indicator") }}
 {% endblock %}

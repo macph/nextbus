@@ -128,12 +128,30 @@ class Locality(db.Model):
     def __repr__(self):
         return '<Locality(%r, %r)>' % (self.code, self.name)
 
+    def stops_grouped(self):
+        """ Returns a dict with stops grouped by first letter of common name,
+            if total exceeds MIN_GROUPED.
+        """
+        list_stops = self.stop_points
+        if len(list_stops) < MIN_GROUPED:
+            dict_stops = {'Stops': list_stops}
+        else:
+            dict_stops = {}
+            for stop in list_stops:
+                letter = stop.common_name[0].upper()
+                if letter in dict_stops:
+                    dict_stops[letter].append(stop)
+                else:
+                    dict_stops[letter] = [stop]
+
+        return dict_stops
+
 
 class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = 'stop_point'
     _text = {'E': 'east', 'N': 'north', 'NE': 'northeast', 'NW': 'northwest',
-              'S': 'south', 'SE': 'southeast', 'SW': 'southwest', 'W': 'west'}
+             'S': 'south', 'SE': 'southeast', 'SW': 'southwest', 'W': 'west'}
 
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
     naptan_code = db.Column(db.VARCHAR(8), index=True, unique=True)

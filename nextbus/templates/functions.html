@@ -24,7 +24,7 @@
 </script>
 {%- endmacro %}
 
-{% macro print_stops(list, count=true) -%}
+{% macro print_stops(list) -%}
 {% if list|length > 0 %}
 <div class="list-stops">
     {% for stop in list %}
@@ -34,7 +34,6 @@
     </a>
     {% endfor %}
 </div>
-{{ resize_indicator("stop-indicator") }}
 {% else %}
 <p>No stops found.</p>
 {% endif %}
@@ -51,7 +50,6 @@
     </a>
     {% endfor %}
 </div>
-{{ resize_indicator("stop-indicator") }}
 {% else %}
 <p>No stops nearby.</p>
 {% endif %}

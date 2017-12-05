@@ -85,6 +85,13 @@ set up favourites or such?
     - For stops do a simple embed, perhaps with streetview?
     - For places, stop areas, postcodes and GPS: show stops with indicators.
     - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
+- Set up stop area page such that
+    - Info about area
+    - Map with all stops
+    - Section for each stop in area with live bus times
+- Index stops in locality if there are too many?
+- Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.
+- Fix height of services; add another div within with height fixed by content not the grid
 
 ### Admin area colours
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |
@@ -123,6 +130,10 @@ div.scheme-tfl-red {
 ```
 
 ## Responses for requests
+- Sort out response handling for:
+    - `stop_get_times()` POST response; need to pass on any errors from retrieving data to the JS
+    - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
+    - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
 - Change JS to report on live data status (timed out, server unavailable, can't reach API, etc)
 - If no response is received:
     - Display message (timed out, unavailable, etc)
@@ -149,9 +160,5 @@ SELECT DISTINCT loc.code
                         ON sp.locality_code = loc.code
           WHERE sp.stop_area_code='370G105082';
 ```
-- Sort out response handling for:
-    - `stop_get_times()` POST response; need to pass on any errors from retrieving data to the JS
-    - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
-    - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import lxml.etree as et
 
-from nextbus.populate import IterChunk, XPath, capitalise
+from nextbus.populate import XPath, capitalise
 
 HOME_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -100,46 +100,20 @@ class XPathTests(unittest.TestCase):
         self.assertDictEqual(output, expected)
 
 
-class IterChunkTests(unittest.TestCase):
-
-    def setUp(self):
-        self.range = iter(range(500))
-        self.iter = IterChunk(self.range, 100)
-
-    def tearDown(self):
-        del self.range
-        del self.iter
-
-    def test_iter_mid(self):
-        next(self.iter)
-        next(self.iter)
-        self.assertListEqual(next(self.iter), list(range(200, 300)))
-
-    def test_iter_loop(self):
-        new_list = []
-        for chunk in self.iter:
-            new_list.extend(chunk)
-        self.assertListEqual(new_list, list(range(500)))
-
-    def test_iter_larger(self):
-        chunks = IterChunk(self.range, 600)
-        self.assertListEqual(next(chunks), list(range(500)))
-
-
 class CapitaliseTests(unittest.TestCase):
 
     def test_string_lower(self):
         string = "oxford street"
         self.assertEqual(capitalise(string), "Oxford Street")
-    
+
     def test_string_upper(self):
         string = "OXFORD STREET"
         self.assertEqual(capitalise(string), "Oxford Street")
-    
+
     def test_string_astothrope(self):
         string = "st james's gate"
         self.assertEqual(capitalise(string), "St James's Gate")
-    
+
     def test_string_brackets(self):
         string = "Trafalgar square (stop d)"
         self.assertEqual(capitalise(string), "Trafalgar Square (Stop D)")

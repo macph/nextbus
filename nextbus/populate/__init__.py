@@ -1,12 +1,8 @@
 """
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
-import os
-import json
 import re
 import click
-from definitions import ROOT_DIR
-from nextbus import db, models
 
 
 def progress_bar(iterable, **kwargs):
@@ -91,57 +87,3 @@ def capitalise(string):
                 list_words[w] = word[:c] + char.upper() + word[c+1:]
                 break
     return ' '.join(list_words)
-
-
-def modify_data(file_name=None):
-    """ Modifies data after populating. Reads a JSON file with 'modify' and
-        'delete' keys, each a list of entries, and modifies each entry.
-    """
-    count_m, count_d = 0, 0
-    if file_name is None:
-        path = os.path.join(ROOT_DIR, 'nextbus/populate/modifications.json')
-    else:
-        path = file_name
-    with open(path, 'r') as jf:
-        data = json.load(jf)
-
-    click.echo("Making modifications...")
-    for entry in data.get('modify', []):
-        try:
-            model = getattr(models, entry['model'], None)
-            if model is None:
-                raise ValueError("Model name %r does not exist. Use the "
-                                 "Python class name, not the DB table name."
-                                 % entry['model'])
-            old_values = {entry['attr']: entry['old']}
-            new_values = {entry['attr']: entry['new']}
-            entry = model.query.filter_by(**old_values).update(new_values)
-            if entry > 0:
-                count_m += 1
-        except KeyError as err:
-            raise ValueError("Each modification entry must be a dict with "
-                             "keys {model, attr, old, new}.") from err
-
-    for entry in data.get('delete', []):
-        try:
-            model = getattr(models, entry['model'], None)
-            if model is None:
-                raise ValueError("Model name %r does not exist. Use the "
-                                 "Python class name, not the DB table name."
-                                 % entry['model'])
-            values = {entry['attr']: entry['value']}
-            entry = model.query.filter_by(**values).delete()
-            if entry > 0:
-                count_d += 1
-        except KeyError as err:
-            raise ValueError("Each delete entry must be a dict with "
-                             "keys {model, attr, value}.") from err
-
-    if count_m + count_d > 0:
-        try:
-            db.session.commit()
-        except:
-            db.session.rollback()
-    click.echo("%s record%s modified and %s record%s deleted." %
-               (count_m, '' if count_m == 1 else 's',
-                count_d, '' if count_d == 1 else 's'))

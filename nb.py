@@ -7,7 +7,7 @@ from nextbus import create_app
 app = create_app()
 
 from nextbus import models, views
-from nextbus.populate import modify_data, naptan, nspl
+from nextbus.populate import modifications, naptan, nspl
 
 
 @app.cli.command(help='Populate NaPTAN, NPTG and NSPL data.')
@@ -55,9 +55,9 @@ def populate(naptan_dl, naptan_files, nspl_dl, nspl_file, modify, modify_file):
         click.echo("Can't use both default and specified file for "
                    "modification.")
     elif modify:
-        modify_data()
+        modifications.modify_data()
     elif modify_file is not None:
-        modify_data(modify_file)
+        modifications.modify_data(modify_file)
     else:
         no_modify = True
 

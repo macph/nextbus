@@ -74,13 +74,17 @@ set up favourites or such?
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
     - Add fields for colour - background and text/logo. See table.
     - Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)
+    - Change locality name to place - or at least, do this for front facing pages.
 - With PSQL implemented, add proper search fields
 
 ## Styling website
 - Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc. This would allow the bus/tram icons to be of different colours without having to use JS to modify the SVG colours.
 - ~~Refine templates further such that the list of stops for localities, postcodes and locations all come from the same template, with a list of stop points as an object. Same goes for live times for ATCO and NaPTAN codes.~~
 - Add info panel for more details about stop; by default only show street & SMS code
-- Add map - for now, do a simple embed for stop. Later, can do markers for each stop in stop area or locality.
+- Add maps for easier navigation.
+    - For stops do a simple embed, perhaps with streetview?
+    - For places, stop areas, postcodes and GPS: show stops with indicators.
+    - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
 
 ### Admin area colours
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |

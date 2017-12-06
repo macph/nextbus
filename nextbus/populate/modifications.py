@@ -66,23 +66,23 @@ def _find_delete(entry):
 
 
 def modify_data(file_name=None):
-    """ Modifies data after populating. Reads a JSON file with 'modify' and
-        'delete' keys, each a list of entries, and modifies each entry. Either
+    """ Modifies data after populating. Reads a JSON file with ``modify`` and
+        ``delete`` keys, each a list of entries, and modifies each entry. Either
         find old value, or use separate column with list of values to filter
         rows to be modified.
 
         Each 'modify' entry has the keys
-        - 'model': class name for data model
-        - 'modify_attr': column to modify
-        - 'old_value': find old value to modify (optional)
-        - 'find_attr': another column to search by (optional)
-        - 'find_values': list of values to filter rows (optional)
-        - 'new_value': new value
+        - ``model``: class name for data model
+        - ``modify_attr``: column to modify
+        - ``old_value``: find old value to modify (optional)
+        - ``find_attr``: another column to search by (optional)
+        - ``find_values``: list of values to filter rows (optional)
+        - ``new_value``: new value
 
         Each 'delete' entry has keys
-        - 'model': class name for data model
-        - 'attr': column to match value with
-        - 'value': rows with this value in column 'attr' are deleted
+        - ``model``: class name for data model
+        - ``attr``: column to match value with
+        - ``value``: rows with this value in column 'attr' are deleted
 
     """
     count_m, count_d = 0, 0
@@ -106,6 +106,7 @@ def modify_data(file_name=None):
             db.session.commit()
         except:
             db.session.rollback()
+
     click.echo("%s record%s modified and %s record%s deleted." %
                (count_m, '' if count_m == 1 else 's',
                 count_d, '' if count_d == 1 else 's'))

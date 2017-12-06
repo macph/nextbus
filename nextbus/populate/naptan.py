@@ -225,12 +225,13 @@ class _NaPTANStops(object):
     regex_no_word = re.compile(r"^[^\w]*$")
     indicator_regex = [
         (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
-        (re.compile(r"adjacent", re.I), "adj"),
+        (re.compile(r"(adj|adjacent)", re.I), "adj"),
         (re.compile(r"after", re.I), "aft"),
         (re.compile(r"before", re.I), "pre"),
-        (re.compile(r"^nr$", re.I), "near"),
-        (re.compile(r"opposite", re.I), "opp"),
-        (re.compile(r"outside", re.I), "o/s"),
+        (re.compile(r"^(nr|near)$", re.I), "near"),
+        (re.compile(r"(opp|opposite)", re.I), "opp"),
+        (re.compile(r"(o/s|outside)", re.I), "o/s"),
+        (re.compile(r"^at$", re.I), "at"),
         (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
         (re.compile(r"->([ENSW]+)", re.I), r">\1"),
         (re.compile(r"(East|North|South|West)[-\s]?bound", re.I),
@@ -312,6 +313,8 @@ class _NaPTANStops(object):
             return
         if area.modified is not None:
             area.modified = dateutil.parser.parse(area.modified)
+        # '/' is not allowed in NaPTAN strings; was simply removed
+        area.name = area.name.replace('  ', ' / ')
         list_objects.append(area)
 
 

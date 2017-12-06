@@ -94,6 +94,12 @@ set up favourites or such?
 - Index stops in locality if there are too many?
 - Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.
 - Fix height of services; add another div within with height fixed by content not the grid
+- Take a look at how different pages call the SQL database; if only calling a specific column value it would be a waste to get the object for that row and then retrieve the attribute in question. If calling a number of attributes, can do a single query and output to a dict in the view function to be passed to the template page. So, instead of doing `stop_point.locality.name`, do
+```python
+models.Locality.name.query.filter_by(
+    code=stop_point.locality_code
+).scalar()
+```
 
 ### Admin area colours
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |

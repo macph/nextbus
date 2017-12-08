@@ -13,16 +13,16 @@
             "new_value": "London"
         },
         {
-            "model": "District",
-            "modify_attr": "name",
-            "old_value": "Westminster City of",
-            "new_value": "City of Westminster"
-        },
-        {
             "model": "AdminArea",
             "modify_attr": "name",
             "old_value": "Durham",
             "new_value": "County Durham"
+        },
+        {
+            "model": "District",
+            "modify_attr": "name",
+            "old_value": "Westminster City of",
+            "new_value": "City of Westminster"
         },
         {
             "model": "StopPoint",
@@ -47,8 +47,20 @@
         },
         {
             "model": "StopPoint",
-            "find_attr": "stop_area_code",
-            "find_values": ["370G102474"],
+            "find_attr": "atco_code",
+            "find_values": [
+                "370022801",
+                "370022802",
+                "370022803",
+                "370022857",
+                "370023168",
+                "370023169",
+                "370023170",
+                "370023171",
+                "370023715",
+                "370027281",
+                "370027436"
+            ],
             "modify_attr": "common_name",
             "new_value": "Arundel Gate"
         },

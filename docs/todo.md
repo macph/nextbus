@@ -72,8 +72,8 @@ set up favourites or such?
     - Harmonise names (mix of short and common names) - makes it easier to sort.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
-    - Add fields for colour - background and text/logo. See table.
-    - Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)
+    - ~~Add fields for colour - background and text/logo. See table.~~
+    - ~~Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)~~
     - Change locality name to place - or at least, do this for front facing pages.
 - With PSQL implemented, add proper search fields
 
@@ -92,16 +92,16 @@ set up favourites or such?
     - Map with all stops
     - Section for each stop in area with live bus times
 - Index stops in locality if there are too many?
-- Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.
-- Fix height of services; add another div within with height fixed by content not the grid
+- ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
+- ~~Fix height of services; add another div within with height fixed by content not the grid~~
 - Take a look at how different pages call the SQL database; if only calling a specific column value it would be a waste to get the object for that row and then retrieve the attribute in question. If calling a number of attributes, can do a single query and output to a dict in the view function to be passed to the template page. So, instead of doing `stop_point.locality.name`, do
 ```python
-models.Locality.name.query.filter_by(
+db.session.query(models.Locality.name).filter_by(
     code=stop_point.locality_code
 ).scalar()
 ```
 
-### Admin area colours
+### ~~Admin area colours~~
 | ATCO code | Area code | Area name  | Stop colour   | Text colour   |
 | --------- | --------- | ---------- | ------------- | ------------- |
 | 180       | 083       | Manchester | Dark grey     |               |
@@ -115,25 +115,11 @@ models.Locality.name.query.filter_by(
 | 620       | 124       | Edinburgh  | Maroon        |               |
 
 How would the colours be encoded?
-- Pair of columns for background and text colour, with colours as integers, eg TfL red:
-    - `rgb(220, 36, 31)`
-    - `#DC241F`
-    - `14427167`
-    - Would need to set up functions to get the string value, eg
-```python
-def int_to_rgb(integer):
-    """ Converts an integer (up to 2^24) to RGB values in the form #FFFFFF. """
-    if not 0 < integer <= 2 ^ 24:
-        raise ValueError("Integer must be in range [0, 2^24).")
-    b, no_b = integer % 256, integer // 256
-    g, r = no_b % 256, no_b // 256
-    return "#%2X%2X%2X" % (r, g, b)
-```
 - One column for a text value for class name, so for TfL red:
 ```css
-div.scheme-tfl-red {
-    background: #DC241F;
-    color: #FFF;
+/* Transport for London */
+div.area-color-490 {
+    background: rgb(220, 36, 31);
 }
 ```
 

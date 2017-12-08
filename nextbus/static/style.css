@@ -313,7 +313,7 @@ div.stop-indicator {
     background: midnightblue;
 
     color: white;
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     /* default settings; can be modified by ResizeInd() */
     font-size: 1em;
     font-weight: 700;
@@ -359,7 +359,7 @@ div.row-service-line {
     max-width: 96px;
 }
 
-div.row-service-line > div {
+div.row-service-line-inner {
     display: flex;
     width: 100%;
     min-height: 32px;
@@ -379,7 +379,7 @@ div.row-service-line > div {
     font-size: 2rem;
 }
 
-div.row-service-line > div.text-line-small {
+div.row-service-line-small {
     font-size: 1.75rem;
     font-weight: 600;
 }
@@ -414,6 +414,53 @@ span.text-red {
 
 div.search-box {
     margin: 0 10px;
+}
+
+/* specific colours for areas, using ATCO area codes */
+/* Greater Manchester */
+div.area-color-180 {
+    background: rgb(64, 64, 62);
+}
+
+/* Merseyside */
+div.area-color-280 {
+    background: rgb(239, 224, 0);
+    color: rgb(51, 51, 51);
+}
+
+/* Nottingham */
+div.area-color-339 {
+    background: rgb(0, 89, 77);;
+}
+
+/* West Yorkshire */
+div.area-color-450 {
+    background: rgb(6, 65, 126);;
+}
+
+/* London */
+div.area-color-490 {
+    background: rgb(220, 36, 31);
+}
+
+/* Cardiff */
+div.area-color-571 {
+    background: rgb(5, 139, 136);
+}
+
+/* Glasgow */
+div.area-color-609 {
+    background: rgb(255, 98, 0);;
+}
+
+/* Edinburgh */
+div.area-color-620 {
+    background: rgb(118, 19, 21);;
+}
+
+/* Trams */
+div.area-color-940 {
+    background: dimgrey;
 }
 
 /* search fields */

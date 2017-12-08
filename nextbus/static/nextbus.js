@@ -168,14 +168,16 @@ function ServicesFilter(callback, ...args) {
  * Retrieves live data and displays it in a table
  * @constructor
  * @param {string} atcoCode - ATCO code for stop
+ * @param {string} atcoArea - ATCO code for area stop is in
  * @param {string} postURL - URL to send requests to
  * @param {Element} tableElement - Table element in document
  * @param {Element} timeElement - Element in document showing time when data was retrieved
  * @param {Element} countdownElement - Element in document showing time before next refresh
  */
-function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement) {
+function LiveData(atcoCode, atcoArea, postURL, tableElement, timeElement, countdownElement) {
     var self = this;
     this.atcoCode = atcoCode;
+    this.atcoArea = atcoArea;
     this.postURL = postURL;
     this.table = tableElement;
     this.hTime = timeElement;
@@ -259,8 +261,9 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 let cellNumber = document.createElement('div');
                 let cellNumberInner = document.createElement('div');
                 cellNumber.className = 'row-service-line';
+                cellNumberInner.className = 'row-service-line-inner' + ` area-color-${self.atcoArea}`;
                 if (s.name.length > 6) {
-                    cellNumberInner.className = 'text-line-small';
+                    cellNumberInner.className += ' row-service-line-small';
                 }
                 cellNumberInner.appendChild(document.createTextNode(s.name));
                 cellNumber.appendChild(cellNumberInner);

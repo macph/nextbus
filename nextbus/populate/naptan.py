@@ -225,12 +225,12 @@ class _NaPTANStops(object):
     regex_no_word = re.compile(r"^[^\w]*$")
     indicator_regex = [
         (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
-        (re.compile(r"(adj|adjacent)", re.I), "adj"),
+        (re.compile(r"(adjacent|adj)", re.I), "adj"),
         (re.compile(r"after", re.I), "aft"),
         (re.compile(r"before", re.I), "pre"),
-        (re.compile(r"^(nr|near)$", re.I), "near"),
-        (re.compile(r"(opp|opposite)", re.I), "opp"),
-        (re.compile(r"(o/s|outside)", re.I), "o/s"),
+        (re.compile(r"^(near|nr)$", re.I), "near"),
+        (re.compile(r"(opposite|opp)", re.I), "opp"),
+        (re.compile(r"(outside|o/s)", re.I), "o/s"),
         (re.compile(r"^at$", re.I), "at"),
         (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
         (re.compile(r"->([ENSW]+)", re.I), r">\1"),
@@ -242,15 +242,14 @@ class _NaPTANStops(object):
 
     def __init__(self, list_admin_area_codes=None, list_locality_codes=None):
         self.naptan_codes = set([])
-        self.area_codes = set([])
-
+        self.area_codes = {}
         self.admin_codes = list_admin_area_codes
         self.locality_codes = list_locality_codes
 
     def _replace_ind(self, ind_text):
         """ Shortens indicator text to fit inside sign. """
         if ind_text is not None:
-            short_indicator = ind_text
+            short_indicator = ind_text.upper()
             for regex, repl in self.indicator_regex:
                 short_indicator = regex.sub(repl, short_indicator)
         else:
@@ -301,16 +300,26 @@ class _NaPTANStops(object):
         else:
             self.naptan_codes.add(point.naptan_code)
 
-        # Add stop area code to set for filtering
-        if self.admin_codes:
-            self.area_codes.add(point.stop_area_code)
-
+        if point.stop_area_code not in self.area_codes:
+            self.area_codes[point.stop_area_code] = [point]
+        else:
+            self.area_codes[point.stop_area_code].append(point)
         list_objects.append(point)
 
     def filter_areas(self, list_objects, area):
         """ Filters stop areas. """
         if self.admin_codes and area.code not in self.area_codes:
             return
+        if area.code in self.area_codes:
+            # Find the most common locality among the stops in area
+            loc = list(map(lambda p: p.locality_code, self.area_codes[area.code]))
+            count_loc = {l: loc.count(l) for l in set(loc)}
+            mode = [i for i, j in count_loc.items() if j == max(count_loc.values())]
+            if len(mode) == 1:
+                area.locality_code = mode[0]
+            else:
+                click.echo("\nStop area %s / '%s' has multiple possible localities: %s."
+                           % (area.code, area.name, ', '.join(mode)))
         if area.modified is not None:
             area.modified = dateutil.parser.parse(area.modified)
         # '/' is not allowed in NaPTAN strings; was simply removed

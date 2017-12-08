@@ -40,6 +40,7 @@ class AdminArea(db.Model):
     name = db.Column(db.Text, index=True)
     atco_code = db.Column(db.VARCHAR(3), index=True, unique=True)
     region_code = db.Column(db.VARCHAR(2), db.ForeignKey('region.code'))
+    is_live = db.Column(db.Boolean, default=True)
     modified = db.Column(db.DateTime)
 
     districts = db.relationship('District', backref='admin_area', order_by='District.name')
@@ -122,6 +123,7 @@ class Locality(db.Model):
 
     stop_points = db.relationship('StopPoint', backref='locality',
                                   order_by='StopPoint.common_name, StopPoint.short_ind')
+    stop_areas = db.relationship('StopArea', backref='locality', order_by='StopArea.name')
     children = db.relationship('Locality', backref=db.backref('parent', remote_side=[code]),
                                order_by='Locality.name')
 
@@ -188,6 +190,7 @@ class StopArea(db.Model):
     code = db.Column(db.VARCHAR(10), primary_key=True)
     name = db.Column(db.Text, index=True)
     admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
+    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'))
     stop_area_type = db.Column(db.VARCHAR(4))
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)

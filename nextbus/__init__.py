@@ -30,8 +30,9 @@ def create_app(config_obj=None, config_file=None):
     db.init_app(app)
     migrate.init_app(app, db)
     # Adding db and app objects to flask shell
+    from nextbus import models
     app.shell_context_processor(
-        lambda: {'app': app, 'db': db}
+        lambda: {'app': app, 'db': db, 'models': models}
     )
 
     from nextbus.views import page

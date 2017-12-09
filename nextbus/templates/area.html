@@ -5,7 +5,7 @@
 {% block nav %}
 <ul class="breadcrumbs">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=area.region.code) }}">{{ area.region.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
     <li>{{ area.name }}</li>
 </ul>
 {% endblock %}
@@ -15,15 +15,15 @@
 {% endblock %}
 
 {% block content %}
-{% if not area.districts %}
-{% for group in area.localities_grouped()|dictsort %}
+{% if not districts %}
+{% for group in localities|dictsort %}
 <h2 id="{{ group[0] }}">{{ group[0] }}</h2>
 {{ f.print_localities(group[1]) }}
 {% endfor %}
 {% else %}
 <h2>Districts</h2>
 <div class="list-places">
-    {% for district in area.districts %}
+    {% for district in districts %}
     <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a>
     {% endfor %}
 </div>

@@ -45,7 +45,6 @@
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",
-        "{{ stop.admin_area.atco_code }}",
         "{{ url_for('page.stop_get_times') }}",
         document.getElementById("services"),
         document.getElementById("liveTime"),

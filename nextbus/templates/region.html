@@ -12,11 +12,10 @@
 {% endblock %}
 
 {% block content %}
-{% set list = region.list_areas_districts() %}
-{% if list|length > 0 %}
+{% if areas|length > 0 %}
 <h2>Areas</h2>
 <div class="list-places">
-    {% for ad in list %}
+    {% for ad in areas %}
     {% if ad.__tablename__ == 'admin_area' %}
     <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
     {% elif ad.__tablename__ == 'district' %}

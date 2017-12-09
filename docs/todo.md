@@ -72,9 +72,10 @@ set up favourites or such?
     - Harmonise names (mix of short and common names) - makes it easier to sort.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
-    - ~~Add fields for colour - background and text/logo. See table.~~
+    - ~~Add fields for colour - background and text/logo. See table.~~ **Need to change CSS style to use admin area code not ATCO area code, as to reduce load on DB.**
     - ~~Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)~~
     - Change locality name to place - or at least, do this for front facing pages.
+    - Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).
 - With PSQL implemented, add proper search fields
 
 ## Styling website
@@ -87,11 +88,18 @@ set up favourites or such?
     - With streetview, set it up so that it points in right direction. (Embed API?)
     - For places, stop areas, postcodes and GPS: show stops with indicators. (JS API)
     - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
+    - **On Firefox, the stop page's map cannot be loaded - it seems to be activated already?**
 - Set up stop area page such that
     - Info about area
     - Map with all stops
     - Section for each stop in area with live bus times
-- Index stops in locality if there are too many?
+    - Style:
+        - Border between each stop
+        - When expanded, have vertical border & bottom border, with margin at bottom and white background. All content goes here.
+        - Only one section at a time. Close others when selecting a new stop.
+        - For paired stops should we have a single table??
+        - Request time, SMS code, link to single stop, table of services.
+- ~~Index stops in locality if there are too many?~~
 - ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
 - ~~Fix height of services; add another div within with height fixed by content not the grid~~
 - Take a look at how different pages call the SQL database; if only calling a specific column value it would be a waste to get the object for that row and then retrieve the attribute in question. If calling a number of attributes, can do a single query and output to a dict in the view function to be passed to the template page. So, instead of doing `stop_point.locality.name`, do
@@ -148,15 +156,95 @@ div.area-color-490 {
     - The TLNDS would be really useful in getting list of services for each stop.
     - Add breadcrumbs. Requires working out which locality from list of stops within area, eg (this would be easier to do during population instead of live data retrieval)
 ```sql
-  SELECT stop_area_code, locality_code, MAX(count)
-    FROM (
-          SELECT stop_area_code, locality_code, COUNT(locality_code) AS count
-            FROM stop_point
-        GROUP BY stop_area_code, locality_code
-    )
-GROUP BY stop_area_code;
+WITH count_stops AS (
+      SELECT sa.code AS a_code,
+             sp.locality_code AS l_code,
+             COUNT(sp.atco_code) AS n_stops
+        FROM stop_area AS sa
+             INNER JOIN stop_point as sp
+                     ON sp.stop_area_code = sa.code
+    GROUP BY sa.code, sp.locality_code
+)
+SELECT a.a_code AS stop_area_code,
+       a.l_code AS locality_code
+  FROM count_stops AS a
+       INNER JOIN (
+             SELECT a_code,
+                    l_code,
+                    MAX(n_stops) AS m_stops
+               FROM count_stops
+           GROUP BY a_code, l_code
+       ) AS b
+               ON a.a_code = b.a_code AND
+                  a.l_code = b.l_code AND
+                  a.n_stops = b.m_stops;
+```
+Or in Python (SQLAlchemy):
+```python
+from nextbus import db, models
+from sqlalchemy import and_, func
+# Find locality codes as modes of stop points within each stop area.
+# Stop areas are repeated if there are multiple modes.
+c_stops = (db.session.query(models.StopArea.code.label('a_code'),
+                            models.StopPoint.locality_code.label('l_code'),
+                            func.count(models.StopPoint.atco_code).label('n_stops'))
+           .join(models.StopArea.stop_points)
+           .group_by(models.StopArea.code, models.StopPoint.locality_code)
+          ).subquery()
+m_stops = (db.session.query(c_stops.c.a_code, c_stops.c.l_code,
+                            func.max(c_stops.c.n_stops).label('max_stops'))
+           .group_by(c_stops.c.a_code, c_stops.c.l_code)
+          ).subquery()
+
+query_area_localities = (db.session.query(c_stops.c.a_code, c_stops.c.l_code)
+                         .join(m_stops, and_(c_stops.c.a_code == m_stops.c.a_code,
+                               c_stops.c.l_code == m_stops.c.l_code,
+                               c_stops.c.n_stops == m_stops.c.max_stops))
+                        ).all()
 ```
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
-- Move the `populate` command to a separate module and import it into the package somehow. Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
-- Add SQLAlchemy logging; this would help with optimising SQL queries.
+- ~~Move the `populate` command to a separate module and import it into the package somehow.~~ Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
+- ~~Add SQLAlchemy logging; this would help with optimising SQL queries.~~
+- Change locality page to a mix of stop points and areas. Use a SQL query
+```sql
+SELECT 'stop_point' AS s_type,
+       stop_point.atco_code AS code,
+       stop_point.common_name AS name,
+       stop_point.short_ind AS ind
+  FROM stop_area
+       LEFT OUTER JOIN stop_point
+                    ON stop_area.code = stop_point.stop_area_code
+ WHERE stop_point.locality_code = 'E0029996' AND stop_point.stop_area_code IS NULL
+UNION
+SELECT 'stop_area' AS stype,
+       stop_area.code AS code,
+       stop_area.name AS name,
+       '' AS ind
+  FROM stop_area, stop_point
+ WHERE stop_point.locality_code = 'E0029996';
+```
+or in Python (SQLAlchemy):
+```python
+from sqlalchemy import implict_column
+from nextbus import db, models
+# Find all stop areas and all stop points _not_ associated with a stop area
+# TODO: Adjust locality page to include stop areas
+table_name = lambda m: literal_column("'%s'" % m.__tablename__)
+stops = (db.session.query(table_name(models.StopPoint).label('s_type'),
+                          models.StopPoint.atco_code.label('code'),
+                          models.StopPoint.common_name.label('name'),
+                          models.StopPoint.short_ind.label('ind'))
+         .outerjoin(models.StopPoint.stop_area)
+         .filter(models.StopPoint.locality_code == lty.code,
+                 models.StopPoint.stop_area_code.is_(None))
+        )
+areas = (db.session.query(table_name(models.StopArea).label('s_type'),
+                          models.StopArea.code,
+                          models.StopArea.name,
+                          literal_column("''").label('ind'))
+         .filter(models.StopArea.locality_code == lty.code)
+        )
+query_stops = stops.union_all(areas).order_by('name')
+list_stops = [r._asdict() for r in query_stops.all()]
+```

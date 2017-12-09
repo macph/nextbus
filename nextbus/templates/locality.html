@@ -1,28 +1,25 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ locality.name }} locality{% endblock %}
-{% set area = locality.admin_area %}
-{% set district = locality.district %}
-{% set region = area.region %}
 
 {% block nav %}
 <ul class="breadcrumbs">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a></li>
-    {% if district is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=info['region_code']) }}">{{ info['region_name'] }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=info['area_code']) }}">{{ info['area_name'] }}</a></li>
+    {% if info['district_code'] is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=info['district_code']) }}">{{ info['district_name'] }}</a></li>
     {% endif %}
     <li>{{ locality.name }}</li>
 </ul>
 {% endblock %}
 
 {% block heading %}
-<h1>{{ locality.name }}{{ ', %s'|format(district.name) if district is not none }}</h1>
+<h1>{{ locality.name }}{{ ', %s'|format(info['district_name']) if info['district_code'] is not none }}</h1>
 {% endblock %}
 
 {% block content %}
-{% for group in locality.stops_grouped()|dictsort %}
+{% for group in stops|dictsort %}
 <h2 id="{{ group[0] }}">{{ group[0] }}</h2>
 {{ f.print_stops(group[1]) }}
 {% endfor %}

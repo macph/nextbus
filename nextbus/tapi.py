@@ -48,6 +48,7 @@ def get_nextbus_times(atco_code, nextbuses=True, group=True, limit=6):
         if data.get('error') is not None:
             raise ValueError("Error with data: " + data["error"])
         current_app.logger.info("Received live data for ATCO code %s" % atco_code)
+        current_app.logger.debug("Data received:\n" + repr(data))
 
     else:
         file_name = "samples/tapi_live_group.json" if group else "samples/tapi_live.json"
@@ -163,7 +164,8 @@ def parse_nextbus_times(atco_code, **kwargs):
         'local_time': req_date.astimezone(GB_TZ).strftime("%H:%M:%S"),
         'services': services.get_list()
     }
-    current_app.logger.debug("Parsed data with %d services for ATCO code %s"
-                             % (len(new_data['services']), atco_code))
+    current_app.logger.debug("%d services for ATCO code %s:\n%r"
+                             % (len(new_data['services']), atco_code,
+                                repr(new_data)))
 
     return new_data

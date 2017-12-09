@@ -15,7 +15,7 @@
 {%- endmacro %}
 
 {% macro stop_css_class(stop) -%}
-area-color-{{ stop.admin_area.atco_code }}
+area-color-{{ stop.atco_code[:3] }}
 {%- endmacro %}
 
 {% macro resize_indicator(class_name) %}

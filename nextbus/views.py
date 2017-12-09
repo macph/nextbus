@@ -1,11 +1,16 @@
 """
 Views for the nextbus website.
 """
+import collections
 import re
 from requests import HTTPError
+from sqlalchemy import or_
+from sqlalchemy.orm import load_only
 from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
 from nextbus import db, forms, location, models, tapi
 
+
+MIN_GROUPED = 72
 MAX_DISTANCE = 500
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
                         r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
@@ -33,13 +38,29 @@ def _find_stops_in_range(coord):
         models.StopPoint.longitude > long_0,
         models.StopPoint.longitude < long_1
     )
-    filter_stops = []
-    for stop in query_nearby_stops.all():
-        distance = location.get_dist(coord, (stop.latitude, stop.longitude))
-        if distance < MAX_DISTANCE:
-            filter_stops.append((stop, distance))
+    stops = [(stop, location.get_dist(coord, (stop.latitude, stop.longitude)))
+             for stop in query_nearby_stops.all()]
+    return sorted(filter(lambda x: x[1] < MAX_DISTANCE, stops), key=lambda x: x[1])
 
-    return sorted(filter_stops, key=lambda x: x[1])
+
+def _group_places(list_places, attribute):
+    """ Groups localities by their names, or under a single key 'A-Z' if the
+        total is less than MIN_GROUPED.
+
+        :param list_places: list of models.Locality objects.
+        :param attribute: First letter of attribute to group by.
+        :returns: Dictionary of models.Locality objects.
+    """
+    groups = {}
+    if list_places:
+        if len(list_places) > MIN_GROUPED:
+            groups = collections.defaultdict(list)
+            for p in list_places:
+                groups[getattr(p, attribute)[0]].append(p)
+        else:
+            groups = {'A-Z': list_places}
+
+    return groups
 
 
 @page.route('/', methods=['GET', 'POST'])
@@ -48,9 +69,9 @@ def index():
     f_naptan = forms.FindStop()
     f_postcode = forms.FindPostcode()
     if f_naptan.submit_code.data and f_naptan.validate():
-        return redirect('/stop/naptan/%s' % f_naptan.query.naptan_code)
+        return redirect('/stop/naptan/%s' % f_naptan.new)
     if f_postcode.submit_postcode.data and f_postcode.validate():
-        return redirect('/near/postcode/%s' % f_postcode.query.text.replace(' ', '+'))
+        return redirect('/near/postcode/%s' % f_postcode.new.replace(' ', '+'))
 
     return render_template('index.html', form_naptan=f_naptan, form_postcode=f_postcode)
 
@@ -64,8 +85,8 @@ def about():
 @page.route('/list/')
 def list_regions():
     """ Shows list of all regions. """
-    regions = (models.Region.query.filter(models.Region.code != 'GB')
-               .order_by(models.Region.name).all())
+    regions = (models.Region.query.options(load_only('code', 'name'))
+               .filter(models.Region.code != 'GB').order_by('name')).all()
 
     return render_template('all_regions.html', regions=regions)
 
@@ -80,7 +101,16 @@ def list_in_region(region_code):
     if region is None:
         raise EntityNotFound("Region with code '%s' does not exist." % region_code)
 
-    return render_template('region.html', region=region)
+    q_area = (models.AdminArea.query
+              .outerjoin(models.AdminArea.districts) # LEFT OUTER JOIN
+              .filter(models.District.code.is_(None),
+                      models.AdminArea.region_code == region.code))
+    q_district = (models.District.query
+                  .join(models.AdminArea.districts)
+                  .filter(models.AdminArea.region_code == region.code))
+    list_areas = sorted(q_area.all() + q_district.all(), key=lambda a: a.name)
+
+    return render_template('region.html', region=region, areas=list_areas)
 
 
 @page.route('/list/area/<area_code>')
@@ -88,27 +118,58 @@ def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
     """
-    area = models.AdminArea.query.filter_by(code=area_code).one_or_none()
+    area = models.AdminArea.query.get(area_code)
     if area is None:
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
 
-    return render_template('area.html', area=area)
+    region = (models.Region.query
+              .filter(models.Region.code == area.region_code)).one()
+    ls_district = (models.District.query
+                   .filter(models.District.admin_area_code == area.code)
+                   .order_by(models.District.name)).all()
+    if not ls_district:
+        ls_local = (models.Locality.query
+                    .outerjoin(models.Locality.stop_points)
+                    .filter(models.StopPoint.atco_code.isnot(None),
+                            models.Locality.admin_area_code == area.code)
+                    .order_by(models.Locality.name)).all()
+    else:
+        ls_local = []
+    group_local = _group_places(ls_local, 'name')
+
+    return render_template('area.html', region=region, area=area, districts=ls_district,
+                           localities=group_local)
 
 
 @page.route('/list/district/<district_code>')
 def list_in_district(district_code):
     """ Shows list of localities in district. """
-    district = models.District.query.filter_by(code=district_code).one_or_none()
+    district = models.District.query.get(district_code)
     if district is None:
         raise EntityNotFound("District with code '%s' does not exist." % district_code)
 
-    return render_template('district.html', district=district)
+    info = (db.session.query(models.Region.code.label('region_code'),
+                             models.Region.name.label('region_name'),
+                             models.AdminArea.code.label('area_code'),
+                             models.AdminArea.name.label('area_name'))
+            .join(models.Region.areas)
+            .filter(models.AdminArea.code == district.admin_area_code)).one()
+    ls_local = (models.Locality.query
+                .outerjoin(models.Locality.stop_points)
+                .filter(models.StopPoint.atco_code.isnot(None),
+                        models.Locality.district_code == district.code)
+                .order_by(models.Locality.name)).all()
+    group_local = _group_places(ls_local, 'name')
+
+
+    return render_template('district.html', info=info._asdict(), district=district,
+                           localities=group_local)
 
 
 @page.route('/list/locality/<locality_code>')
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
-    lty = models.Locality.query.filter_by(code=locality_code).one_or_none()
+    lty = models.Locality.query.get(locality_code)
     if lty is None:
         str_lty = locality_code.upper()
         new_lty = models.Locality.query.filter_by(code=str_lty).one_or_none()
@@ -118,7 +179,37 @@ def list_in_locality(locality_code):
         else:
             raise EntityNotFound("Locality with code '%s' does not exist." % locality_code)
 
-    return render_template('locality.html', locality=lty)
+    # SELECT admin_area.code AS area_code,
+    #        admin_area.name AS area_name,
+    #        region.code AS region_code,
+    #        region.name AS region_name,
+    #        district.code AS district_code,
+    #        district.name AS district_name
+    #   FROM region, admin_area
+    #        LEFT OUTER JOIN district
+    #                     ON admin_area.code = district.admin_area_cod
+    #        INNER JOIN admin_area
+    #                ON admin_area.region_code = region.code
+    #  WHERE admin_area.code = ? AND (district.code = ? OR district.code IS NULL)
+    info = (db.session.query(models.AdminArea.code.label('area_code'),
+                             models.AdminArea.name.label('area_name'),
+                             models.Region.code.label('region_code'),
+                             models.Region.name.label('region_name'),
+                             models.District.code.label('district_code'),
+                             models.District.name.label('district_name'))
+            .outerjoin(models.AdminArea.districts)
+            .join(models.Region, models.AdminArea.region_code == models.Region.code)
+            .filter(models.AdminArea.code == lty.admin_area_code,
+                    or_(models.District.code == lty.district_code,
+                        models.District.code.is_(None)))
+           ).one()
+
+    list_stops = (models.StopPoint.query
+                  .filter(models.StopPoint.locality_code == lty.code)
+                  .order_by('common_name', 'short_ind')).all()
+    stops = _group_places(list_stops, 'common_name')
+
+    return render_template('locality.html', info=info._asdict(), locality=lty, stops=stops)
 
 
 @page.route('/near/postcode/<postcode>')
@@ -162,7 +253,7 @@ def list_nr_location(lat_long):
 @page.route('/stop/area/<stop_area_code>')
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
-    s_area = models.StopArea.query.filter_by(code=stop_area_code).one_or_none()
+    s_area = models.StopArea.query.get(stop_area_code)
     if s_area is None:
         s_area2 = models.StopArea.query.filter(models.StopArea.code
                                                .ilike(stop_area_code)).one_or_none()
@@ -172,11 +263,7 @@ def stop_area(stop_area_code):
             raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
                                  % stop_area_code)
 
-    area_info = db.session.query(
-        models.StopArea.name,
-        models.StopArea.latitude,
-        models.StopArea.longitude,
-    ).filter_by(code=s_area.code).one()._asdict()
+    area_info = {c: getattr(s_area, c) for c in ['name', 'latitude', 'longitude']}
 
     query_stops = db.session.query(
         models.StopPoint.atco_code,

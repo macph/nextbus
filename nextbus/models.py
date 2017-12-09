@@ -20,17 +20,6 @@ class Region(db.Model):
     def __repr__(self):
         return '<Region(%r, %r)>' % (self.code, self.name)
 
-    def list_areas_districts(self):
-        """ Gets flat list of all admin areas and districts within region. """
-        result_list = []
-        for area in self.areas:
-            if area.districts:
-                result_list.extend(area.districts)
-            else:
-                result_list.append(area)
-
-        return sorted(result_list, key=lambda a: a.name)
-
 
 class AdminArea(db.Model):
     """ NPTG administrative area. """

@@ -47,20 +47,8 @@
         },
         {
             "model": "StopPoint",
-            "find_attr": "atco_code",
-            "find_values": [
-                "370022801",
-                "370022802",
-                "370022803",
-                "370022857",
-                "370023168",
-                "370023169",
-                "370023170",
-                "370023171",
-                "370023715",
-                "370027281",
-                "370027436"
-            ],
+            "find_attr": "stop_area_code",
+            "find_values": ["370G102474"],
             "modify_attr": "common_name",
             "new_value": "Arundel Gate"
         },

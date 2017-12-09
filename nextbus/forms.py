@@ -5,19 +5,22 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import DataRequired
 
-from nextbus.models import StopPoint, Postcode
+from nextbus import db, models
 
 
 def _stop_point_exists(form, field):
     """ Checks if stop point with associated NaPTAN code exists. """
-    if len(field.data) != 5 and len(field.data) != 8:
-        raise ValidationError("NaPTAN codes should be 5 characters in London "
-                              "or 8 characters elsewhere.")
-    # Add query object to FlaskForm instance for use by view
-    form.query = StopPoint.query.filter(StopPoint.naptan_code
-                                        .ilike(field.data)).one_or_none()
-    if form.query is None:
-        raise ValidationError(("Bus/tram stop with NaPTAN code %r does not "
+    if not 5 <= len(field.data) <= 8:
+        raise ValidationError("SMS codes should be between 5 and 8 "
+                              "characters long.")
+    # Add real code to FlaskForm instance for use by view
+    query = db.session.query(models.StopPoint.naptan_code).filter(
+        models.StopPoint.naptan_code.ilike(field.data)
+    ).one_or_none()
+    if query is not None:
+        form.new = query[0]
+    else:
+        raise ValidationError(("Bus/tram stop with SMS code %r does not "
                                "exist.") % field.data)
 
 
@@ -27,9 +30,13 @@ def _postcode_exists(form, field):
     if not 5 <= len(new_postcode) <= 7:
         raise ValidationError("Postcodes should be between 6 and 8 letters "
                               "long.")
-    # Add query object to FlaskForm instance for use by view
-    form.query = Postcode.query.filter_by(index=new_postcode).one_or_none()
-    if form.query is None:
+    # Add real postcode to FlaskForm instance for use by view
+    query = db.session.query(models.Postcode.text).filter(
+        models.Postcode.index == new_postcode
+    ).one_or_none()
+    if query is not None:
+        form.new = query[0]
+    else:
         raise ValidationError("Postcode %r does not exist." % field.data)
 
 

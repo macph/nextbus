@@ -27,8 +27,8 @@ class AdminArea(db.Model):
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True)
-    atco_code = db.Column(db.VARCHAR(3), index=True, unique=True)
-    region_code = db.Column(db.VARCHAR(2), db.ForeignKey('region.code'))
+    atco_code = db.Column(db.VARCHAR(3), unique=True)
+    region_code = db.Column(db.VARCHAR(2), db.ForeignKey('region.code'), index=True)
     is_live = db.Column(db.Boolean, default=True)
     modified = db.Column(db.DateTime)
 
@@ -42,24 +42,6 @@ class AdminArea(db.Model):
     def __repr__(self):
         return '<AdminArea(%r, %r, %r)>' % (self.code, self.atco_code, self.name)
 
-    def localities_grouped(self):
-        """ Returns a dict with localities grouped by first letter, if total
-            exceeds MIN_GROUPED.
-        """
-        list_local = self.localities
-        if len(list_local) < MIN_GROUPED:
-            dict_local = {'Places': list_local}
-        else:
-            dict_local = {}
-            for local in list_local:
-                letter = local.name[0].upper()
-                if letter in dict_local:
-                    dict_local[letter].append(local)
-                else:
-                    dict_local[letter] = [local]
-
-        return dict_local
-
 
 class District(db.Model):
     """ NPTG district. """
@@ -67,7 +49,7 @@ class District(db.Model):
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
     modified = db.Column(db.DateTime)
 
     localities = db.relationship('Locality', backref='district', order_by='Locality.name')
@@ -76,24 +58,6 @@ class District(db.Model):
     def __repr__(self):
         return '<District(%r, %r)>' % (self.code, self.name)
 
-    def localities_grouped(self):
-        """ Returns a dict with localities grouped by first letter, if total
-            exceeds MIN_GROUPED.
-        """
-        list_local = self.localities
-        if len(list_local) < MIN_GROUPED:
-            dict_local = {'Places': list_local}
-        else:
-            dict_local = {}
-            for local in list_local:
-                letter = local.name[0].upper()
-                if letter in dict_local:
-                    dict_local[letter].append(local)
-                else:
-                    dict_local[letter] = [local]
-
-        return dict_local
-
 
 class Locality(db.Model):
     """ NPTG locality. """
@@ -101,9 +65,9 @@ class Locality(db.Model):
 
     code = db.Column(db.VARCHAR(7), primary_key=True)
     name = db.Column(db.Text, index=True)
-    parent_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'))
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
-    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'))
+    parent_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
+    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)
@@ -119,24 +83,6 @@ class Locality(db.Model):
     def __repr__(self):
         return '<Locality(%r, %r)>' % (self.code, self.name)
 
-    def stops_grouped(self):
-        """ Returns a dict with stops grouped by first letter of common name,
-            if total exceeds MIN_GROUPED.
-        """
-        list_stops = self.stop_points
-        if len(list_stops) < MIN_GROUPED:
-            dict_stops = {'Stops': list_stops}
-        else:
-            dict_stops = {}
-            for stop in list_stops:
-                letter = stop.common_name[0].upper()
-                if letter in dict_stops:
-                    dict_stops[letter].append(stop)
-                else:
-                    dict_stops[letter] = [stop]
-
-        return dict_stops
-
 
 class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
@@ -147,15 +93,15 @@ class StopPoint(db.Model):
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
     naptan_code = db.Column(db.VARCHAR(8), index=True, unique=True)
     common_name = db.Column(db.Text, index=True)
-    short_name = db.Column(db.Text, index=True)
+    short_name = db.Column(db.Text)
     landmark = db.Column(db.Text)
-    street = db.Column(db.Text, index=True)
+    street = db.Column(db.Text)
     crossing = db.Column(db.Text)
-    indicator = db.Column(db.Text, index=True)
+    indicator = db.Column(db.Text)
     short_ind = db.Column(db.Text, index=True)
-    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'))
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
-    stop_area_code = db.Column(db.VARCHAR(10), db.ForeignKey('stop_area.code'))
+    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
+    stop_area_code = db.Column(db.VARCHAR(10), db.ForeignKey('stop_area.code'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)
@@ -172,14 +118,28 @@ class StopPoint(db.Model):
         """ Prints bearing in full (eg 'NW' returns 'northwest'). """
         return self._text.get(self.bearing.upper())
 
+    def serialise(self):
+        """ Pass stop data in serialised form. """
+        attrs = [
+            "atco_code",
+            "common_name",
+            "indicator",
+            "short_ind",
+            "latitude",
+            "longitude"
+        ]
+
+        return {i: getattr(self, i) for i in attrs}
+
+
 class StopArea(db.Model):
     """ NaPTAN stop areas, eg bus interchanges. """
     __tablename__ = 'stop_area'
 
     code = db.Column(db.VARCHAR(10), primary_key=True)
     name = db.Column(db.Text, index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
-    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'))
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
+    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
     stop_area_type = db.Column(db.VARCHAR(4))
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
@@ -193,22 +153,6 @@ class StopArea(db.Model):
     def __repr__(self):
         return '<StopArea(%r, %r)>' % (self.code, self.name)
 
-    def serialise_data(self):
-        """ Pass data on each stop point in serialised form. """
-        attrs = [
-            "atco_code",
-            "common_name",
-            "indicator",
-            "short_ind",
-            "latitude",
-            "longitude"
-        ]
-        list_stops = []
-        for stop in self.stop_points:
-            list_stops.append({i: getattr(stop, i) for i in attrs})
-
-        return list_stops
-
 class Postcode(db.Model):
     """ Postcodes with coordinates, derived from the NSPL data. """
     __tablename__ = 'postcode'
@@ -217,8 +161,8 @@ class Postcode(db.Model):
     index = db.Column(db.VARCHAR(7), primary_key=True)
     text = db.Column(db.VARCHAR(8), index=True, unique=True)
     local_authority_code = db.Column(db.VARCHAR(9))
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'))
-    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'))
+    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
+    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)

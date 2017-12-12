@@ -1,5 +1,5 @@
 {% macro stop_name(stop) -%}
-{{ stop.common_name if stop.common_name is not none else stop.short_name }}
+{{ stop.common_name }}
 {%- endmacro %}
 
 {% macro stop_indicator(stop) -%}

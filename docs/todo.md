@@ -72,10 +72,11 @@ set up favourites or such?
     - Harmonise names (mix of short and common names) - makes it easier to sort.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
-    - ~~Add fields for colour - background and text/logo. See table.~~ **Need to change CSS style to use admin area code not ATCO area code, as to reduce load on DB.**
+    - ~~Add fields for colour - background and text/logo. See table.~~ *ATCO code/admin area code no longer necessary as the same code is used as the first 3 digits of stop's ATCO code.
     - ~~Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)~~
     - Change locality name to place - or at least, do this for front facing pages.
-    - Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).
+    - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
+    - ~~Index the correct columns.~~
 - With PSQL implemented, add proper search fields
 
 ## Styling website

@@ -70,6 +70,7 @@ ON CONFLICT (atco_code) /* or 'ON CONSTRAINT constraint' instead of '(sp.atco_co
 set up favourites or such?
 - Consider changing DB tables such that:
     - Harmonise names (mix of short and common names) - makes it easier to sort.
+        - Do this by accepting `CommonName` as the default, else use `ShortName`. Single `name` column in table.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
     - ~~Add fields for colour - background and text/logo. See table.~~ *ATCO code/admin area code no longer necessary as the same code is used as the first 3 digits of stop's ATCO code.
@@ -77,7 +78,11 @@ set up favourites or such?
     - Change locality name to place - or at least, do this for front facing pages.
     - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
     - ~~Index the correct columns.~~
+- ~~Find out why the query to match stop areas with localities was hanging up~~ *Fixed with autocommit enabled for SQLAlchemy.*
 - With PSQL implemented, add proper search fields
+    - Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway
+    - Text search covering areas, localities, stops (common name & street) and stop area names.
+    - With FTS, add options to filter by area or type.
 
 ## Styling website
 - Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc. This would allow the bus/tram icons to be of different colours without having to use JS to modify the SVG colours.
@@ -90,6 +95,7 @@ set up favourites or such?
     - For places, stop areas, postcodes and GPS: show stops with indicators. (JS API)
     - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
     - **On Firefox, the stop page's map cannot be loaded - it seems to be activated already?**
+    - **Consider whether to use OpenStreetMap with leaflet.js or continue with Google Maps.**
 - Set up stop area page such that
     - Info about area
     - Map with all stops
@@ -209,45 +215,19 @@ query_area_localities = (db.session.query(c_stops.c.a_code, c_stops.c.l_code)
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
 - ~~Move the `populate` command to a separate module and import it into the package somehow.~~ Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
 - ~~Add SQLAlchemy logging; this would help with optimising SQL queries.~~
-- Change locality page to a mix of stop points and areas. Use a SQL query
-```sql
-SELECT 'stop_point' AS s_type,
-       stop_point.atco_code AS code,
-       stop_point.common_name AS name,
-       stop_point.short_ind AS ind
-  FROM stop_area
-       LEFT OUTER JOIN stop_point
-                    ON stop_area.code = stop_point.stop_area_code
- WHERE stop_point.locality_code = 'E0029996' AND stop_point.stop_area_code IS NULL
-UNION
-SELECT 'stop_area' AS stype,
-       stop_area.code AS code,
-       stop_area.name AS name,
-       '' AS ind
-  FROM stop_area, stop_point
- WHERE stop_point.locality_code = 'E0029996';
+- **Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**. See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows.
 ```
-or in Python (SQLAlchemy):
-```python
-from sqlalchemy import implict_column
-from nextbus import db, models
-# Find all stop areas and all stop points _not_ associated with a stop area
-# TODO: Adjust locality page to include stop areas
-table_name = lambda m: literal_column("'%s'" % m.__tablename__)
-stops = (db.session.query(table_name(models.StopPoint).label('s_type'),
-                          models.StopPoint.atco_code.label('code'),
-                          models.StopPoint.common_name.label('name'),
-                          models.StopPoint.short_ind.label('ind'))
-         .outerjoin(models.StopPoint.stop_area)
-         .filter(models.StopPoint.locality_code == lty.code,
-                 models.StopPoint.stop_area_code.is_(None))
-        )
-areas = (db.session.query(table_name(models.StopArea).label('s_type'),
-                          models.StopArea.code,
-                          models.StopArea.name,
-                          literal_column("''").label('ind'))
-         .filter(models.StopArea.locality_code == lty.code)
-        )
-query_stops = stops.union_all(areas).order_by('name')
-list_stops = [r._asdict() for r in query_stops.all()]
+SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\Scripts\nb.exe on line 1, but no encoding declared; see http://python.org/dev/peps/pep-0263/ for details
+```
+- Change options of `populate` command, *again*.
+    - `-g` to download NPTG data.
+    - `-G` with path to use file.
+    - `-m` to use default JSON file for modifications.
+    - `-n` to download NaPTAN data.
+    - `-N` with path to use file.
+    - `-p` to download NSPL data.
+    - `-P` with path to use file.
+```bash
+nxb -gmnp                                                    # Download files
+nxb -G temp/NPTG.xml -m -N temp/Naptan.xml -P temp/nspl.json # Use files
 ```

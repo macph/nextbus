@@ -11,7 +11,7 @@ import default_config
 from definitions import ROOT_DIR
 
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={'autocommit': True})
 migrate = Migrate()
 
 
@@ -23,13 +23,15 @@ def create_app(config_obj=None, config_file=None):
     elif config_obj is not None and config_file is not None:
         raise ValueError("Can't have both config object and config file!")
     elif config_file is not None:
+        # Load app defaults first
+        app.config.from_object(default_config.Config)
         app.config.from_pyfile(config_file)
     else:
         app.config.from_object(config_obj)
 
     db.init_app(app)
     migrate.init_app(app, db)
-    # Adding db and app objects to flask shell
+    # Adding app, db and model objects to flask shell
     from nextbus import models
     app.shell_context_processor(
         lambda: {'app': app, 'db': db, 'models': models}

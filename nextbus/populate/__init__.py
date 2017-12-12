@@ -55,7 +55,7 @@ class XPath(object):
         """ Iterates over a list of elements with the same XPath query,
             returning a list of text values.
         """
-        return [self.text(path, element=node) for node in elements]
+        return (self.text(path, element=node) for node in elements)
 
     def dict_text(self, dict_paths, element=None):
         """ Returns a dict of text values obtained from processing a dict with

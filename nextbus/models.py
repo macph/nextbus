@@ -28,7 +28,8 @@ class AdminArea(db.Model):
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True)
     atco_code = db.Column(db.VARCHAR(3), unique=True)
-    region_code = db.Column(db.VARCHAR(2), db.ForeignKey('region.code'), index=True)
+    region_code = db.Column(db.VARCHAR(2),
+                            db.ForeignKey('region.code', ondelete='CASCADE'), index=True)
     is_live = db.Column(db.Boolean, default=True)
     modified = db.Column(db.DateTime)
 
@@ -49,7 +50,8 @@ class District(db.Model):
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3),
+                                db.ForeignKey('admin_area.code', ondelete='CASCADE'), index=True)
     modified = db.Column(db.DateTime)
 
     localities = db.relationship('Locality', backref='district', order_by='Locality.name')
@@ -63,11 +65,14 @@ class Locality(db.Model):
     """ NPTG locality. """
     __tablename__ = 'locality'
 
-    code = db.Column(db.VARCHAR(7), primary_key=True)
+    # TODO: Fix self-referential foreign keys deferring.
+    code = db.Column(db.VARCHAR(8), primary_key=True)
     name = db.Column(db.Text, index=True)
-    parent_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
-    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'), index=True)
+    parent_code = db.Column(db.VARCHAR(8), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3),
+                                db.ForeignKey('admin_area.code', ondelete='CASCADE'), index=True)
+    district_code = db.Column(db.VARCHAR(3),
+                              db.ForeignKey('district.code', ondelete='CASCADE'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)
@@ -77,8 +82,8 @@ class Locality(db.Model):
     stop_points = db.relationship('StopPoint', backref='locality',
                                   order_by='StopPoint.common_name, StopPoint.short_ind')
     stop_areas = db.relationship('StopArea', backref='locality', order_by='StopArea.name')
-    children = db.relationship('Locality', backref=db.backref('parent', remote_side=[code]),
-                               order_by='Locality.name')
+    # children = db.relationship('Locality', backref=db.backref('parent', remote_side=[code]),
+    #                            order_by='Locality.name')
 
     def __repr__(self):
         return '<Locality(%r, %r)>' % (self.code, self.name)
@@ -91,7 +96,7 @@ class StopPoint(db.Model):
              'S': 'south', 'SE': 'southeast', 'SW': 'southwest', 'W': 'west'}
 
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
-    naptan_code = db.Column(db.VARCHAR(8), index=True, unique=True)
+    naptan_code = db.Column(db.VARCHAR(9), index=True, unique=True)
     common_name = db.Column(db.Text, index=True)
     short_name = db.Column(db.Text)
     landmark = db.Column(db.Text)
@@ -99,15 +104,18 @@ class StopPoint(db.Model):
     crossing = db.Column(db.Text)
     indicator = db.Column(db.Text)
     short_ind = db.Column(db.Text, index=True)
-    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
-    stop_area_code = db.Column(db.VARCHAR(10), db.ForeignKey('stop_area.code'), index=True)
+    locality_code = db.Column(db.VARCHAR(8),
+                              db.ForeignKey('locality.code', ondelete='CASCADE'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3),
+                                db.ForeignKey('admin_area.code', ondelete='CASCADE'), index=True)
+    stop_area_code = db.Column(db.VARCHAR(12),
+                               db.ForeignKey('stop_area.code', ondelete='CASCADE'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)
     latitude = db.Column(db.Float)
     stop_type = db.Column(db.VARCHAR(3))
-    bearing = db.Column(db.VARCHAR(1))
+    bearing = db.Column(db.VARCHAR(2))
     modified = db.Column(db.DateTime)
 
     def __repr__(self):
@@ -136,10 +144,12 @@ class StopArea(db.Model):
     """ NaPTAN stop areas, eg bus interchanges. """
     __tablename__ = 'stop_area'
 
-    code = db.Column(db.VARCHAR(10), primary_key=True)
+    code = db.Column(db.VARCHAR(12), primary_key=True)
     name = db.Column(db.Text, index=True)
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
-    locality_code = db.Column(db.VARCHAR(7), db.ForeignKey('locality.code'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3),
+                                db.ForeignKey('admin_area.code', ondelete='CASCADE'), index=True)
+    locality_code = db.Column(db.VARCHAR(8),
+                              db.ForeignKey('locality.code', ondelete='CASCADE'), index=True)
     stop_area_type = db.Column(db.VARCHAR(4))
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
@@ -161,8 +171,10 @@ class Postcode(db.Model):
     index = db.Column(db.VARCHAR(7), primary_key=True)
     text = db.Column(db.VARCHAR(8), index=True, unique=True)
     local_authority_code = db.Column(db.VARCHAR(9))
-    admin_area_code = db.Column(db.VARCHAR(3), db.ForeignKey('admin_area.code'), index=True)
-    district_code = db.Column(db.VARCHAR(3), db.ForeignKey('district.code'), index=True)
+    admin_area_code = db.Column(db.VARCHAR(3),
+                                db.ForeignKey('admin_area.code', ondelete='CASCADE'), index=True)
+    district_code = db.Column(db.VARCHAR(3),
+                              db.ForeignKey('district.code', ondelete='CASCADE'), index=True)
     easting = db.Column(db.Integer)
     northing = db.Column(db.Integer)
     longitude = db.Column(db.Float)

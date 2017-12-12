@@ -82,7 +82,7 @@ class _NSPLData(object):
 
     def __call__(self, row):
         local_authority = self.local_auth[row["local_authority_code"]]
-        dict_psc = {
+        dict_postcode = {
             'index':                ''.join(row['postcode_3'].split()),
             'text':                 row['postcode_3'],
             'local_authority_code': row['local_authority_code'],
@@ -93,7 +93,7 @@ class _NSPLData(object):
             'longitude':            row['longitude'],
             'latitude':             row['latitude']
         }
-        return models.Postcode(**dict_psc)
+        return models.Postcode(**dict_postcode)
 
 
 def commit_nspl_data(nspl_file=None):
@@ -120,12 +120,13 @@ def commit_nspl_data(nspl_file=None):
     with open(nspl_path, 'r') as json_file:
         data = json.load(json_file)
         list_postcodes = []
-        filter_psc = _NSPLData(atco_codes)
-        with progress_bar(data, label="Parsing postcode data") as iter_postcodes:
-            for row in iter_postcodes:
-                list_postcodes.append(filter_psc(row))
+    parse_psc = _NSPLData(atco_codes)
+    with progress_bar(data, label="Parsing postcode data") as iter_postcodes:
+        for row in iter_postcodes:
+            list_postcodes.append(parse_psc(row))
 
     try:
+        db.session.begin()
         click.echo("Deleting old records...")
         models.Postcode.query.delete()
         click.echo("Adding %d postcodes..." % len(list_postcodes))
@@ -144,6 +145,6 @@ def commit_nspl_data(nspl_file=None):
 
 
 if __name__ == "__main__":
-    NSPL = os.path.join(ROOT_DIR, "temp/data/nspl.csv")
+    NSPL = os.path.join(ROOT_DIR, "temp/nspl.csv")
     with current_app.app_context():
         commit_nspl_data(nspl_file=NSPL)

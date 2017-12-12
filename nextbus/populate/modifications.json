@@ -31,6 +31,12 @@
             "new_value": "Trafalgar Square / Charing Cross"
         },
         {
+            "model": "StopArea",
+            "modify_attr": "name",
+            "old_value": "Trafalgar SquareCharing Cross",
+            "new_value": "Trafalgar Square / Charing Cross"
+        },
+        {
             "model": "StopPoint",
             "find_attr": "stop_area_code",
             "find_values": ["370G105082"],

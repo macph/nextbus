@@ -7,11 +7,13 @@ import dateutil.parser
 import lxml.etree
 import click
 from flask import current_app
+from sqlalchemy import and_, func
 
 from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import capitalise, file_ops, progress_bar, XPath
 
+# TODO: Use INSERT ON CONFLICT for NPTG and NaPTAN entries
 
 NPTG_URL = r'http://naptan.app.dft.gov.uk/datarequest/nptg.ashx'
 NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
@@ -121,20 +123,26 @@ def download_nptg_data():
 
 
 class _DBEntries(object):
-    """ Collects a list of database entries from XML data. """
+    """ Collects a list of database entries from XML data and commits them. """
     def __init__(self, xpath):
         self.xpath = xpath
         self.entries = []
 
-    def add(self, list_elements, db_model, args, label=None, func=None):
+    def add(self, list_elements, db_model, args, label=None, parse=None):
         """ Iterates through a list of elements, creating a database model
-            object with XPath queries and adding to list. With a function,
-            each entry can be filtered out or modified.
+            object with XPath queries and adding to list. With a parsing
+            function, each entry can be filtered out or modified.
 
             All existing rows are deleted before iterating.
 
-            Filter functions must have two arguments: list of existing objects
-            and the current object being evaluated.
+            :param list_elements: List of XML elements to iterate over
+            :param db_model: SQLAlchemy database model to create object from
+            :param args: Dictionary of args to be passed to database model,
+            with values the XPath queries to retrieve values from
+            :param label: Label for the progress bar
+            :param parse: Function to evaluate each new object, with two
+            arguments - list of existing objects (self.entries) and the current
+            object being evaluated. Not expected to return anything
         """
         db_model.query.delete()
 
@@ -145,7 +153,7 @@ class _DBEntries(object):
                     self.entries.append(obj)
                     continue
                 try:
-                    func(self.entries, obj)
+                    parse(self.entries, obj)
                 except TypeError as err:
                     if 'positional argument' in str(err):
                         raise TypeError("Filter function must receive two "
@@ -156,21 +164,34 @@ class _DBEntries(object):
 
     def commit(self):
         """ Commits all entries to database. """
-        click.echo("Adding %d objects to session..." % len(self.entries))
-        db.session.add_all(self.entries)
-        click.echo("Committing changes to database...")
-        db.session.commit()
+        try:
+            db.session.begin()
+            click.echo("Adding %d objects to session..." % len(self.entries))
+            db.session.add_all(self.entries)
+            click.echo("Committing changes to database...")
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+        finally:
+            db.session.close()
 
 
-class _NPTGPlaces(object):
-    """ Helper class for NPTG areas """
-    def __init__(self):
-        pass
+def _parse_nptg_places(list_objects, new_obj):
+    """ Parses regions, areas and districts. """
+    if new_obj.modified is not None:
+        new_obj.modified = dateutil.parser.parse(new_obj.modified)
+    list_objects.append(new_obj)
 
-    def __call__(self, list_objects, new_obj):
-        if new_obj.modified is not None:
-            new_obj.modified = dateutil.parser.parse(new_obj.modified)
-        list_objects.append(new_obj)
+
+def _parse_localities(list_objects, new_obj):
+    """ Parses localities and set district code '310' to None. """
+    if new_obj.modified is not None:
+        new_obj.modified = dateutil.parser.parse(new_obj.modified)
+    # 310 is used if locality is not within a district
+    if new_obj.district_code == '310':
+        new_obj.district_code = None
+    list_objects.append(new_obj)
 
 
 def _get_nptg_data(nptg_file, atco_codes=None):
@@ -188,7 +209,7 @@ def _get_nptg_data(nptg_file, atco_codes=None):
         admin_areas = []
         invalid_codes = []
         for code in atco_codes:
-            area = nxp("//n:AdministrativeArea[n:AtcoAreaCode='%d']" % code)
+            area = nxp("//n:AdministrativeArea[n:AtcoAreaCode='%s']" % code)
             if area:
                 admin_areas.append(area[0])
             else:
@@ -242,7 +263,7 @@ class _NaPTANStops(object):
 
     def __init__(self, list_admin_area_codes=None, list_locality_codes=None):
         self.naptan_codes = set([])
-        self.area_codes = {}
+        self.area_codes = set([])
         self.admin_codes = list_admin_area_codes
         self.locality_codes = list_locality_codes
 
@@ -257,8 +278,40 @@ class _NaPTANStops(object):
 
         return short_indicator
 
-    def filter_points(self, list_objects, point):
-        """ Filters stop points. """
+    def _stop_exists(self, list_objects, stop_point):
+        """ Checks if stop has already been entered and replace with latest
+            record. Returns True if stop already exists and is newer, or False
+            if this stop is new.
+        """
+        if stop_point.naptan_code in self.naptan_codes:
+            for obj in list_objects:
+                if getattr(obj, 'naptan_code', None) == stop_point.naptan_code:
+                    duplicate = obj
+                    break
+            if (stop_point.modified is not None and
+                    duplicate.modified >= stop_point.modified):
+                return True
+            else:
+                list_objects.remove(duplicate)
+        else:
+            self.naptan_codes.add(stop_point.naptan_code)
+
+        return False
+
+    def parse_areas(self, list_objects, area):
+        """ Parses stop areas. """
+        if area.modified is not None:
+            area.modified = dateutil.parser.parse(area.modified)
+        # A lot of stop areas have this mistyped type.
+        if area.stop_area_type == 'GBPS':
+            area.stop_area_type = 'GPBS'
+        # '/' is not allowed in NaPTAN strings; was simply removed
+        area.name = area.name.replace('  ', ' / ')
+        self.area_codes.add(area.code)
+        list_objects.append(area)
+
+    def parse_points(self, list_objects, point):
+        """ Parses stop points. """
         if point.naptan_code is None:
             # Skip over if stop point does not have a NaPTAN code
             return
@@ -266,6 +319,12 @@ class _NaPTANStops(object):
             if (point.admin_area_code not in self.admin_codes
                     or point.locality_code not in self.locality_codes):
                 return
+
+        if point.modified is not None:
+            point.modified = dateutil.parser.parse(point.modified)
+        # Checks if record already exists
+        if self._stop_exists(list_objects, point):
+            return
 
         # Create short indicator for display
         point.short_ind = self._replace_ind(point.indicator)
@@ -275,56 +334,82 @@ class _NaPTANStops(object):
         if point.short_name is not None:
             point.short_name = point.short_name.replace('  ', ' / ')
         # Replace non-word values (eg '---') with None for descriptors
-        for desc in ['street', 'crossing', 'landmark']:
-            point_desc = getattr(point, desc)
+        for attr in ['street', 'crossing', 'landmark']:
+            point_desc = getattr(point, attr)
             if point_desc is not None:
                 if self.regex_no_word.match(point_desc) or point_desc.lower() == 'none':
-                    setattr(point, desc, None)
+                    setattr(point, attr, None)
                 elif not any(i.islower() for i in point_desc):
                     # Capitalise descriptors that were in all capitals
-                    setattr(point, desc, capitalise(point_desc))
-
-        if point.modified is not None:
-            point.modified = dateutil.parser.parse(point.modified)
-
-        if point.naptan_code in self.naptan_codes:
-            for obj in list_objects:
-                if getattr(obj, 'naptan_code') == point.naptan_code:
-                    duplicate = obj
-                    break
-            if (point.modified is not None and
-                    duplicate.modified >= point.modified):
-                return
-            else:
-                list_objects.remove(duplicate)
-        else:
-            self.naptan_codes.add(point.naptan_code)
-
+                    setattr(point, attr, capitalise(point_desc))
         if point.stop_area_code not in self.area_codes:
-            self.area_codes[point.stop_area_code] = [point]
-        else:
-            self.area_codes[point.stop_area_code].append(point)
+            point.stop_area_code = None
+
         list_objects.append(point)
 
-    def filter_areas(self, list_objects, area):
-        """ Filters stop areas. """
-        if self.admin_codes and area.code not in self.area_codes:
-            return
-        if area.code in self.area_codes:
-            # Find the most common locality among the stops in area
-            loc = list(map(lambda p: p.locality_code, self.area_codes[area.code]))
-            count_loc = {l: loc.count(l) for l in set(loc)}
-            mode = [i for i, j in count_loc.items() if j == max(count_loc.values())]
-            if len(mode) == 1:
-                area.locality_code = mode[0]
-            else:
-                click.echo("\nStop area %s / '%s' has multiple possible localities: %s."
-                           % (area.code, area.name, ', '.join(mode)))
-        if area.modified is not None:
-            area.modified = dateutil.parser.parse(area.modified)
-        # '/' is not allowed in NaPTAN strings; was simply removed
-        area.name = area.name.replace('  ', ' / ')
-        list_objects.append(area)
+
+def _remove_stop_areas():
+    """ Remove all stop areas that do not belong within specified admin areas,
+        and add locality info based on stops contained within the stop areas.
+    """
+    # Find all stop areas without any stop points (ie they are outside
+    # specified areas)
+    query_del = (db.session.query(models.StopArea.code)
+                 .outerjoin(models.StopArea.stop_points)
+                 .filter(models.StopPoint.atco_code.is_(None)))
+
+    # Find locality codes as modes of stop points within each stop area.
+    # Stop areas are repeated if there are multiple modes.
+    c_stops = (
+        db.session.query(models.StopArea.code.label('a_code'),
+                         models.StopPoint.locality_code.label('l_code'),
+                         func.count(models.StopPoint.atco_code).label('n_stops'))
+        .join(models.StopArea.stop_points)
+        .group_by(models.StopArea.code, models.StopPoint.locality_code)
+    ).subquery()
+    m_stops = (
+        db.session.query(c_stops.c.a_code, c_stops.c.l_code,
+                         func.max(c_stops.c.n_stops).label('max_stops'))
+        .group_by(c_stops.c.a_code, c_stops.c.l_code)
+    ).subquery()
+
+    query_area_localities = (
+        db.session.query(c_stops.c.a_code, c_stops.c.l_code)
+        .join(m_stops, and_(c_stops.c.a_code == m_stops.c.a_code,
+                            c_stops.c.l_code == m_stops.c.l_code,
+                            c_stops.c.n_stops == m_stops.c.max_stops))
+    )
+
+    dict_areas = {}
+    update_areas, invalid_areas = [], []
+    click.echo("Linking stop areas with localities...")
+    for res in query_area_localities.all():
+        if res[0] in dict_areas:
+            dict_areas[res[0]].append(res[1])
+        else:
+            dict_areas[res[0]] = [res[1]]
+    for area, local in dict_areas.items():
+        if len(local) == 1:
+            update_areas.append({'code': area, 'locality_code': local[0]})
+        else:
+            invalid_areas.append("Stop area %s has multiple localities %s"
+                                 % (area, ', '.join(local)))
+
+    try:
+        db.session.begin()
+        click.echo("Deleting orphaned stop areas...")
+        list_del = [sa[0] for sa in query_del.all()]
+        (models.StopArea.query
+         .filter(models.StopArea.code.in_(list_del))
+        ).delete(synchronize_session='fetch')
+        click.echo("Adding locality codes to stop areas...")
+        db.session.bulk_update_mappings(models.StopArea, update_areas)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise
+    else:
+        click.echo('\n'.join(invalid_areas))
 
 
 def _get_naptan_data(naptan_file, list_area_codes=None):
@@ -336,8 +421,6 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
     sxp = XPath(naptan_data, 's')
 
     if list_area_codes:
-        # add 147 for trams/metro
-        list_area_codes.add('147')
         aa_query = ' or '.join(".='%s'" % a for a in list_area_codes)
         any_area_query = "(s:AdministrativeAreaRef[%s])" % aa_query + ' and '
     else:
@@ -350,7 +433,8 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
                        "[%s(s:StopClassification/s:StopType[%s])]" % (any_area_query, stop_types))
     stop_points = sxp(stop_point_path)
 
-    area_types = ' or '.join(".='%s'" % t for t in ['GBPS', 'GCLS', 'GBCS', 'GTMU'])
+    # GBPS is a common typo for GPBS in NapTAN data
+    area_types = ' or '.join(".='%s'" % t for t in ['GBPS', 'GCLS', 'GBCS', 'GPBS', 'GTMU'])
     stop_area_path = ("s:StopAreas/s:StopArea[@Status='active']"
                       "[%s(s:StopAreaType[%s])]" % (any_area_query, area_types))
     stop_areas = sxp(stop_area_path)
@@ -358,75 +442,98 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
     return sxp, stop_points, stop_areas
 
 
-def commit_naptan_data(nptg_file=None, naptan_file=None):
-    """ Convert NPTG data (regions admin areas, districts and localities) and
-        NaPTAN data (stop points and areas) to database objects and commit them
-        to the application database.
-    """
+def _get_atco_codes():
+    """ Helper function to get list of ATCO codes from config. """
     get_atco_codes = current_app.config.get('ATCO_CODES')
     if get_atco_codes == 'all':
-        atco_codes = None
+        codes = None
     elif isinstance(get_atco_codes, list):
-        atco_codes = get_atco_codes
+        # Add ATCO area code 940 for trams
+        try:
+            codes = [int(i) for i in get_atco_codes]
+        except TypeError as err:
+            raise TypeError("All ATCO codes must be integers.") from err
+        if 940 not in codes:
+            codes.append(940)
     else:
         raise ValueError("ATCO codes must be set to either 'all' or a list of "
                          "codes to filter.")
 
-    nptg_dl = nptg_file is None
-    naptan_dl = naptan_file is None
-    if nptg_dl:
+    return codes
+
+
+def commit_nptg_data(nptg_file=None):
+    """ Convert NPTG data (regions admin areas, districts and localities) to
+        database objects and commit them to the application database.
+    """
+    atco_codes = _get_atco_codes()
+    if nptg_file is None:
         click.echo("Downloading NPTG.xml from the DfT site...")
         downloaded_files = download_nptg_data()
         nptg_path = downloaded_files[0]
     else:
         nptg_path = nptg_file
-    if naptan_dl:
+
+    nxp, admin_areas, regions, districts, localities = _get_nptg_data(nptg_path, atco_codes)
+    nptg = _DBEntries(nxp)
+    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions",
+             _parse_nptg_places)
+    nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas",
+             _parse_nptg_places)
+    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts",
+             _parse_nptg_places)
+    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities",
+             _parse_localities)
+    # Commit changes to database
+    nptg.commit()
+
+    click.echo("NPTG population done.")
+
+
+def commit_naptan_data(naptan_file=None):
+    """ Convert NaPTAN data (stop points and areas) to database objects and
+        commit them to the application database.
+    """
+    atco_codes = _get_atco_codes()
+    if naptan_file is None:
         click.echo("Downloading Naptan.xml from the DfT site...")
         downloaded_files = download_naptan_data(atco_codes)
         naptan_path = downloaded_files[0]
     else:
         naptan_path = naptan_file
 
-
-    nxp, admin_areas, regions, districts, localities = _get_nptg_data(nptg_path, atco_codes)
-    nptg = _DBEntries(nxp)
-    nptg.add(regions, models.Region, PATHS_REGION, "Parsing NPTG regions", _NPTGPlaces())
-    nptg.add(admin_areas, models.AdminArea, PATH_ADMIN_AREA, "Parsing NPTG admin areas",
-             _NPTGPlaces())
-    nptg.add(districts, models.District, PATHS_DISTRICT, "Parsing NPTG districts", _NPTGPlaces())
-    nptg.add(localities, models.Locality, PATHS_LOCALITY, "Parsing NPTG localities", _NPTGPlaces())
+    query_areas = db.session.query(models.AdminArea.code).all()
+    query_local = db.session.query(models.Locality.code).all()
+    if not (query_areas and query_local):
+        raise ValueError("NPTG tables are not populated; stop point data "
+                         "cannot be added without the required locality data."
+                         "Run the commit NPTG data function first.")
 
     if atco_codes:
-        area_codes = set(nxp.iter_text("n:AdministrativeAreaCode", admin_areas))
-        locality_codes = set(nxp.iter_text("n:NptgLocalityCode", localities))
+        area_codes = set(x[0] for x in query_areas)
+        local_codes = set(x[0] for x in query_local)
     else:
         area_codes = None
-        locality_codes = None
+        local_codes = None
 
     sxp, stop_points, stop_areas = _get_naptan_data(naptan_path, area_codes)
-    eval_stops = _NaPTANStops(area_codes, locality_codes)
+    eval_stops = _NaPTANStops(area_codes, local_codes)
     naptan = _DBEntries(sxp)
-    naptan.add(stop_points, models.StopPoint, PATHS_STOP_POINT, "Parsing NaPTAN stop points",
-               eval_stops.filter_points)
     naptan.add(stop_areas, models.StopArea, PATHS_STOP_AREA, "Parsing NaPTAN stop areas",
-               eval_stops.filter_areas)
-
+               eval_stops.parse_areas)
+    naptan.add(stop_points, models.StopPoint, PATHS_STOP_POINT, "Parsing NaPTAN stop points",
+               eval_stops.parse_points)
     # Commit changes to database
-    nptg.commit()
     naptan.commit()
+    # Remove all orphaned stop areas and add localities to other stop areas
+    _remove_stop_areas()
 
-    message = "Population done."
-    if nptg_dl and naptan_dl:
-        message += " The files 'NPTG.xml' and 'Naptan.xml' are saved in the Temp directory."
-    elif nptg_dl:
-        message += " The file 'NPTG.xml' is saved in the Temp directory."
-    elif naptan_dl:
-        message += "The file 'Naptan.xml' is saved in the Temp directory."
-    click.echo(message)
+    click.echo("NaPTAN population done.")
 
 
 if __name__ == "__main__":
-    NAPTAN = os.path.join(ROOT_DIR, "temp/data/Naptan.xml")
-    NPTG = os.path.join(ROOT_DIR, "temp/data/NPTG.xml")
+    NAPTAN = os.path.join(ROOT_DIR, "temp/Naptan.xml")
+    NPTG = os.path.join(ROOT_DIR, "temp/NPTG.xml")
     with current_app.app_context():
-        commit_naptan_data(nptg_file=NPTG, naptan_file=NAPTAN)
+        commit_nptg_data(nptg_file=NPTG)
+        commit_naptan_data(naptan_file=NAPTAN)

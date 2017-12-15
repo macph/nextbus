@@ -29,16 +29,42 @@
 </div>
 <div class="google-maps-js" id="divMap"></div>
 <h2>Stops</h2>
-{{ f.print_stops(stop_area.stop_points) }}
+{% if stop_area.stop_points|length > 0 %}
+<div class="list-stops-services">
+    {% for stop in stop_area.stop_points %}
+    <div id="stop{{ stop.atco_code }}" class="item-stop-services">
+        <div class="item-stop-services-head">
+            <div class="stop-indicator {{ f.stop_css_class(stop) }}"><span>{{ f.stop_short_indicator(stop) }}</span></div>
+            <div class="stop-name">{{ f.stop_name(stop) }}</div>
+            <div class="stop-arrow"></div>
+        </div>
+        <div class="item-stop-services-content">
+            <p>
+                {% set pipe = joiner() %}
+                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}<!--
+             -->{{ pipe() }}<a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">Link to stop</a>
+            </p>
+            <div class="heading-inline">
+                <h2 class="stop-live-time">Retrieving live data...</h2>
+                <span class="stop-live-countdown"></span>
+            </div>
+            <div class="stop-live-services"></div>
+            <p><span class="text-green">Live times are in green,</span> otherwise they are retrieved from timetables.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>No stops found.</p>
+{% endif %}
 {{ f.resize_indicator("stop-indicator") }}
 <script>
+    let area = {{ area_info|tojson }};
+    let listStops = {{ list_stops|tojson }};
     var showButton = document.getElementById("buttonShowMap");
     var mapDiv = document.getElementById("divMap");
-    var map = new MultiStopMap(
-        mapDiv,
-        {{ area_info|tojson }},
-        {{ list_stops|tojson }}
-    );
+    var map = new MultiStopMap(mapDiv, area, listStops);
 
     /* Checks animations, from Modernizr */
     function whichTransitionEvent(el) {
@@ -69,6 +95,54 @@
         console.log("Map created for stop area with " + map.markers.length + " stops.");
     }
     mapDiv.addEventListener(transitionEnd, transitionEndCallback);
+
+    var listLiveStops = {};
+    for (s of listStops) {
+        let index = "stop" + s.atco_code;
+        let row = document.getElementById(index);
+        let head = row.getElementsByClassName("item-stop-services-head")[0];
+        let content = row.getElementsByClassName("item-stop-services-content")[0];
+        listLiveStops[index] = {
+            code: s.atco_code,
+            row: row,
+            head: head,
+            content: content,
+            data: new LiveData(
+                s.atco_code,
+                "{{ url_for('page.stop_get_times') }}",
+                row.getElementsByClassName("stop-live-services")[0],
+                row.getElementsByClassName("stop-live-time")[0],
+                row.getElementsByClassName("stop-live-countdown")[0]
+            )
+        };
+    }
+
+    function selectStop(rowElement) {
+        let r = rowElement;
+        if (r.row.className === "item-stop-services-show") {
+            r.data.stopLoop();
+            r.row.className = "item-stop-services";
+        } else if (r.row.className === "item-stop-services") {
+            r.data.startLoop();
+            r.row.className = "item-stop-services-show";
+            for (s in listLiveStops) {
+                if (listLiveStops.hasOwnProperty(s) && listLiveStops[s].code !== r.code) {
+                    let t = listLiveStops[s]
+                    t.data.stopLoop();
+                    t.row.className = "item-stop-services";
+                }
+            }
+        }
+    }
+
+    for (s in listLiveStops) {
+        if (listLiveStops.hasOwnProperty(s)) {
+            let ls = listLiveStops[s];
+            ls.head.addEventListener("click", function() {
+                selectStop(ls);
+            });
+        }
+    }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4z8yZknfpA57bRuTky5jC1rKtS_Phd-0&callback=map.setReady"></script>
 {% endblock %}

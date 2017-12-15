@@ -100,6 +100,8 @@ set up favourites or such?
         - Only one section at a time. Close others when selecting a new stop.
         - For paired stops should we have a single table??
         - Request time, SMS code, link to single stop, table of services.
+        - Get a link from map to stop in question with JS, makes it easier to navigate.
+        - Anchor tags to open a stop automatically?
 - ~~Index stops in locality if there are too many?~~
 - ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
 - ~~Fix height of services; add another div within with height fixed by content not the grid~~

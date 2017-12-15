@@ -179,18 +179,6 @@ def list_in_locality(locality_code):
         else:
             raise EntityNotFound("Locality with code '%s' does not exist." % locality_code)
 
-    # SELECT admin_area.code AS area_code,
-    #        admin_area.name AS area_name,
-    #        region.code AS region_code,
-    #        region.name AS region_name,
-    #        district.code AS district_code,
-    #        district.name AS district_name
-    #   FROM region, admin_area
-    #        LEFT OUTER JOIN district
-    #                     ON admin_area.code = district.admin_area_cod
-    #        INNER JOIN admin_area
-    #                ON admin_area.region_code = region.code
-    #  WHERE admin_area.code = ? AND (district.code = ? OR district.code IS NULL)
     info = (db.session.query(models.AdminArea.code.label('area_code'),
                              models.AdminArea.name.label('area_name'),
                              models.Region.code.label('region_code'),
@@ -264,17 +252,16 @@ def stop_area(stop_area_code):
                                  % stop_area_code)
 
     area_info = {c: getattr(s_area, c) for c in ['name', 'latitude', 'longitude']}
-
-    query_stops = db.session.query(
-        models.StopPoint.atco_code,
-        models.StopPoint.common_name,
-        models.StopPoint.indicator,
-        models.StopPoint.short_ind,
-        models.StopPoint.street,
-        models.StopPoint.latitude,
-        models.StopPoint.longitude
-    ).filter_by(stop_area_code=s_area.code).all()
-    list_stops = list(map(lambda i: i._asdict(), query_stops))
+    query_stops = (db.session.query(models.StopPoint.atco_code,
+                                    models.StopPoint.common_name,
+                                    models.StopPoint.indicator,
+                                    models.StopPoint.short_ind,
+                                    models.StopPoint.street,
+                                    models.StopPoint.latitude,
+                                    models.StopPoint.longitude,
+                                    models.StopPoint.bearing)
+                   .filter(models.StopPoint.stop_area_code == s_area.code))
+    list_stops = [r._asdict() for r in query_stops.all()]
 
     return render_template('stop_area.html', stop_area=s_area, area_info=area_info,
                            list_stops=list_stops)

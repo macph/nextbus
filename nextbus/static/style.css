@@ -216,7 +216,7 @@ div.heading-inline > button:focus {
 }
 
 /* list of places */
-div.list-places, div.list-stops, div.list-stops-dist, div.list-services {
+div.list-places, div.list-stops, div.list-stops-dist, div.list-services, div.list-stops-services {
     display: grid;
     grid-column-gap: 5px;
     border-width: 1px 0;
@@ -236,6 +236,10 @@ div.list-stops {
 }
 
 div.list-stops-dist {
+    grid-template-columns: 1fr;
+}
+
+div.list-stops-services {
     grid-template-columns: 1fr;
 }
 
@@ -268,9 +272,36 @@ a.item-stop-dist {
     padding: 5px 10px;
 }
 
-a.item-place:hover, a.item-stop:hover, a.item-stop-dist:hover {
-    background: gainsboro;
+div.item-stop-services-head {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 36px 1fr 36px;
+    grid-column-gap: 12px;
+    padding: 5px 10px;
+}
 
+div.item-stop-services-content {
+    display: none;
+    padding: 5px;
+    background: white;
+}
+
+div.item-stop-services-show {
+    
+}
+
+div.item-stop-services-show > div.item-stop-services-head {
+    grid-template-columns: 54px 1fr 36px;
+    font-size: 1.5rem;
+}
+
+div.item-stop-services-show > div.item-stop-services-content {
+    display: block;
+}
+
+a.item-place:hover, a.item-stop:hover, a.item-stop-dist:hover, div.item-stop-services-head:hover {
+    background: gainsboro;
+    cursor: pointer;
     text-decoration: none;
 }
 
@@ -283,6 +314,11 @@ div.stop-name {
     color: black;
 }
 
+div.item-stop-services-show > div.item-stop-services-head > div.stop-name {
+    font-size: 2.7rem;
+    font-weight: 600;
+}
+
 div.stop-dist {
     display: flex;
     align-items: center;
@@ -291,6 +327,19 @@ div.stop-dist {
     font-size: 1.6rem;
     font-style: italic;
     color: black;
+}
+
+div.stop-arrow {
+    display: flex;
+    align-items: center;
+
+    line-height: 1.0em;
+    font-size: 3.2rem;
+    color: black;
+}
+
+div.stop-arrow:after {
+    content: "\203A";
 }
 
 div.stop-indicator {

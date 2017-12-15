@@ -60,6 +60,11 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady) {
         }
         self.map = new google.maps.Map(mapElement, {
             center: {lat: self.stopArea.latitude, lng: self.stopArea.longitude},
+            styles: [
+                // Hide business points of interest and transit locations
+                {featureType: 'poi.business', stylers: [{visibility: 'off'}]},
+                {featureType: 'transit', elementType: 'labels.icon', stylers: [{visibility: 'off'}]}
+            ]
         });
         self.bounds = new google.maps.LatLngBounds();
     
@@ -182,6 +187,8 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     this.cd = countdownElement;
     this.data = null;
     this.isLive = true;
+    this.loopActive = false;
+    this.loopEnding = false;
     this.filter = new ServicesFilter(this.printData);
 
     /**
@@ -357,18 +364,32 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
      * Starts up the class with interval for refreshing
      */
     this.startLoop = function() {
-        self.getData();
+        if (self.loopActive) {
+            if (self.loopEnding) {
+                self.loopEnding = false;
+            }
+            return;
+        } else {
+            self.getData();
+        }
         if (REFRESH) {
+            self.loopActive = true;
             var time = INTERVAL;
-            self.interval = setInterval(function() {
+            self.interval = setInterval(function () {
                 if (--time > 0) {
                     self.cd.innerHTML = `${time}s`
                 } else {
                     self.cd.innerHTML = 'now';
                 }
                 if (time <= 0) {
-                    self.getData();
-                    time = INTERVAL;
+                    if (self.loopEnding) {
+                        self.loopActive = false;
+                        self.loopEnding = false;
+                        clearInterval(self.interval);
+                    } else {
+                        self.getData();
+                        time = INTERVAL;
+                    }
                 }
             }, 1000);
         } else {
@@ -380,8 +401,8 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
      * Stops the interval, leaving it paused. Can be restarted with startLoop() again
      */
     this.stopLoop = function() {
-        if (self.interval) {
-            clearInterval(self.interval);
+        if (self.loopActive) {
+            self.loopEnding = true;
         }
     };
 }

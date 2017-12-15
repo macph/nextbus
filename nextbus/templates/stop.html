@@ -68,11 +68,11 @@
         mapDiv.style.paddingBottom = "56.25%";
         mapFrame.setAttribute("src", mapFrame.getAttribute("data-src"));
         this.onclick = null;
+        mapFrame.addEventListener("load", function() {
+            showButton.textContent = "show";
+            showButton.style.display = "none";
+        });
     };
-    mapFrame.addEventListener("load", function() {
-        showButton.textContent = "show";
-        showButton.style.display = "none";
-    });
 </script>
 {% if stop.stop_area is not none %}
 <h2>Other stops</h2>

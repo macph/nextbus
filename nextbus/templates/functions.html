@@ -32,7 +32,7 @@ area-color-{{ stop.atco_code[:3] }}
 {% if list|length > 0 %}
 <div class="list-stops">
     {% for stop in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=item-stop>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop">
         <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
         <div class="stop-name">{{ stop_name(stop) }}</div>
     </a>
@@ -47,7 +47,7 @@ area-color-{{ stop.atco_code[:3] }}
 {% if list|length > 0 %}
 <div class="list-stops-dist">
     {% for stop, distance in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class=item-stop-dist>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop-dist">
         <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
         <div class="stop-name">{{ stop_name(stop) }}</div>
         <div class="stop-dist">{{ '%.0f m'|format(distance) }}</div>

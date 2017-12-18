@@ -84,13 +84,77 @@ set up favourites or such?
     - ~~Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)~~
     - Change locality name to place - or at least, do this for front facing pages.
     - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
-    - ~~Index the correct columns.~~
-    - Capitalize *all* ATCO and NaPTAN codes. This speeds up searches significantly.
+    - Index the correct columns.
+        - Add `tsvector` GIN indexes to all area and stop names (including streets) for full text searches.
+        - Consider using GIN index on NaPTAN codes to speed up searches using `pg_trgm`. The alternative is to capitalize all codes and use a `LIKE` query which already uses indices.
+    - ~~Capitalize *all* ATCO and NaPTAN codes. This speeds up searches significantly.~~
 - ~~Find out why the query to match stop areas with localities was hanging up~~ *Fixed with autocommit enabled for SQLAlchemy.*
+- ~~Add GIN indices for text search; because the `to_tsvector` function is used, migrations involving functional indices cannot add them automatically. We add something like these to the migration script:~~
+
+```sql
+CREATE INDEX ix_region_tsvector_name
+          ON region
+       USING gin (to_tsvector('english'), "name");
+```
+
+```python
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    # sa.text() reads string and injects into SQL query directly
+    op.create_index('ix_region_tsvector_name', 'region',
+                    [sa.text("to_tsvector('english', name)")],
+                    unique=False, postgresql_using='gin')
+
+def downgrade():
+    op.drop_index('ix_region_tsvector_name', table_name='region')
+
+```
 - With PSQL implemented, add proper search fields
     - Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway
     - Text search covering areas, localities, stops (common name & street) and stop area names.
     - With FTS, add options to filter by area or type.
+
+```sql
+SELECT atco_code, common_name, indicator
+  FROM stop_point
+ WHERE to_tsvector('english', common_name || ' ' || street)
+       @@
+       to_tsquery('english' 'crook');
+```
+
+```python
+from nextbus import db, models
+
+stops = (db.session.query(models.StopPoint.atco_code,
+                          models.StopPoint.common_name,
+                          models.StopPoint.indicator)
+         .filter(db.func.to_tsvector('english', models.StopPoint.common_name
+                                     + ' ' + models.StopPoint.street)
+                 .match('crook', postgresql_regconfig='english'))
+        ).all()
+```
+
+- **Need to format strings for use by `tsquery` , for example `ringstead crescent` needs to be parsed as `ringstead & crescent`.**
+    - Search rules:
+        - Words separated by spaces or `+` will be evaluated together.
+        - Words separated by `or` or `|` will be evaluated separately.
+        - Words prefixed by `-` or `!` will be excluded by the search.
+        - Words enclosed within brackets `()` are evaluated before rest of the query.
+    - With `tsquery` we have the operators `&`, `|`, `!`, `()` and `''' '''`:
+        - `fat & cat` -> `fat AND cat`
+        - `fat | cat` -> `fat OR cat`
+        - `fat & ! cat` -> `fat AND NOT cat`
+        - `fat & (cat | rat)` -> `fat AND (cat OR rat)`
+    - So a parsing algorithm goes like this:
+        - Replace `+` with a space.
+        - Check if brackets do work -- use function recursively. Raise `ValueError` if required
+        - Split up all by spaces -- can use `str.split()` or `re.split(r'\W', ...)`
+        - In list: replace `or` (any case) with `|`, and split words starting with `|`
+        - Strip any items or words without alphanumeric characters, except if they are prefixed with `-` or `!` (replace with `!`).
+- **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.**
+
 
 ## Styling website
 
@@ -280,7 +344,7 @@ query_stops = stops.union_all(areas).order_by('name')
 list_stops = [r._asdict() for r in query_stops.all()]
 ```
 
-- **Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**. See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows.
+- ~~**Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**.~~ See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows. *Symptom fixed by adding a `__main__.py` to the `nextbus` module which is identical in functionality to the `nxb` command. Just run it with `python -m nextbus [COMMAND]`.*
 
 ```
 SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\Scripts\nb.exe on line 1, but no encoding declared; see http://python.org/dev/peps/pep-0263/ for details

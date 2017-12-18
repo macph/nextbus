@@ -4,7 +4,6 @@ Views for the nextbus website.
 import collections
 import re
 from requests import HTTPError
-from sqlalchemy import or_
 from sqlalchemy.orm import load_only
 from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
 from nextbus import db, forms, location, models, tapi
@@ -97,9 +96,11 @@ def list_in_region(region_code):
         Administrative areas with districts are excluded in favour of listing
         districts.
     """
-    region = models.Region.query.get(region_code)
+    region = models.Region.query.get(region_code.upper())
     if region is None:
         raise EntityNotFound("Region with code '%s' does not exist." % region_code)
+    if region.code != region_code:
+        return redirect('/list/region/%s' % region.code, code=301)
 
     q_area = (models.AdminArea.query
               .outerjoin(models.AdminArea.districts) # LEFT OUTER JOIN
@@ -169,15 +170,12 @@ def list_in_district(district_code):
 @page.route('/list/locality/<locality_code>')
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
-    lty = models.Locality.query.get(locality_code)
+    lty = models.Locality.query.get(locality_code.upper())
     if lty is None:
-        str_lty = locality_code.upper()
-        new_lty = models.Locality.query.filter_by(code=str_lty).one_or_none()
-        if new_lty is not None:
-            return redirect('/list/locality/%s' % new_lty.code,
-                            code=301)
-        else:
-            raise EntityNotFound("Locality with code '%s' does not exist." % locality_code)
+        raise EntityNotFound("Locality with code '%s' does not exist." % locality_code)
+    else:
+        if lty.code != locality_code:
+            return redirect('/list/locality/%s' % lty.code, code=301)
 
     info = (db.session.query(models.AdminArea.code.label('area_code'),
                              models.AdminArea.name.label('area_name'),
@@ -188,8 +186,8 @@ def list_in_locality(locality_code):
             .outerjoin(models.AdminArea.districts)
             .join(models.Region, models.AdminArea.region_code == models.Region.code)
             .filter(models.AdminArea.code == lty.admin_area_code,
-                    or_(models.District.code == lty.district_code,
-                        models.District.code.is_(None)))
+                    db.or_(models.District.code == lty.district_code,
+                           models.District.code.is_(None)))
            ).one()
 
     list_stops = (models.StopPoint.query
@@ -204,18 +202,16 @@ def list_in_locality(locality_code):
 def list_nr_postcode(postcode):
     """ Show stops within range of postcode. """
     str_psc = postcode.replace('+', ' ')
-    psc = models.Postcode.query.filter_by(text=str_psc).one_or_none()
+    index_psc = ''.join(str_psc.split()).upper()
+    psc = models.Postcode.query.get(index_psc)
     if psc is None:
-        new_str = ''.join(str_psc.split()).upper()
-        new_psc = models.Postcode.query.filter_by(index=new_str).one_or_none()
-        if new_psc is not None:
+        raise EntityNotFound("Postcode '%s' does not exist." % postcode)
+    else:
+        if psc.text != str_psc:
             # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
-            return redirect('/near/postcode/%s' % new_psc.text.replace(' ', '+'), code=301)
-        else:
-            raise EntityNotFound("Postcode '%s' does not exist." % postcode)
+            return redirect('/near/postcode/%s' % psc.text.replace(' ', '+'), code=301)
 
-    coord = (psc.latitude, psc.longitude)
-    stops = _find_stops_in_range(coord)
+    stops = _find_stops_in_range((psc.latitude, psc.longitude))
 
     return render_template('postcode.html', postcode=psc, list_stops=stops)
 
@@ -241,17 +237,15 @@ def list_nr_location(lat_long):
 @page.route('/stop/area/<stop_area_code>')
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
-    s_area = models.StopArea.query.get(stop_area_code)
-    if s_area is None:
-        s_area2 = models.StopArea.query.filter(models.StopArea.code
-                                               .ilike(stop_area_code)).one_or_none()
-        if s_area2 is not None:
-            return redirect('/stop/naptan/%s' % s_area2.stop_area_code, code=301)
-        else:
-            raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
-                                 % stop_area_code)
+    stop_area = models.StopArea.query.get(stop_area_code.upper())
+    if stop_area is None:
+        raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
+                             % stop_area_code)
+    else:
+        if stop_area.code != stop_area_code:
+            return redirect('/stop/naptan/%s' % stop_area.code, code=301)
 
-    area_info = {c: getattr(s_area, c) for c in ['name', 'latitude', 'longitude']}
+    area_info = {c: getattr(stop_area, c) for c in ['name', 'latitude', 'longitude']}
     query_stops = (db.session.query(models.StopPoint.atco_code,
                                     models.StopPoint.common_name,
                                     models.StopPoint.indicator,
@@ -260,43 +254,39 @@ def stop_area(stop_area_code):
                                     models.StopPoint.latitude,
                                     models.StopPoint.longitude,
                                     models.StopPoint.bearing)
-                   .filter(models.StopPoint.stop_area_code == s_area.code))
+                   .filter(models.StopPoint.stop_area_code == stop_area.code))
     list_stops = [r._asdict() for r in query_stops.all()]
 
-    return render_template('stop_area.html', stop_area=s_area, area_info=area_info,
+    return render_template('stop_area.html', stop_area=stop_area, area_info=area_info,
                            list_stops=list_stops)
 
 
 @page.route('/stop/naptan/<naptan_code>')
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
-    s_pt = models.StopPoint.query.filter_by(naptan_code=naptan_code).one_or_none()
-    if s_pt is None:
-        s_pt2 = models.StopPoint.query.filter(models.StopPoint.naptan_code
-                                              .ilike(naptan_code)).one_or_none()
-        if s_pt2 is not None:
-            return redirect('/stop/naptan/%s' % s_pt2.naptan_code, code=301)
-        else:
-            raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
-                                 % naptan_code)
+    stop = models.StopPoint.query.filter_by(naptan_code=naptan_code.lower()).one_or_none()
+    if stop is None:
+        raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
+                             % naptan_code)
+    else:
+        if stop.naptan_code != naptan_code:
+            return redirect('/stop/naptan/%s' % stop.naptan_code, code=301)
 
-    return render_template('stop.html', stop=s_pt)
+    return render_template('stop.html', stop=stop)
 
 
 @page.route('/stop/atco/<atco_code>')
 def stop_atco(atco_code):
     """ Shows stop with NaPTAN code. """
-    s_pt = models.StopPoint.query.filter_by(atco_code=atco_code).one_or_none()
-    if s_pt is None:
-        s_pt2 = models.StopPoint.query.filter(models.StopPoint.atco_code
-                                              .ilike(atco_code)).one_or_none()
-        if s_pt2 is not None:
-            return redirect('/stop/atco/%s' % s_pt2.atco_code, code=301)
-        else:
-            raise EntityNotFound("Bus stop with ATCO code %r does not exist"
-                                 % atco_code)
+    stop = models.StopPoint.query.get(atco_code.upper())
+    if stop is None:
+        raise EntityNotFound("Bus stop with ATCO code %r does not exist"
+                             % atco_code)
+    else:
+        if stop.atco_code != atco_code:
+            return redirect('/stop/atco/%s' % stop.atco_code, code=301)
 
-    return render_template('stop.html', stop=s_pt)
+    return render_template('stop.html', stop=stop)
 
 
 @page.route('/stop/get', methods=['POST'])

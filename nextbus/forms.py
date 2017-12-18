@@ -14,9 +14,9 @@ def _stop_point_exists(form, field):
         raise ValidationError("SMS codes should be between 5 and 8 "
                               "characters long.")
     # Add real code to FlaskForm instance for use by view
-    query = db.session.query(models.StopPoint.naptan_code).filter(
-        models.StopPoint.naptan_code.ilike(field.data)
-    ).one_or_none()
+    query = (db.session.query(models.StopPoint.naptan_code)
+             .filter_by(naptan_code=field.data.lower())
+            ).one_or_none()
     if query is not None:
         form.new = query[0]
     else:
@@ -31,9 +31,12 @@ def _postcode_exists(form, field):
         raise ValidationError("Postcodes should be between 6 and 8 letters "
                               "long.")
     # Add real postcode to FlaskForm instance for use by view
-    query = db.session.query(models.Postcode.text).filter(
-        models.Postcode.index == new_postcode
-    ).one_or_none()
+    query = (db.session.query(models.Postcode.text)
+             .filter_by(index=field.data.upper())
+            ).one_or_none()
+    query = (db.session.query(models.Postcode.text)
+             .filter_by(index=new_postcode)
+            ).one_or_none()
     if query is not None:
         form.new = query[0]
     else:

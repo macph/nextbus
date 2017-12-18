@@ -230,6 +230,11 @@
         {
             "model": "District",
             "attr": "admin_area_code",
+            "value": "069"
+        },
+        {
+            "model": "District",
+            "attr": "admin_area_code",
             "value": "078"
         },
         {

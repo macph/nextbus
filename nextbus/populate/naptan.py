@@ -3,11 +3,11 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import os
 import re
+import collections
 import dateutil.parser
 import lxml.etree
 import click
 from flask import current_app
-from sqlalchemy import and_, func
 
 from definitions import ROOT_DIR
 from nextbus import db, models
@@ -181,17 +181,19 @@ def _parse_nptg_places(list_objects, new_obj):
     """ Parses regions, areas and districts. """
     if new_obj.modified is not None:
         new_obj.modified = dateutil.parser.parse(new_obj.modified)
+    new_obj.code = new_obj.code.upper()
     list_objects.append(new_obj)
 
 
-def _parse_localities(list_objects, new_obj):
+def _parse_localities(list_objects, local):
     """ Parses localities and set district code '310' to None. """
-    if new_obj.modified is not None:
-        new_obj.modified = dateutil.parser.parse(new_obj.modified)
+    if local.modified is not None:
+        local.modified = dateutil.parser.parse(local.modified)
+    local.code = local.code.upper()
     # 310 is used if locality is not within a district
-    if new_obj.district_code == '310':
-        new_obj.district_code = None
-    list_objects.append(new_obj)
+    if local.district_code == '310':
+        local.district_code = None
+    list_objects.append(local)
 
 
 def _get_nptg_data(nptg_file, atco_codes=None):
@@ -302,7 +304,9 @@ class _NaPTANStops(object):
         """ Parses stop areas. """
         if area.modified is not None:
             area.modified = dateutil.parser.parse(area.modified)
-        # A lot of stop areas have this mistyped type.
+        # Set all ATCO codes to uppercase
+        area.code = area.code.upper()
+        # A lot of stop areas have this mistyped stop area type.
         if area.stop_area_type == 'GBPS':
             area.stop_area_type = 'GPBS'
         # '/' is not allowed in NaPTAN strings; was simply removed
@@ -322,6 +326,9 @@ class _NaPTANStops(object):
 
         if point.modified is not None:
             point.modified = dateutil.parser.parse(point.modified)
+        # Set all NaPTAN codes to lowercase and all ATCO codes to uppercase
+        point.atco_code = point.atco_code.upper()
+        point.naptan_code = point.naptan_code.lower()
         # Checks if record already exists
         if self._stop_exists(list_objects, point):
             return
@@ -363,31 +370,28 @@ def _remove_stop_areas():
     c_stops = (
         db.session.query(models.StopArea.code.label('a_code'),
                          models.StopPoint.locality_code.label('l_code'),
-                         func.count(models.StopPoint.atco_code).label('n_stops'))
+                         db.func.count(models.StopPoint.atco_code).label('n_stops'))
         .join(models.StopArea.stop_points)
         .group_by(models.StopArea.code, models.StopPoint.locality_code)
     ).subquery()
     m_stops = (
         db.session.query(c_stops.c.a_code, c_stops.c.l_code,
-                         func.max(c_stops.c.n_stops).label('max_stops'))
+                         db.func.max(c_stops.c.n_stops).label('max_stops'))
         .group_by(c_stops.c.a_code, c_stops.c.l_code)
     ).subquery()
 
     query_area_localities = (
         db.session.query(c_stops.c.a_code, c_stops.c.l_code)
-        .join(m_stops, and_(c_stops.c.a_code == m_stops.c.a_code,
-                            c_stops.c.l_code == m_stops.c.l_code,
-                            c_stops.c.n_stops == m_stops.c.max_stops))
+        .join(m_stops, db.and_(c_stops.c.a_code == m_stops.c.a_code,
+                               c_stops.c.l_code == m_stops.c.l_code,
+                               c_stops.c.n_stops == m_stops.c.max_stops))
     )
 
-    dict_areas = {}
+    dict_areas = collections.defaultdict(list)
     update_areas, invalid_areas = [], []
     click.echo("Linking stop areas with localities...")
     for res in query_area_localities.all():
-        if res[0] in dict_areas:
-            dict_areas[res[0]].append(res[1])
-        else:
-            dict_areas[res[0]] = [res[1]]
+        dict_areas[res[0]].append(res[1])
     for area, local in dict_areas.items():
         if len(local) == 1:
             update_areas.append({'code': area, 'locality_code': local[0]})

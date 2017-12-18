@@ -15,6 +15,7 @@ setup(
         'flask_wtf',
         'lxml',
         'psycopg2',
+        'pyparsing',
         'python-dateutil',
         'pytz',
         'requests'

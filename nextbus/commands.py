@@ -48,33 +48,41 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify):
     """
     from nextbus.populate import modifications, naptan, nspl
 
-    options = {'nptg': True, 'naptan': True, 'nspl': True, 'modify': True}
+    errors = False
+    options = {'g': False, 'n': False, 'p': False, 'm': False}
 
     if nptg_d and nptg_f:
-        click.echo("Can't specify both download and filepath for NPTG data.")
-    elif nptg_d or nptg_f:
-        naptan.commit_nptg_data(nptg_file=nptg_f)
+        click.echo("Can't specify both download option (-g) and filepath (-G) "
+                   "for NPTG data.")
+        errors = True
     else:
-        options['nptg'] = False
+        options['g'] = nptg_d or nptg_f
 
     if naptan_d and naptan_f:
-        click.echo("Can't specify both download and filepath for NaPTAN data.")
-    elif naptan_d or naptan_f:
-        naptan.commit_naptan_data(naptan_file=naptan_f)
+        click.echo("Can't specify both download option (-n) and filepath (-N) "
+                   "for NaPTAN data.")
+        errors = True
     else:
-        options['naptan'] = False
+        options['n'] = naptan_d or naptan_f
 
     if nspl_d and nspl_f:
-        click.echo("Can't specify both download and filepath for NSPL data.")
-    elif nspl_d or nspl_f:
-        nspl.commit_nspl_data(nspl_file=nspl_f)
+        click.echo("Can't specify both download option (-p) and filepath (-P) "
+                   "for NSPL data.")
+        errors = True
     else:
-        options['nspl'] = False
+        options['p'] = nspl_d or nspl_f
+    options['m'] = modify
 
-    if modify:
+    if errors:
+        return
+    if options['g']:
+        naptan.commit_nptg_data(nptg_file=nptg_f)
+    if options['n']:
+        naptan.commit_naptan_data(naptan_file=naptan_f)
+    if options['p']:
+        nspl.commit_nspl_data(nspl_file=nspl_f)
+    if options['m']:
         modifications.modify_data()
-    else:
-        options['modify'] = False
 
     if not any(i for i in options.values()):
         click.echo('No option selected.')

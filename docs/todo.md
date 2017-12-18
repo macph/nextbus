@@ -8,6 +8,7 @@
 - ~~Set up the website.~~
 
 Set up the routing as such:
+
 - `/` & `/home` **Home page**: search for bus stop, route, etc
     - `/list` **List of regions**: List of all regions.
         - `/list/region/<code>` **List of areas/districts**: List of areas and districts in a region
@@ -24,7 +25,9 @@ Set up the routing as such:
     - `/search/<string>` **Search**: Find an area, district, locality or stop name
 
 ### ~~Changes to area list~~
+
 Do we move to a setup where we have a list of regions only, maybe with map, and each region has list of areas and districts combined - for example Yorkshire would have a list of all districts _and_ the areas which do not have any districts (marked with *):
+
 - Barnsley
 - Bradford
 - Calderdale
@@ -46,15 +49,18 @@ Do we move to a setup where we have a list of regions only, maybe with map, and 
 - York *
 
 In this case:
+
 - `/list` **List of regions**: List of all regions.
     - `/list/region/<code>` **List of areas/districts**: List of areas and districts in a region
         - `/list/area/<code>` **List of localities**: List of localities in an area
         - `/list/district/<code>` **List of localities**: List of localities in an district
 
 ## Migrate to PostgreSQL
+
 Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.
 - Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.
 - Use extra features provided by PostgreSQL, such as `ON CONFLICT`:
+
 ```sql
 INSERT INTO stop_point AS sp (atco_code, naptan_code, modified ...)
      VALUES ('490008978N1', '75463', '2017-11-21 16:53:00' ...)
@@ -65,6 +71,7 @@ ON CONFLICT (atco_code) /* or 'ON CONSTRAINT constraint' instead of '(sp.atco_co
                           ...
       WHERE sp.modified < '2017-11-21 16:53:00'; /* must prefix with table name */
 ```
+
 - Consider getting 2 databases - static for all data such as postcodes and stops, and users/dynamic for users, eg tracking and cookies.
 - Settings per user (eg with cookies) - may want to start tracking once they
 set up favourites or such?
@@ -78,6 +85,7 @@ set up favourites or such?
     - Change locality name to place - or at least, do this for front facing pages.
     - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
     - ~~Index the correct columns.~~
+    - Capitalize *all* ATCO and NaPTAN codes. This speeds up searches significantly.
 - ~~Find out why the query to match stop areas with localities was hanging up~~ *Fixed with autocommit enabled for SQLAlchemy.*
 - With PSQL implemented, add proper search fields
     - Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway
@@ -85,6 +93,7 @@ set up favourites or such?
     - With FTS, add options to filter by area or type.
 
 ## Styling website
+
 - Create a webfont with icons: bus/tram, TfL roundel, arrows, search, refresh, etc. This would allow the bus/tram icons to be of different colours without having to use JS to modify the SVG colours.
 - ~~Refine templates further such that the list of stops for localities, postcodes and locations all come from the same template, with a list of stop points as an object. Same goes for live times for ATCO and NaPTAN codes.~~
 - Add info panel for more details about stop; by default only show street & SMS code
@@ -112,6 +121,7 @@ set up favourites or such?
 - ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
 - ~~Fix height of services; add another div within with height fixed by content not the grid~~
 - Take a look at how different pages call the SQL database; if only calling a specific column value it would be a waste to get the object for that row and then retrieve the attribute in question. If calling a number of attributes, can do a single query and output to a dict in the view function to be passed to the template page. So, instead of doing `stop_point.locality.name`, do
+
 ```python
 db.session.query(models.Locality.name).filter_by(
     code=stop_point.locality_code
@@ -132,7 +142,9 @@ db.session.query(models.Locality.name).filter_by(
 | 620       | 124       | Edinburgh  | Maroon        |               |
 
 How would the colours be encoded?
+
 - One column for a text value for class name, so for TfL red:
+
 ```css
 /* Transport for London */
 div.area-color-490 {
@@ -141,17 +153,20 @@ div.area-color-490 {
 ```
 
 ## Responses for requests
+
 - Sort out response handling for:
     - `stop_get_times()` POST response; need to pass on any errors from retrieving data to the JS
     - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
     - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
 - Change JS to report on live data status (timed out, server unavailable, can't reach API, etc)
+    - When POST request is sent, change heading to 'Updating live data' or 'Retrieving live data'.
+    - Change back to 'Live times at HH:MM:SS' when data is retrieved and parsed.
 - If no response is received:
     - Display message (timed out, unavailable, etc)
     - ~~Change the time remaining by cutting off a minute off and any live times could be changed to timetabled alternative, or simulated with red text to indicate they are not tracked at present. This requires including _both_ live and timetabled times - use ISO formats and let JS do the minute calculations?~~
 
-
 ## What else?
+
 - ~~Set up TransportAPI querying, convert to data to be used by the website. Make a distinction between live and timetabled times.~~
 - ~~Should we set up the URLs such that we have `/stop?naptan=51201` or `/list?postcode=W1A 1AA`, instead of `/naptan/51201` or `/postcode/W1A 1AA`?~~
 - ~~How to retrieve lat/long data? Set up a JS function, and have it operate upon pressing a button.~~
@@ -164,6 +179,7 @@ div.area-color-490 {
     - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
     - The TLNDS would be really useful in getting list of services for each stop.
     - Add breadcrumbs. Requires working out which locality from list of stops within area, eg (this would be easier to do during population instead of live data retrieval)
+
 ```sql
 WITH count_stops AS (
       SELECT sa.code AS a_code,
@@ -188,7 +204,9 @@ SELECT a.a_code AS stop_area_code,
                   a.l_code = b.l_code AND
                   a.n_stops = b.m_stops;
 ```
+
 Or in Python (SQLAlchemy):
+
 ```python
 from nextbus import db, models
 from sqlalchemy import and_, func
@@ -211,14 +229,63 @@ query_area_localities = (db.session.query(c_stops.c.a_code, c_stops.c.l_code)
                                c_stops.c.n_stops == m_stops.c.max_stops))
                         ).all()
 ```
+
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
 - ~~Move the `populate` command to a separate module and import it into the package somehow.~~ Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
 - ~~Add SQLAlchemy logging; this would help with optimising SQL queries.~~
+- Change locality page to a mix of stop points and areas. Use a SQL query
+
+```sql
+SELECT 'stop_point' AS s_type,
+       stop_point.atco_code AS code,
+       stop_point.common_name AS name,
+       stop_point.short_ind AS ind
+  FROM stop_area
+       LEFT OUTER JOIN stop_point
+                    ON stop_area.code = stop_point.stop_area_code
+ WHERE stop_point.locality_code = 'E0029996' AND stop_point.stop_area_code IS NULL
+UNION
+SELECT 'stop_area' AS stype,
+       stop_area.code AS code,
+       stop_area.name AS name,
+       '' AS ind
+  FROM stop_area, stop_point
+ WHERE stop_point.locality_code = 'E0029996';
+```
+
+or in Python (SQLAlchemy):
+
+```python
+from sqlalchemy import implict_column
+from nextbus import db, models
+# Find all stop areas and all stop points _not_ associated with a stop area
+# TODO: Adjust locality page to include stop areas
+table_name = lambda m: literal_column("'%s'" % m.__tablename__)
+stops = (db.session.query(table_name(models.StopPoint).label('s_type'),
+                          models.StopPoint.atco_code.label('code'),
+                          models.StopPoint.common_name.label('name'),
+                          models.StopPoint.short_ind.label('ind'))
+         .outerjoin(models.StopPoint.stop_area)
+         .filter(models.StopPoint.locality_code == lty.code,
+                 models.StopPoint.stop_area_code.is_(None))
+        )
+areas = (db.session.query(table_name(models.StopArea).label('s_type'),
+                          models.StopArea.code,
+                          models.StopArea.name,
+                          literal_column("''").label('ind'))
+         .filter(models.StopArea.locality_code == lty.code)
+        )
+query_stops = stops.union_all(areas).order_by('name')
+list_stops = [r._asdict() for r in query_stops.all()]
+```
+
 - **Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**. See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows.
+
 ```
 SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\Scripts\nb.exe on line 1, but no encoding declared; see http://python.org/dev/peps/pep-0263/ for details
 ```
+
 - Change options of `populate` command, *again*.
     - `-g` to download NPTG data.
     - `-G` with path to use file.
@@ -227,6 +294,7 @@ SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\
     - `-N` with path to use file.
     - `-p` to download NSPL data.
     - `-P` with path to use file.
+
 ```bash
 nxb -gmnp                                                    # Download files
 nxb -G temp/NPTG.xml -m -N temp/Naptan.xml -P temp/nspl.json # Use files

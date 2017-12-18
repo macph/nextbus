@@ -14,17 +14,17 @@ function getLocation(elementId) {
     var output = document.getElementById(elementId);
     if (!navigator.geolocation) {
         console.log("Browser does not support geolocation.");
-        output.innerHTML = "Geolocation not supported; try searching by postcode.";
+        output.textContent = "Geolocation not supported; try searching by postcode.";
         return;
     }
     var success = function(position) {
         var lat = position.coords.latitude.toFixed(6);
         var long = position.coords.longitude.toFixed(6);
-        output.innerHTML = `Your position is ${lat}, ${long}. I know where you live now.`;
+        output.textContent = `Your position is ${lat}, ${long}. I know where you live now.`;
     }
     var error = function(err) {
         console.log("Geolocation error: " + err);
-        output.innerHTML = "Unable to retrieve your location.";
+        output.textContent = "Unable to retrieve your location.";
     }
     navigator.geolocation.getCurrentPosition(success, error);
 }
@@ -36,12 +36,16 @@ function getLocation(elementId) {
  * @param {object} stopArea - Current area, with name, lat and long
  * @param {array} listStops - The list of stops with required attributes
  * @param {boolean} isReady - Used to set up once external script finishes loading
+ * @param {array} listStopElements - List of live stop data with data
+ * @param {function} selectStop - Function used to call stop live data
  */
-function MultiStopMap(mapElement, stopArea, listStops, isReady) {
+function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements, selectStop) {
     var self = this;
     this.mapElement = mapElement;
     this.stopArea = stopArea;
     this.listStops = listStops;
+    this.listStopElements = listStopElements;
+    this.selectStop = selectStop;
     if (isReady !== undefined && isReady) {
         this.ready = true;
     } else {
@@ -85,6 +89,7 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady) {
             // Add coordinates to boundary
             self.bounds.extend(coord);
             self.markers.push(marker);
+            self.addListener(marker, stop.atco_code);
         }
         // Fit all coordinates within map
         self.map.fitBounds(self.bounds);
@@ -92,6 +97,21 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady) {
         var listener = google.maps.event.addListener(self.map, "zoom_changed", function() {
             if (self.map.getZoom() > 18) self.map.setZoom(18);
             google.maps.event.removeListener(listener); 
+        });
+    };
+
+    /**
+     * Adds event listener for clicking on one of the markers on the map
+     * @param {google.maps.Marker} marker 
+     * @param {string} atcoCode 
+     */
+    this.addListener = function(marker, atcoCode) {
+        google.maps.event.addListener(marker, 'click', function() {
+            let stopElement = self.listStopElements['stop' + atcoCode];
+            if (stopElement.row.className === "item-stop-services") {
+                selectStop(stopElement);
+            }
+            stopElement.head.scrollIntoView(true);
         });
     };
 }
@@ -183,8 +203,8 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     this.atcoCode = atcoCode;
     this.postURL = postURL;
     this.table = tableElement;
-    this.hTime = timeElement;
-    this.cd = countdownElement;
+    this.headingTime = timeElement;
+    this.headingCountdown = countdownElement;
     this.data = null;
     this.isLive = true;
     this.loopActive = false;
@@ -207,6 +227,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
      */
     this.getData = function() {
         console.log(`Sending POST request to ${self.postURL} with code='${self.atcoCode}'`);
+        self.headingTime.textContent = "Updating..."
         var request = new XMLHttpRequest();
         request.open('POST', self.postURL, true);
         request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
@@ -224,7 +245,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                     self.printData();
                 } else {
                     self.isLive = false;
-                    self.hTime.innerHTML = "No data available";
+                    self.headingTime.textContent = "No data available";
                 }
             }
         }
@@ -252,7 +273,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
 
         if (self.data.services.length > 0) {
             console.log(`Found ${self.data.services.length} services for stop '${self.atcoCode}'.`);
-            self.hTime.textContent = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
+            self.headingTime.textContent = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
 
             var table = document.createElement('div');
             table.className = 'list-services';
@@ -329,7 +350,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             console.log(`Created table with ${self.data.services.length} services for stop '${self.atcoCode}'.`);
 
         } else {
-            self.hTime.innerHTML = `No buses expected at ${self.data.local_time}`;
+            self.headingTime.textContent = `No buses expected at ${self.data.local_time}`;
             console.log(`No services found for stop ${self.atcoCode}.`);
         }
     };
@@ -377,9 +398,9 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             var time = INTERVAL;
             self.interval = setInterval(function () {
                 if (--time > 0) {
-                    self.cd.innerHTML = `${time}s`
+                    self.headingCountdown.textContent = `${time}s`
                 } else {
-                    self.cd.innerHTML = 'now';
+                    self.headingCountdown.textContent = 'now';
                 }
                 if (time <= 0) {
                     if (self.loopEnding) {
@@ -393,7 +414,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 }
             }, 1000);
         } else {
-            self.cd.innerHTML = '';
+            self.headingCountdown.textContent = '';
         }
     };
 

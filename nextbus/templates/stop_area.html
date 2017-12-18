@@ -62,39 +62,6 @@
 <script>
     let area = {{ area_info|tojson }};
     let listStops = {{ list_stops|tojson }};
-    var showButton = document.getElementById("buttonShowMap");
-    var mapDiv = document.getElementById("divMap");
-    var map = new MultiStopMap(mapDiv, area, listStops);
-
-    /* Checks animations, from Modernizr */
-    function whichTransitionEvent(el) {
-        var transitions = {
-            'transition': 'transitionend',
-            'OTransition': 'oTransitionEnd',
-            'MozTransition': 'transitionend',
-            'WebkitTransition': 'webkitTransitionEnd'
-        };
-    
-        for (var t in transitions) {
-            if (transitions.hasOwnProperty(t) && el.style[t] !== undefined) {
-                return transitions[t];
-            }
-        }
-    }
-    showButton.onclick = function() {
-        showButton.textContent = "loading";
-        mapDiv.style.paddingBottom = "56.25%";
-        this.onclick = null;
-    };
-    /* Uses whichTransitionEvent to detect which transition to use, then listens out for it */
-    let transitionEnd = whichTransitionEvent(mapDiv);
-    var transitionEndCallback = function() {
-        mapDiv.removeEventListener(transitionEnd, transitionEndCallback);
-        showButton.style.display = "none";
-        map.create(); 
-        console.log("Map created for stop area with " + map.markers.length + " stops.");
-    }
-    mapDiv.addEventListener(transitionEnd, transitionEndCallback);
 
     var listLiveStops = {};
     for (s of listStops) {
@@ -143,6 +110,39 @@
             });
         }
     }
+    var showButton = document.getElementById("buttonShowMap");
+    var mapDiv = document.getElementById("divMap");
+    var map = new MultiStopMap(mapDiv, area, listStops, false, listLiveStops, selectStop);
+
+    /* Checks animations, from Modernizr */
+    function whichTransitionEvent(el) {
+        var transitions = {
+            'transition': 'transitionend',
+            'OTransition': 'oTransitionEnd',
+            'MozTransition': 'transitionend',
+            'WebkitTransition': 'webkitTransitionEnd'
+        };
+    
+        for (var t in transitions) {
+            if (transitions.hasOwnProperty(t) && el.style[t] !== undefined) {
+                return transitions[t];
+            }
+        }
+    }
+    showButton.onclick = function() {
+        showButton.textContent = "loading";
+        mapDiv.style.paddingBottom = "56.25%";
+        this.onclick = null;
+    };
+    /* Uses whichTransitionEvent to detect which transition to use, then listens out for it */
+    let transitionEnd = whichTransitionEvent(mapDiv);
+    var transitionEndCallback = function() {
+        mapDiv.removeEventListener(transitionEnd, transitionEndCallback);
+        showButton.style.display = "none";
+        map.create(); 
+        console.log("Map created for stop area with " + map.markers.length + " stops.");
+    }
+    mapDiv.addEventListener(transitionEnd, transitionEndCallback);
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4z8yZknfpA57bRuTky5jC1rKtS_Phd-0&callback=map.setReady"></script>
 {% endblock %}

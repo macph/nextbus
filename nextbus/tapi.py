@@ -161,7 +161,7 @@ def parse_nextbus_times(atco_code, **kwargs):
         'atco_code': data['atcocode'],
         'naptan_code': data['smscode'],
         'iso_date': req_date.isoformat(),
-        'local_time': req_date.astimezone(GB_TZ).strftime("%H:%M:%S"),
+        'local_time': req_date.astimezone(GB_TZ).strftime("%H:%M"),
         'services': services.get_list()
     }
     current_app.logger.debug("%d services for ATCO code %s:\n%r"

@@ -225,6 +225,14 @@ div.list-places, div.list-stops, div.list-stops-dist, div.list-services, div.lis
     background: whitesmoke;
 }
 
+div.list-stops-services {
+    display: grid;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: gainsboro;
+    background: whitesmoke;
+}
+
 div.list-places {
     /* 3-column layout */
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -278,6 +286,10 @@ div.item-stop-services-head {
     grid-template-columns: 36px 1fr 36px;
     grid-column-gap: 12px;
     padding: 5px 10px;
+
+    border-width: 1px 0 0 0;
+    border-style: solid;
+    border-color: gainsboro;
 }
 
 div.item-stop-services-content {

@@ -9,39 +9,17 @@
 <h2>Search for bus stops</h2>
 <div class="search-box">
     <form class="search-form" method="post" name="sms">
-        {{ form_naptan.hidden_tag() }}
-        <div class="search-label">
-            <label>with SMS code </label>
-        </div>
+        {{ form_search.hidden_tag() }}
         <div class="search-field">
-            {{ form_naptan.code(placeholder="eg 55677") }}
+            {{ form_search.search_query(placeholder="eg 55677, SW1A 0AA or 'Westminster'") }}
         </div>
         <div class="search-submit">
-            <input class="form-submit" type="submit" name="submit_code" value=">">
+            <input class="form-submit" type="submit" name="submit_query" value=">">
         </div>
     </form>
     <div class="search-error">
-        {% if form_naptan.code.errors %}
-        {% for error in form_naptan.code.errors %}
-        <p>{{ error }}</p>
-        {% endfor %}
-        {% endif %}
-    </div>
-    <form class="search-form" action="" method="post" name="postcode">
-        {{ form_postcode.hidden_tag() }}
-        <div class="search-label">
-            <label>with postcode </label>
-        </div>
-        <div class="search-field">
-            {{ form_postcode.postcode(placeholder="eg SW1A 0AA") }}
-        </div>
-        <div class="search-submit">
-            <input class="form-submit" type="submit" name="submit_postcode" value=">">
-        </div>
-    </form>
-    <div class="search-error">
-        {% if form_postcode.postcode.errors %}
-        {% for error in form_postcode.postcode.errors %}
+        {% if form_search.search_query.errors %}
+        {% for error in form_search.search_query.errors %}
         <p>{{ error }}</p>
         {% endfor %}
         {% endif %}

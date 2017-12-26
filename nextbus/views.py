@@ -7,7 +7,7 @@ from requests import HTTPError
 from sqlalchemy import literal_column, or_
 from sqlalchemy.orm import load_only
 from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
-from nextbus import db, forms, location, models, tapi
+from nextbus import db, forms, location, models, search, tapi
 
 
 MIN_GROUPED = 72
@@ -57,11 +57,11 @@ def _group_places(list_places, attr=None, key=None):
     if list_places:
         if len(list_places) > MIN_GROUPED:
             groups = collections.defaultdict(list)
-            for p in list_places:
+            for item in list_places:
                 if attr is None and key is not None:
-                    groups[p[key][0]].append(p)
+                    groups[item[key][0]].append(item)
                 elif attr is not None and key is None:
-                    groups[getattr(p, attr)[0]].append(p)
+                    groups[getattr(item, attr)[0]].append(item)
                 else:
                     raise AttributeError("Either an attribute or a key must "
                                          "be specified.")
@@ -74,20 +74,47 @@ def _group_places(list_places, attr=None, key=None):
 @page.route('/', methods=['GET', 'POST'])
 def index():
     """ The home page. """
-    f_naptan = forms.FindStop()
-    f_postcode = forms.FindPostcode()
-    if f_naptan.submit_code.data and f_naptan.validate():
-        return redirect('/stop/naptan/%s' % f_naptan.new)
-    if f_postcode.submit_postcode.data and f_postcode.validate():
-        return redirect('/near/postcode/%s' % f_postcode.new.replace(' ', '+'))
+    f_search = forms.SearchPlaces()
+    if f_search.submit_query.data and f_search.validate():
+        if isinstance(f_search.result, models.StopPoint):
+            return redirect('/stop/atco/%s' % f_search.result.atco_code)
+        elif isinstance(f_search.result, models.Postcode):
+            return redirect('/near/postcode/%s' % f_search.result.text.replace(' ', '+'))
+        else:
+            return redirect('/search/%s' % f_search.query.replace(' ', '+'))
 
-    return render_template('index.html', form_naptan=f_naptan, form_postcode=f_postcode)
+    return render_template('index.html', form_search=f_search)
 
 
 @page.route('/about')
 def about():
     """ The about page. """
     return render_template('about.html')
+
+
+@page.route('/search/<query>')
+def search_results(query):
+    """ Shows a list of search results. """
+    s_query = query.replace('+', ' ')
+    result = search.search_full(s_query, search.TSQueryParser().parse_query)
+    # Redirect to postcode or stop if one was found
+    if isinstance(result, models.StopPoint):
+        return redirect('/stop/atco/%s' % result.atco_code)
+    elif isinstance(result, models.Postcode):
+        return redirect('/near/postcode/%s' % result.text.replace(' ', '+'))
+
+    dict_result = collections.defaultdict(list)
+    for row in result:
+        if row.table_name in ['admin_area', 'district']:
+            dict_result['area'].append(row)
+        elif row.table_name in ['stop_area', 'stop_point']:
+            dict_result['stop'].append(row)
+        else:
+            dict_result[row.table_name].append(row)
+    for group, rows in dict_result.items():
+        dict_result[group] = sorted(rows, key=lambda r: r.name)
+
+    return render_template('search.html', query=s_query, results=dict_result)
 
 
 @page.route('/list/')
@@ -219,12 +246,13 @@ def list_in_locality(locality_code):
     areas = (db.session.query(table_name(models.StopArea).label('table'),
                               models.StopArea.code,
                               models.StopArea.name,
-                              literal_column("''").label('ind'))
+                              db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'))
+             .join(models.StopArea.stop_points)
+             .group_by(models.StopArea.code)
              .filter(models.StopArea.locality_code == lty.code)
             )
-    query_stops = stops.union_all(areas).order_by('name', 'ind')
-    list_stops = [r._asdict() for r in query_stops.all()]
-    stops = _group_places(list_stops, key='name')
+    list_stops = stops.union(areas).order_by('name', 'ind').all()
+    stops = _group_places(list_stops, attr='name')
 
     return render_template('locality.html', info=info, locality=lty, stops=stops)
 
@@ -268,27 +296,30 @@ def list_nr_location(lat_long):
 @page.route('/stop/area/<stop_area_code>')
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
-    stop_area = models.StopArea.query.get(stop_area_code.upper())
-    if stop_area is None:
+    s_area = models.StopArea.query.get(stop_area_code.upper())
+    if s_area is None:
         raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
                              % stop_area_code)
     else:
-        if stop_area.code != stop_area_code:
-            return redirect('/stop/naptan/%s' % stop_area.code, code=301)
+        if s_area.code != stop_area_code:
+            return redirect('/stop/naptan/%s' % s_area.code, code=301)
 
-    area_info = {c: getattr(stop_area, c) for c in ['name', 'latitude', 'longitude']}
-    query_stops = (db.session.query(models.StopPoint.atco_code,
-                                    models.StopPoint.common_name,
-                                    models.StopPoint.indicator,
-                                    models.StopPoint.short_ind,
-                                    models.StopPoint.street,
-                                    models.StopPoint.latitude,
-                                    models.StopPoint.longitude,
-                                    models.StopPoint.bearing)
-                   .filter(models.StopPoint.stop_area_code == stop_area.code))
+    area_info = {c: getattr(s_area, c) for c in ['name', 'latitude', 'longitude']}
+    query_stops = (
+        db.session.query(
+            models.StopPoint.atco_code,
+            models.StopPoint.common_name,
+            models.StopPoint.indicator,
+            models.StopPoint.short_ind,
+            models.StopPoint.street,
+            models.StopPoint.latitude,
+            models.StopPoint.longitude,
+            models.StopPoint.bearing
+            ).filter(models.StopPoint.stop_area_code == s_area.code)
+    )
     list_stops = [r._asdict() for r in query_stops.all()]
 
-    return render_template('stop_area.html', stop_area=stop_area, area_info=area_info,
+    return render_template('stop_area.html', stop_area=s_area, area_info=area_info,
                            list_stops=list_stops)
 
 

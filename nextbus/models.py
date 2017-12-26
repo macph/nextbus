@@ -168,8 +168,11 @@ class StopPoint(db.Model):
     modified = db.Column(db.DateTime)
 
     __table_args__ = (
-        db.Index('ix_stop_point_gin_common_name_street',
-                 db.text("to_tsvector('english', common_name || ' ' || street)"),
+        db.Index('ix_stop_point_gin_common_name',
+                 db.text("to_tsvector('english', common_name)"),
+                 postgresql_using='gin'),
+        db.Index('ix_stop_point_gin_street',
+                 db.text("to_tsvector('english', street)"),
                  postgresql_using='gin'),
     )
 

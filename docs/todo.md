@@ -155,7 +155,8 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - Strip any items or words without alphanumeric characters, except if they are prefixed with `-` or `!` (replace with `!`).
 - **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.**
 - Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.
-
+- ~~Add a second search function to only search places/stops without any joins - this should be useful in checking whether a search query does return results or not.~~
+- ~~Should use '+' in URLs, eg searching 'ringstead crescent' should return URL `search/ringstead+crescent`.~~
 
 ## Styling website
 
@@ -217,12 +218,13 @@ div.area-color-490 {
 }
 ```
 
-- Add search to homepage and header.
-- Set up the search results to have no columns, and:
+- ~~Add search to homepage~~ and header.
+- ~~Set up the search results to have no columns~~, and:
     - Each locality should have area and/or district names as well.
-    - Each stop point/area should have locality and street as well.
+    - ~~Each stop point/area should have locality and street as well~~.
     - These supplementary info should be linkable in some way.
     - Stop areas should have their own logos - what to use?
+- Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.
 
 ## Responses for requests
 
@@ -248,9 +250,9 @@ div.area-color-490 {
 - ~~Change titling such that we have indicator & common name with street and landmark as subtitles. Some places will look weird, especially with city centre stops in South Yorkshire, but it should look better for most areas.~~
 - Add a stop area page with either:
     - ~~list of stops within area~~
-    - Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.
+    - ~~Live bus times for each stop within area. They should be hidden by default, with only one stop being updated, if the number of stops within area exceeds 2.~~
     - The TLNDS would be really useful in getting list of services for each stop.
-    - Add breadcrumbs. Requires working out which locality from list of stops within area, eg (this would be easier to do during population instead of live data retrieval)
+    - ~~Add breadcrumbs. Requires working out which locality from list of stops within area, eg (this would be easier to do during population instead of live data retrieval)~~
 
 ```sql
 WITH count_stops AS (

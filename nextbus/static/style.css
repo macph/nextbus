@@ -216,7 +216,7 @@ div.heading-inline > button:focus {
 }
 
 /* list of places */
-div.list-places, div.list-stops, div.list-stops-dist, div.list-services, div.list-stops-services {
+div.list-places, div.list-places-search, div.list-stops, div.list-stops-dist, div.list-stops-search, div.list-services, div.list-search-places {
     display: grid;
     grid-column-gap: 5px;
     border-width: 1px 0;
@@ -238,20 +238,27 @@ div.list-places {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
+div.list-places-search {
+    grid-template-columns: 1fr;
+}
+
 div.list-stops {
     /* 2-column layout */
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-div.list-stops-dist {
+div.list-stops-dist, div.list-stops-search, div.list-stops-services {
     grid-template-columns: 1fr;
 }
 
-div.list-stops-services {
-    grid-template-columns: 1fr;
+a.item-place-search {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 10px;
+    align-items: center;
 }
 
-a.item-place {
+a.item-place, div.item-place {
     display: flex;
     padding: 2px 10px;
     min-height: 28px;
@@ -259,7 +266,22 @@ a.item-place {
     align-items: center;
 
     color: black;
-    font-size: 1.7rem;
+    font-size: 1.8rem;
+    line-height: 1em;
+}
+
+div.item-place-description {
+    display: flex;
+    padding: 2px 10px;
+    min-height: 28px;
+    /* Vertically centered text */
+    align-items: center;
+
+    justify-content: flex-end;
+    text-align: right;
+
+    color: black;
+    font-size: 1.4rem;
     line-height: 1em;
 }
 
@@ -276,6 +298,14 @@ a.item-stop-dist {
     display: grid;
     align-items: center;
     grid-template-columns: 36px 1fr minmax(56px, 0.2fr);
+    grid-column-gap: 12px;
+    padding: 5px 10px;
+}
+
+a.item-stop-search {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 36px 1fr minmax(96px, 0.5fr);
     grid-column-gap: 12px;
     padding: 5px 10px;
 }
@@ -311,7 +341,7 @@ div.item-stop-services-show > div.item-stop-services-content {
     display: block;
 }
 
-a.item-place:hover, a.item-stop:hover, a.item-stop-dist:hover, div.item-stop-services-head:hover {
+a.item-place:hover, a.item-place-search:hover, a.item-stop:hover, a.item-stop-dist:hover, a.item-stop-search:hover, div.item-stop-services-head:hover {
     background: gainsboro;
     cursor: pointer;
     text-decoration: none;
@@ -341,6 +371,18 @@ div.stop-dist {
     color: black;
 }
 
+div.stop-description {
+    display: flex;
+    align-items: center;
+
+    justify-content: flex-end;
+    text-align: right;
+
+    line-height: 1.0em;
+    font-size: 1.4rem;
+    color: black;
+}
+
 div.stop-arrow {
     display: flex;
     align-items: center;
@@ -352,6 +394,12 @@ div.stop-arrow {
 
 div.stop-arrow:after {
     content: "\203A";
+}
+
+div.stop-indicator-empty {
+    height: 3.2em;
+    width: 3.2em;
+    padding: 0.2em;
 }
 
 div.stop-indicator {

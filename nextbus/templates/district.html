@@ -5,8 +5,8 @@
 {% block nav %}
 <ul class="breadcrumbs">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=info['region_code']) }}">{{ info['region_name'] }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=info['area_code']) }}">{{ info['area_name'] }}</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=info.region_code) }}">{{ info.region_name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=info.area_code) }}">{{ info.area_name }}</a></li>
     <li>{{ district.name }}</li>
 </ul>
 {% endblock %}

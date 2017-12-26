@@ -4,6 +4,7 @@ Views for the nextbus website.
 import collections
 import re
 from requests import HTTPError
+from sqlalchemy import literal_column, or_
 from sqlalchemy.orm import load_only
 from flask import abort, Blueprint, current_app, jsonify, render_template, redirect, request
 from nextbus import db, forms, location, models, tapi
@@ -42,20 +43,28 @@ def _find_stops_in_range(coord):
     return sorted(filter(lambda x: x[1] < MAX_DISTANCE, stops), key=lambda x: x[1])
 
 
-def _group_places(list_places, attribute):
+def _group_places(list_places, attr=None, key=None):
     """ Groups localities by their names, or under a single key 'A-Z' if the
         total is less than MIN_GROUPED.
 
         :param list_places: list of models.Locality objects.
-        :param attribute: First letter of attribute to group by.
+        :param attr: First letter of attribute to group by.
+        :param key: First letter of dict key to group by.
         :returns: Dictionary of models.Locality objects.
+        :raises AttributeError: Either an attribute or a key must be specified.
     """
     groups = {}
     if list_places:
         if len(list_places) > MIN_GROUPED:
             groups = collections.defaultdict(list)
             for p in list_places:
-                groups[getattr(p, attribute)[0]].append(p)
+                if attr is None and key is not None:
+                    groups[p[key][0]].append(p)
+                elif attr is not None and key is None:
+                    groups[getattr(p, attr)[0]].append(p)
+                else:
+                    raise AttributeError("Either an attribute or a key must "
+                                         "be specified.")
         else:
             groups = {'A-Z': list_places}
 
@@ -136,7 +145,7 @@ def list_in_area(area_code):
                     .order_by(models.Locality.name)).all()
     else:
         ls_local = []
-    group_local = _group_places(ls_local, 'name')
+    group_local = _group_places(ls_local, attr='name')
 
     return render_template('area.html', region=region, area=area, districts=ls_district,
                            localities=group_local)
@@ -153,17 +162,21 @@ def list_in_district(district_code):
                              models.Region.name.label('region_name'),
                              models.AdminArea.code.label('area_code'),
                              models.AdminArea.name.label('area_name'))
-            .join(models.Region.areas)
-            .filter(models.AdminArea.code == district.admin_area_code)).one()
+            .select_from(models.District)
+            .join(models.AdminArea,
+                  models.AdminArea.code == models.District.admin_area_code)
+            .join(models.Region,
+                  models.Region.code == models.AdminArea.region_code)
+            .filter(models.District.code == district.code)).one()
     ls_local = (models.Locality.query
                 .outerjoin(models.Locality.stop_points)
                 .filter(models.StopPoint.atco_code.isnot(None),
                         models.Locality.district_code == district.code)
                 .order_by(models.Locality.name)).all()
-    group_local = _group_places(ls_local, 'name')
+    group_local = _group_places(ls_local, attr='name')
 
 
-    return render_template('district.html', info=info._asdict(), district=district,
+    return render_template('district.html', info=info, district=district,
                            localities=group_local)
 
 
@@ -183,19 +196,37 @@ def list_in_locality(locality_code):
                              models.Region.name.label('region_name'),
                              models.District.code.label('district_code'),
                              models.District.name.label('district_name'))
-            .outerjoin(models.AdminArea.districts)
-            .join(models.Region, models.AdminArea.region_code == models.Region.code)
-            .filter(models.AdminArea.code == lty.admin_area_code,
-                    db.or_(models.District.code == lty.district_code,
-                           models.District.code.is_(None)))
+            .select_from(models.Locality)
+            .outerjoin(models.District,
+                       models.District.code == models.Locality.district_code)
+            .join(models.AdminArea,
+                  models.AdminArea.code == models.Locality.admin_area_code)
+            .join(models.Region,
+                  models.Region.code == models.AdminArea.region_code)
+            .filter(models.Locality.code == lty.code)
            ).one()
 
-    list_stops = (models.StopPoint.query
-                  .filter(models.StopPoint.locality_code == lty.code)
-                  .order_by('common_name', 'short_ind')).all()
-    stops = _group_places(list_stops, 'common_name')
+    # Find all stop areas and all stop points _not_ associated with a stop area
+    table_name = lambda m: literal_column("'%s'" % m.__tablename__)
+    stops = (db.session.query(table_name(models.StopPoint).label('table'),
+                              models.StopPoint.atco_code.label('code'),
+                              models.StopPoint.common_name.label('name'),
+                              models.StopPoint.short_ind.label('ind'))
+             .outerjoin(models.StopPoint.stop_area)
+             .filter(models.StopPoint.locality_code == lty.code,
+                     models.StopPoint.stop_area_code.is_(None))
+            )
+    areas = (db.session.query(table_name(models.StopArea).label('table'),
+                              models.StopArea.code,
+                              models.StopArea.name,
+                              literal_column("''").label('ind'))
+             .filter(models.StopArea.locality_code == lty.code)
+            )
+    query_stops = stops.union_all(areas).order_by('name', 'ind')
+    list_stops = [r._asdict() for r in query_stops.all()]
+    stops = _group_places(list_stops, key='name')
 
-    return render_template('locality.html', info=info._asdict(), locality=lty, stops=stops)
+    return render_template('locality.html', info=info, locality=lty, stops=stops)
 
 
 @page.route('/near/postcode/<postcode>')

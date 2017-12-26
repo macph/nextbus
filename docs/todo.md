@@ -85,7 +85,7 @@ set up favourites or such?
     - Change locality name to place - or at least, do this for front facing pages.
     - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
     - Index the correct columns.
-        - Add `tsvector` GIN indexes to all area and stop names (including streets) for full text searches.
+        - ~~Add `tsvector` GIN indexes to all area and stop names (including streets) for full text searches.~~
         - Consider using GIN index on NaPTAN codes to speed up searches using `pg_trgm`. The alternative is to capitalize all codes and use a `LIKE` query which already uses indices.
     - ~~Capitalize *all* ATCO and NaPTAN codes. This speeds up searches significantly.~~
 - ~~Find out why the query to match stop areas with localities was hanging up~~ *Fixed with autocommit enabled for SQLAlchemy.*
@@ -154,6 +154,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - In list: replace `or` (any case) with `|`, and split words starting with `|`
         - Strip any items or words without alphanumeric characters, except if they are prefixed with `-` or `!` (replace with `!`).
 - **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.**
+- Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.
 
 
 ## Styling website
@@ -215,6 +216,13 @@ div.area-color-490 {
     background: rgb(220, 36, 31);
 }
 ```
+
+- Add search to homepage and header.
+- Set up the search results to have no columns, and:
+    - Each locality should have area and/or district names as well.
+    - Each stop point/area should have locality and street as well.
+    - These supplementary info should be linkable in some way.
+    - Stop areas should have their own logos - what to use?
 
 ## Responses for requests
 

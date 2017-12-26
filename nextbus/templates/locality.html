@@ -5,10 +5,10 @@
 {% block nav %}
 <ul class="breadcrumbs">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=info['region_code']) }}">{{ info['region_name'] }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=info['area_code']) }}">{{ info['area_name'] }}</a></li>
-    {% if info['district_code'] is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=info['district_code']) }}">{{ info['district_name'] }}</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=info.region_code) }}">{{ info.region_name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=info.area_code) }}">{{ info.area_name }}</a></li>
+    {% if info.district_code is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=info.district_code) }}">{{ info.district_name }}</a></li>
     {% endif %}
     <li>{{ locality.name }}</li>
 </ul>
@@ -19,9 +19,27 @@
 {% endblock %}
 
 {% block content %}
-{% for group in stops|dictsort %}
-<h2 id="{{ group[0] }}">{{ group[0] }}</h2>
-{{ f.print_stops(group[1]) }}
+{% for letter, group in stops|dictsort %}
+<h2 id="{{ letter }}">{{ letter }}</h2>
+{% if group|length > 0 %}
+<div class="list-stops">
+    {% for stop in group %}
+    {% if stop['table'] == 'stop_point' %}
+    <a href="{{ url_for('page.stop_atco', atco_code=stop['code']) }}" class="item-stop">
+        <div class="stop-indicator area-color-{{ stop['code'][:3] }}"><span>{{ stop['ind'] }}</span></div>
+        <div class="stop-name">{{ stop['name'] }}</div>
+    </a>
+    {% elif stop['table'] == 'stop_area' %}
+    <a href="{{ url_for('page.stop_area', stop_area_code=stop['code']) }}" class="item-stop">
+        <div class="stop-indicator-empty"></div>
+        <div class="stop-name">{{ stop['name'] }}</div>
+    </a>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<p>No stops found.</p>
+{% endif %}
 {% endfor %}
 {{ f.resize_indicator("stop-indicator") }}
 {% endblock %}

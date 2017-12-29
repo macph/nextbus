@@ -25,7 +25,7 @@
 {% block content %}
 <div class="heading-inline">
     <h2>Map</h2>
-    <button id="buttonShowMap" type="button" onclick="" value="show">show</button>
+    <button id="buttonShowMap" class="small-button" type="button" onclick="" value="show">show</button>
 </div>
 <div class="google-maps-js" id="divMap"></div>
 <h2>Stops</h2>
@@ -42,15 +42,14 @@
             <p>
                 {% set pipe = joiner() %}
                 {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
-             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}<!--
-             -->{{ pipe() }}<a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">Link to stop</a>
+             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
             </p>
             <div class="heading-inline">
                 <h2 class="stop-live-time">Retrieving live data...</h2>
                 <span class="stop-live-countdown"></span>
             </div>
             <div class="stop-live-services"></div>
-            <p><span class="text-green">Live times are in green,</span> otherwise they are retrieved from timetables.</p>
+            <p><a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">Link to stop</a></p>
         </div>
     </div>
     {% endfor %}

@@ -26,7 +26,7 @@ Set up the routing as such:
 
 ### ~~Changes to area list~~
 
-Do we move to a setup where we have a list of regions only, maybe with map, and each region has list of areas and districts combined - for example Yorkshire would have a list of all districts _and_ the areas which do not have any districts (marked with *):
+~~Do we move to a setup where we have a list of regions only, maybe with map, and each region has list of areas and districts combined - for example Yorkshire would have a list of all districts _and_ the areas which do not have any districts (marked with *):~~
 
 - Barnsley
 - Bradford
@@ -57,8 +57,8 @@ In this case:
 
 ## Migrate to PostgreSQL
 
-Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.
-- Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.
+~~Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.~~
+- ~~Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.~~
 - Use extra features provided by PostgreSQL, such as `ON CONFLICT`:
 
 ```sql
@@ -80,7 +80,7 @@ set up favourites or such?
         - Do this by accepting `CommonName` as the default, else use `ShortName`. Single `name` column in table.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
-    - ~~Add fields for colour - background and text/logo. See table.~~ *ATCO code/admin area code no longer necessary as the same code is used as the first 3 digits of stop's ATCO code.
+    - ~~Add fields for colour - background and text/logo. See table.~~ *ATCO code/admin area code no longer necessary as the same code is used as the first 3 digits of stop's ATCO code.*
     - ~~Live tracking enabled areas - a whitelist (London, SY, GM, etc would qualify)~~
     - Change locality name to place - or at least, do this for front facing pages.
     - ~~Add an surrogate primary key to stop points and stop areas; this should help with LEFT JOINs for localities (detecting whether a locality has any stops or not).~~ *Was done simply by indexing the locality code and the names (for ordering.)*
@@ -111,9 +111,9 @@ def downgrade():
     op.drop_index('ix_region_tsvector_name', table_name='region')
 
 ```
-- With PSQL implemented, add proper search fields
-    - Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway
-    - Text search covering areas, localities, stops (common name & street) and stop area names.
+- ~~With PSQL implemented, add proper search fields~~
+    - ~~Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway~~
+    - ~~Text search covering areas, localities, stops (common name & street) and stop area names.~~
     - With FTS, add options to filter by area or type.
 
 ```sql
@@ -157,6 +157,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
 - Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.
 - ~~Add a second search function to only search places/stops without any joins - this should be useful in checking whether a search query does return results or not.~~
 - ~~Should use '+' in URLs, eg searching 'ringstead crescent' should return URL `search/ringstead+crescent`.~~
+- Add `by` and some other keywords for short indicators so they do not get capitalised (like with `adj` and `opp` for example).
 
 ## Styling website
 
@@ -183,6 +184,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - Request time, SMS code, link to single stop, table of services.
         - Get a link from map to stop in question with JS, makes it easier to navigate.
         - Anchor tags to open a stop automatically?
+- Add the same info above when searching by postcode or location. Do we include stop areas, and exclude these within stop areas?
 - ~~Index stops in locality if there are too many?~~
 - ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
 - ~~Fix height of services; add another div within with height fixed by content not the grid~~
@@ -224,6 +226,7 @@ div.area-color-490 {
     - ~~Each stop point/area should have locality and street as well~~.
     - These supplementary info should be linkable in some way.
     - Stop areas should have their own logos - what to use?
+- How would we style stop areas - switching around the colours would work the best.
 - Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.
 
 ## Responses for requests

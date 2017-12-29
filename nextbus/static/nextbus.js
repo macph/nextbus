@@ -470,3 +470,175 @@ function resizeInd(className, busImage, tramImage) {
         }
     }
 }
+
+/**
+ * Each section in search results has heading and list;
+ * this constructor can hide them or show them.
+ * @constructor
+ * @param {String} headingId 
+ * @param {String} listId 
+ */
+function Section(headingId, listId) {
+    var self = this;
+    this.heading = document.getElementById(headingId);
+    this.list = document.getElementById(listId);
+
+    /**
+     * Hides the heading and list by adding classes
+     */
+    this.hide = function() {
+        if (self.heading.className.indexOf('heading-hidden') === -1) {
+            self.heading.className = self.heading.className + " heading-hidden";
+        }
+        if (self.list.className.indexOf('list-hidden') === -1) {
+            self.list.className = self.list.className + " list-hidden";
+        }
+    };
+
+    /**
+     * Shows the heading and list by removing the hidden classes
+     */
+    this.show = function() {
+        if (self.heading.className.indexOf('heading-hidden') > -1) {
+            self.heading.className = self.heading.className.replace('heading-hidden', '');
+        }
+        if (self.list.className.indexOf('list-hidden') > -1) {
+            self.list.className = self.list.className.replace('list-hidden', '');
+        }
+    };
+}
+
+/**
+ * List of search results and a set of filtering buttons to select the right areas.
+ * @constructor
+ */
+function FilterList() {
+    var self = this;
+    this.divFilterAreas = document.getElementById('dFilterAreas');
+    this.listElements = Array.prototype.slice.call(
+        document.querySelectorAll(
+            ".item-area-search, .item-local-search, .item-stop-search"
+        )
+    );
+    this.areaNames = new Set(self.listElements.map(i => i.dataset.adminArea));
+    this.selectArea = null;
+    this.selectedArea = 'all';
+    this.listAreas = [];
+    this.groups = {};
+
+    this.headers = {
+        area: new Section('hArea', 'dAreas'),
+        local: new Section('hLocal', 'dLocal'),
+        stop: new Section('hStop', 'dStops')
+    };
+
+    /**
+     * Initialises the filter list, adding buttons if the number of areas exceed 1.
+     */
+    this.initialise = function() {
+        if (self.areaNames.size > 1) {
+            let text = document.createElement('p');
+            text.textContent = "Filter by area:";
+            self.divFilterAreas.appendChild(text);
+            self.selectArea = document.createElement('select');
+            self.divFilterAreas.appendChild(self.selectArea);
+
+            // Add first option to show everything (default)
+            let optionAll = document.createElement('option');
+            optionAll.textContent = 'all';
+            optionAll.value = 'all';
+            self.selectArea.appendChild(optionAll);
+            self.addSelectEvent(self.selectArea)
+
+            for (a of Array.from(self.areaNames).sort()) {
+                self.groups[a] = self.listElements.filter(s => s.dataset.adminArea === a);
+                let option = document.createElement('option');
+                option.textContent = a;
+                option.value = a;
+                self.selectArea.appendChild(option);
+                self.listAreas.push(option)
+            }
+        }
+    }
+
+    /**
+     * Helper function to add on 'change' event to select list
+     * @param {document.Element} element 
+     */
+    this.addSelectEvent = function(element) {
+        element.addEventListener('change', function() {
+            if (self.selectedArea !== element.value) {
+                if (element.value === 'all') {
+                    self.showItems(self.listElements);
+                } else {
+                    for (g in self.groups) {
+                        // Show stops and place matching specified area
+                        if (self.groups.hasOwnProperty(g) && element.value === g) {
+                            self.showItems(self.groups[g]);
+                        // Else hide all other groups
+                        } else if (self.groups.hasOwnProperty(g)) {
+                            self.hideItems(self.groups[g]);
+                        }
+                    }
+                }
+                self.selectedArea = element.value;
+            }
+        });
+    };
+
+    /**
+     * Show all item elements in list; will hide sections if all items within are excluded
+     * @param {Array} list 
+     */
+    this.showItems = function(list) {
+        let showAreas = false, showLocal = false, showStops = false;
+        for (s of list) {
+            if (s.className.indexOf('item-hidden') > -1) {
+                s.className = s.className.replace('item-hidden', '');
+            }
+            if (!showAreas && s.className.indexOf('item-area-search') > -1) {
+                showAreas = true;
+            }
+            if (!showLocal && s.className.indexOf('item-local-search') > -1) {
+                showLocal = true;
+            }
+            if (!showStops && s.className.indexOf('item-stop-search') > -1) {
+                showStops = true;
+            }
+        }
+        console.log("area, local, place:" + showAreas + ' ' + showLocal + ' ' + showStops)
+        if (self.headers.area.heading !== null) {
+            if (showAreas) {
+                self.headers.area.show();
+            } else {
+                self.headers.area.hide();
+            }
+        }
+        if (self.headers.local.heading !== null) {
+            if (showLocal) {
+                self.headers.local.show();
+            } else {
+                self.headers.local.hide();
+            }
+        }
+        if (self.headers.stop.heading !== null) {
+            if (showStops) {
+                self.headers.stop.show();
+            } else {
+                self.headers.stop.hide();
+            }
+        }
+    }
+
+    /**
+     * Hide all item elements in list
+     * @param {Array} list 
+     */
+    this.hideItems = function(list) {
+        for (s of list) {
+            if (s.className.indexOf('item-hidden') === -1) {
+                s.className = s.className + " item-hidden";
+            }
+        }
+    }
+}

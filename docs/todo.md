@@ -154,10 +154,10 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - In list: replace `or` (any case) with `|`, and split words starting with `|`
         - Strip any items or words without alphanumeric characters, except if they are prefixed with `-` or `!` (replace with `!`).
 - **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.**
-- Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.
+- ~~Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.~~
 - ~~Add a second search function to only search places/stops without any joins - this should be useful in checking whether a search query does return results or not.~~
 - ~~Should use '+' in URLs, eg searching 'ringstead crescent' should return URL `search/ringstead+crescent`.~~
-- Add `by` and some other keywords for short indicators so they do not get capitalised (like with `adj` and `opp` for example).
+- ~~Add `by` and some other keywords for short indicators so they do not get capitalised (like with `adj` and `opp` for example).~~
 
 ## Styling website
 

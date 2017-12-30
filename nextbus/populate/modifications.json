@@ -226,26 +226,5 @@
             "new_value": "Town Hall"
         }
     ],
-    "delete": [
-        {
-            "model": "District",
-            "attr": "admin_area_code",
-            "value": "069"
-        },
-        {
-            "model": "District",
-            "attr": "admin_area_code",
-            "value": "078"
-        },
-        {
-            "model": "District",
-            "attr": "admin_area_code",
-            "value": "094"
-        },
-        {
-            "model": "District",
-            "attr": "admin_area_code",
-            "value": "097"
-        }
-    ]
+    "delete": []
 }

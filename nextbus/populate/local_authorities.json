@@ -2405,7 +2405,7 @@
         "la_code": "E06000055",
         "admin_area_code": "069",
         "atco_area_code": "020",
-        "district_code": "14"
+        "district_code": null
     },
     {
         "la_name": "Broxbourne",

@@ -149,7 +149,7 @@ class _DBEntries(object):
         with progress_bar(list_elements, label=label) as iter_elements:
             for element in iter_elements:
                 obj = db_model(**self.xpath.dict_text(args, element=element))
-                if not func:
+                if not parse:
                     self.entries.append(obj)
                     continue
                 try:
@@ -240,6 +240,29 @@ def _get_nptg_data(nptg_file, atco_codes=None):
     return nxp, admin_areas, regions, districts, localities
 
 
+def _remove_districts():
+    """ Removes districts without associated localities.
+    """
+    query_districts = (
+        db.session.query(models.District.code)
+        .outerjoin(models.District.localities)
+        .filter(models.Locality.code.is_(None))
+    )
+    list_orphaned_districts = [d.code for d in query_districts.all()]
+    try:
+        db.session.begin()
+        click.echo("Deleting orphaned stop areas...")
+        models.District.query.filter(
+            models.District.code.in_(list_orphaned_districts)
+        ).delete(synchronize_session='fetch')
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.close()
+
+
 class _NaPTANStops(object):
     """ Filters NaPTAN stop points and areas by checking duplicates and
         ensuring only stop areas belonging to stop points within specified
@@ -247,14 +270,15 @@ class _NaPTANStops(object):
     """
     regex_no_word = re.compile(r"^[^\w]*$")
     indicator_regex = [
-        (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
         (re.compile(r"(adjacent|adj)", re.I), "adj"),
         (re.compile(r"after", re.I), "aft"),
-        (re.compile(r"before", re.I), "pre"),
+        (re.compile(r"before", re.I), "bef"),
         (re.compile(r"^(near|nr)$", re.I), "near"),
         (re.compile(r"(opposite|opp)", re.I), "opp"),
-        (re.compile(r"(outside|o/s)", re.I), "o/s"),
+        (re.compile(r"^(outside|o/s|os)$", re.I), "o/s"),
         (re.compile(r"^at$", re.I), "at"),
+        (re.compile(r"^by$", re.I), "by"),
+        (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
         (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
         (re.compile(r"->([ENSW]+)", re.I), r">\1"),
         (re.compile(r"(East|North|South|West)[-\s]?bound", re.I),
@@ -361,30 +385,37 @@ def _remove_stop_areas():
     """
     # Find all stop areas without any stop points (ie they are outside
     # specified areas)
-    query_del = (db.session.query(models.StopArea.code)
-                 .outerjoin(models.StopArea.stop_points)
-                 .filter(models.StopPoint.atco_code.is_(None)))
-
+    query_del = (
+        db.session.query(models.StopArea.code)
+        .outerjoin(models.StopArea.stop_points)
+        .filter(models.StopPoint.atco_code.is_(None))
+    )
+    list_del = [sa.code for sa in query_del.all()]
     # Find locality codes as modes of stop points within each stop area.
     # Stop areas are repeated if there are multiple modes.
     c_stops = (
-        db.session.query(models.StopArea.code.label('a_code'),
-                         models.StopPoint.locality_code.label('l_code'),
-                         db.func.count(models.StopPoint.atco_code).label('n_stops'))
-        .join(models.StopArea.stop_points)
+        db.session.query(
+            models.StopArea.code.label('a_code'),
+            models.StopPoint.locality_code.label('l_code'),
+            db.func.count(models.StopPoint.atco_code).label('n_stops')
+        ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code, models.StopPoint.locality_code)
     ).subquery()
     m_stops = (
-        db.session.query(c_stops.c.a_code, c_stops.c.l_code,
-                         db.func.max(c_stops.c.n_stops).label('max_stops'))
-        .group_by(c_stops.c.a_code, c_stops.c.l_code)
+        db.session.query(
+            c_stops.c.a_code, c_stops.c.l_code,
+            db.func.max(c_stops.c.n_stops).label('max_stops')
+        ).group_by(c_stops.c.a_code, c_stops.c.l_code)
     ).subquery()
 
     query_area_localities = (
-        db.session.query(c_stops.c.a_code, c_stops.c.l_code)
-        .join(m_stops, db.and_(c_stops.c.a_code == m_stops.c.a_code,
-                               c_stops.c.l_code == m_stops.c.l_code,
-                               c_stops.c.n_stops == m_stops.c.max_stops))
+        db.session.query(
+            c_stops.c.a_code, c_stops.c.l_code
+        ).join(m_stops, db.and_(
+            c_stops.c.a_code == m_stops.c.a_code,
+            c_stops.c.l_code == m_stops.c.l_code,
+            c_stops.c.n_stops == m_stops.c.max_stops
+        ))
     )
 
     dict_areas = collections.defaultdict(list)
@@ -402,9 +433,8 @@ def _remove_stop_areas():
     try:
         db.session.begin()
         click.echo("Deleting orphaned stop areas...")
-        list_del = [sa[0] for sa in query_del.all()]
-        (models.StopArea.query
-         .filter(models.StopArea.code.in_(list_del))
+        models.StopArea.query.filter(
+            models.StopArea.code.in_(list_del)
         ).delete(synchronize_session='fetch')
         click.echo("Adding locality codes to stop areas...")
         db.session.bulk_update_mappings(models.StopArea, update_areas)
@@ -490,6 +520,8 @@ def commit_nptg_data(nptg_file=None):
              _parse_localities)
     # Commit changes to database
     nptg.commit()
+    # Remove all orphaned districts
+    _remove_districts()
 
     click.echo("NPTG population done.")
 

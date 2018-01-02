@@ -1,10 +1,13 @@
 """
 Search functions for the nextbus package.
 """
+import sys
 import pyparsing as pp
 
 from nextbus import db
 from nextbus import models
+
+# TODO: Is there a better/faster way of getting all Unicode characters?
 
 
 class TSQueryParser(object):
@@ -36,12 +39,24 @@ class TSQueryParser(object):
     @staticmethod
     def create_parser():
         """ Creates the parser. """
+        # Operators
         not_, and_, or_ = map(pp.CaselessKeyword, ['not', 'and', 'or'])
         op_not = not_ | pp.Literal('!')
         op_and = and_ | pp.Literal('&')
         op_or = or_ | pp.oneOf('| ,')
-        illegal = pp.Word(""""#$%'*-./:;<=>?@[\\]^_`{}~""").suppress()
-        word = ~and_ + ~or_ + pp.Word(pp.alphanums)
+
+        # Looping over all Unicode characters once
+        alpha_num, punctuation = [], []
+        for char in (chr(c) for c in range(sys.maxunicode)):
+            if char.isalnum():
+                alpha_num.append(char)
+            elif not char.isspace():
+                if char in '!&|()':
+                    continue
+                punctuation.append(char)
+
+        illegal = pp.Word(''.join(punctuation)).suppress()
+        word = ~and_ + ~or_ + pp.Word(''.join(alpha_num))
         replace = lambda op, s: op.setParseAction(pp.replaceWith(s))
 
         # Suppress illegal characters around words

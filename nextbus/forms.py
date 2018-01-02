@@ -10,6 +10,9 @@ from wtforms.validators import DataRequired
 from nextbus import search
 
 
+parser = search.TSQueryParser()
+
+
 def _search_results(form, field):
     """ Does a search and check if any results pop up. """
     # Remove all punctuation, leaving behind alphanumeric characters to test
@@ -19,11 +22,10 @@ def _search_results(form, field):
         raise ValidationError("Too few letters or digits; try using a longer "
                               "phrase.")
     try:
-        parser = search.TSQueryParser()
         result = search.search_exists(field.data, parser.parse_query)
-    except ValueError:
-        current_app.logger.error("Query %r resulted in an parsing error."
-                                 % field.data)
+    except ValueError as err:
+        current_app.logger.error("Query %r resulted in an parsing error: %s"
+                                 % (field.data, err))
         raise ValidationError("There was a problem with your search. Try "
                               "again.")
     if result:

@@ -226,6 +226,7 @@ div.area-color-490 {
     - ~~Each stop point/area should have locality and street as well~~.
     - These supplementary info should be linkable in some way.
     - Stop areas should have their own logos - what to use?
+    - **Set up pyparsing parser to accept all unicode characters -- will not break search functions even if no characters outside of ASCII are used in the NPTG/NaPTAN datasets.**
 - How would we style stop areas - switching around the colours would work the best.
 - Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.
 

@@ -96,7 +96,7 @@ def about():
 def search_results(query):
     """ Shows a list of search results. """
     s_query = query.replace('+', ' ')
-    result = search.search_full(s_query, search.TSQueryParser().parse_query)
+    result = search.search_full(s_query, forms.parser.parse_query)
     # Redirect to postcode or stop if one was found
     if isinstance(result, models.StopPoint):
         return redirect('/stop/atco/%s' % result.atco_code)
@@ -315,7 +315,7 @@ def stop_area(stop_area_code):
             models.StopPoint.latitude,
             models.StopPoint.longitude,
             models.StopPoint.bearing
-            ).filter(models.StopPoint.stop_area_code == s_area.code)
+        ).filter(models.StopPoint.stop_area_code == s_area.code)
     )
     list_stops = [r._asdict() for r in query_stops.all()]
 

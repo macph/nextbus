@@ -16,8 +16,8 @@ UTC = pytz.utc
 
 def get_nextbus_times(atco_code, nextbuses=True, group=True, limit=6):
     """ Retrieves data from the NextBuses API via Transport API. If
-        TRANSPORT_API_ACTIVE is not True sample data from a file is loaded
-        instead for testing.
+        TRANSPORT_API_ACTIVE is not True, sample data from a file will be
+        loaded instead for testing.
 
         :param atco_code: The ATCO code for the bus/tram stop.
         :param nextbuses: Use the NextBuses API to get live bus times. If
@@ -47,14 +47,19 @@ def get_nextbus_times(atco_code, nextbuses=True, group=True, limit=6):
             raise ValueError("Data is expected to be in JSON format.") from err
         if data.get('error') is not None:
             raise ValueError("Error with data: " + data["error"])
-        current_app.logger.info("Received live data for ATCO code %s" % atco_code)
+        current_app.logger.info("Received live data for ATCO code %s"
+                                % atco_code)
         current_app.logger.debug("Data received:\n" + repr(data))
 
     else:
-        file_name = "samples/tapi_live_group.json" if group else "samples/tapi_live.json"
-        with open(os.path.join(ROOT_DIR, file_name), 'r') as jf:
-            data = json.load(jf)
-        current_app.logger.info("Received sample data from file '%s'" %  file_name)
+        if group:
+            file_name = "samples/tapi_live_group.json"
+        else:
+            file_name = "samples/tapi_live.json"
+        with open(os.path.join(ROOT_DIR, file_name), 'r') as sample_file:
+            data = json.load(sample_file)
+        current_app.logger.info("Received sample data from file '%s'"
+                                %  file_name)
 
     return data
 
@@ -74,9 +79,14 @@ class _Services(object):
     def add(self, line, service):
         """ Adds service to list of services, or to a line/destination if it
             already exists.
+
+            :param line: String for bus or tram route label, used for grouping
+            services
+            :param service: Dictionary object for each service.
         """
         exp_dt = (service['date'], service['aimed_departure_time'])
-        live_dt = (service['expected_departure_date'], service['expected_departure_time'])
+        live_dt = (service['expected_departure_date'],
+                   service['expected_departure_time'])
         is_live = live_dt[0] is not None and live_dt[1] is not None
 
         if exp_dt[0] is not None and exp_dt[1] is not None:
@@ -85,7 +95,9 @@ class _Services(object):
             exp_date = None
 
         if is_live:
-            live_date = GB_TZ.localize(dateutil.parser.parse('T'.join(live_dt)))
+            live_date = GB_TZ.localize(
+                dateutil.parser.parse('T'.join(live_dt))
+            )
             exp_sec = (live_date - self.req_date).seconds
         elif exp_date is not None:
             live_date = None
@@ -111,6 +123,7 @@ class _Services(object):
                 new_sv['expected'].append(sv_expected)
                 break
         else:
+            # No matching line and/or destination, create a new group
             new_service = {
                 'line': line,
                 'name': service['line_name'],
@@ -121,10 +134,8 @@ class _Services(object):
             }
             self.list.append(new_service)
 
-        return
-
     def get_list(self):
-        """ Sorts list of lines by first service expected. """
+        """ Returns a list of lines, sorted by first service expected. """
         for group in self.list:
             group['expected'].sort(key=lambda sv: sv['sec'])
         self.list.sort(key=lambda sg: sg['expected'][0]['sec'])
@@ -141,7 +152,9 @@ def parse_nextbus_times(atco_code, **kwargs):
         get_nextbus_times(). By default 'group' is True and 'limit' is 6.
         :returns: JSON serializable dict with required lists and info.
     """
-    data = get_nextbus_times(atco_code, group=True, limit=6, **kwargs)
+    kwargs['group'] = kwargs.get('group', True)
+    kwargs['limit'] = kwargs.get('limit', 6)
+    data = get_nextbus_times(atco_code, **kwargs)
     req_date = dateutil.parser.parse(data['request_time'])
     if req_date.tzinfo is None:
         # Assume naive datetime is UTC
@@ -153,8 +166,14 @@ def parse_nextbus_times(atco_code, **kwargs):
             try:
                 services.add(line, sv)
             except:
-                with open('temp/error.json', 'w') as jf:
+                error_file = ('temp/error_%s.json'
+                              % req_date.strftime('%Y%m%d_%H%M%S'))
+                with open(error_file, 'w') as jf:
                     json.dump(data, jf, indent=4)
+                current_app.logger.error(
+                    "Error with request for stop %s. The retrieved JSON file "
+                    "has been saved to %r." % (atco_code, error_file)
+                )
                 raise
 
     new_data = {
@@ -164,8 +183,9 @@ def parse_nextbus_times(atco_code, **kwargs):
         'local_time': req_date.astimezone(GB_TZ).strftime("%H:%M"),
         'services': services.get_list()
     }
-    current_app.logger.debug("%d services for ATCO code %s:\n%r"
-                             % (len(new_data['services']), atco_code,
-                                repr(new_data)))
+    current_app.logger.debug(
+        "%d services for ATCO code %s:\n%r"
+        % (len(new_data['services']), atco_code, repr(new_data))
+    )
 
     return new_data

@@ -79,7 +79,7 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements
             let marker = new google.maps.Marker({
                 position: coord,
                 map: self.map,
-                title: `${stop.common_name} (${stop.indicator})`,
+                title: `${stop.name} (${stop.indicator})`,
                 label: {
                     fontFamily: "Source Sans Pro, sans-serif",
                     fontWeight: "600",

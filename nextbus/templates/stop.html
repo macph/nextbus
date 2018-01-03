@@ -7,11 +7,9 @@
 {% if stop.locality is not none %}
 <ul class="breadcrumbs trailing">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li>&middot;&middot;&middot;</li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
     {% if district is not none %}
     <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
-    {% else %}
-    <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
     {% endif %}
     <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{stop.locality.name }}</a></li>
 </ul>
@@ -26,7 +24,7 @@
         </div>
         {{ f.resize_indicator("stop-indicator") }}
     </div>
-    <h1>{{ f.stop_name(stop) }}</h1>
+    <h1>{{ stop.name }}</h1>
 </div>
 <p>
     {% set pipe = joiner() %}
@@ -75,7 +73,6 @@
     };
 </script>
 {% if stop.stop_area is not none %}
-<h2>Other stops</h2>
 <p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">View all stops around {{ stop.stop_area.name }}</a></p>
 {% endif %}
 {% endblock %}

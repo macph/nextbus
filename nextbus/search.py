@@ -186,7 +186,6 @@ def search_exists(query, parser=None):
 
     # Else: do a full text search - format query string first
     s_query = parser(query) if parser else query
-    empty_col = db.literal_column("''")
 
     s_region = (
         db.session.query(
@@ -225,7 +224,7 @@ def search_exists(query, parser=None):
             models.StopPoint.atco_code.label('code')
         ).filter(
             db.or_(
-                db.func.to_tsvector('english', models.StopPoint.common_name)
+                db.func.to_tsvector('english', models.StopPoint.name)
                 .match(s_query, postgresql_regconfig='english'),
                 db.func.to_tsvector('english', models.StopPoint.street)
                 .match(s_query, postgresql_regconfig='english')
@@ -339,7 +338,7 @@ def search_full(query, parser=None):
         db.session.query(
             _table_col(models.StopPoint).label('table_name'),
             models.StopPoint.atco_code.label('code'),
-            models.StopPoint.common_name.label('name'),
+            models.StopPoint.name.label('name'),
             models.StopPoint.short_ind.label('indicator'),
             models.StopPoint.street.label('street'),
             models.Locality.name.label('locality_name'),
@@ -352,7 +351,7 @@ def search_full(query, parser=None):
               models.AdminArea.code == models.Locality.admin_area_code)
         .filter(
             db.or_(
-                db.func.to_tsvector('english', models.StopPoint.common_name)
+                db.func.to_tsvector('english', models.StopPoint.name)
                 .match(s_query, postgresql_regconfig='english'),
                 db.func.to_tsvector('english', models.StopPoint.street)
                 .match(s_query, postgresql_regconfig='english')

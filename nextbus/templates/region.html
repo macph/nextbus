@@ -16,9 +16,9 @@
 <h2>Areas</h2>
 <div class="list-places">
     {% for ad in areas %}
-    {% if ad.__tablename__ == 'admin_area' %}
+    {% if ad.table_name == 'admin_area' %}
     <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
-    {% elif ad.__tablename__ == 'district' %}
+    {% elif ad.table_name == 'district' %}
     <a class="item-place" href="{{ url_for('page.list_in_district', district_code=ad.code) }}">{{ ad.name }}</a>
     {% endif %}
     {% endfor %}

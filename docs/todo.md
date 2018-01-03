@@ -76,7 +76,7 @@ ON CONFLICT (atco_code) /* or 'ON CONSTRAINT constraint' instead of '(sp.atco_co
 - Settings per user (eg with cookies) - may want to start tracking once they
 set up favourites or such?
 - Consider changing DB tables such that:
-    - Harmonise names (mix of short and common names) - makes it easier to sort.
+    - ~~Harmonise names (mix of short and common names) - makes it easier to sort.~~
         - Do this by accepting `CommonName` as the default, else use `ShortName`. Single `name` column in table.
     - ~~Short version of indicator for labelling.~~
     - ~~Remove all unnecessary data fields, eg town/suburb as they are already covered by locality.~~
@@ -114,7 +114,7 @@ def downgrade():
 - ~~With PSQL implemented, add proper search fields~~
     - ~~Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway~~
     - ~~Text search covering areas, localities, stops (common name & street) and stop area names.~~
-    - With FTS, add options to filter by area or type.
+    - ~~With FTS, add options to filter by area~~ or type.
 
 ```sql
 SELECT atco_code, common_name, indicator
@@ -377,3 +377,5 @@ SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\
 nxb -gmnp                                                    # Download files
 nxb -G temp/NPTG.xml -m -N temp/Naptan.xml -P temp/nspl.json # Use files
 ```
+
+- **Setting indicator to use `NOT NULL` constraint causes several separate commits to be done when populating NaPTAN data. Is this significantly slower in any way?**

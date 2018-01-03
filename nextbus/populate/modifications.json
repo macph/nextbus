@@ -26,7 +26,7 @@
         },
         {
             "model": "StopPoint",
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "old_value": "Trafalgar SquareCharing Cross",
             "new_value": "Trafalgar Square / Charing Cross"
         },
@@ -40,7 +40,7 @@
             "model": "StopPoint",
             "find_attr": "stop_area_code",
             "find_values": ["370G105082"],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Hillsborough Interchange"
 
         },
@@ -48,14 +48,14 @@
             "model": "StopPoint",
             "find_attr": "stop_area_code",
             "find_values": ["370G100020"],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Wicker"
         },
         {
             "model": "StopPoint",
             "find_attr": "stop_area_code",
             "find_values": ["370G102474"],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Arundel Gate"
         },
         {
@@ -67,7 +67,7 @@
                 "370022880",
                 "370022881"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "High Street"
         },
         {
@@ -77,7 +77,7 @@
                 "370022796",
                 "370023893"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "City Hall"
         },
         {
@@ -88,7 +88,7 @@
                 "370023127",
                 "370027392"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Charles Street"
         },
         {
@@ -100,7 +100,7 @@
                 "370022832",
                 "370022835"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Flat Street"
         },
         {
@@ -110,7 +110,7 @@
                 "370022817",
                 "370023628"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Commercial Street"
         },
         {
@@ -120,7 +120,7 @@
                 "370022805",
                 "370023844"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Castle Street"
         },
         {
@@ -135,7 +135,7 @@
                 "370022839",
                 "370022840"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Waingate"
         },
         {
@@ -146,14 +146,14 @@
                 "370022843",
                 "370022844"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Castlegate"
         },
         {
             "model": "StopPoint",
             "find_attr": "atco_code",
             "find_values": ["370022816"],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Haymarket"
         },
         {
@@ -163,7 +163,7 @@
                 "370022855",
                 "370022856"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Angel Street"
         },
         {
@@ -174,7 +174,7 @@
                 "370022854",
                 "370027393"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Snig Hill"
         },
         {
@@ -195,7 +195,7 @@
                 "370023164",
                 "370027315"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Moor Market"
         },
         {
@@ -211,7 +211,7 @@
                 "370023176",
                 "370027314"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Moorhead"
         },
         {
@@ -222,7 +222,7 @@
                 "370022859",
                 "370022860"
             ],
-            "modify_attr": "common_name",
+            "modify_attr": "name",
             "new_value": "Town Hall"
         }
     ],

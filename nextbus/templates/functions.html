@@ -1,17 +1,9 @@
-{% macro stop_name(stop) -%}
-{{ stop.common_name }}
-{%- endmacro %}
-
-{% macro stop_indicator(stop) -%}
-{{ stop.indicator if stop.indicator is not none }}
-{%- endmacro %}
-
 {% macro stop_short_indicator(stop) -%}
 {{ stop.short_ind if stop.short_ind is not none }}
 {%- endmacro %}
 
 {% macro stop_full_name(stop) -%}
-{{ stop_name(stop) }}{{ " (%s)"|format(stop.indicator) if stop.indicator is not none }}
+{{ stop.name }}{{ " (%s)"|format(stop.indicator) if stop.indicator is not none }}
 {%- endmacro %}
 
 {% macro stop_css_class(stop) -%}
@@ -34,7 +26,7 @@ area-color-{{ stop.atco_code[:3] }}
     {% for stop in list %}
     <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop">
         <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-name">{{ stop_name(stop) }}</div>
+        <div class="stop-name">{{ stop.name }}</div>
     </a>
     {% endfor %}
 </div>
@@ -49,7 +41,7 @@ area-color-{{ stop.atco_code[:3] }}
     {% for stop, distance in list %}
     <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop-dist">
         <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-name">{{ stop_name(stop) }}</div>
+        <div class="stop-name">{{ stop.name }}</div>
         <div class="stop-dist">{{ '%.0f m'|format(distance) }}</div>
     </a>
     {% endfor %}

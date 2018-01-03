@@ -1,21 +1,18 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ stop_area.name }}{% endblock %}
-{% set district = stop_area.locality.district|default(none) %}
 
 {% block nav %}
-{% if stop_area.locality is not none %}
 <ul class="breadcrumbs trailing">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li>&middot;&middot;&middot;</li>
-    {% if district is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
-    {% else %}
-    <li><a href="{{ url_for('page.list_in_area', area_code=stop_area.locality.admin_area.code) }}">{{ stop_area.locality.admin_area.name }}</a></li>
+    {% if info is not none %}
+    <li><a href="{{ url_for('page.list_in_area', area_code=info.area_code) }}">{{ info.area_name }}</a></li>
+    {% if info.district_code is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=info.district_code) }}">{{ info.district_name }}</a></li>
     {% endif %}
-    <li><a href="{{ url_for('page.list_in_locality', locality_code=stop_area.locality.code) }}">{{stop_area.locality.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_locality', locality_code=info.locality_code) }}">{{ info.locality_name }}</a></li>
+    {% endif %}
 </ul>
-{% endif %}
 {% endblock %}
 
 {% block heading %}
@@ -35,14 +32,14 @@
     <div id="stop{{ stop.atco_code }}" class="item-stop-services">
         <div class="item-stop-services-head">
             <div class="stop-indicator {{ f.stop_css_class(stop) }}"><span>{{ f.stop_short_indicator(stop) }}</span></div>
-            <div class="stop-name">{{ f.stop_name(stop) }}</div>
+            <div class="stop-name">{{ stop.name }}</div>
             <div class="stop-arrow"></div>
         </div>
         <div class="item-stop-services-content">
             <p>
                 {% set pipe = joiner() %}
-                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
-             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
+                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.get('street', '') }}</strong>{% endif %}<!--
+             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop['naptan_code'] }}</strong>{% endif %}
             </p>
             <div class="heading-inline">
                 <h2 class="stop-live-time">Retrieving live data...</h2>

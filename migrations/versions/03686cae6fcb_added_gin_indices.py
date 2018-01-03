@@ -17,13 +17,26 @@ depends_on = None
 
 
 def upgrade():
-    op.create_index('ix_region_tsvector_name', 'region', [sa.text("to_tsvector('english', name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_admin_area_tsvector_name', 'admin_area', [sa.text("to_tsvector('english', name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_district_tsvector_name', 'district', [sa.text("to_tsvector('english', name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_locality_tsvector_name', 'locality', [sa.text("to_tsvector('english', name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_stop_area_tsvector_name', 'stop_area', [sa.text("to_tsvector('english', name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_stop_point_tsvector_common_name', 'stop_point', [sa.text("to_tsvector('english', common_name)")], unique=False, postgresql_using='gin')
-    op.create_index('ix_stop_point_tsvector_street', 'stop_point', [sa.text("to_tsvector('english', street)")], unique=False, postgresql_using='gin')
+    op.create_index('ix_region_tsvector_name', 'region', [sa.text("to_tsvector('english', name)")],
+                    unique=False, postgresql_using='gin')
+    op.create_index('ix_admin_area_tsvector_name', 'admin_area',
+                    [sa.text("to_tsvector('english', name)")], unique=False,
+                    postgresql_using='gin')
+    op.create_index('ix_district_tsvector_name', 'district',
+                    [sa.text("to_tsvector('english', name)")], unique=False,
+                    postgresql_using='gin')
+    op.create_index('ix_locality_tsvector_name', 'locality',
+                    [sa.text("to_tsvector('english', name)")], unique=False,
+                    postgresql_using='gin')
+    op.create_index('ix_stop_area_tsvector_name', 'stop_area',
+                    [sa.text("to_tsvector('english', name)")], unique=False,
+                    postgresql_using='gin')
+    op.create_index('ix_stop_point_tsvector_common_name', 'stop_point',
+                    [sa.text("to_tsvector('english', common_name)")], unique=False,
+                    postgresql_using='gin')
+    op.create_index('ix_stop_point_tsvector_street', 'stop_point',
+                    [sa.text("to_tsvector('english', street)")], unique=False,
+                    postgresql_using='gin')
 
 
 def downgrade():
@@ -32,4 +45,5 @@ def downgrade():
     op.drop_index('ix_district_tsvector_name', table_name='district')
     op.drop_index('ix_locality_tsvector_name', table_name='locality')
     op.drop_index('ix_stop_area_tsvector_name', table_name='stop_area')
-    op.drop_index('ix_stop_point_tsvector_common_name_street', table_name='stop_point')
+    op.drop_index('ix_stop_point_tsvector_common_name', table_name='stop_point')
+    op.drop_index('ix_stop_point_tsvector_street', table_name='stop_point')

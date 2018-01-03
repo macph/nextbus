@@ -32,7 +32,16 @@ def _find_stops_in_range(coord):
         latter value.
     """
     lat_0, long_0, lat_1, long_1 = location.bounding_box(coord, MAX_DISTANCE)
-    query_nearby_stops = models.StopPoint.query.filter(
+    query_nearby_stops = db.session.query(
+        models.StopPoint.atco_code,
+        models.StopPoint.naptan_code,
+        models.StopPoint.name,
+        models.StopPoint.indicator,
+        models.StopPoint.short_ind,
+        models.StopPoint.street,
+        models.StopPoint.latitude,
+        models.StopPoint.longitude
+    ).filter(
         models.StopPoint.latitude > lat_0,
         models.StopPoint.latitude < lat_1,
         models.StopPoint.longitude > long_0,
@@ -40,7 +49,9 @@ def _find_stops_in_range(coord):
     )
     stops = [(stop, location.get_dist(coord, (stop.latitude, stop.longitude)))
              for stop in query_nearby_stops.all()]
-    return sorted(filter(lambda x: x[1] < MAX_DISTANCE, stops), key=lambda x: x[1])
+    filter_stops = filter(lambda x: x[1] < MAX_DISTANCE, stops)
+
+    return sorted(filter_stops, key=lambda x: x[1])
 
 
 def _group_places(list_places, attr=None, key=None):
@@ -69,6 +80,11 @@ def _group_places(list_places, attr=None, key=None):
             groups = {'A-Z': list_places}
 
     return groups
+
+
+def _table_literal(db_model):
+    """ Returns a column object with table name as the text value. """
+    return db.literal_column("'%s'" % db_model.__tablename__)
 
 
 @page.route('/', methods=['GET', 'POST'])
@@ -138,14 +154,26 @@ def list_in_region(region_code):
     if region.code != region_code:
         return redirect('/list/region/%s' % region.code, code=301)
 
-    q_area = (models.AdminArea.query
-              .outerjoin(models.AdminArea.districts) # LEFT OUTER JOIN
-              .filter(models.District.code.is_(None),
-                      models.AdminArea.region_code == region.code))
-    q_district = (models.District.query
-                  .join(models.AdminArea.districts)
-                  .filter(models.AdminArea.region_code == region.code))
-    list_areas = sorted(q_area.all() + q_district.all(), key=lambda a: a.name)
+    q_area = (
+        db.session.query(
+            _table_literal(models.AdminArea).label('table_name'),
+            models.AdminArea.code,
+            models.AdminArea.name
+        ).outerjoin(models.AdminArea.districts)
+        .filter(models.District.code.is_(None),
+                models.AdminArea.region_code == region.code)
+    )
+    q_district = (
+        db.session.query(
+            _table_literal(models.District).label('table_name'),
+            models.District.code,
+            models.District.name
+        ).select_from(models.District)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.District.admin_area_code)
+        .filter(models.AdminArea.region_code == region.code)
+    )
+    list_areas = sorted(q_area.union(q_district).all(), key=lambda a: a.name)
 
     return render_template('region.html', region=region, areas=list_areas)
 
@@ -159,17 +187,23 @@ def list_in_area(area_code):
     if area is None:
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
 
-    region = (models.Region.query
-              .filter(models.Region.code == area.region_code)).one()
-    ls_district = (models.District.query
-                   .filter(models.District.admin_area_code == area.code)
-                   .order_by(models.District.name)).all()
+    region = (
+        models.Region.query
+        .filter(models.Region.code == area.region_code)
+    ).one()
+    ls_district = (
+        models.District.query
+        .filter(models.District.admin_area_code == area.code)
+        .order_by(models.District.name)
+    ).all()
     if not ls_district:
-        ls_local = (models.Locality.query
-                    .outerjoin(models.Locality.stop_points)
-                    .filter(models.StopPoint.atco_code.isnot(None),
-                            models.Locality.admin_area_code == area.code)
-                    .order_by(models.Locality.name)).all()
+        ls_local = (
+            models.Locality.query
+            .outerjoin(models.Locality.stop_points)
+            .filter(models.StopPoint.atco_code.isnot(None),
+                    models.Locality.admin_area_code == area.code)
+            .order_by(models.Locality.name)
+        ).all()
     else:
         ls_local = []
     group_local = _group_places(ls_local, attr='name')
@@ -185,16 +219,19 @@ def list_in_district(district_code):
     if district is None:
         raise EntityNotFound("District with code '%s' does not exist." % district_code)
 
-    info = (db.session.query(models.Region.code.label('region_code'),
-                             models.Region.name.label('region_name'),
-                             models.AdminArea.code.label('area_code'),
-                             models.AdminArea.name.label('area_name'))
-            .select_from(models.District)
-            .join(models.AdminArea,
-                  models.AdminArea.code == models.District.admin_area_code)
-            .join(models.Region,
-                  models.Region.code == models.AdminArea.region_code)
-            .filter(models.District.code == district.code)).one()
+    info = (
+        db.session.query(
+            models.Region.code.label('region_code'),
+            models.Region.name.label('region_name'),
+            models.AdminArea.code.label('area_code'),
+            models.AdminArea.name.label('area_name')
+        ).select_from(models.District)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.District.admin_area_code)
+        .join(models.Region,
+              models.Region.code == models.AdminArea.region_code)
+        .filter(models.District.code == district.code)
+    ).one()
     ls_local = (models.Locality.query
                 .outerjoin(models.Locality.stop_points)
                 .filter(models.StopPoint.atco_code.isnot(None),
@@ -216,41 +253,45 @@ def list_in_locality(locality_code):
     else:
         if lty.code != locality_code:
             return redirect('/list/locality/%s' % lty.code, code=301)
-
-    info = (db.session.query(models.AdminArea.code.label('area_code'),
-                             models.AdminArea.name.label('area_name'),
-                             models.Region.code.label('region_code'),
-                             models.Region.name.label('region_name'),
-                             models.District.code.label('district_code'),
-                             models.District.name.label('district_name'))
-            .select_from(models.Locality)
-            .outerjoin(models.District,
-                       models.District.code == models.Locality.district_code)
-            .join(models.AdminArea,
-                  models.AdminArea.code == models.Locality.admin_area_code)
-            .join(models.Region,
-                  models.Region.code == models.AdminArea.region_code)
-            .filter(models.Locality.code == lty.code)
-           ).one()
+    info = (
+        db.session.query(
+            models.AdminArea.code.label('area_code'),
+            models.AdminArea.name.label('area_name'),
+            models.Region.code.label('region_code'),
+            models.Region.name.label('region_name'),
+            models.District.code.label('district_code'),
+            models.District.name.label('district_name')
+        ).select_from(models.Locality)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.Locality.admin_area_code)
+        .join(models.Region,
+              models.Region.code == models.AdminArea.region_code)
+        .filter(models.Locality.code == lty.code)
+    ).one()
 
     # Find all stop areas and all stop points _not_ associated with a stop area
-    table_name = lambda m: literal_column("'%s'" % m.__tablename__)
-    stops = (db.session.query(table_name(models.StopPoint).label('table'),
-                              models.StopPoint.atco_code.label('code'),
-                              models.StopPoint.common_name.label('name'),
-                              models.StopPoint.short_ind.label('ind'))
-             .outerjoin(models.StopPoint.stop_area)
-             .filter(models.StopPoint.locality_code == lty.code,
-                     models.StopPoint.stop_area_code.is_(None))
-            )
-    areas = (db.session.query(table_name(models.StopArea).label('table'),
-                              models.StopArea.code,
-                              models.StopArea.name,
-                              db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'))
-             .join(models.StopArea.stop_points)
-             .group_by(models.StopArea.code)
-             .filter(models.StopArea.locality_code == lty.code)
-            )
+    stops = (
+        db.session.query(
+            _table_literal(models.StopPoint).label('table'),
+            models.StopPoint.atco_code.label('code'),
+            models.StopPoint.name.label('name'),
+            models.StopPoint.short_ind.label('ind')
+        ).outerjoin(models.StopPoint.stop_area)
+        .filter(models.StopPoint.locality_code == lty.code,
+                models.StopPoint.stop_area_code.is_(None))
+    )
+    areas = (
+        db.session.query(
+            _table_literal(models.StopArea).label('table'),
+            models.StopArea.code,
+            models.StopArea.name,
+            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind')
+        ).join(models.StopArea.stop_points)
+        .group_by(models.StopArea.code)
+        .filter(models.StopArea.locality_code == lty.code)
+    )
     list_stops = stops.union(areas).order_by('name', 'ind').all()
     stops = _group_places(list_stops, attr='name')
 
@@ -304,23 +345,45 @@ def stop_area(stop_area_code):
         if s_area.code != stop_area_code:
             return redirect('/stop/naptan/%s' % s_area.code, code=301)
 
+    if s_area.locality_code is not None:
+        info = (
+            db.session.query(
+                models.AdminArea.code.label('area_code'),
+                models.AdminArea.name.label('area_name'),
+                models.District.code.label('district_code'),
+                models.District.name.label('district_name'),
+                models.Locality.code.label('locality_code'),
+                models.Locality.name.label('locality_name')
+            ).select_from(models.StopArea)
+            .join(models.Locality,
+                  models.Locality.code == models.StopArea.locality_code)
+            .outerjoin(models.District,
+                       models.District.code == models.Locality.district_code)
+            .join(models.AdminArea,
+                  models.AdminArea.code == models.Locality.admin_area_code)
+            .filter(models.StopArea.code == s_area.code)
+        ).one()
+    else:
+        info = None
+
     area_info = {c: getattr(s_area, c) for c in ['name', 'latitude', 'longitude']}
     query_stops = (
         db.session.query(
             models.StopPoint.atco_code,
-            models.StopPoint.common_name,
+            models.StopPoint.naptan_code,
+            models.StopPoint.name,
             models.StopPoint.indicator,
             models.StopPoint.short_ind,
             models.StopPoint.street,
             models.StopPoint.latitude,
-            models.StopPoint.longitude,
-            models.StopPoint.bearing
+            models.StopPoint.longitude
         ).filter(models.StopPoint.stop_area_code == s_area.code)
+        .order_by('name', 'short_ind')
     )
     list_stops = [r._asdict() for r in query_stops.all()]
 
-    return render_template('stop_area.html', stop_area=s_area, area_info=area_info,
-                           list_stops=list_stops)
+    return render_template('stop_area.html', stop_area=s_area, info=info,
+                           area_info=area_info, list_stops=list_stops)
 
 
 @page.route('/stop/naptan/<naptan_code>')

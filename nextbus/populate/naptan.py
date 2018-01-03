@@ -55,8 +55,7 @@ PATHS_LOCALITY = {
 PATHS_STOP_POINT = {
     "atco_code":        "s:AtcoCode",
     "naptan_code":      "s:NaptanCode",
-    "common_name":      "s:Descriptor/s:CommonName",
-    "short_name":       "s:Descriptor/s:ShortCommonName",
+    "name":             "s:Descriptor/s:CommonName",
     "landmark":         "s:Descriptor/s:Landmark",
     "street":           "s:Descriptor/s:Street",
     "crossing":         "s:Descriptor/s:Crossing",
@@ -278,6 +277,7 @@ class _NaPTANStops(object):
         (re.compile(r"^(outside|o/s|os)$", re.I), "o/s"),
         (re.compile(r"^at$", re.I), "at"),
         (re.compile(r"^by$", re.I), "by"),
+        (re.compile(r"^(cnr|corner)$", re.I), "cnr"),
         (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
         (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
         (re.compile(r"->([ENSW]+)", re.I), r">\1"),
@@ -360,10 +360,8 @@ class _NaPTANStops(object):
         # Create short indicator for display
         point.short_ind = self._replace_ind(point.indicator)
         # '/' is not allowed in NaPTAN strings; was simply removed
-        if point.common_name is not None:
-            point.common_name = point.common_name.replace('  ', ' / ')
-        if point.short_name is not None:
-            point.short_name = point.short_name.replace('  ', ' / ')
+        if point.name is not None:
+            point.name = point.name.replace('  ', ' / ')
         # Replace non-word values (eg '---') with None for descriptors
         for attr in ['street', 'crossing', 'landmark']:
             point_desc = getattr(point, attr)

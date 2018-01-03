@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block heading %}
-<h1>{{ locality.name }}{{ ', %s'|format(info['district_name']) if info['district_code'] is not none }}</h1>
+<h1>{{ locality.name }}, {{ info['district_name'] if info['district_code'] is not none else info['area_name'] }}</h1>
 {% endblock %}
 
 {% block content %}

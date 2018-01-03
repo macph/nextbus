@@ -85,7 +85,6 @@ class _NSPLData(object):
         dict_postcode = {
             'index':                ''.join(row['postcode_3'].split()),
             'text':                 row['postcode_3'],
-            'local_authority_code': row['local_authority_code'],
             'admin_area_code':      local_authority['admin_area_code'],
             'district_code':        local_authority['district_code'],
             'easting':              row['easting'],

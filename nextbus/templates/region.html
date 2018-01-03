@@ -14,7 +14,7 @@
 {% block content %}
 {% if areas|length > 0 %}
 <h2>Areas</h2>
-<div class="list-places">
+<div class="list list-places">
     {% for ad in areas %}
     {% if ad.table_name == 'admin_area' %}
     <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>

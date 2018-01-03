@@ -67,7 +67,7 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements
             styles: [
                 // Hide business points of interest and transit locations
                 {featureType: 'poi.business', stylers: [{visibility: 'off'}]},
-                {featureType: 'transit', elementType: 'labels.icon', stylers: [{visibility: 'off'}]}
+                {featureType: 'transit.station.bus', elementType: 'labels.icon', stylers: [{visibility: 'off'}]}
             ]
         });
         self.bounds = new google.maps.LatLngBounds();
@@ -276,7 +276,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             self.headingTime.textContent = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
 
             var table = document.createElement('div');
-            table.className = 'list-services';
+            table.className = 'list list-services';
             for (s of self.data.services) {
                 if (self.filter.exclude(s.name)) {
                     continue;
@@ -436,18 +436,30 @@ var TRAM = "tram-white.svg";
  * @param {string} className - name of class to modify data in
  * @param {string} busImage - link to bus logo SVG
  * @param {string} tramImage - link to tram logo SVG
+ * @param {boolean} revert - Reverts colours of indicator
  */
-function resizeInd(className, busImage, tramImage) {
+function resizeInd(className, busImage, tramImage, revert) {
     for (elt of document.getElementsByClassName(className)) {
-        var text = elt.getElementsByTagName('span')[0];
+        let text = elt.getElementsByTagName('span')[0];
+        let style = window.getComputedStyle(elt);
         if (!text) {
           return;
         }
+        if (typeof revert !== 'undefined' && revert) {
+            let foreground = style.getPropertyValue('color');
+            let background = style.getPropertyValue('background-color');
+            elt.style.backgroundColor = foreground;
+            elt.style.color = background;
+        }
         var ind = text.textContent;
         if (/(Bay|Stan\.|Stand|Stop)/gi.test(ind) || ind.trim().length == 0) {
-            fontSize = parseFloat(getComputedStyle(elt).fontSize);
-            imgSize = Math.round(2.8 * fontSize);
-            elt.innerHTML = `<img src=${busImage} width="${imgSize}px">`;
+            let fontSize = parseFloat(style.fontSize);
+            let imgSize = Math.round(2.8 * fontSize);
+            let imgElement = document.createElement('img');
+            imgElement.src = busImage
+            imgElement.width = Math.round(2.8 * fontSize);
+            text.remove();
+            elt.appendChild(imgElement);
         } else {
             text.textContent = ind;
             var len = ind.replace(/(&#?\w+;)/, ' ').length;
@@ -606,7 +618,6 @@ function FilterList() {
                 showStops = true;
             }
         }
-        console.log("area, local, place:" + showAreas + ' ' + showLocal + ' ' + showStops)
         if (self.headers.area.heading !== null) {
             if (showAreas) {
                 self.headers.area.show();

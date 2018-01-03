@@ -6,7 +6,7 @@
 {% block content %}
 {% if regions|length > 0 %}
 <h2>Regions</h2>
-<div class="list-places">
+<div class="list list-places">
     {% for region in regions %}
     <a class="item-place" href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a>
     {% endfor %}

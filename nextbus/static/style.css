@@ -218,19 +218,11 @@ button.small-button:focus {
     color: white;
 }
 
-/* list of places */
-div.list-places, div.list-places-search, div.list-stops, div.list-stops-dist, div.list-stops-search, div.list-services, div.list-search-places {
+/* List of places or stops */
+div.list {
     display: grid;
     grid-column-gap: 5px;
     border-width: 1px 0;
-    border-style: solid;
-    border-color: gainsboro;
-    background: whitesmoke;
-}
-
-div.list-stops-services {
-    display: grid;
-    border-width: 0 0 1px 0;
     border-style: solid;
     border-color: gainsboro;
     background: whitesmoke;
@@ -241,24 +233,25 @@ div.list-places {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
-div.list-places-search {
-    grid-template-columns: 1fr;
-}
-
 div.list-stops {
     /* 2-column layout */
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-div.list-stops-dist, div.list-stops-search, div.list-stops-services {
+div.list-places-search, div.list-stops-dist, div.list-stops-search {
     grid-template-columns: 1fr;
+}
+
+div.list-stops-services {
+    grid-template-columns: 1fr;
+    border-width: 0 0 1px 0;
 }
 
 div.list-hidden {
     display: none;
 }
 
-a.item-place, a.item-area-search,  a.item-local-search, div.item-place-name {
+a.item-place {
     display: flex;
     padding: 2px 10px;
     min-height: 28px;
@@ -267,21 +260,6 @@ a.item-place, a.item-area-search,  a.item-local-search, div.item-place-name {
 
     color: black;
     font-size: 1.8rem;
-    line-height: 1em;
-}
-
-div.item-place-description {
-    display: flex;
-    padding: 2px 10px;
-    min-height: 28px;
-    /* Vertically centered text */
-    align-items: center;
-
-    justify-content: flex-end;
-    text-align: right;
-
-    color: black;
-    font-size: 1.4rem;
     line-height: 1em;
 }
 
@@ -295,19 +273,11 @@ a.item-stop {
 }
 
 a.item-stop-dist {
-    display: grid;
-    align-items: center;
     grid-template-columns: 36px 1fr minmax(56px, 0.2fr);
-    grid-column-gap: 12px;
-    padding: 5px 10px;
 }
 
 a.item-stop-search {
-    display: grid;
-    align-items: center;
     grid-template-columns: 36px 1fr minmax(96px, 0.5fr);
-    grid-column-gap: 12px;
-    padding: 5px 10px;
 }
 
 div.item-stop-services-head {
@@ -322,14 +292,9 @@ div.item-stop-services-head {
     border-color: gainsboro;
 }
 
+/* is hidden by default */
 div.item-stop-services-content {
     display: none;
-    padding: 5px;
-    background: white;
-}
-
-div.item-stop-services-show {
-    
 }
 
 div.item-stop-services-show > div.item-stop-services-head {
@@ -339,9 +304,11 @@ div.item-stop-services-show > div.item-stop-services-head {
 
 div.item-stop-services-show > div.item-stop-services-content {
     display: block;
+    padding: 5px;
+    background: white;
 }
 
-a.item-place:hover, a.item-area-search:hover, a.item-local-search:hover, a.item-stop:hover, a.item-stop-dist:hover, a.item-stop-search:hover, div.item-stop-services-head:hover {
+a.item-place:hover, a.item-stop:hover, div.item-stop-services-head:hover {
     background: gainsboro;
     cursor: pointer;
     text-decoration: none;
@@ -351,7 +318,7 @@ a.item-hidden {
     display: none;
 }
 
-div.stop-name {
+div.stop-label {
     display: flex;
     align-items: center;
 
@@ -360,53 +327,32 @@ div.stop-name {
     color: black;
 }
 
-div.item-stop-services-show > div.item-stop-services-head > div.stop-name {
+div.item-stop-services-show > div.item-stop-services-head > div.stop-label {
     font-size: 2.7rem;
     font-weight: 600;
 }
 
 div.stop-dist {
-    display: flex;
-    align-items: center;
-
-    line-height: 1.0em;
     font-size: 1.6rem;
     font-style: italic;
-    color: black;
 }
 
 div.stop-description {
-    display: flex;
-    align-items: center;
-
     justify-content: flex-end;
     text-align: right;
 
-    line-height: 1.0em;
     font-size: 1.4rem;
-    color: black;
 }
 
 div.stop-arrow {
-    display: flex;
-    align-items: center;
-
-    line-height: 1.0em;
     font-size: 3.2rem;
-    color: black;
 }
 
 div.stop-arrow:after {
     content: "\203A";
 }
 
-div.stop-indicator-empty {
-    height: 3.2em;
-    width: 3.2em;
-    padding: 0.2em;
-}
-
-div.stop-indicator {
+div.indicator {
     /* with flex:
         main axis is horizontal
         justify-content horiztonally centers content,

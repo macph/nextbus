@@ -10,23 +10,25 @@
 area-color-{{ stop.atco_code[:3] }}
 {%- endmacro %}
 
-{% macro resize_indicator(class_name) %}
+{% macro resize_indicator(class_name, reverse=false) %}
+{% set param = 'true' if reverse else 'false' %}
 <script>
     resizeInd(
         "{{ class_name }}",
         "{{ url_for('static', filename='img/bus-white.svg') }}",
-        "{{ url_for('static', filename='img/tram-white.svg') }}"
+        "{{ url_for('static', filename='img/tram-white.svg') }}",
+        {{ param }}
     );
 </script>
 {%- endmacro %}
 
 {% macro print_stops(list) -%}
 {% if list|length > 0 %}
-<div class="list-stops">
+<div class="list list-stops">
     {% for stop in list %}
     <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop">
-        <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-name">{{ stop.name }}</div>
+        <div class="indicator stop-ind {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
+        <div class="stop-label">{{ stop.name }}</div>
     </a>
     {% endfor %}
 </div>
@@ -37,12 +39,12 @@ area-color-{{ stop.atco_code[:3] }}
 
 {% macro print_stops_dist(list) -%}
 {% if list|length > 0 %}
-<div class="list-stops-dist">
+<div class="list list-stops-dist">
     {% for stop, distance in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop-dist">
-        <div class="stop-indicator {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-name">{{ stop.name }}</div>
-        <div class="stop-dist">{{ '%.0f m'|format(distance) }}</div>
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop item-stop-dist">
+        <div class="indicator stop-ind {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
+        <div class="stop-label">{{ stop.name }}</div>
+        <div class="stop-label stop-dist">{{ '%.0f m'|format(distance) }}</div>
     </a>
     {% endfor %}
 </div>
@@ -53,7 +55,7 @@ area-color-{{ stop.atco_code[:3] }}
 
 {% macro print_localities(list, warning=true) -%}
 {% if list|length > 0 %}
-<div class="list-places">
+<div class="list list-places">
     {% for locality in list %}
     <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}</a>
     {% endfor %}

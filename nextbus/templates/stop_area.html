@@ -27,13 +27,13 @@
 <div class="google-maps-js" id="divMap"></div>
 <h2>Stops</h2>
 {% if stop_area.stop_points|length > 0 %}
-<div class="list-stops-services">
+<div class="list list-stops-services">
     {% for stop in stop_area.stop_points %}
     <div id="stop{{ stop.atco_code }}" class="item-stop-services">
         <div class="item-stop-services-head">
-            <div class="stop-indicator {{ f.stop_css_class(stop) }}"><span>{{ f.stop_short_indicator(stop) }}</span></div>
-            <div class="stop-name">{{ stop.name }}</div>
-            <div class="stop-arrow"></div>
+            <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ f.stop_short_indicator(stop) }}</span></div>
+            <div class="stop-label">{{ stop.name }}</div>
+            <div class="stop-label stop-arrow"></div>
         </div>
         <div class="item-stop-services-content">
             <p>
@@ -54,7 +54,7 @@
 {% else %}
 <p>No stops found.</p>
 {% endif %}
-{{ f.resize_indicator("stop-indicator") }}
+{{ f.resize_indicator("stop-ind") }}
 <script>
     let area = {{ area_info|tojson }};
     let listStops = {{ list_stops|tojson }};
@@ -80,19 +80,31 @@
         };
     }
 
+    function resizeImg(headElement) {
+        let imgElements = headElement.getElementsByTagName('img');
+        if (imgElements.length > 0) {
+            let img = imgElements[0];
+            let style = window.getComputedStyle(headElement);
+            img.width = Math.round(2.8 * parseFloat(style.fontSize));
+        }
+    }
+
     function selectStop(rowElement) {
         let r = rowElement;
         if (r.row.className === "item-stop-services-show") {
             r.data.stopLoop();
             r.row.className = "item-stop-services";
+            resizeImg(r.head);
         } else if (r.row.className === "item-stop-services") {
             r.data.startLoop();
             r.row.className = "item-stop-services-show";
+            resizeImg(r.head);
             for (s in listLiveStops) {
                 if (listLiveStops.hasOwnProperty(s) && listLiveStops[s].code !== r.code) {
                     let t = listLiveStops[s]
                     t.data.stopLoop();
                     t.row.className = "item-stop-services";
+                    resizeImg(t.head);
                 }
             }
         }

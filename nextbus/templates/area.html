@@ -22,7 +22,7 @@
 {% endfor %}
 {% else %}
 <h2>Districts</h2>
-<div class="list-places">
+<div class="list list-places">
     {% for district in districts %}
     <a class="item-place" href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a>
     {% endfor %}

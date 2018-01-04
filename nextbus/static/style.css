@@ -272,10 +272,6 @@ a.item-stop {
     align-items: center;
 }
 
-a.item-stop-dist {
-    grid-template-columns: 36px 1fr minmax(56px, 0.2fr);
-}
-
 a.item-stop-search {
     grid-template-columns: 36px 1fr minmax(96px, 0.5fr);
 }
@@ -292,20 +288,25 @@ div.item-stop-services-head {
     border-color: gainsboro;
 }
 
+div.item-stop-dist {
+    grid-template-columns: 36px 1fr minmax(56px, 0.2fr) 36px;
+}
+
 /* is hidden by default */
 div.item-stop-services-content {
-    display: none;
+    overflow: hidden;
+    transition: height 0.5s ease-out;
+    height: 0;
+    background: white;
 }
 
 div.item-stop-services-show > div.item-stop-services-head {
-    grid-template-columns: 54px 1fr 36px;
+    grid-template-columns: 54px 1fr;
     font-size: 1.5rem;
 }
 
-div.item-stop-services-show > div.item-stop-services-content {
-    display: block;
-    padding: 5px;
-    background: white;
+div.item-stop-services-show > div.item-stop-dist {
+    grid-template-columns: 54px 1fr minmax(56px, 0.2fr);
 }
 
 a.item-place:hover, a.item-stop:hover, div.item-stop-services-head:hover {
@@ -327,7 +328,7 @@ div.stop-label {
     color: black;
 }
 
-div.item-stop-services-show > div.item-stop-services-head > div.stop-label {
+div.item-stop-services-show div.stop-label {
     font-size: 2.7rem;
     font-weight: 600;
 }
@@ -335,6 +336,10 @@ div.item-stop-services-show > div.item-stop-services-head > div.stop-label {
 div.stop-dist {
     font-size: 1.6rem;
     font-style: italic;
+}
+
+div.item-stop-services-show div.stop-dist {
+    font-size: 1.8rem;
 }
 
 div.stop-description {
@@ -346,6 +351,10 @@ div.stop-description {
 
 div.stop-arrow {
     font-size: 3.2rem;
+}
+
+div.item-stop-services-show  div.stop-arrow {
+    display: none;
 }
 
 div.stop-arrow:after {
@@ -471,10 +480,6 @@ span.text-red {
     color: red;
 }
 
-div.search-box {
-    margin: 0 10px;
-}
-
 /* specific colours for areas, using ATCO area codes */
 /* Greater Manchester */
 div.area-color-180 {
@@ -527,7 +532,7 @@ form.search-form {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 10px 0;
+    margin: 0 10px;
 
     font-size: 1.7rem;
 }
@@ -549,7 +554,7 @@ div.search-label > label {
 }
 
 div.search-field {
-    flex: 0 1 320px;
+    width: 100%;
 }
 
 div.search-field > input[type="text"] {

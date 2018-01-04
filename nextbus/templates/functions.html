@@ -1,7 +1,3 @@
-{% macro stop_short_indicator(stop) -%}
-{{ stop.short_ind if stop.short_ind is not none }}
-{%- endmacro %}
-
 {% macro stop_full_name(stop) -%}
 {{ stop.name }}{{ " (%s)"|format(stop.indicator) if stop.indicator is not none }}
 {%- endmacro %}
@@ -20,37 +16,6 @@ area-color-{{ stop.atco_code[:3] }}
         {{ param }}
     );
 </script>
-{%- endmacro %}
-
-{% macro print_stops(list) -%}
-{% if list|length > 0 %}
-<div class="list list-stops">
-    {% for stop in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop">
-        <div class="indicator stop-ind {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-label">{{ stop.name }}</div>
-    </a>
-    {% endfor %}
-</div>
-{% else %}
-<p>No stops found.</p>
-{% endif %}
-{%- endmacro %}
-
-{% macro print_stops_dist(list) -%}
-{% if list|length > 0 %}
-<div class="list list-stops-dist">
-    {% for stop, distance in list %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-stop item-stop-dist">
-        <div class="indicator stop-ind {{ stop_css_class(stop) }}"><span>{{ stop_short_indicator(stop) }}</span></div>
-        <div class="stop-label">{{ stop.name }}</div>
-        <div class="stop-label stop-dist">{{ '%.0f m'|format(distance) }}</div>
-    </a>
-    {% endfor %}
-</div>
-{% else %}
-<p>No stops nearby.</p>
-{% endif %}
 {%- endmacro %}
 
 {% macro print_localities(list, warning=true) -%}

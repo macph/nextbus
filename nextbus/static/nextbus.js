@@ -33,19 +33,17 @@ function getLocation(elementId) {
  * Creates a Google Maps with the JS API, with marked stops.
  * @constructor
  * @param {string} mapElement - The <div> element to insert map in
- * @param {object} stopArea - Current area, with name, lat and long
+ * @param {object} centre - Centre of area, with lat and long
  * @param {array} listStops - The list of stops with required attributes
  * @param {boolean} isReady - Used to set up once external script finishes loading
- * @param {array} listStopElements - List of live stop data with data
- * @param {function} selectStop - Function used to call stop live data
+ * @param {function} selectCallback - Callback when clicking a marker
  */
-function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements, selectStop) {
+function MultiStopMap(mapElement, centre, listStops, isReady, selectCallback) {
     var self = this;
     this.mapElement = mapElement;
-    this.stopArea = stopArea;
+    this.centre = centre;
     this.listStops = listStops;
-    this.listStopElements = listStopElements;
-    this.selectStop = selectStop;
+    this.callback = selectCallback;
     if (isReady !== undefined && isReady) {
         this.ready = true;
     } else {
@@ -63,7 +61,7 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements
             return;
         }
         self.map = new google.maps.Map(mapElement, {
-            center: {lat: self.stopArea.latitude, lng: self.stopArea.longitude},
+            center: {lat: self.centre.latitude, lng: self.centre.longitude},
             styles: [
                 // Hide business points of interest and transit locations
                 {featureType: 'poi.business', stylers: [{visibility: 'off'}]},
@@ -103,89 +101,12 @@ function MultiStopMap(mapElement, stopArea, listStops, isReady, listStopElements
     /**
      * Adds event listener for clicking on one of the markers on the map
      * @param {google.maps.Marker} marker 
-     * @param {string} atcoCode 
+     * @param {string} id
      */
-    this.addListener = function(marker, atcoCode) {
+    this.addListener = function(marker, id) {
         google.maps.event.addListener(marker, 'click', function() {
-            let stopElement = self.listStopElements['stop' + atcoCode];
-            if (stopElement.row.className === "item-stop-services") {
-                selectStop(stopElement);
-            }
-            stopElement.head.scrollIntoView(true);
+            self.callback(id);
         });
-    };
-}
-
-/**
- * Filters services in list
- * @constructor
- * @param {Object} callback - Function called to redraw list
- * @param {string} args - List of services to add at start
- */
-function ServicesFilter(callback, ...args) {
-    var self = this;
-    this.callback = callback;
-    this.services = args;
-    this.filterList = [];
-
-    /**
-     * Adds a service to whitelist, refreshing table
-     * @param {string} s - Service to add
-     */
-    this.add = function(s) {
-        if (self.services.indexOf(s) > -1 && self.filterList.indexOf(s) == -1) {
-            console.log(`Adding '${s}' to filtered list '[${self.filterList}]'.`);
-            self.filterList.push(s);
-            self.callback();
-        } else if (self.filterList.indexOf(s) == -1) {
-            console.log(`Service '${s}' is not in list of current services.`);
-        } else {
-            console.log(`Service '${s}' is already in filtered list.`);
-        }
-    };
-
-    /**
-     * Removes a service from whitelist, refreshing table
-     * @param {string} s - Service to remove
-     */
-    this.del = function(s) {
-        index = self.filterList.indexOf(s);
-        if (index > -1) {
-            console.log(`Deleting '${s}' from filtered list '[${self.filterList}]'.`);
-            self.filterList.splice(index, 1);
-            self.callback();
-        } else {
-            console.log(`Service '${s}' is not in filtered list.`);
-        }
-    };
-
-    /**
-     * Resets filter list, refreshing table
-     */
-    this.reset = function() {
-        if (self.filterList.length > 0) {
-            console.log(`Resetting filtered list ${self.filterList}.`);
-            self.filterList.length = 0;
-            self.callback();
-        } else {
-            console.log(`Filtered list is empty.`);
-        }
-    };
-
-    /**
-     * Checks if whitelist is active & service is not in list, therefore excluding
-     * @param {string} s - Service to check
-     */
-    this.exclude = function(s) {
-        return (self.filterList.length > 0 && self.filterList.indexOf(s) === -1);
-    };
-
-    /**
-     * Checks if whitelist is inactive or service is in list, therefore including
-     * @param {string} s - Service to check
-     */
-    this.include = function(s) {
-        return (self.filterList.length === 0 || self.filterList.indexOf(s) > -1);
     };
 }
 
@@ -209,23 +130,12 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     this.isLive = true;
     this.loopActive = false;
     this.loopEnding = false;
-    this.filter = new ServicesFilter(this.printData);
-
-    /**
-     * Get list of all services to pass on to filtering class
-     */
-    this.getAllServices = function() {
-        var listServices = [];
-        if (self.data.services.length > 0) {
-            listServices = self.data.services.map(s => s.name);
-        }
-        return [...new Set(listServices)];
-    };
 
     /**
      * Gets data from server, refreshing table
+     * @param {function} callback - Callback to be used upon successful request
      */
-    this.getData = function() {
+    this.getData = function(callback) {
         console.log(`Sending POST request to ${self.postURL} with code='${self.atcoCode}'`);
         self.headingTime.textContent = "Updating..."
         var request = new XMLHttpRequest();
@@ -237,7 +147,6 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 if (request.status === 200) {
                     console.log(`Request for stop '${self.atcoCode}' successful`);
                     self.data = JSON.parse(request.responseText);
-                    self.filter.services = self.getAllServices();
                     self.isLive = true;
                     self.printData();
                 } else if (self.data != null) {
@@ -246,6 +155,9 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 } else {
                     self.isLive = false;
                     self.headingTime.textContent = "No data available";
+                }
+                if (typeof callback !== 'undefined') {
+                    callback();
                 }
             }
         }
@@ -278,9 +190,6 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             var table = document.createElement('div');
             table.className = 'list list-services';
             for (s of self.data.services) {
-                if (self.filter.exclude(s.name)) {
-                    continue;
-                }
                 let row = document.createElement('a');
                 row.className = 'row-service';
 
@@ -383,15 +292,28 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
 
     /**
      * Starts up the class with interval for refreshing
+     * @param {function} callbackInter - Function to be used when data comes in each interval.
+     *     The getData() function already checks if this function is defined before calling
+     * @param {function} callbackStart - Function to be used when data comes in for the first time.
+     *     If this argument is undefined, the callbackInter function is used instead
      */
-    this.startLoop = function() {
+    this.startLoop = function(callbackInter, callbackStart) {
+        var onStart, onInterval = callbackInter;
+        if (typeof callbackStart === 'undefined') {
+            onStart = callbackInter;
+        } else {
+            onStart = callbackStart;
+        }
         if (self.loopActive) {
             if (self.loopEnding) {
                 self.loopEnding = false;
             }
+            if (typeof onStart !== 'undefined') {
+                onStart();
+            }
             return;
         } else {
-            self.getData();
+            self.getData(onStart);
         }
         if (REFRESH) {
             self.loopActive = true;
@@ -408,7 +330,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                         self.loopEnding = false;
                         clearInterval(self.interval);
                     } else {
-                        self.getData();
+                        self.getData(onInterval);
                         time = INTERVAL;
                     }
                 }
@@ -420,10 +342,14 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
 
     /**
      * Stops the interval, leaving it paused. Can be restarted with startLoop() again
+     * @param {function} callback - Calls function at same time
      */
-    this.stopLoop = function() {
+    this.stopLoop = function(callback) {
         if (self.loopActive) {
             self.loopEnding = true;
+        }
+        if (typeof callback !== 'undefined') {
+            callback();
         }
     };
 }
@@ -521,10 +447,190 @@ function Section(headingId, listId) {
 }
 
 /**
+ * Handles list of stops with live data for areas and locations.
+ * @constructor
+ * @param {string} url - URL to get live data
+ * @param {array} listStops - List of stops
+ */
+function ListLiveStops(url, listStops) {
+    var self = this;
+    this.liveStops = {}
+    this.activeStop = null;
+
+    /**
+     * Initialises constructor
+     */
+    this.init = function() {
+        for (s of listStops) {
+            let index = "stop" + s.atco_code;
+            let row = document.getElementById(index);
+            let head = row.getElementsByClassName("item-stop-services-head")[0];
+            let content = row.getElementsByClassName("item-stop-services-content")[0];
+            self.liveStops[index] = {
+                code: s.atco_code,
+                row: row,
+                head: head,
+                content: content,
+                data: new LiveData(
+                    s.atco_code,
+                    url,
+                    row.getElementsByClassName("stop-live-services")[0],
+                    row.getElementsByClassName("stop-live-time")[0],
+                    row.getElementsByClassName("stop-live-countdown")[0]
+                )
+            };
+            self.addSelectStop(self.liveStops[index]);
+        }
+    };
+
+    /**
+     * Resizes images (eg SVG bus symbol) when indicator is resized
+     * @param {HTMLElement} headElement - Heading element containing the indicator
+     */
+    this.resizeImg = function(headElement) {
+        let imgElements = headElement.getElementsByTagName('img');
+        if (imgElements.length > 0) {
+            let img = imgElements[0];
+            let style = window.getComputedStyle(headElement);
+            img.width = Math.round(2.8 * parseFloat(style.fontSize));
+        }
+    };
+
+    /**
+     * Collapses a section by removing its set height (assuming the CSS style has zero height)
+     * @param {HTMLElement} element - Element to be collapsed 
+     */
+    this.collapseContent = function(element) {
+        element.style.height = '';
+    }
+
+    /**
+     * Expands (or shrinks) a section to its height with transition.
+     * @param {HTMLElement} element - Element to be expanded 
+     */
+    this.resizeContent = function(element) {
+        let height = element.scrollHeight;
+        element.style.height = height + 'px';
+    }
+
+    /**
+     * Called when a stop is selected - gets live data and close other rows
+     * @param {HTMLElement} rowElement - Row element to be selected
+     */
+    this.selectStop = function(rowElement) {
+        let r = rowElement;
+        if (r.row.className === "item-stop-services") {
+            r.data.startLoop(function() {
+                self.resizeContent(r.content)
+            });
+            r.row.className = "item-stop-services-show";
+            self.resizeImg(r.head);
+            // Checks if another element is active; stop loop and collapse
+            if (!!self.active) {
+                let t = self.liveStops[self.active]
+                t.data.stopLoop(function() {
+                    self.collapseContent(t.content)
+                });
+                t.row.className = "item-stop-services";
+                self.resizeImg(t.head);
+            }
+            self.active = 'stop' + r.code;
+        } else if (r.row.className === "item-stop-services-show") {
+            r.data.stopLoop(function() {
+                self.collapseContent(r.content)
+            });
+            r.row.className = "item-stop-services";
+            self.active = null;
+            self.resizeImg(r.head);
+        }
+    };
+
+    /**
+     * Adds on click event to a row
+     * @param {object} stop - Stop object in list 
+     */
+    this.addSelectStop = function(stop) {
+        stop.head.addEventListener("click", function() {
+            self.selectStop(stop);
+        });
+    };
+
+    /**
+     * Called when a marker is clicked - opens stop row and scrolls to it
+     * @param {string} atcoCode 
+     */
+    this.markerSelectStop = function(atcoCode) {
+        let stopElement = self.liveStops['stop' + atcoCode];
+        if (stopElement.row.className === "item-stop-services") {
+            self.selectStop(stopElement);
+        }
+        stopElement.head.scrollIntoView(true);
+    }
+}
+
+/**
+ * Sets up the map and buttons to be revealed when button is pressed.
+ * @constructor
+ * @param {MultiStopMap} mapObject 
+ * @param {HTMLElement} mapElement 
+ * @param {HTMLElement} buttonElement 
+ * @param {function} callback 
+ */
+function AddMapElements(mapObject, mapElement, buttonElement, callback) {
+    var self = this;
+    this.map = mapObject;
+    this.mapElem = mapElement;
+    this.button = buttonElement;
+    this.callback = callback;
+    this.transitionCallback = null;
+
+    /**
+     * Checks animations to see which one is applicable, from Modernizr
+     * @param {HTMLElement} element
+     * @returns {string}
+     */
+    this.whichTransitionEvent = function(element) {
+        var transitions = {
+            'transition': 'transitionend',
+            'OTransition': 'oTransitionEnd',
+            'MozTransition': 'transitionend',
+            'WebkitTransition': 'webkitTransitionEnd'
+        };
+        for (var t in transitions) {
+            if (transitions.hasOwnProperty(t) && element.style[t] !== undefined) {
+                return transitions[t];
+            }
+        }
+    };
+    this.transitionEnd = this.whichTransitionEvent(self.mapElem);
+
+    /**
+     * Initialises the map.
+     */
+    this.setupMap = function() {
+        self.button.addEventListener('click', function() {
+            this.textContent = "loading";
+            self.mapElem.style.paddingBottom = "56.25%";
+            this.onclick = null;
+        });
+        self.transitionCallback = function() {
+            self.mapElem.removeEventListener(self.transitionEnd, self.transitionCallback);
+            self.button.style.display = "none";
+            self.map.create();
+            if (typeof self.callback !== 'undefined') {
+                self.callback();
+            }
+            console.log("Map created for stop area with " + map.markers.length + " stops.");
+        }
+        self.mapElem.addEventListener(self.transitionEnd, self.transitionCallback);
+    }
+}
+
+/**
  * List of search results and a set of filtering buttons to select the right areas.
  * @constructor
  */
-function FilterList() {
+function SearchFilterList() {
     var self = this;
     this.divFilterAreas = document.getElementById('dFilterAreas');
     this.listElements = Array.prototype.slice.call(
@@ -547,7 +653,7 @@ function FilterList() {
     /**
      * Initialises the filter list, adding buttons if the number of areas exceed 1.
      */
-    this.initialise = function() {
+    this.init = function() {
         if (self.areaNames.size > 1) {
             let text = document.createElement('p');
             text.textContent = "Filter by area:";

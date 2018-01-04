@@ -47,7 +47,7 @@ def _find_stops_in_range(coord):
         models.StopPoint.longitude > long_0,
         models.StopPoint.longitude < long_1
     )
-    stops = [(stop, location.get_dist(coord, (stop.latitude, stop.longitude)))
+    stops = [(stop._asdict(), location.get_dist(coord, (stop.latitude, stop.longitude)))
              for stop in query_nearby_stops.all()]
     filter_stops = filter(lambda x: x[1] < MAX_DISTANCE, stops)
 

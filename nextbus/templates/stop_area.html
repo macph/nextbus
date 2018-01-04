@@ -59,98 +59,16 @@
     let area = {{ area_info|tojson }};
     let listStops = {{ list_stops|tojson }};
 
-    var listLiveStops = {};
-    for (s of listStops) {
-        let index = "stop" + s.atco_code;
-        let row = document.getElementById(index);
-        let head = row.getElementsByClassName("item-stop-services-head")[0];
-        let content = row.getElementsByClassName("item-stop-services-content")[0];
-        listLiveStops[index] = {
-            code: s.atco_code,
-            row: row,
-            head: head,
-            content: content,
-            data: new LiveData(
-                s.atco_code,
-                "{{ url_for('page.stop_get_times') }}",
-                row.getElementsByClassName("stop-live-services")[0],
-                row.getElementsByClassName("stop-live-time")[0],
-                row.getElementsByClassName("stop-live-countdown")[0]
-            )
-        };
-    }
+    var live = new ListLiveStops(
+        "{{ url_for('page.stop_get_times') }}", listStops
+    );
+    live.init();
 
-    function resizeImg(headElement) {
-        let imgElements = headElement.getElementsByTagName('img');
-        if (imgElements.length > 0) {
-            let img = imgElements[0];
-            let style = window.getComputedStyle(headElement);
-            img.width = Math.round(2.8 * parseFloat(style.fontSize));
-        }
-    }
-
-    function selectStop(rowElement) {
-        let r = rowElement;
-        if (r.row.className === "item-stop-services-show") {
-            r.data.stopLoop();
-            r.row.className = "item-stop-services";
-            resizeImg(r.head);
-        } else if (r.row.className === "item-stop-services") {
-            r.data.startLoop();
-            r.row.className = "item-stop-services-show";
-            resizeImg(r.head);
-            for (s in listLiveStops) {
-                if (listLiveStops.hasOwnProperty(s) && listLiveStops[s].code !== r.code) {
-                    let t = listLiveStops[s]
-                    t.data.stopLoop();
-                    t.row.className = "item-stop-services";
-                    resizeImg(t.head);
-                }
-            }
-        }
-    }
-
-    for (s in listLiveStops) {
-        if (listLiveStops.hasOwnProperty(s)) {
-            let ls = listLiveStops[s];
-            ls.head.addEventListener("click", function() {
-                selectStop(ls);
-            });
-        }
-    }
     var showButton = document.getElementById("buttonShowMap");
     var mapDiv = document.getElementById("divMap");
-    var map = new MultiStopMap(mapDiv, area, listStops, false, listLiveStops, selectStop);
-
-    /* Checks animations, from Modernizr */
-    function whichTransitionEvent(el) {
-        var transitions = {
-            'transition': 'transitionend',
-            'OTransition': 'oTransitionEnd',
-            'MozTransition': 'transitionend',
-            'WebkitTransition': 'webkitTransitionEnd'
-        };
-    
-        for (var t in transitions) {
-            if (transitions.hasOwnProperty(t) && el.style[t] !== undefined) {
-                return transitions[t];
-            }
-        }
-    }
-    showButton.onclick = function() {
-        showButton.textContent = "loading";
-        mapDiv.style.paddingBottom = "56.25%";
-        this.onclick = null;
-    };
-    /* Uses whichTransitionEvent to detect which transition to use, then listens out for it */
-    let transitionEnd = whichTransitionEvent(mapDiv);
-    var transitionEndCallback = function() {
-        mapDiv.removeEventListener(transitionEnd, transitionEndCallback);
-        showButton.style.display = "none";
-        map.create(); 
-        console.log("Map created for stop area with " + map.markers.length + " stops.");
-    }
-    mapDiv.addEventListener(transitionEnd, transitionEndCallback);
+    var map = new MultiStopMap(mapDiv, area, listStops, false, live.markerSelectStop);
+    var elem = new AddMapElements(map, mapDiv, showButton);
+    elem.setupMap();
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC4z8yZknfpA57bRuTky5jC1rKtS_Phd-0&callback=map.setReady"></script>
 {% endblock %}

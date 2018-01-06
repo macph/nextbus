@@ -1,13 +1,44 @@
 """
 Search functions for the nextbus package.
 """
-import sys
 import pyparsing as pp
-
+from flask import current_app
 from nextbus import db
 from nextbus import models
 
-# TODO: Is there a better/faster way of getting all Unicode characters?
+SEARCH_LIMIT = 2048
+
+
+class LimitException(Exception):
+    """ Raised if a search query returns too many results """
+    def __init__(self, query, count):
+        super(LimitException, self).__init__()
+        self.query = query
+        self.count = count
+    
+    def __str__(self):
+        return ("Search result %r returned too many results (%d)"
+                % (self.query, self.count))
+
+
+def _get_unicode_characters():
+    """ Loops through all Unicode characters, creating lists of alphanumeric
+        and punctuation characters. Excludes characters used in parsing, ie
+        !, &, | and ().
+    """
+    import sys
+
+    alpha_num, punctuation = [], []
+    for c in range(sys.maxunicode):
+        char = chr(c)
+        if char.isalnum():
+            alpha_num.append(char)
+        elif not char.isspace():
+            if char in '!&|()':
+                continue
+            punctuation.append(char)
+
+    return alpha_num, punctuation
 
 
 class TSQueryParser(object):
@@ -45,28 +76,20 @@ class TSQueryParser(object):
         op_and = and_ | pp.Literal('&')
         op_or = or_ | pp.oneOf('| ,')
 
-        # Looping over all Unicode characters once
-        alpha_num, punctuation = [], []
-        for char in (chr(c) for c in range(sys.maxunicode)):
-            if char.isalnum():
-                alpha_num.append(char)
-            elif not char.isspace():
-                if char in '!&|()':
-                    continue
-                punctuation.append(char)
-
-        illegal = pp.Word(''.join(punctuation)).suppress()
-        word = ~and_ + ~or_ + pp.Word(''.join(alpha_num))
+        punctuation = ''.join(c for c in pp.printables
+                              if c not in pp.alphanums and c not in '!&|()')
+        illegal = pp.Word(punctuation + pp.punc8bit).suppress()
+        word = ~and_ + ~or_ + pp.Word(pp.alphanums + pp.alphas8bit)
         replace = lambda op, s: op.setParseAction(pp.replaceWith(s))
 
-        # Suppress illegal characters around words
+        # Suppress unused characters around words
         search_term = pp.Optional(illegal) + word + pp.Optional(illegal)
         search_expr = pp.infixNotation(search_term, [
             (replace(op_not, '!'), 1, pp.opAssoc.RIGHT),
             (pp.Optional(replace(op_and, '&'), default='&'), 2,
              pp.opAssoc.LEFT),
             (replace(op_or, '|'), 2, pp.opAssoc.LEFT)
-        ]) + pp.StringEnd()
+        ]) + pp.Optional(pp.Word('!&|').suppress()) + pp.StringEnd()
 
         return search_expr
 
@@ -142,7 +165,11 @@ class TSQueryParser(object):
             raise ValueError("Parser ran into an error with the search query "
                              "%r:\n%s" % (search_query, err)) from err
         output = output[0] if len(output) == 1 else output
-
+        query_string = self.to_string(output, '')
+        current_app.logger.debug(
+            "Search query %r parsed as\n%r\nand formatted as %r"
+            % (search_query, output, query_string)
+        )
         return self.to_string(output, '')
 
 
@@ -171,10 +198,15 @@ def _table_col(model):
     return db.literal_column("'%s'" % model.__tablename__)
 
 
-def search_exists(query, parser=None):
+def search_exists(query, parser=None, raise_exception=True):
     """ Searches for stop, postcodes and places that do exist, without
         information on areas, before redirecting to a search results page with
         the full data.
+
+        :param parser: Parser to use when searching for all results with
+        PostgreSQL's full text search.
+        :param raise_exception: Set to raise an exception when too many results
+        are returned.
     """
     if not ''.join(query.split()):
         raise ValueError("No suitable query was entered.")
@@ -187,12 +219,6 @@ def search_exists(query, parser=None):
     # Else: do a full text search - format query string first
     s_query = parser(query) if parser else query
 
-    s_region = (
-        db.session.query(
-            models.Region.code.label('code')
-        ).filter(db.func.to_tsvector('english', models.Region.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
     s_admin_area = (
         db.session.query(
             models.AdminArea.code.label('code')
@@ -231,15 +257,23 @@ def search_exists(query, parser=None):
             )
         )
     )
-    search = s_region.union(s_admin_area, s_district, s_locality,
-                            s_stop_area, s_stop)
+    search = s_admin_area.union(s_district, s_locality, s_stop_area, s_stop)
 
-    return search.all()
+    results = search.all()
+    if raise_exception and len(results) > SEARCH_LIMIT:
+        raise LimitException(s_query, len(results))
+
+    return results
 
 
-def search_full(query, parser=None):
+def search_full(query, parser=None, raise_exception=True):
     """ Searches for stops, postcodes and places, returning full data including
         area information.
+
+        :param parser: Parser to use when searching for all results with
+        PostgreSQL's full text search.
+        :param raise_exception: Set to raise an exception when too many results
+        are returned.
     """
     if not ''.join(query.split()):
         raise ValueError("No suitable query was entered.")
@@ -253,19 +287,6 @@ def search_full(query, parser=None):
     s_query = parser(query) if parser else query
     empty_col = db.literal_column("''")
 
-    s_region = (
-        db.session.query(
-            _table_col(models.Region).label('table_name'),
-            models.Region.code.label('code'),
-            models.Region.name.label('name'),
-            empty_col.label('indicator'),
-            empty_col.label('street'),
-            empty_col.label('locality_name'),
-            empty_col.label('admin_area'),
-            empty_col.label('admin_area_name')
-        ).filter(db.func.to_tsvector('english', models.Region.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
     s_admin_area = (
         db.session.query(
             _table_col(models.AdminArea).label('table_name'),
@@ -313,26 +334,35 @@ def search_full(query, parser=None):
                 .match(s_query, postgresql_regconfig='english'),
                 models.StopPoint.atco_code.isnot(None))
     )
+    # Subquery required to count number of stops in stop area and group by stop
+    # area code before joining with locality and admin area
+    sub_stop_area = (
+        db.session.query(
+            models.StopArea.code.label('code'),
+            models.StopArea.name.label('name'),
+            models.StopArea.admin_area_code.label('admin_area'),
+            models.StopArea.locality_code.label('locality'),
+            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
+        ).join(models.StopArea.stop_points)
+        .group_by(models.StopArea.code)
+        .filter(db.func.to_tsvector('english', models.StopArea.name)
+                .match(s_query, postgresql_regconfig='english'))
+    ).subquery()
     s_stop_area = (
         db.session.query(
             _table_col(models.StopArea).label('table_name'),
-            models.StopArea.code.label('code'),
-            models.StopArea.name.label('name'),
-            db.cast(db.func.count(models.StopArea.code), db.Text).label('indicator'),
+            sub_stop_area.c.code.label('code'),
+            sub_stop_area.c.name.label('name'),
+            sub_stop_area.c.ind.label('indicator'),
             empty_col.label('street'),
-            models.Locality.name.label('locality_name'),
+            db.func.coalesce(models.Locality.name.label('locality_name'), ''),
             models.AdminArea.code.label('admin_area'),
             models.AdminArea.name.label('admin_area_name')
-        ).select_from(models.StopArea)
-        .join(models.StopArea.stop_points)
-        .join(models.Locality,
-              models.Locality.code == models.StopArea.locality_code)
+        ).select_from(sub_stop_area)
+        .outerjoin(models.Locality,
+                   models.Locality.code == sub_stop_area.c.locality)
         .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
-        .group_by(models.StopArea.code, models.Locality.code,
-                  models.AdminArea.code)
-        .filter(db.func.to_tsvector('english', models.StopArea.name)
-                .match(s_query, postgresql_regconfig='english'))
+              models.AdminArea.code == sub_stop_area.c.admin_area)
     )
     s_stop = (
         db.session.query(
@@ -345,20 +375,34 @@ def search_full(query, parser=None):
             models.AdminArea.code.label('admin_area'),
             models.AdminArea.name.label('admin_area_name')
         ).select_from(models.StopPoint)
+        .outerjoin(models.StopArea,
+                   models.StopArea.code == models.StopPoint.stop_area_code)
         .join(models.Locality,
               models.Locality.code == models.StopPoint.locality_code)
         .join(models.AdminArea,
               models.AdminArea.code == models.Locality.admin_area_code)
+        # Include stops with name or street matching query but exclude these
+        # within areas that have already been found - prevent duplicates
         .filter(
             db.or_(
                 db.func.to_tsvector('english', models.StopPoint.name)
                 .match(s_query, postgresql_regconfig='english'),
                 db.func.to_tsvector('english', models.StopPoint.street)
                 .match(s_query, postgresql_regconfig='english')
+            ),
+            db.not_(
+                db.and_(
+                    models.StopPoint.stop_area_code.isnot(None),
+                    db.func.to_tsvector('english', models.StopArea.name)
+                    .match(s_query, postgresql_regconfig='english')
+                )
             )
         )
     )
-    search = s_region.union(s_admin_area, s_district, s_locality,
-                            s_stop_area, s_stop)
+    search = s_admin_area.union(s_district, s_locality, s_stop_area, s_stop)
 
-    return search.all()
+    results = search.all()
+    if raise_exception and len(results) > SEARCH_LIMIT:
+        raise LimitException(s_query, len(results))
+
+    return results

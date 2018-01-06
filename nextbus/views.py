@@ -108,16 +108,42 @@ def about():
     return render_template('about.html')
 
 
-@page.route('/search/<query>')
+@page.route('/search/<query>', methods=['GET', 'POST'])
 def search_results(query):
     """ Shows a list of search results. """
+
+    f_search = forms.SearchPlaces()
+    if f_search.submit_query.data and f_search.validate():
+        if isinstance(f_search.result, models.StopPoint):
+            return redirect('/stop/atco/%s' % f_search.result.atco_code)
+        elif isinstance(f_search.result, models.Postcode):
+            return redirect('/near/postcode/%s' % f_search.result.text.replace(' ', '+'))
+        else:
+            return redirect('/search/%s' % f_search.query.replace(' ', '+'))
+
     s_query = query.replace('+', ' ')
-    result = search.search_full(s_query, forms.parser.parse_query)
+    try:
+        result = search.search_full(s_query, forms.parser.parse_query)
+    except ValueError:
+        return render_template(
+            'search.html', query=s_query, form_search=f_search,
+            error="There was a problem reading your search query."
+        )
+    except search.LimitException as err:
+        return render_template(
+            'search.html', query=s_query, form_search=f_search,
+            error="Too many results were found. Try narrowing your search."
+        )
     # Redirect to postcode or stop if one was found
     if isinstance(result, models.StopPoint):
         return redirect('/stop/atco/%s' % result.atco_code)
     elif isinstance(result, models.Postcode):
         return redirect('/near/postcode/%s' % result.text.replace(' ', '+'))
+    elif len(result) == 0:
+        return render_template(
+            'search.html', query=s_query, form_search=f_search,
+            error="No results were found."
+        )
 
     dict_result = collections.defaultdict(list)
     for row in result:
@@ -130,7 +156,8 @@ def search_results(query):
     for group, rows in dict_result.items():
         dict_result[group] = sorted(rows, key=lambda r: r.name)
 
-    return render_template('search.html', query=s_query, results=dict_result)
+    return render_template('search.html', query=s_query, form_search=f_search,
+                           results=dict_result)
 
 
 @page.route('/list/')

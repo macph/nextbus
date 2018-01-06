@@ -17,7 +17,7 @@ body {
     width: 1fr;
     height: 100vh;
     box-sizing: border-box;
-    background: whitesmoke;
+    background: gainsboro;
 }
   
 p {
@@ -97,7 +97,7 @@ button {
 
 #divContent {
     grid-row: 3 / 4;
-    padding: 10px 0;
+    padding: 0 0 32px 0;
 }
 
 #divFooterOuter {
@@ -528,13 +528,18 @@ div.area-color-940 {
 }
 
 /* search fields */
+div.box-upper-margin {
+    margin-top: 20px;
+}
+
+
 form.search-form {
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 0 10px;
 
-    font-size: 1.7rem;
+    font-size: 1.6rem;
 }
 
 form.search-form > div {
@@ -543,7 +548,7 @@ form.search-form > div {
 }
 
 div.search-label {
-    flex: 0 0 120px;
+    flex: 0 0 96px;
 
     text-align: right;
 }

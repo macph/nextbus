@@ -115,6 +115,16 @@ def downgrade():
     - ~~Correct ATCO/NaPTAN/SMS codes should send you to the correct stop/stop area page straightaway~~
     - ~~Text search covering areas, localities, stops (common name & street) and stop area names.~~
     - ~~With FTS, add options to filter by area~~ or type.
+    - Limits to search queries was added, but we need a more graceful way of returning these results. We would need to split the results into pages, with additional queries to restrict by area (can't be done all by JS since not all results will be returned).
+    - How would we sort stops? Ranking?
+    - How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':
+        - We want to search stops with 'High Street' and 'Sheffield' separately.
+        - Ideally this would return stops with name or street 'High Street' that are located in place 'Sheffield' (eg 'Sheffield Centre' locality).
+        - But how do we know which keywords?
+        - One option is to use parser and use a keyword. Then with 'High Street in Sheffield' we can do the above search.
+        - Keywords: `@` `at``area` `in`, `place`, `where`. Use a colon or is that too difficult? I think the `at`/`@` keyword is the best here. Add to pyparsing and do a second passthrough where multiple `@` expressions can be interpreted as `OR`.
+    - Set up pyparsing to label results. This lets us do a more refined search expression and identify specific phrases such as above.
+    - Use regex to identify postcodes and automatically return error if no postcode was found. Eg, 'W1X1AA' is definitely a postcode but doesn't exist. No point in doing a full search.
 
 ```sql
 SELECT atco_code, common_name, indicator

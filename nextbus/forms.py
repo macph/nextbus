@@ -28,6 +28,10 @@ def _search_results(form, field):
                                  % (field.data, err))
         raise ValidationError("There was a problem with your search. Try "
                               "again.")
+    except search.LimitException as err:
+        current_app.logger.debug(str(err))
+        raise ValidationError("Too many results found. Try narrowing  your "
+                              "search.")
     if result:
         form.query = field.data
         form.result = result

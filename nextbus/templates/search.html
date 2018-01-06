@@ -13,19 +13,32 @@
 {% endblock %}
 
 {% block content %}
-{% set found = false %}
-{% if results.get('region') %}
-{% set found = true %}
-<h2>Regions</h2>
-<div class="list list-places-search">
-    {% for region in results['region'] %}
-    <a class="item-place" href="{{ url_for('page.list_in_region', region_code=region.code) }}">{{ region.name }}</a>
-    {% endfor %}
+<div class="search-box box-upper-margin">
+    <form class="search-form" method="post" name="sms">
+        {{ form_search.hidden_tag() }}
+        <div class="search-label">
+            <label>Search again:</label>
+        </div>
+        <div class="search-field">
+            {{ form_search.search_query(placeholder="eg 55677, SW1A 0AA or 'Westminster'") }}
+        </div>
+        <div class="search-submit">
+            <input class="form-submit" type="submit" name="submit_query" value=">">
+        </div>
+    </form>
+    <div class="search-error">
+        {% if form_search.search_query.errors %}
+        {% for error in form_search.search_query.errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+        {% endif %}
+    </div>
 </div>
-{% endif %}
+{% if error %}
+<p>{{ error }}</p>
+{% else %}
 <div class="select-area-list" id="dFilterAreas"></div>
 {% if results.get('area') %}
-{% set found = true %}
 <h2 id="hArea">Areas</h2>
 <div class="list list-places-search" id="dAreas">
     {% for area in results['area'] %}
@@ -38,7 +51,6 @@
 </div>
 {% endif %}
 {% if results.get('locality') %}
-{% set found = true %}
 <h2 id="hLocal">Places</h2>
 <div class="list list-places-search" id="dLocal">
     {% for locality in results['locality'] %}
@@ -47,7 +59,6 @@
 </div>
 {% endif %}
 {% if results.get('stop') %}
-{% set found = true %}
 <h2 id="hStop">Stops</h2>
 <div class="list list-stops-search" id="dStops">
     {% for stop in results['stop'] %}
@@ -67,14 +78,12 @@
     {% endif %}
     {% endfor %}
 </div>
+{% endif %}
 <script>
     var fl = new SearchFilterList();
     fl.init();
 </script>
-{% endif %}
-{% if not found %}
-<p>No stops or places found.</p>
-{% endif %}
 {{ f.resize_indicator("stop-ind") }}
 {{ f.resize_indicator("stop-area-ind", true) }}
+{% endif %}
 {% endblock %}

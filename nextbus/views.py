@@ -123,17 +123,27 @@ def search_results(query):
 
     s_query = query.replace('+', ' ')
     try:
-        result = search.search_full(s_query, forms.parser.parse_query)
+        result = search.search_full(s_query, forms.parse.parse_query)
     except ValueError:
+        current_app.logger.error("Query %r resulted in an parsing error: %s"
+                                 % (query, err))
         return render_template(
             'search.html', query=s_query, form_search=f_search,
             error="There was a problem reading your search query."
         )
-    except search.LimitException as err:
+    except search.LimitException:
+        current_app.logger.debug(str(err))
         return render_template(
             'search.html', query=s_query, form_search=f_search,
             error="Too many results were found. Try narrowing your search."
         )
+    except search.PostcodeException as err:
+        current_app.logger.debug(str(err))
+        return render_template(
+            'search.html', query=s_query, form_search=f_search,
+            error="Postcode '%s' was not found." % err.postcode
+        )
+
     # Redirect to postcode or stop if one was found
     if isinstance(result, models.StopPoint):
         return redirect('/stop/atco/%s' % result.atco_code)
@@ -259,13 +269,14 @@ def list_in_district(district_code):
               models.Region.code == models.AdminArea.region_code)
         .filter(models.District.code == district.code)
     ).one()
-    ls_local = (models.Locality.query
-                .outerjoin(models.Locality.stop_points)
-                .filter(models.StopPoint.atco_code.isnot(None),
-                        models.Locality.district_code == district.code)
-                .order_by(models.Locality.name)).all()
+    ls_local = (
+        models.Locality.query
+        .outerjoin(models.Locality.stop_points)
+        .filter(models.StopPoint.atco_code.isnot(None),
+                models.Locality.district_code == district.code)
+        .order_by(models.Locality.name)
+    ).all()
     group_local = _group_places(ls_local, attr='name')
-
 
     return render_template('district.html', info=info, district=district,
                            localities=group_local)

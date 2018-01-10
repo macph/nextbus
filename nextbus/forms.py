@@ -7,10 +7,10 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import DataRequired
 
-from nextbus import search
+from nextbus import parser, search
 
 
-parser = search.TSQueryParser()
+parse = parser.TSQueryParser(use_logger=True)
 
 
 def _search_results(form, field):
@@ -22,7 +22,7 @@ def _search_results(form, field):
         raise ValidationError("Too few letters or digits; try using a longer "
                               "phrase.")
     try:
-        result = search.search_exists(field.data, parser.parse_query)
+        result = search.search_exists(field.data, parse.parse_query)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (field.data, err))
@@ -32,6 +32,10 @@ def _search_results(form, field):
         current_app.logger.debug(str(err))
         raise ValidationError("Too many results found. Try narrowing  your "
                               "search.")
+    except search.PostcodeException as err:
+        current_app.logger.debug(str(err))
+        raise ValidationError("Postcode '%s' was not found." % err.postcode)
+
     if result:
         form.query = field.data
         form.result = result

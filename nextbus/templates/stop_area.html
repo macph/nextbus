@@ -26,14 +26,16 @@
 </div>
 <div class="google-maps-js" id="divMap"></div>
 <h2>Stops</h2>
-{% if stop_area.stop_points|length > 0 %}
+{% if list_stops|length > 0 %}
 <div class="list list-stops-services">
-    {% for stop in stop_area.stop_points %}
+    {% for stop in list_stops %}
     <div id="stop{{ stop.atco_code }}" class="item-stop-services">
-        <div class="item-stop-services-head">
-            <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ f.stop_short_indicator(stop) }}</span></div>
-            <div class="stop-label">{{ stop.name }}</div>
-            <div class="stop-label stop-arrow"></div>
+        <div class="item-stop-services-row">
+            <div class="item-stop-services-head">
+                <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ stop.get('short_ind', '') }}</span></div>
+                <div class="stop-label">{{ stop['name'] }}</div>
+            </div>
+            <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-arrow"></a>
         </div>
         <div class="item-stop-services-content">
             <p>
@@ -46,7 +48,6 @@
                 <span class="stop-live-countdown"></span>
             </div>
             <div class="stop-live-services"></div>
-            <p><a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}">Link to stop</a></p>
         </div>
     </div>
     {% endfor %}

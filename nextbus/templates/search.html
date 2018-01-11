@@ -71,7 +71,7 @@
     </a>
     {% elif stop.table_name == 'stop_area' %}
     <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_area', stop_area_code=stop.code) }}">
-        <div class="indicator stop-area-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}s</span></div>
+        <div class="indicator stop-area-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}</span></div>
         <div class="stop-label">{{ stop.name }}</div>
         <div class="stop-label stop-description">{{ stop.locality_name }}</div>
     </a>

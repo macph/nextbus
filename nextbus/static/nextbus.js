@@ -173,7 +173,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         if (self.isLive) {
             clLive = 'text-green';
         } else {
-            self.updateData();
+            self.updateOutdatedData();
             clLive = 'text-red';
         }
 
@@ -259,7 +259,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             console.log(`Created table with ${self.data.services.length} services for stop '${self.atcoCode}'.`);
 
         } else {
-            self.headingTime.textContent = `No buses expected at ${self.data.local_time}`;
+            self.headingTime.textContent = `No services expected at ${self.data.local_time}`;
             console.log(`No services found for stop ${self.atcoCode}.`);
         }
     };
@@ -267,7 +267,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
     /**
      * Updates seconds remaining with current date/time if no data received
      */
-    this.updateData = function() {
+    this.updateOutdatedData = function() {
         var dtNow = new Date();
         for (s of self.data.services) {
             for (e of s.expected) {
@@ -298,12 +298,8 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
      *     If this argument is undefined, the callbackInter function is used instead
      */
     this.startLoop = function(callbackInter, callbackStart) {
-        var onStart, onInterval = callbackInter;
-        if (typeof callbackStart === 'undefined') {
-            onStart = callbackInter;
-        } else {
-            onStart = callbackStart;
-        }
+        var onInterval = callbackInter;
+        var onStart = (typeof callbackStart !== 'undefined') ? callbackStart : callbackInter;
         if (self.loopActive) {
             if (self.loopEnding) {
                 self.loopEnding = false;
@@ -319,7 +315,8 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
             self.loopActive = true;
             var time = INTERVAL;
             self.interval = setInterval(function () {
-                if (--time > 0) {
+                time--;
+                if (time > 0) {
                     self.headingCountdown.textContent = `${time}s`
                 } else {
                     self.headingCountdown.textContent = 'now';
@@ -365,7 +362,9 @@ var TRAM = "tram-white.svg";
  * @param {boolean} revert - Reverts colours of indicator
  */
 function resizeInd(className, busImage, tramImage, revert) {
-    for (elt of document.getElementsByClassName(className)) {
+    var elements = document.getElementsByClassName(className);
+    for (let i = 0; i < elements.length; i++) {
+        let elt = elements[i];
         let text = elt.getElementsByTagName('span')[0];
         let style = window.getComputedStyle(elt);
         if (!text) {
@@ -510,7 +509,7 @@ function ListLiveStops(url, listStops) {
      */
     this.resizeContent = function(element) {
         let height = element.scrollHeight;
-        element.style.height = height + 'px';
+        element.style.height = height + 20 + 'px';
     }
 
     /**

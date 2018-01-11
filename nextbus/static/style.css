@@ -17,7 +17,7 @@ body {
     width: 1fr;
     height: 100vh;
     box-sizing: border-box;
-    background: gainsboro;
+    background: whitesmoke;
 }
   
 p {
@@ -222,10 +222,6 @@ button.small-button:focus {
 div.list {
     display: grid;
     grid-column-gap: 5px;
-    border-width: 1px 0;
-    border-style: solid;
-    border-color: gainsboro;
-    background: whitesmoke;
 }
 
 div.list-places {
@@ -244,7 +240,6 @@ div.list-places-search, div.list-stops-dist, div.list-stops-search {
 
 div.list-stops-services {
     grid-template-columns: 1fr;
-    border-width: 0 0 1px 0;
 }
 
 div.list-hidden {
@@ -276,20 +271,41 @@ a.item-stop-search {
     grid-template-columns: 36px 1fr minmax(96px, 0.5fr);
 }
 
+div.item-stop-services-row {
+    display: flex;
+    align-items: stretch;
+    align-content: center;
+}
+
 div.item-stop-services-head {
+    flex: 1 1 auto;
     display: grid;
     align-items: center;
-    grid-template-columns: 36px 1fr 36px;
+    grid-template-columns: 36px 1fr;
     grid-column-gap: 12px;
     padding: 5px 10px;
-
-    border-width: 1px 0 0 0;
-    border-style: solid;
-    border-color: gainsboro;
 }
 
 div.item-stop-dist {
-    grid-template-columns: 36px 1fr minmax(56px, 0.2fr) 36px;
+    grid-template-columns: 36px 1fr minmax(56px, 0.2fr);
+}
+
+a.item-arrow {
+    flex: none;
+    width: 48px;
+    height: auto;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 3.2rem;
+    color: black;
+}
+
+a.item-arrow:after {
+    content: "\203A";
 }
 
 /* is hidden by default */
@@ -300,16 +316,22 @@ div.item-stop-services-content {
     background: white;
 }
 
-div.item-stop-services-show > div.item-stop-services-head {
+div.item-stop-services-show div.item-stop-services-head {
     grid-template-columns: 54px 1fr;
     font-size: 1.5rem;
 }
 
-div.item-stop-services-show > div.item-stop-dist {
+div.item-stop-services-show div.item-stop-dist {
     grid-template-columns: 54px 1fr minmax(56px, 0.2fr);
 }
 
-a.item-place:hover, a.item-stop:hover, div.item-stop-services-head:hover {
+div.item-stop-services-show > div.item-stop-services-content {
+    border-width: 1px 0 0 0;
+    border-style: solid;
+    border-color: gainsboro;
+}
+
+a.item-place:hover, a.item-stop:hover, a.item-arrow:hover, div.item-stop-services-head:hover {
     background: gainsboro;
     cursor: pointer;
     text-decoration: none;
@@ -335,7 +357,6 @@ div.item-stop-services-show div.stop-label {
 
 div.stop-dist {
     font-size: 1.6rem;
-    font-style: italic;
 }
 
 div.item-stop-services-show div.stop-dist {
@@ -347,18 +368,6 @@ div.stop-description {
     text-align: right;
 
     font-size: 1.4rem;
-}
-
-div.stop-arrow {
-    font-size: 3.2rem;
-}
-
-div.item-stop-services-show  div.stop-arrow {
-    display: none;
-}
-
-div.stop-arrow:after {
-    content: "\203A";
 }
 
 div.indicator {
@@ -374,10 +383,13 @@ div.indicator {
     text-align: center;
 
     /* 0.2 padding around 3.2 -> 3.6 with 1.8 radius for circle */
-    height: 3.2em;
-    width: 3.2em;
+    height: 3.0em;
+    width: 3.0em;
     padding: 0.2em;
     border-radius: 1.8em;
+    border-width: 0.1em;
+    border-style: solid;
+    border-color: midnightblue;
     background: midnightblue;
 
     color: white;
@@ -415,6 +427,10 @@ div.list-services {
         minmax(64px, 0.30fr);
     grid-gap: 5px 10px;
     padding: 5px 10px;
+
+    border-width: 1px 0;
+    border-style: solid;
+    border-color: gainsboro;
 }
 
 div.list-services > div {
@@ -484,47 +500,56 @@ span.text-red {
 /* Greater Manchester */
 div.area-color-180 {
     background: rgb(64, 64, 62);
+    border-color: rgb(64, 64, 62);
 }
 
 /* Merseyside */
 div.area-color-280 {
     background: rgb(239, 224, 0);
+    border-color: rgb(239, 224, 0);
     color: rgb(51, 51, 51);
 }
 
 /* Nottingham */
 div.area-color-339 {
-    background: rgb(0, 89, 77);;
+    background: rgb(0, 89, 77);
+    border-color: rgb(0, 89, 77);
 }
 
 /* West Yorkshire */
 div.area-color-450 {
-    background: rgb(6, 65, 126);;
+    background: rgb(6, 65, 126);
+    border-color: rgb(6, 65, 126);
 }
 
 /* London */
 div.area-color-490 {
     background: rgb(220, 36, 31);
+    border-color: rgb(220, 36, 31);
 }
 
 /* Cardiff */
 div.area-color-571 {
     background: rgb(5, 139, 136);
+    border-color: rgb(5, 139, 136);
 }
 
 /* Glasgow */
 div.area-color-609 {
-    background: rgb(255, 98, 0);;
+    background: rgb(255, 98, 0);
+    border-color: rgb(255, 98, 0);
 }
 
 /* Edinburgh */
 div.area-color-620 {
-    background: rgb(118, 19, 21);;
+    background: rgb(118, 19, 21);
+    border-color: rgb(118, 19, 21);
 }
 
 /* Trams */
 div.area-color-940 {
     background: dimgrey;
+    border-color: dimgrey;
 }
 
 /* search fields */

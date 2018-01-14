@@ -30,8 +30,9 @@ def _search_results(form, field):
                               "again.")
     except search.LimitException as err:
         current_app.logger.debug(str(err))
-        raise ValidationError("Too many results found. Try narrowing  your "
-                              "search.")
+        raise ValidationError("Too many results found, try narrowing your "
+                              "search. If you know the area you can do a "
+                              "search of the form 'name @ location'")
     except search.PostcodeException as err:
         current_app.logger.debug(str(err))
         raise ValidationError("Postcode '%s' was not found." % err.postcode)

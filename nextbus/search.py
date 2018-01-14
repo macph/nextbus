@@ -6,6 +6,9 @@ from nextbus import db
 from nextbus import models
 
 SEARCH_LIMIT = 2048
+RESULT_COLUMNS = ['table_name', 'code', 'name', 'indicator', 'street',
+                  'locality_name', 'district_name', 'admin_area',
+                  'admin_area_name']
 
 
 class PostcodeException(Exception):
@@ -63,6 +66,442 @@ def _table_col(model):
     """ Helper function to create column with name of table. """
     return db.literal_column("'%s'" % model.__tablename__)
 
+def _empty_col(column_name):
+    """ Helper function to create a column with empty text and a label. """
+    return db.literal_column("''").label(column_name)
+
+
+def _fts_search_exists(tsquery):
+    """ Does a PostgreSQL FTS search to check if matching entries exist. """
+    admin_area = (
+        db.session.query(
+            models.AdminArea.code
+        ).filter(db.func.to_tsvector('english', models.AdminArea.name)
+                 .match(tsquery, postgresql_regconfig='english'))
+    )
+    district = (
+        db.session.query(
+            models.District.code
+        ).filter(db.func.to_tsvector('english', models.District.name)
+                 .match(tsquery, postgresql_regconfig='english'))
+    )
+    locality = (
+        db.session.query(
+            models.Locality.code
+        ).outerjoin(models.Locality.stop_points)
+        .filter(db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery, postgresql_regconfig='english'),
+                models.StopPoint.atco_code.isnot(None))
+    )
+    stop_area = (
+        db.session.query(
+            models.StopArea.code
+        ).filter(db.func.to_tsvector('english', models.StopArea.name)
+                 .match(tsquery, postgresql_regconfig='english'))
+    )
+    stop = (
+        db.session.query(
+            models.StopPoint.atco_code
+        ).filter(
+            db.or_(
+                db.func.to_tsvector('english', models.StopPoint.name)
+                .match(tsquery, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.StopPoint.street)
+                .match(tsquery, postgresql_regconfig='english')
+            )
+        )
+    )
+
+    return admin_area.union_all(district, locality, stop_area, stop).all()
+
+
+def _fts_location_search_exists(tsquery_name, tsquery_location):
+    """ Does a PostgreSQL FTS search on both names of stops/places and the
+        areas they are located in to check if matching entries exist.
+    """
+    # Admin area not needed
+    district = (
+        db.session.query(
+            models.District.code
+        ).select_from(models.District)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.District.admin_area_code)
+        .filter(db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_name, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english'))
+    )
+    locality = (
+        db.session.query(
+            models.Locality.code
+        ).select_from(models.Locality)
+        .outerjoin(models.Locality.stop_points)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.Locality.admin_area_code)
+        .filter(
+            db.func.to_tsvector('english', models.Locality.name)
+            .match(tsquery_name, postgresql_regconfig='english'),
+            models.StopPoint.atco_code.isnot(None),
+            db.or_(
+                db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english')
+            )
+        )
+    )
+    stop_area = (
+        db.session.query(
+            models.StopArea.code
+        ).select_from(models.StopArea)
+        .outerjoin(models.Locality,
+                   models.Locality.code == models.StopArea.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.StopArea.admin_area_code)
+        .filter(
+            db.func.to_tsvector('english', models.StopArea.name)
+            .match(tsquery_name, postgresql_regconfig='english'),
+            db.or_(
+                db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english')
+            )
+        )
+    )
+    stop = (
+        db.session.query(
+            models.StopPoint.atco_code
+        ).select_from(models.StopPoint)
+        .join(models.Locality,
+              models.Locality.code == models.StopPoint.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.StopPoint.admin_area_code)
+        .filter(
+            db.or_(
+                db.func.to_tsvector('english', models.StopPoint.name)
+                .match(tsquery_name, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.StopPoint.street)
+                .match(tsquery_name, postgresql_regconfig='english')
+            ),
+            db.or_(
+                db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english')
+            )
+        )
+    )
+
+    return district.union_all(locality, stop_area, stop).all()
+
+
+def _fts_search_all(tsquery):
+    """ Does a PostgreSQL FTS search to find all stops and places matching
+        query, returning table with specific columns.
+    """
+    empty_query = db.session.query(
+        *tuple(_empty_col(c) for c in RESULT_COLUMNS)
+    ).filter(db.false())
+
+    admin_area = (
+        db.session.query(
+            _table_col(models.AdminArea),
+            models.AdminArea.code,
+            models.AdminArea.name,
+            _empty_col('indicator'),
+            _empty_col('street'),
+            _empty_col('locality_name'),
+            _empty_col('district_name'),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).filter(db.func.to_tsvector('english', models.AdminArea.name)
+                 .match(tsquery, postgresql_regconfig='english'))
+    )
+    district = (
+        db.session.query(
+            _table_col(models.District),
+            models.District.code,
+            models.District.name,
+            _empty_col('indicator'),
+            _empty_col('street'),
+            _empty_col('locality_name'),
+            _empty_col('district_name'),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(models.District)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.District.admin_area_code)
+        .filter(db.func.to_tsvector('english', models.District.name)
+                .match(tsquery, postgresql_regconfig='english'))
+    )
+    sub_locality = (
+        db.session.query(
+            models.Locality.code,
+            models.Locality.name,
+            models.Locality.district_code,
+            models.Locality.admin_area_code
+        ).outerjoin(models.Locality.stop_points)
+        .group_by(models.Locality.code)
+        .filter(db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery, postgresql_regconfig='english'),
+                models.StopPoint.atco_code.isnot(None))
+    ).subquery()
+    locality = (
+        db.session.query(
+            _table_col(models.Locality),
+            sub_locality.c.code,
+            sub_locality.c.name,
+            _empty_col('indicator'),
+            _empty_col('street'),
+            _empty_col('locality_name'),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(sub_locality)
+        .outerjoin(models.District,
+                   models.District.code == sub_locality.c.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == sub_locality.c.admin_area_code)
+    )
+    # Subquery required to count number of stops in stop area and group by stop
+    # area code before joining with locality and admin area
+    sub_stop_area = (
+        db.session.query(
+            models.StopArea.code.label('code'),
+            models.StopArea.name.label('name'),
+            models.StopArea.locality_code.label('locality_code'),
+            models.StopArea.admin_area_code.label('admin_area_code'),
+            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
+        ).join(models.StopArea.stop_points)
+        .group_by(models.StopArea.code)
+        .filter(db.func.to_tsvector('english', models.StopArea.name)
+                .match(tsquery, postgresql_regconfig='english'))
+    ).subquery()
+    stop_area = (
+        db.session.query(
+            _table_col(models.StopArea),
+            sub_stop_area.c.code,
+            sub_stop_area.c.name,
+            sub_stop_area.c.ind,
+            _empty_col('street'),
+            db.func.coalesce(models.Locality.name.label('locality_name'), ''),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(sub_stop_area)
+        .outerjoin(models.Locality,
+                   models.Locality.code == sub_stop_area.c.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == sub_stop_area.c.admin_area_code)
+    )
+    stop = (
+        db.session.query(
+            _table_col(models.StopPoint),
+            models.StopPoint.atco_code,
+            models.StopPoint.name,
+            models.StopPoint.short_ind,
+            models.StopPoint.street,
+            models.Locality.name.label('locality_name'),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(models.StopPoint)
+        .outerjoin(models.StopArea,
+                   models.StopArea.code == models.StopPoint.stop_area_code)
+        .join(models.Locality,
+              models.Locality.code == models.StopPoint.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.Locality.admin_area_code)
+        # Include stops with name or street matching query but exclude these
+        # within areas that have already been found - prevent duplicates
+        .filter(
+            db.or_(
+                db.func.to_tsvector('english', models.StopPoint.name)
+                .match(tsquery, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.StopPoint.street)
+                .match(tsquery, postgresql_regconfig='english')
+            ),
+            db.not_(
+                db.and_(
+                    models.StopPoint.stop_area_code.isnot(None),
+                    db.func.to_tsvector('english', models.StopArea.name)
+                    .match(tsquery, postgresql_regconfig='english')
+                )
+            )
+        )
+    )
+
+    return empty_query.union_all(admin_area, district, locality, stop_area,
+                                 stop).all()
+
+
+def _fts_location_search_all(tsquery_name, tsquery_location):
+    """ Does a PostgreSQL FTS search to find all stops and places matching
+        query, returning table with specific columns.
+    """
+    empty_query = db.session.query(
+        *tuple(_empty_col(c) for c in RESULT_COLUMNS)
+    ).filter(db.false())
+    # Admin area not needed
+    district = (
+        db.session.query(
+            _table_col(models.District),
+            models.District.code,
+            models.District.name,
+            _empty_col('indicator'),
+            _empty_col('street'),
+            _empty_col('locality_name'),
+            _empty_col('district_name'),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(models.District)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.District.admin_area_code)
+        .filter(db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_name, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english'))
+    )
+    sub_locality = (
+        db.session.query(
+            models.Locality.code,
+            models.Locality.name,
+            models.Locality.district_code,
+            models.Locality.admin_area_code
+        ).outerjoin(models.Locality.stop_points)
+        .group_by(models.Locality.code)
+        .filter(db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery_name, postgresql_regconfig='english'),
+                models.StopPoint.atco_code.isnot(None))
+    ).subquery()
+    locality = (
+        db.session.query(
+            _table_col(models.Locality),
+            sub_locality.c.code,
+            sub_locality.c.name,
+            _empty_col('indicator'),
+            _empty_col('street'),
+            _empty_col('locality_name'),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(sub_locality)
+        .outerjoin(models.District,
+                   models.District.code == sub_locality.c.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == sub_locality.c.admin_area_code)
+        .filter(db.or_(
+            db.func.to_tsvector('english', models.District.name)
+            .match(tsquery_location, postgresql_regconfig='english'),
+            db.func.to_tsvector('english', models.AdminArea.name)
+            .match(tsquery_location, postgresql_regconfig='english')
+        ))
+    )
+    # Subquery required to count number of stops in stop area and group by stop
+    # area code before joining with locality and admin area
+    sub_stop_area = (
+        db.session.query(
+            models.StopArea.code.label('code'),
+            models.StopArea.name.label('name'),
+            models.StopArea.locality_code.label('locality_code'),
+            models.StopArea.admin_area_code.label('admin_area_code'),
+            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
+        ).join(models.StopArea.stop_points)
+        .group_by(models.StopArea.code)
+        .filter(db.func.to_tsvector('english', models.StopArea.name)
+                .match(tsquery_name, postgresql_regconfig='english'))
+    ).subquery()
+    stop_area = (
+        db.session.query(
+            _table_col(models.StopArea),
+            sub_stop_area.c.code,
+            sub_stop_area.c.name,
+            sub_stop_area.c.ind,
+            _empty_col('street'),
+            db.func.coalesce(models.Locality.name.label('locality_name'), ''),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(sub_stop_area)
+        .outerjoin(models.Locality,
+                   models.Locality.code == sub_stop_area.c.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == sub_stop_area.c.admin_area_code)
+        .filter(db.or_(
+            db.func.to_tsvector('english', models.Locality.name)
+            .match(tsquery_location, postgresql_regconfig='english'),
+            db.func.to_tsvector('english', models.District.name)
+            .match(tsquery_location, postgresql_regconfig='english'),
+            db.func.to_tsvector('english', models.AdminArea.name)
+            .match(tsquery_location, postgresql_regconfig='english')
+        ))
+    )
+    stop = (
+        db.session.query(
+            _table_col(models.StopPoint),
+            models.StopPoint.atco_code,
+            models.StopPoint.name,
+            models.StopPoint.short_ind,
+            models.StopPoint.street,
+            models.Locality.name.label('locality_name'),
+            db.func.coalesce(models.District.name.label('district_name'), ''),
+            models.AdminArea.code.label('admin_area'),
+            models.AdminArea.name.label('admin_area_name')
+        ).select_from(models.StopPoint)
+        .outerjoin(models.StopArea,
+                   models.StopArea.code == models.StopPoint.stop_area_code)
+        .join(models.Locality,
+              models.Locality.code == models.StopPoint.locality_code)
+        .outerjoin(models.District,
+                   models.District.code == models.Locality.district_code)
+        .join(models.AdminArea,
+              models.AdminArea.code == models.Locality.admin_area_code)
+        # Include stops with name or street matching query but exclude these
+        # within areas that have already been found - prevent duplicates
+        .filter(
+            db.or_(
+                db.func.to_tsvector('english', models.StopPoint.name)
+                .match(tsquery_name, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.StopPoint.street)
+                .match(tsquery_name, postgresql_regconfig='english')
+            ),
+            db.not_(
+                db.and_(
+                    models.StopPoint.stop_area_code.isnot(None),
+                    db.func.to_tsvector('english', models.StopArea.name)
+                    .match(tsquery_name, postgresql_regconfig='english')
+                )
+            ),
+            db.or_(
+                db.func.to_tsvector('english', models.Locality.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.District.name)
+                .match(tsquery_location, postgresql_regconfig='english'),
+                db.func.to_tsvector('english', models.AdminArea.name)
+                .match(tsquery_location, postgresql_regconfig='english')
+            )
+        )
+    )
+
+    return empty_query.union_all(district, locality, stop_area, stop).all()
+
 
 def search_exists(query, parser=None, raise_exception=True):
     """ Searches for stop, postcodes and places that do exist, without
@@ -83,51 +522,17 @@ def search_exists(query, parser=None, raise_exception=True):
         return object_match
 
     # Else: do a full text search - format query string first
-    s_query = parser(query) if parser else query
+    result = parser(query) if parser else query
+    # If the 'at' operator is used, a tuple is returned
+    if isinstance(result, tuple):
+        s_query, l_query = result
+        results = _fts_location_search_exists(s_query, l_query)
+    else:
+        s_query = result
+        results = _fts_search_exists(s_query)
 
-    admin_area = (
-        db.session.query(
-            models.AdminArea.code.label('code')
-        ).filter(db.func.to_tsvector('english', models.AdminArea.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
-    district = (
-        db.session.query(
-            models.District.code.label('code')
-        ).filter(db.func.to_tsvector('english', models.District.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
-    locality = (
-        db.session.query(
-            models.Locality.code.label('code')
-        ).outerjoin(models.Locality.stop_points)
-        .filter(db.func.to_tsvector('english', models.Locality.name)
-                .match(s_query, postgresql_regconfig='english'),
-                models.StopPoint.atco_code.isnot(None))
-    )
-    stop_area = (
-        db.session.query(
-            models.StopArea.code.label('code')
-        ).filter(db.func.to_tsvector('english', models.StopArea.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
-    stop = (
-        db.session.query(
-            models.StopPoint.atco_code.label('code')
-        ).filter(
-            db.or_(
-                db.func.to_tsvector('english', models.StopPoint.name)
-                .match(s_query, postgresql_regconfig='english'),
-                db.func.to_tsvector('english', models.StopPoint.street)
-                .match(s_query, postgresql_regconfig='english')
-            )
-        )
-    )
-    search = admin_area.union_all(district, locality, stop_area, stop)
-
-    results = search.all()
     if raise_exception and len(results) > SEARCH_LIMIT:
-        raise LimitException(s_query, len(results))
+        raise LimitException(query, len(results))
 
     return results
 
@@ -150,132 +555,17 @@ def search_full(query, parser=None, raise_exception=True):
         return obj
 
     # Else: do a full text search - format query string first
-    s_query = parser(query) if parser else query
-    empty_col = db.literal_column("''")
+    result = parser(query) if parser else query
+    # If the 'at' operator is used, a tuple is returned but we only need to
+    # find the names of stops or places
+    if isinstance(result, tuple):
+        s_query, l_query = result
+        results = _fts_location_search_all(s_query, l_query)
+    else:
+        s_query = result
+        results = _fts_search_all(s_query)
 
-    admin_area = (
-        db.session.query(
-            _table_col(models.AdminArea).label('table_name'),
-            models.AdminArea.code.label('code'),
-            models.AdminArea.name.label('name'),
-            empty_col.label('indicator'),
-            empty_col.label('street'),
-            empty_col.label('locality_name'),
-            models.AdminArea.code.label('admin_area'),
-            models.AdminArea.name.label('admin_area_name')
-        ).filter(db.func.to_tsvector('english', models.AdminArea.name)
-                 .match(s_query, postgresql_regconfig='english'))
-    )
-    district = (
-        db.session.query(
-            _table_col(models.District).label('table_name'),
-            models.District.code.label('code'),
-            models.District.name.label('name'),
-            empty_col.label('indicator'),
-            empty_col.label('street'),
-            empty_col.label('locality_name'),
-            models.AdminArea.code.label('admin_area'),
-            models.AdminArea.name.label('admin_area_name')
-        ).select_from(models.District)
-        .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
-        .filter(db.func.to_tsvector('english', models.District.name)
-                .match(s_query, postgresql_regconfig='english'))
-    )
-    sub_locality = (
-        db.session.query(
-            models.Locality.code,
-            models.Locality.name,
-            models.Locality.admin_area_code
-        ).outerjoin(models.Locality.stop_points)
-        .group_by(models.Locality.code)
-        .filter(db.func.to_tsvector('english', models.Locality.name)
-                .match(s_query, postgresql_regconfig='english'),
-                models.StopPoint.atco_code.isnot(None))
-    ).subquery()
-    locality = (
-        db.session.query(
-            _table_col(models.Locality).label('table_name'),
-            sub_locality.c.code.label('code'),
-            sub_locality.c.name.label('name'),
-            empty_col.label('indicator'),
-            empty_col.label('street'),
-            empty_col.label('locality_name'),
-            models.AdminArea.code.label('admin_area'),
-            models.AdminArea.name.label('admin_area_name')
-        ).select_from(sub_locality)
-        .join(models.AdminArea,
-              models.AdminArea.code == sub_locality.c.admin_area_code)
-    )
-    # Subquery required to count number of stops in stop area and group by stop
-    # area code before joining with locality and admin area
-    sub_stop_area = (
-        db.session.query(
-            models.StopArea.code.label('code'),
-            models.StopArea.name.label('name'),
-            models.StopArea.admin_area_code.label('admin_area'),
-            models.StopArea.locality_code.label('locality'),
-            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
-        ).join(models.StopArea.stop_points)
-        .group_by(models.StopArea.code)
-        .filter(db.func.to_tsvector('english', models.StopArea.name)
-                .match(s_query, postgresql_regconfig='english'))
-    ).subquery()
-    stop_area = (
-        db.session.query(
-            _table_col(models.StopArea).label('table_name'),
-            sub_stop_area.c.code.label('code'),
-            sub_stop_area.c.name.label('name'),
-            sub_stop_area.c.ind.label('indicator'),
-            empty_col.label('street'),
-            db.func.coalesce(models.Locality.name.label('locality_name'), ''),
-            models.AdminArea.code.label('admin_area'),
-            models.AdminArea.name.label('admin_area_name')
-        ).select_from(sub_stop_area)
-        .outerjoin(models.Locality,
-                   models.Locality.code == sub_stop_area.c.locality)
-        .join(models.AdminArea,
-              models.AdminArea.code == sub_stop_area.c.admin_area)
-    )
-    stop = (
-        db.session.query(
-            _table_col(models.StopPoint).label('table_name'),
-            models.StopPoint.atco_code.label('code'),
-            models.StopPoint.name.label('name'),
-            models.StopPoint.short_ind.label('indicator'),
-            models.StopPoint.street.label('street'),
-            models.Locality.name.label('locality_name'),
-            models.AdminArea.code.label('admin_area'),
-            models.AdminArea.name.label('admin_area_name')
-        ).select_from(models.StopPoint)
-        .outerjoin(models.StopArea,
-                   models.StopArea.code == models.StopPoint.stop_area_code)
-        .join(models.Locality,
-              models.Locality.code == models.StopPoint.locality_code)
-        .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
-        # Include stops with name or street matching query but exclude these
-        # within areas that have already been found - prevent duplicates
-        .filter(
-            db.or_(
-                db.func.to_tsvector('english', models.StopPoint.name)
-                .match(s_query, postgresql_regconfig='english'),
-                db.func.to_tsvector('english', models.StopPoint.street)
-                .match(s_query, postgresql_regconfig='english')
-            ),
-            db.not_(
-                db.and_(
-                    models.StopPoint.stop_area_code.isnot(None),
-                    db.func.to_tsvector('english', models.StopArea.name)
-                    .match(s_query, postgresql_regconfig='english')
-                )
-            )
-        )
-    )
-    search = admin_area.union_all(district, locality, stop_area, stop)
-
-    results = search.all()
     if raise_exception and len(results) > SEARCH_LIMIT:
-        raise LimitException(s_query, len(results))
+        raise LimitException(query, len(results))
 
     return results

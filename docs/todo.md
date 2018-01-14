@@ -116,15 +116,17 @@ def downgrade():
     - ~~Text search covering areas, localities, stops (common name & street) and stop area names.~~
     - ~~With FTS, add options to filter by area~~ or type.
     - Limits to search queries was added, but we need a more graceful way of returning these results. We would need to split the results into pages, with additional queries to restrict by area (can't be done all by JS since not all results will be returned).
+    - In the meantime, we can return areas/places and give message for stops.
+    - When searching from the search results page, should any errors be loaded on the next page, rather than returning the same page but with errors? I don't know if the results will be cached.
     - How would we sort stops? Ranking?
-    - How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':
+    - ~~How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':~~ *Done with @; need to think more about whether this is possible without use of operators - use a combined GIN index and use ranking to order results??*
         - We want to search stops with 'High Street' and 'Sheffield' separately.
         - Ideally this would return stops with name or street 'High Street' that are located in place 'Sheffield' (eg 'Sheffield Centre' locality).
         - But how do we know which keywords?
-        - One option is to use parser and use a keyword. Then with 'High Street in Sheffield' we can do the above search.
+        - ~~One option is to use parser and use a keyword. Then with 'High Street in Sheffield' we can do the above search.~~
         - Keywords: `@` `at``area` `in`, `place`, `where`. Use a colon or is that too difficult? I think the `at`/`@` keyword is the best here. Add to pyparsing and do a second passthrough where multiple `@` expressions can be interpreted as `OR`.
-    - Set up pyparsing to label results. This lets us do a more refined search expression and identify specific phrases such as above.
-    - Use regex to identify postcodes and automatically return error if no postcode was found. Eg, 'W1X1AA' is definitely a postcode but doesn't exist. No point in doing a full search.
+    - ~~Set up pyparsing to label results. This lets us do a more refined search expression and identify specific phrases such as above.~~
+    - ~~Use regex to identify postcodes and automatically return error if no postcode was found. Eg, 'W1X1AA' is definitely a postcode but doesn't exist. No point in doing a full search.~~
 
 ```sql
 SELECT atco_code, common_name, indicator
@@ -180,7 +182,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
     - With streetview, set it up so that it points in right direction. (Embed API?)
     - For places, stop areas, postcodes and GPS: show stops with indicators. (JS API)
     - Use Google Maps' APIs, or use an openly available solution? May need to self-host.
-    - **On Firefox, the stop page's map cannot be loaded - it seems to be activated already?**
+    - ~~**On Firefox, the stop page's map cannot be loaded - it seems to be activated already?**~~
     - **Consider whether to use OpenStreetMap with leaflet.js or continue with Google Maps.**
 - Set up stop area page such that
     - Info about area
@@ -194,7 +196,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - Request time, SMS code, link to single stop, table of services.
         - Get a link from map to stop in question with JS, makes it easier to navigate.
         - Anchor tags to open a stop automatically?
-- Add the same info above when searching by postcode or location. Do we include stop areas, and exclude these within stop areas?
+- ~~Add the same info above when searching by postcode or location. Do we include stop areas, and exclude these within stop areas?~~
 - ~~Index stops in locality if there are too many?~~
 - ~~Change JS for live data to allow pausing of interval or stopping it, so can wait for the response to come back, or stop when focus is switched to another stop in area.~~
 - ~~Fix height of services; add another div within with height fixed by content not the grid~~
@@ -232,13 +234,13 @@ div.area-color-490 {
 
 - ~~Add search to homepage~~ and header.
 - ~~Set up the search results to have no columns~~, and:
-    - Each locality should have area and/or district names as well.
+    - ~~Each locality should have area and/or district names as well.~~
     - ~~Each stop point/area should have locality and street as well~~.
     - These supplementary info should be linkable in some way.
-    - Stop areas should have their own logos - what to use?
+    - ~~Stop areas should have their own logos - what to use?~~
     - **Set up pyparsing parser to accept all unicode characters -- will not break search functions even if no characters outside of ASCII are used in the NPTG/NaPTAN datasets.**
-- How would we style stop areas - switching around the colours would work the best.
-- Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.
+- ~~How would we style stop areas - switching around the colours would work the best.~~
+- ~~Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.~~
 
 ## Responses for requests
 
@@ -320,9 +322,10 @@ query_area_localities = (db.session.query(c_stops.c.a_code, c_stops.c.l_code)
 
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
-- ~~Move the `populate` command to a separate module and import it into the package somehow.~~ Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.
+    - One way of doing this is to set up a separate table with distinct (no capitals?) indicator entries and assign an sorting index each time the data is populated. Should be very fast if this table is indexed properly.
+- ~~Move the `populate` command to a separate module and import it into the package somehow. Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.~~
 - ~~Add SQLAlchemy logging; this would help with optimising SQL queries.~~
-- Change locality page to a mix of stop points and areas. Use a SQL query
+- ~~Change locality page to a mix of stop points and areas. Use a SQL query~~
 
 ```sql
 SELECT 'stop_point' AS s_type,
@@ -368,13 +371,13 @@ query_stops = stops.union_all(areas).order_by('name')
 list_stops = [r._asdict() for r in query_stops.all()]
 ```
 
-- ~~**Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**.~~ See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows. *Symptom fixed by adding a `__main__.py` to the `nextbus` module which is identical in functionality to the `nxb` command. Just run it with `python -m nextbus [COMMAND]`.*
+- ~~**Fix issue where setting FLASK_DEBUG to 1 breaks the CLI program on Windows**. See github.com/pallets/werkzeug/issues/1136 - seems to be an issue with setuptools-created exes on Windows. *Symptom fixed by adding a `__main__.py` to the `nextbus` module which is identical in functionality to the `nxb` command. Just run it with `python -m nextbus [COMMAND]`.*~~ Should be fixed in latest release of Werkzeug.
 
 ```
 SyntaxError: Non-UTF-8 code starting with '\x90' in file C:\Miniconda3\envs\NxB\Scripts\nb.exe on line 1, but no encoding declared; see http://python.org/dev/peps/pep-0263/ for details
 ```
 
-- Change options of `populate` command, *again*.
+- ~~Change options of `populate` command, *again*.~~
     - `-g` to download NPTG data.
     - `-G` with path to use file.
     - `-m` to use default JSON file for modifications.

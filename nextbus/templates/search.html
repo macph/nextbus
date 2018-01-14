@@ -54,7 +54,7 @@
 <h2 id="hLocal">Places</h2>
 <div class="list list-places-search" id="dLocal">
     {% for locality in results['locality'] %}
-    <a class="item-place item-local-search" data-admin-area="{{ locality.admin_area_name }}" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}, {{ locality.admin_area_name }}</a>
+    <a class="item-place item-local-search" data-admin-area="{{ locality.admin_area_name }}" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}, {{ locality.district_name if locality.district_name else locality.admin_area_name }}</a>
     {% endfor %}
 </div>
 {% endif %}
@@ -67,13 +67,14 @@
     <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_atco', atco_code=stop.code) }}">
         <div class="indicator stop-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}</span></div>
         <div class="stop-label">{{ stop.name }}</div>
-        <div class="stop-label stop-description">{% if stop.street %}{{ sep() }}{{ stop.street }}{% endif %}{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}</div>
+        <div class="stop-label stop-description">{% if stop.street %}{{ sep() }}{{ stop.street }}{% endif %}{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{{ stop.district_name if stop.district_name else stop.admin_area_name }}</div>
     </a>
     {% elif stop.table_name == 'stop_area' %}
+    {% set sep = joiner() %}
     <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_area', stop_area_code=stop.code) }}">
         <div class="indicator stop-area-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}</span></div>
         <div class="stop-label">{{ stop.name }}</div>
-        <div class="stop-label stop-description">{{ stop.locality_name }}</div>
+        <div class="stop-label stop-description">{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{% if stop.district_name %}{{ stop.district_name }}{% else %}{{ stop.admin_area_name }}{% endif %}</div>
     </a>
     {% endif %}
     {% endfor %}

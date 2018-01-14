@@ -55,58 +55,72 @@ def _fix_parentheses(query, opening='(', closing=')'):
     return new_query
 
 
-def _to_string(operand):
-    if isinstance(operand, BinaryOperator):
-        return "(%s)" % operand
-    else:
-        return str(operand)
+class Operator(object):
+    """ Base class for operators in a search query. """
+    operator = None
+
+    def __init__(self):
+        if self.operator is None:
+            raise NotImplementedError("The operator must be defined with a "
+                                      "new subclass.")
+
+    @staticmethod
+    def to_string(operand):
+        """ Converts an operand to string form using the stringify method. """
+        try:
+            return operand.stringify()
+        except AttributeError:
+            return operand
 
 
-class UnaryOperator(object):
+class UnaryOperator(Operator):
     """ Base class for unary operators in a search query. """
     operator = None
 
     def __init__(self, tokens):
-        if self.operator is None:
-            raise NotImplementedError("The operator must be defined with a "
-                                      "new subclass.")
+        super(UnaryOperator, self).__init__()
         self.symbol = tokens[0][0]
         self.operands = [tokens[0][1]]
 
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
 
-    def __str__(self):
-        return self.operator + _to_string(self.operands[0])
+    def stringify(self):
+        """ Returns the parsed query in string form. """
+        return self.operator + self.to_string(self.operands[0])
 
 
-class BinaryOperator(object):
+class BinaryOperator(Operator):
     """ Base class for unary operators in a search query. """
     operator = None
 
     def __init__(self, tokens):
-        if self.operator is None:
-            raise NotImplementedError("The operator must be defined with a "
-                                      "new subclass.")
+        super(BinaryOperator, self).__init__()
         self.symbol = tokens[0][1]
-        self.operands = [tokens[0][0], tokens[0][2]]
+        self.operands = tokens[0][::2]
 
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
 
-    def __str__(self):
-        return (_to_string(self.operands[0]) + self.operator +
-                _to_string(self.operands[1]))
-
-
-class At(UnaryOperator):
-    """ Unary 'at' operator, to identify places. """
-    operator = '@'
+    def stringify(self):
+        """ Returns the parsed query in string form. """
+        return self.operator.join(self.to_string(op) for op in self.operands)
 
 
 class Not(UnaryOperator):
     """ Unary NOT operator. """
     operator = '!'
+
+
+class At(BinaryOperator):
+    """ Unary 'at' operator, to identify places. """
+    operator = '@'
+
+    def stringify(self):
+        """ Returns a tuple of two strings - one for stops/places and another
+            for areas.
+        """
+        return tuple(self.to_string(op) for op in self.operands)
 
 
 class And(BinaryOperator):
@@ -150,30 +164,51 @@ class TSQueryParser(object):
     def create_parser():
         """ Creates the parser. """
         # Operators
-        not_, and_, or_ = map(pp.CaselessKeyword, ['not', 'and', 'or'])
-        op_not = not_ | pp.Literal('!')
+        and_, or_ = pp.CaselessKeyword('and'), pp.CaselessKeyword('or')
+        in_at = pp.CaselessKeyword('in') | pp.CaselessKeyword('at')
+        op_not = pp.CaselessKeyword('not') | pp.Literal('!')
         op_and = and_ | pp.Literal('&')
+        op_at = in_at | pp.Literal('@')
         op_or = or_ | pp.oneOf('| ,')
 
         punctuation = ''.join(
             c for c in pp.printables
-            if c not in pp.alphanums and c not in '!&|()'
-        )
-        illegal = pp.Word(punctuation + pp.punc8bit).suppress()
+            if c not in pp.alphanums and c not in '!&|()@'
+        ) + pp.punc8bit
+
+        def get_operators(word, exclude_characters, suppress_characters):
+            """ Helper function to construct search query notation with
+                operators.
+            """
+            # Suppress unused characters around words as well as operators on
+            # end of strings, otherwise the parser will fail to find an operand
+            # at the end of query and throw an exception
+            search_term = (pp.Optional(exclude_characters.suppress()) + word
+                           + pp.Optional(exclude_characters.suppress()))
+            search_expr = pp.infixNotation(search_term, [
+                (op_not, 1, pp.opAssoc.RIGHT, Not),
+                (pp.Optional(op_and, default='&'), 2, pp.opAssoc.LEFT, And),
+                (op_or, 2, pp.opAssoc.LEFT, Or)
+            ]) + pp.Optional(suppress_characters.suppress())
+
+            return search_expr
+
+        # Operators 'and', 'at' and 'or' are excluded from words as not to be
+        # part of search query. 'not' is higher in precedence and doesn't have
+        # this problem
+        illegal = pp.Word(punctuation)
+        illegal_at = pp.Word(punctuation + '@')
         word = ~and_ + ~or_ + pp.Word(pp.alphanums + pp.alphas8bit)
-        replace = lambda op, s: op.setParseAction(pp.replaceWith(s))
+        # If search query is split into before and after @ operator, the first
+        # part should not suppress or ignore 'at'/@ but the second part should
+        search_bef_at = get_operators(~in_at + word, illegal, pp.Word('!&|'))
+        search_aft_at = get_operators(word, illegal_at, pp.Word('!&|@'))
 
-        # Suppress unused characters around words as well as operators on end
-        # of strings, otherwise the parser will fail to find an operand after
-        # and throw an exception
-        search_term = pp.Optional(illegal) + word + pp.Optional(illegal)
-        search_expr = pp.infixNotation(search_term, [
-            (op_not, 1, pp.opAssoc.RIGHT, Not),
-            (pp.Optional(op_and, default='&'), 2, pp.opAssoc.LEFT, And),
-            (op_or, 2, pp.opAssoc.LEFT, Or)
-        ]) + pp.Optional(pp.Word('!&|').suppress()) + pp.StringEnd()
-
-        return search_expr
+        # Either 2 search terms plus @ operator or a single operator
+        return (
+            pp.Group(search_bef_at + op_at + search_aft_at).setParseAction(At)
+            | search_bef_at + pp.Optional(pp.Word('@').suppress())
+        ) + pp.stringEnd()
 
     def __call__(self, query):
         """ Parses a search query.
@@ -198,8 +233,11 @@ class TSQueryParser(object):
                              "%r:\n%s" % (search_query, err)) from err
         # Getting rid of outer list if one exists
         result = output[0] if len(output) == 1 else output
-        tsquery = str(result)
-        
+        try:
+            tsquery = result.stringify()
+        except AttributeError:
+            tsquery = result
+
         if self.use_logger:
             current_app.logger.debug(
                 "Search query %r parsed as\n%s\nand formatted as %r."

@@ -131,7 +131,7 @@ def search_results(query):
             'search.html', query=s_query, form_search=f_search,
             error="There was a problem reading your search query."
         )
-    except search.LimitException:
+    except search.LimitException as err:
         current_app.logger.debug(str(err))
         return render_template(
             'search.html', query=s_query, form_search=f_search,

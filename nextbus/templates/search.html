@@ -20,22 +20,17 @@
             <label>Search again:</label>
         </div>
         <div class="search-field">
-            {{ form_search.search_query(placeholder="eg 55677, SW1A 0AA or 'Westminster'") }}
+            {{ form_search.search_query(placeholder="another place or stop", required=form_search.search_query.flags.required) }}
         </div>
         <div class="search-submit">
             <input class="form-submit" type="submit" name="submit_query" value=">">
         </div>
     </form>
-    <div class="search-error">
-        {% if form_search.search_query.errors %}
-        {% for error in form_search.search_query.errors %}
-        <p>{{ error }}</p>
-        {% endfor %}
-        {% endif %}
-    </div>
 </div>
 {% if error %}
-<p>{{ error }}</p>
+<div class="nothing-found">
+    <p>{{ error }}</p>
+</div>
 {% else %}
 <div class="select-area-list" id="dFilterAreas"></div>
 {% if results.get('area') %}
@@ -58,7 +53,7 @@
     {% endfor %}
 </div>
 {% endif %}
-{% if results.get('stop') %}
+{% if results.get('stop') and not stops_limit %}
 <h2 id="hStop">Stops</h2>
 <div class="list list-stops-search" id="dStops">
     {% for stop in results['stop'] %}
@@ -79,6 +74,9 @@
     {% endif %}
     {% endfor %}
 </div>
+{% elif stops_limit %}
+<h2 id="hStop">Stops</h2>
+<p>Search for '{{ query }}' returned too many matching stops. Try narrowing your search; if you know the area you can do a search of the form 'stop name at area'.</p>
 {% endif %}
 <script>
     var fl = new SearchFilterList();

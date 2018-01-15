@@ -150,8 +150,11 @@ class TSQueryParser(object):
         The parser accepts the following operators:
         - ``not foobar`` or ``!foobar`` to exclude a word from searches
         - ``foo bar`` or ``foo & bar`` to include both words
-        - ``foo or bar``, ``foo | bar`` or ``foo, bar`` to use either words
+        - ``foo or bar`` and ``foo | bar`` to use either words
         - ``foo (bar or baz)`` to evaluate the OR expression first
+        - ``foo @ bar``, ``foo at bar`` and ``foo in bar`` to create two
+        expressions, each evaluated separately, such that place or area ``bar``
+        matches stops or places ``foo``.
 
         Spaces between words or parentheses are parsed as implicit AND
         expressions.
@@ -159,6 +162,36 @@ class TSQueryParser(object):
     def __init__(self, use_logger=False):
         self.parser = self.create_parser()
         self.use_logger = use_logger
+
+    def __repr__(self):
+        return "<TSQueryParser(use_logger=%s)>" % self.use_logger
+
+    def __call__(self, search_query):
+        """ Uses the parser and the to_string method to convert a search query
+            to a string suitable for TSQuery objects.
+
+            :param query: String from query.
+            :returns: A string to be used in ``to_tsquery()``.
+        """
+        try:
+            new_query = _fix_parentheses(search_query)
+            output = self.parse_string(new_query)
+        except pp.ParseException as err:
+            raise ValueError("Parser ran into an error with the search query "
+                             "%r:\n%s" % (search_query, err)) from err
+        # Getting rid of outer list if one exists
+        result = output[0] if len(output) == 1 else output
+        try:
+            tsquery = result.stringify()
+        except AttributeError:
+            tsquery = result
+
+        if self.use_logger:
+            current_app.logger.debug(
+                "Search query %r parsed as\n%s\nand formatted as %r."
+                % (search_query, output.dump(), tsquery)
+            )
+        return tsquery
 
     @staticmethod
     def create_parser():
@@ -169,7 +202,7 @@ class TSQueryParser(object):
         op_not = pp.CaselessKeyword('not') | pp.Literal('!')
         op_and = and_ | pp.Literal('&')
         op_at = in_at | pp.Literal('@')
-        op_or = or_ | pp.oneOf('| ,')
+        op_or = or_ | pp.Literal('|')
 
         punctuation = ''.join(
             c for c in pp.printables
@@ -210,40 +243,13 @@ class TSQueryParser(object):
             | search_bef_at + pp.Optional(pp.Word('@').suppress())
         ) + pp.stringEnd()
 
-    def __call__(self, query):
+    def parse_string(self, query):
         """ Parses a search query.
 
             :param query: String from search query.
             :returns: ParseResults object with results from parsing.
         """
         return self.parser.parseString(query)
-
-    def parse_query(self, search_query):
-        """ Uses the parser and the to_string method to convert a search query
-            to a string suitable for TSQuery objects.
-
-            :param query: String from query.
-            :returns: A string to be used in ``to_tsquery()``.
-        """
-        try:
-            new_query = _fix_parentheses(search_query)
-            output = self(new_query)
-        except pp.ParseException as err:
-            raise ValueError("Parser ran into an error with the search query "
-                             "%r:\n%s" % (search_query, err)) from err
-        # Getting rid of outer list if one exists
-        result = output[0] if len(output) == 1 else output
-        try:
-            tsquery = result.stringify()
-        except AttributeError:
-            tsquery = result
-
-        if self.use_logger:
-            current_app.logger.debug(
-                "Search query %r parsed as\n%s\nand formatted as %r."
-                % (search_query, output.dump(), tsquery)
-            )
-        return tsquery
 
 
 def main():

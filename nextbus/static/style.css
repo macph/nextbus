@@ -647,6 +647,10 @@ div.search-error > p {
     color: red;
 }
 
+div.nothing-found > p {
+    padding: 24px 0;
+}
+
 div.select-area-list {
     display: flex;
     justify-content: center;

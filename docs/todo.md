@@ -117,7 +117,7 @@ def downgrade():
     - ~~With FTS, add options to filter by area~~ or type.
     - Limits to search queries was added, but we need a more graceful way of returning these results. We would need to split the results into pages, with additional queries to restrict by area (can't be done all by JS since not all results will be returned).
     - In the meantime, we can return areas/places and give message for stops.
-    - When searching from the search results page, should any errors be loaded on the next page, rather than returning the same page but with errors? I don't know if the results will be cached.
+    - ~~When searching from the search results page, should any errors be loaded on the next page, rather than returning the same page but with errors? I don't know if the results will be cached.~~
     - How would we sort stops? Ranking?
     - ~~How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':~~ *Done with @; need to think more about whether this is possible without use of operators - use a combined GIN index and use ranking to order results??*
         - We want to search stops with 'High Street' and 'Sheffield' separately.

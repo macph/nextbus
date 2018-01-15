@@ -5,7 +5,7 @@ import re
 from nextbus import db
 from nextbus import models
 
-SEARCH_LIMIT = 2048
+STOPS_LIMIT = 512
 RESULT_COLUMNS = ['table_name', 'code', 'name', 'indicator', 'street',
                   'locality_name', 'district_name', 'admin_area',
                   'admin_area_name']
@@ -23,21 +23,9 @@ class PostcodeException(Exception):
                 % (self.postcode, self.query))
 
 
-class LimitException(Exception):
-    """ Raised if a search query returns too many results """
-    def __init__(self, query, count):
-        super(LimitException, self).__init__()
-        self.query = query
-        self.count = count
-
-    def __str__(self):
-        return ("Search result %r returned too many results (%d)"
-                % (self.query, self.count))
-
-
-def _check_code(query):
+def search_code(query):
     """ Queries stop points and postcodes to find an exact match, returning
-        the model object, or None if no match is found.
+        the model object, or False if no match is found.
     """
     regex_postcode = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                                 r"\s*(\d[A-Za-z]{2})\s*$")
@@ -60,6 +48,9 @@ def _check_code(query):
     ).one_or_none()
     if q_stop is not None:
         return q_stop
+    
+    # Neither a stop nor a postcode was found
+    return False
 
 
 def _table_col(model):
@@ -517,7 +508,7 @@ def search_exists(query, parser=None, raise_exception=True):
         raise ValueError("No suitable query was entered.")
 
     # Search stop points and postcodes for an exact match
-    object_match = _check_code(query)
+    object_match = search_code(query)
     if object_match:
         return object_match
 
@@ -530,9 +521,6 @@ def search_exists(query, parser=None, raise_exception=True):
     else:
         s_query = result
         results = _fts_search_exists(s_query)
-
-    if raise_exception and len(results) > SEARCH_LIMIT:
-        raise LimitException(query, len(results))
 
     return results
 
@@ -550,7 +538,7 @@ def search_full(query, parser=None, raise_exception=True):
         raise ValueError("No suitable query was entered.")
 
     # Search stop points and postcodes for an exact match
-    obj = _check_code(query)
+    obj = search_code(query)
     if obj:
         return obj
 
@@ -564,8 +552,5 @@ def search_full(query, parser=None, raise_exception=True):
     else:
         s_query = result
         results = _fts_search_all(s_query)
-
-    if raise_exception and len(results) > SEARCH_LIMIT:
-        raise LimitException(query, len(results))
 
     return results

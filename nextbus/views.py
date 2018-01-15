@@ -90,7 +90,7 @@ def _table_literal(db_model):
 @page.route('/', methods=['GET', 'POST'])
 def index():
     """ The home page. """
-    f_search = forms.SearchPlaces()
+    f_search = forms.SearchPlacesValidate()
     if f_search.submit_query.data and f_search.validate():
         if isinstance(f_search.result, models.StopPoint):
             return redirect('/stop/atco/%s' % f_search.result.atco_code)
@@ -111,31 +111,25 @@ def about():
 @page.route('/search/<query>', methods=['GET', 'POST'])
 def search_results(query):
     """ Shows a list of search results. """
-
     f_search = forms.SearchPlaces()
-    if f_search.submit_query.data and f_search.validate():
-        if isinstance(f_search.result, models.StopPoint):
-            return redirect('/stop/atco/%s' % f_search.result.atco_code)
-        elif isinstance(f_search.result, models.Postcode):
-            return redirect('/near/postcode/%s' % f_search.result.text.replace(' ', '+'))
-        else:
-            return redirect('/search/%s' % f_search.query.replace(' ', '+'))
+    if f_search.submit_query.data and f_search.search_query.data:
+        return redirect('/search/%s' % f_search.search_query.data.replace(' ', '+'))
 
     s_query = query.replace('+', ' ')
+    # Check if query has enough alphanumeric characters
+    if len(forms.strip_punctuation(s_query)) < forms.MIN_CHAR:
+        return render_template(
+            'search.html', query=s_query, form_search=f_search,
+            error="Too few characters; try a longer phrase."
+        )
     try:
-        result = search.search_full(s_query, forms.parse.parse_query)
+        result = search.search_full(s_query, forms.parse)
     except ValueError:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (query, err))
         return render_template(
             'search.html', query=s_query, form_search=f_search,
             error="There was a problem reading your search query."
-        )
-    except search.LimitException as err:
-        current_app.logger.debug(str(err))
-        return render_template(
-            'search.html', query=s_query, form_search=f_search,
-            error="Too many results were found. Try narrowing your search."
         )
     except search.PostcodeException as err:
         current_app.logger.debug(str(err))
@@ -165,9 +159,15 @@ def search_results(query):
             dict_result[row.table_name].append(row)
     for group, rows in dict_result.items():
         dict_result[group] = sorted(rows, key=lambda r: r.name)
+    # Throw message if too many stops were found
+    if len(dict_result.get('stop', [])) > search.STOPS_LIMIT:
+        del dict_result['stop']
+        stops_limit = True
+    else:
+        stops_limit = False
 
     return render_template('search.html', query=s_query, form_search=f_search,
-                           results=dict_result)
+                           results=dict_result, stops_limit=stops_limit)
 
 
 @page.route('/list/')

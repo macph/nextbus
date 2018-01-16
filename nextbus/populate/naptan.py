@@ -5,13 +5,12 @@ import os
 import re
 import collections
 import dateutil.parser
-import lxml.etree
 import click
 from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import capitalise, file_ops, progress_bar, XPath
+from nextbus.populate import capitalise, file_ops, progress_bar, XMLDocument
 
 # TODO: Use INSERT ON CONFLICT for NPTG and NaPTAN entries
 
@@ -201,8 +200,7 @@ def _get_nptg_data(nptg_file, atco_codes=None):
         if atco_codes is None).
     """
     click.echo("Opening NPTG file %r..." % nptg_file)
-    nptg_data = lxml.etree.parse(nptg_file)
-    nxp = XPath(nptg_data, 'n')
+    nxp = XMLDocument(nptg_file, 'n')
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
@@ -449,8 +447,7 @@ def _get_naptan_data(naptan_file, list_area_codes=None):
         within the specified admin areas.
     """
     click.echo("Opening NaPTAN file %r..." % naptan_file)
-    naptan_data = lxml.etree.parse(naptan_file)
-    sxp = XPath(naptan_data, 's')
+    sxp = XMLDocument(naptan_file, 's')
 
     if list_area_codes:
         aa_query = ' or '.join(".='%s'" % a for a in list_area_codes)

@@ -4,9 +4,8 @@ Testing the populate module.
 import os
 import tempfile
 import unittest
-import lxml.etree as et
 
-from nextbus.populate import XPath, capitalise
+from nextbus.populate import XMLDocument, capitalise
 
 HOME_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -14,11 +13,9 @@ HOME_DIR = os.path.dirname(os.path.realpath(__file__))
 class XPathTests(unittest.TestCase):
     """ Tests the XPath helper class. """
     def setUp(self):
-        self.data = et.parse(os.path.join(HOME_DIR, "NaPTAN_example.xml"))
-        self.xp = XPath(self.data, 'n')
+        self.xp = XMLDocument(os.path.join(HOME_DIR, "NaPTAN_example.xml"), 'n')
 
     def tearDown(self):
-        del self.data
         del self.xp
 
     def test_namespace(self):
@@ -69,7 +66,7 @@ class XPathTests(unittest.TestCase):
         output = self.xp.iter_text("n:AtcoCode", nodes)
 
         expected = ["370020362", "370023697"]
-        self.assertListEqual(output, expected)
+        self.assertListEqual(list(output), expected)
 
     def test_dict(self):
         atco_code = "370023697"

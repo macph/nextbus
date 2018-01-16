@@ -25,7 +25,9 @@ def cli():
     pass
 
 
-@cli.command(help='Populate NaPTAN, NPTG and NSPL data.')
+@cli.command(help="Populate NaPTAN, NPTG and NSPL data. To download and "
+                  "populate the database with everything use 'nxb populate "
+                  "-gnpm'.")
 @click.option('--nptg', '-g', 'nptg_d', is_flag=True,
               help="Download NPTG locality data and add to database.")
 @click.option('--nptg-path', '-G', 'nptg_f', default=None,

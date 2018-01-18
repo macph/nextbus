@@ -48,14 +48,18 @@ def search_code(query):
     ).one_or_none()
     if q_stop is not None:
         return q_stop
-    
+
     # Neither a stop nor a postcode was found
     return False
 
 
-def _table_col(model):
-    """ Helper function to create column with name of table. """
-    return db.literal_column("'%s'" % model.__tablename__)
+def table_name_literal(model, name=None):
+    """ Helper function to create column with name of table. Adds column
+        name if one is specified.
+    """
+    col = db.literal_column("'%s'" % model.__tablename__)
+    return col.label(name) if name else col
+
 
 def _empty_col(column_name):
     """ Helper function to create a column with empty text and a label. """
@@ -207,7 +211,7 @@ def _fts_search_all(tsquery):
 
     admin_area = (
         db.session.query(
-            _table_col(models.AdminArea),
+            table_name_literal(models.AdminArea),
             models.AdminArea.code,
             models.AdminArea.name,
             _empty_col('indicator'),
@@ -221,7 +225,7 @@ def _fts_search_all(tsquery):
     )
     district = (
         db.session.query(
-            _table_col(models.District),
+            table_name_literal(models.District),
             models.District.code,
             models.District.name,
             _empty_col('indicator'),
@@ -250,7 +254,7 @@ def _fts_search_all(tsquery):
     ).subquery()
     locality = (
         db.session.query(
-            _table_col(models.Locality),
+            table_name_literal(models.Locality),
             sub_locality.c.code,
             sub_locality.c.name,
             _empty_col('indicator'),
@@ -281,7 +285,7 @@ def _fts_search_all(tsquery):
     ).subquery()
     stop_area = (
         db.session.query(
-            _table_col(models.StopArea),
+            table_name_literal(models.StopArea),
             sub_stop_area.c.code,
             sub_stop_area.c.name,
             sub_stop_area.c.ind,
@@ -300,7 +304,7 @@ def _fts_search_all(tsquery):
     )
     stop = (
         db.session.query(
-            _table_col(models.StopPoint),
+            table_name_literal(models.StopPoint),
             models.StopPoint.atco_code,
             models.StopPoint.name,
             models.StopPoint.short_ind,
@@ -351,7 +355,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
     # Admin area not needed
     district = (
         db.session.query(
-            _table_col(models.District),
+            table_name_literal(models.District),
             models.District.code,
             models.District.name,
             _empty_col('indicator'),
@@ -382,7 +386,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
     ).subquery()
     locality = (
         db.session.query(
-            _table_col(models.Locality),
+            table_name_literal(models.Locality),
             sub_locality.c.code,
             sub_locality.c.name,
             _empty_col('indicator'),
@@ -419,7 +423,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
     ).subquery()
     stop_area = (
         db.session.query(
-            _table_col(models.StopArea),
+            table_name_literal(models.StopArea),
             sub_stop_area.c.code,
             sub_stop_area.c.name,
             sub_stop_area.c.ind,
@@ -446,7 +450,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
     )
     stop = (
         db.session.query(
-            _table_col(models.StopPoint),
+            table_name_literal(models.StopPoint),
             models.StopPoint.atco_code,
             models.StopPoint.name,
             models.StopPoint.short_ind,

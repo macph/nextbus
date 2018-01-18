@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='nextbus',
-    version='0.2.0',
+    version='0.3.0',
     packages=['nextbus'],
     include_package_data=True,
     zip_safe=False,
@@ -18,6 +18,7 @@ setup(
         'pyparsing',
         'python-dateutil',
         'pytz',
+        'sqlalchemy',
         'requests'
     ],
     entry_points={

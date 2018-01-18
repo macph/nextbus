@@ -61,7 +61,7 @@
     let listStops = {{ list_stops|tojson }};
 
     var live = new ListLiveStops(
-        "{{ url_for('page.stop_get_times') }}", listStops
+        "{{ url_for('api.stop_get_times') }}", listStops
     );
     live.init();
 

@@ -4,7 +4,7 @@
 
 {% block nav %}
 <ul class="breadcrumbs">
-    <li><a href="{{ url_for('page.index') }}">Back to home page</a></li>
+    <li><a href="{{ url_for('page_ns.index') }}">Back to home page</a></li>
 </ul>
 {% endblock %}
 
@@ -14,13 +14,13 @@
 
 {% block content %}
 <div class="search-box box-upper-margin">
-    <form class="search-form" method="post" name="sms">
-        {{ form_search.hidden_tag() }}
+    <form class="search-form" method="post" name="search">
+        {{ g.form.hidden_tag() }}
         <div class="search-label">
             <label>Search again:</label>
         </div>
         <div class="search-field">
-            {{ form_search.search_query(placeholder="another place or stop", required=form_search.search_query.flags.required) }}
+            {{ g.form.search_query(placeholder="another place or stop", required=g.form.search_query.flags.required) }}
         </div>
         <div class="search-submit">
             <input class="form-submit" type="submit" name="submit_query" value=">">

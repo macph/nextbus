@@ -17,7 +17,7 @@
         <div id="divHeader">
             <header>
                 {% block header %}
-                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a href="{{ url_for('page.index') }}">nextbus</a>
+                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a href="{{ url_for('page_ns.index') }}">nextbus</a>
                 {% endblock %}
             </header>
         </div>
@@ -39,7 +39,7 @@
         <div id=divFooter>
             <footer>
                 {% block footer %}
-                &copy; Ewan Macpherson, 2017. <a href="{{ url_for('page.about') }}">About this website</a>
+                &copy; Ewan Macpherson, 2017. <a href="{{ url_for('page_ns.about') }}">About this website</a>
                 {% endblock %}
             </footer>
         </div>

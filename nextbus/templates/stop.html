@@ -43,7 +43,7 @@
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",
-        "{{ url_for('page.stop_get_times') }}",
+        "{{ url_for('api.stop_get_times') }}",
         document.getElementById("services"),
         document.getElementById("liveTime"),
         document.getElementById("liveCountdown")

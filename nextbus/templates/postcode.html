@@ -52,7 +52,7 @@
     let listStops = listStopsDist.map(g => g[0]);
 
     var live = new ListLiveStops(
-        "{{ url_for('page.stop_get_times') }}", listStops
+        "{{ url_for('api.stop_get_times') }}", listStops
     );
     live.init();
 

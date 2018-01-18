@@ -116,9 +116,9 @@ def downgrade():
     - ~~Text search covering areas, localities, stops (common name & street) and stop area names.~~
     - ~~With FTS, add options to filter by area~~ or type.
     - Limits to search queries was added, but we need a more graceful way of returning these results. We would need to split the results into pages, with additional queries to restrict by area (can't be done all by JS since not all results will be returned).
-    - In the meantime, we can return areas/places and give message for stops.
+    - ~~In the meantime, we can return areas/places and give message for stops.~~
     - ~~When searching from the search results page, should any errors be loaded on the next page, rather than returning the same page but with errors? I don't know if the results will be cached.~~
-    - How would we sort stops? Ranking?
+    - How would we sort stops? Ranking? By name?
     - ~~How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':~~ *Done with @; need to think more about whether this is possible without use of operators - use a combined GIN index and use ranking to order results??*
         - We want to search stops with 'High Street' and 'Sheffield' separately.
         - Ideally this would return stops with name or street 'High Street' that are located in place 'Sheffield' (eg 'Sheffield Centre' locality).
@@ -148,7 +148,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
         ).all()
 ```
 
-- **Need to format strings for use by `tsquery` , for example `ringstead crescent` needs to be parsed as `ringstead & crescent`.**
+- ~~**Need to format strings for use by `tsquery` , for example `ringstead crescent` needs to be parsed as `ringstead & crescent`.**~~
     - Search rules:
         - Words separated by spaces or `+` will be evaluated together.
         - Words separated by `or` or `|` will be evaluated separately.
@@ -165,7 +165,7 @@ stops = (db.session.query(models.StopPoint.atco_code,
         - Split up all by spaces -- can use `str.split()` or `re.split(r'\W', ...)`
         - In list: replace `or` (any case) with `|`, and split words starting with `|`
         - Strip any items or words without alphanumeric characters, except if they are prefixed with `-` or `!` (replace with `!`).
-- **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.**
+- **Need to use `coalesce` for indicators (and maybe names?), to parse `NULL` entries as `''`.** Is this necessary for most columns?
 - ~~Add functionality to populate functions to remove districts without any associated localities, or at least change the district queries to exclude these districts.~~
 - ~~Add a second search function to only search places/stops without any joins - this should be useful in checking whether a search query does return results or not.~~
 - ~~Should use '+' in URLs, eg searching 'ringstead crescent' should return URL `search/ringstead+crescent`.~~
@@ -232,7 +232,7 @@ div.area-color-490 {
 }
 ```
 
-- ~~Add search to homepage~~ and header.
+- ~~Add search to homepage~~ and header, plus favourites?? Use SVG icons from Google.
 - ~~Set up the search results to have no columns~~, and:
     - ~~Each locality should have area and/or district names as well.~~
     - ~~Each stop point/area should have locality and street as well~~.
@@ -241,6 +241,7 @@ div.area-color-490 {
     - **Set up pyparsing parser to accept all unicode characters -- will not break search functions even if no characters outside of ASCII are used in the NPTG/NaPTAN datasets.**
 - ~~How would we style stop areas - switching around the colours would work the best.~~
 - ~~Set up a *better* way of laying out CSS using multiple classes, or move everything to SCSS.~~
+- Use tram icons instead of bus for tram indicators.
 
 ## Responses for requests
 
@@ -254,6 +255,7 @@ div.area-color-490 {
 - If no response is received:
     - Display message (timed out, unavailable, etc)
     - ~~Change the time remaining by cutting off a minute off and any live times could be changed to timetabled alternative, or simulated with red text to indicate they are not tracked at present. This requires including _both_ live and timetabled times - use ISO formats and let JS do the minute calculations?~~
+- Detect inactivity and stop loops until activities resumes? Would be good for ensuring pages do not refresh indefinitely.
 
 ## What else?
 
@@ -323,6 +325,7 @@ query_area_localities = (db.session.query(c_stops.c.a_code, c_stops.c.l_code)
 - What to do about deleted stops??
 - Add natural sorting for stop indicators, such that for a bus interchange `Stand 5` will appear before `Stand 10` - under normal sorting rules the former will show up first. Would have to be done in Python if using SQLite3; should be possible in PostgreSQL thanks to use of regex expressions.
     - One way of doing this is to set up a separate table with distinct (no capitals?) indicator entries and assign an sorting index each time the data is populated. Should be very fast if this table is indexed properly.
+    - The other way is do it through Python but I don't know about the speed penalities.
 - ~~Move the `populate` command to a separate module and import it into the package somehow. Need to be able to set default value such that `flask populate -n` will give a prompt to download the required data. Currently the `-n` option checks if given values do exist; would be better to move that into the actual functions themselves.~~
 - ~~Add SQLAlchemy logging; this would help with optimising SQL queries.~~
 - ~~Change locality page to a mix of stop points and areas. Use a SQL query~~

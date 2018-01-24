@@ -11,11 +11,11 @@ import default_config
 from definitions import ROOT_DIR
 
 
-db = SQLAlchemy(session_options={'autocommit': True})
+db = SQLAlchemy()
 migrate = Migrate()
 
 
-def create_app(config_obj=None, config_file=None):
+def create_app(config_obj=None, config_file=None, force_echo=None):
     """ App factory function for nextbus. """
     app = Flask(__name__)
     if config_obj is None and config_file is None:
@@ -35,6 +35,8 @@ def create_app(config_obj=None, config_file=None):
         app.config.from_pyfile(file_path)
     else:
         raise ValueError("Can't have both config object and config file")
+    if force_echo is not None:
+        app.config['SQLALCHEMY_ECHO'] = force_echo
 
     db.init_app(app)
     migrate.init_app(app, db)

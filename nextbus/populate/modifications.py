@@ -106,6 +106,11 @@ def modify_data(file_name=None):
             db.session.commit()
         except:
             db.session.rollback()
+            raise
+        finally:
+            db.session.close()
+    else:
+        db.session.rollback()
 
     click.echo("%s record%s modified and %s record%s deleted." %
                (count_m, '' if count_m == 1 else 's',

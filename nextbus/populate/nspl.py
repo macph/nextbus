@@ -110,12 +110,12 @@ def commit_nspl_data(nspl_file=None):
         atco_codes = None if get_atco_codes == 'all' else get_atco_codes
 
     if nspl_file is None:
-        click.echo("Downloading NSPL data...")
+        click.echo("Downloading NSPL data")
         nspl_path = download_nspl_data(atco_codes)
     else:
         nspl_path = nspl_file
 
-    click.echo("Opening file %r..." % nspl_path)
+    click.echo("Opening file %r" % nspl_path)
     with open(nspl_path, 'r') as json_file:
         data = json.load(json_file)
         list_postcodes = []
@@ -125,16 +125,17 @@ def commit_nspl_data(nspl_file=None):
             list_postcodes.append(parse_psc(row))
 
     try:
-        db.session.begin()
-        click.echo("Deleting old records...")
+        click.echo("Deleting old records")
         models.Postcode.query.delete()
-        click.echo("Adding %d postcodes..." % len(list_postcodes))
+        click.echo("Adding %d postcodes" % len(list_postcodes))
         db.session.add_all(list_postcodes)
-        click.echo("Committing changes to database...")
+        click.echo("Committing changes to database")
         db.session.commit()
     except:
         db.session.rollback()
         raise
+    finally:
+        db.session.close()
 
     if nspl_file is None:
         click.echo("NSPL population done. The file 'nspl.json' is saved in "

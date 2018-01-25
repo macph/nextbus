@@ -5,20 +5,24 @@
                xmlns:f="http://nextbus.org/functions"
                exclude-result-prefixes="f">
   <xsl:output method="xml" indent="yes"/>
+  <xsl:param name="regions" select="n:NationalPublicTransportGazetteer/n:Regions/n:Region"/>
+  <xsl:param name="areas" select="n:NationalPublicTransportGazetteer/n:Regions//n:AdministrativeArea"/>
+  <xsl:param name="districts" select="n:NationalPublicTransportGazetteer/n:Regions//n:NptgDistrict"/>
+  <xsl:param name="localities" select="n:NationalPublicTransportGazetteer/n:NptgLocalities/n:NptgLocality"/>
 
   <xsl:template match="n:NationalPublicTransportGazetteer">
     <Data>
       <Regions>
-        <xsl:apply-templates select="n:Regions/n:Region[$ra]"/>
+        <xsl:apply-templates select="$regions"/>
       </Regions>
       <AdminAreas>
-        <xsl:apply-templates select="n:Regions//n:AdministrativeArea[$aa]"/>
+        <xsl:apply-templates select="$areas"/>
       </AdminAreas>
       <Districts>
-        <xsl:apply-templates select="n:Regions//n:AdministrativeArea[$aa]//n:NptgDistrict"/>
+        <xsl:apply-templates select="$districts"/>
       </Districts>
       <Localities>
-        <xsl:apply-templates select="n:NptgLocalities/n:NptgLocality[$la]"/>
+        <xsl:apply-templates select="$localities"/>
       </Localities>
     </Data>
   </xsl:template>
@@ -58,12 +62,15 @@
       <name><xsl:value-of select="n:Descriptor/n:LocalityName"/></name>
       <parent_code><xsl:value-of select="f:upper(n:ParentNptgLocalityRef)"/></parent_code>
       <admin_area_code><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_code>
-      <xsl:choose>
-        <!-- Ignore district code if it equals 310 -->
-        <xsl:when test="not(n:NptgDistrictRef='310')">
-          <district_code><xsl:value-of select="n:NptgDistrictRef"/></district_code>
-        </xsl:when>
-      </xsl:choose>
+      <district_code>
+        <xsl:choose>
+          <!-- Ignore district code if it equals 310 -->
+          <xsl:when test="not(n:NptgDistrictRef='310')">
+            <xsl:value-of select="n:NptgDistrictRef"/>
+          </xsl:when>
+          <xsl:otherwise/>
+        </xsl:choose>
+      </district_code>
       <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
       <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
       <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>

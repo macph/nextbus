@@ -7,8 +7,8 @@
                xmlns:re="http://exslt.org/regular-expressions"
                exclude-result-prefixes="f exsl re">
   <xsl:output method="xml" indent="yes"/>
-  <xsl:variable name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode) and @Status='active' and n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT'] and $aa]"/>
-  <xsl:variable name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active' and n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU'] and $aa]"/>
+  <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode) and @Status='active' and n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]"/>
+  <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active' and n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]"/>
 
   <xsl:template match="n:NaPTAN">
     <Data>
@@ -50,11 +50,7 @@
       <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
       <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
       <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
-      <stop_area_code>
-        <xsl:call-template name="check-stop-area">
-          <xsl:with-param name="code" select="n:StopAreas/n:StopAreaRef"/>
-        </xsl:call-template>
-      </stop_area_code>
+      <stop_area_code><xsl:value-of select="n:StopAreas/n:StopAreaRef"/></stop_area_code>
       <admin_area_code><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_code>
       <modified><xsl:value-of select="@ModificationDateTime"/></modified>
     </StopPoint>
@@ -94,10 +90,5 @@
         <xsl:value-of select="$desc"/>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:template>
-
-  <xsl:template name="check-stop-area">
-    <xsl:param name="code"/>
-    <xsl:value-of select="$code"/>
   </xsl:template>
 </xsl:transform>

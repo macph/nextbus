@@ -59,7 +59,7 @@ In this case:
 
 ~~Consider switching over to a PostgreSQL DB for compatibility with cloud providers and FT search.~~
 - ~~Install the `psycopg2` module to let SQLAlchemy interact with the PSQL server.~~
-- Use extra features provided by PostgreSQL, such as `ON CONFLICT`:
+- ~~Use extra features provided by PostgreSQL, such as `ON CONFLICT`:~~
 
 ```sql
 INSERT INTO stop_point AS sp (atco_code, naptan_code, modified ...)
@@ -395,3 +395,4 @@ nxb -G temp/NPTG.xml -m -N temp/Naptan.xml -P temp/nspl.json # Use files
 ```
 
 - **Setting indicator to use `NOT NULL` constraint causes several separate commits to be done when populating NaPTAN data. Is this significantly slower in any way?**
+- Need to be able to modify XPath expression in attributes for XSLT files; can't get to do this with stylesheet parameters for some reason?? Also add ability to iterate over files and merge the data

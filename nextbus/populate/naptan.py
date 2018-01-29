@@ -367,7 +367,7 @@ def commit_nptg_data(nptg_file=None):
     """
     atco_codes = _get_atco_codes()
     if nptg_file is None:
-        click.echo("Downloading NPTG data from the DfT")
+        click.echo("Downloading NPTG data")
         downloaded_files = download_nptg_data()
         nptg_path = downloaded_files[0]
     else:
@@ -574,17 +574,16 @@ def _get_naptan_data(naptan_paths, list_area_codes=None):
     return NAPTAN_XML
 
 
-def commit_naptan_data(naptan_file=None):
+def commit_naptan_data(naptan_files=None):
     """ Convert NaPTAN data (stop points and areas) to database objects and
         commit them to the application database.
     """
     atco_codes = _get_atco_codes()
-    if naptan_file is None:
-        click.echo("Downloading NaPTAN data from the DfT")
-        downloaded_files = download_naptan_data(atco_codes)
-        naptan_paths = downloaded_files
+    if not naptan_files:
+        click.echo("Downloading NaPTAN data")
+        naptan_paths = download_naptan_data(atco_codes)
     else:
-        naptan_paths = [naptan_file]
+        naptan_paths = list(naptan_files)
 
     query_areas = db.session.query(models.AdminArea.code).all()
     query_local = db.session.query(models.Locality.code).all()
@@ -620,4 +619,4 @@ if __name__ == "__main__":
     NPTG = os.path.join(ROOT_DIR, "temp/NPTG.xml")
     with current_app.app_context():
         commit_nptg_data(nptg_file=NPTG)
-        commit_naptan_data(naptan_file=NAPTAN)
+        commit_naptan_data(naptan_files=(NAPTAN,))

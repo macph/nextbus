@@ -5,7 +5,7 @@
                xmlns:func="http://nextbus.org/functions" 
                xmlns:exsl="http://exslt.org/common"
                xmlns:re="http://exslt.org/regular-expressions"
-               exclude-result-prefixes="f exsl re">
+               exclude-result-prefixes="func exsl re">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode) and @Status='active' and n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]"/>
   <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active' and n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]"/>

@@ -1,0 +1,84 @@
+<NationalPublicTransportGazetteer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" CreationDateTime="2018-01-28T20:12:00" ModificationDateTime="2018-01-28T20:12:00" Modification="revise" RevisionNumber="2642" FileName="NPTG.xml" SchemaVersion="2.1" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NPTG.xsd" LocationSystem="Grid">
+  <Regions>
+    <Region CreationDateTime="2006-01-25T07:54:31" ModificationDateTime="2006-01-25T07:54:31" RevisionNumber="0">
+      <RegionCode>Y</RegionCode>
+      <Name>Yorkshire</Name>
+      <Country>England</Country>
+      <AdministrativeAreas>
+        <AdministrativeArea CreationDateTime="2006-01-25T07:54:33" ModificationDateTime="2006-01-25T07:54:33" RevisionNumber="0">
+          <AdministrativeAreaCode>099</AdministrativeAreaCode>
+          <AtcoAreaCode>370</AtcoAreaCode>
+          <Name>South Yorkshire</Name>
+          <ShortName>S Yorks</ShortName>
+          <NptgDistricts>
+            <NptgDistrict CreationDateTime="2006-01-25T07:54:36" ModificationDateTime="2006-01-25T07:54:36" RevisionNumber="0">
+              <NptgDistrictCode>263</NptgDistrictCode>
+              <Name>Sheffield</Name>
+            </NptgDistrict>
+          </NptgDistricts>
+          <National>0</National>
+          <NaptanPrefixes>
+            <AlphaPrefix>shf</AlphaPrefix>
+          </NaptanPrefixes>
+        </AdministrativeArea>
+      </AdministrativeAreas>
+    </Region>
+  </Regions>
+  <NptgLocalities>
+    <NptgLocality CreationDateTime="2005-10-05T10:45:06" ModificationDateTime="2005-10-05T10:45:06" RevisionNumber="0">
+      <NptgLocalityCode>E0029982</NptgLocalityCode>
+      <Descriptor>
+        <LocalityName xml:lang="EN">Banner Cross</LocalityName>
+      </Descriptor>
+      <ParentNptgLocalityRef CreationDateTime="2005-10-14T00:00:00" ModificationDateTime="2006-11-10T10:37:09" Modification="revise" RevisionNumber="1">N0077767</ParentNptgLocalityRef>
+      <AdministrativeAreaRef>099</AdministrativeAreaRef>
+      <NptgDistrictRef>263</NptgDistrictRef>
+      <SourceLocalityType>Lo</SourceLocalityType>
+      <Location>
+        <Translation>
+          <Easting>432828</Easting>
+          <Northing>385109</Northing>
+          <Longitude>-1.508178</Longitude>
+          <Latitude>53.36184</Latitude>
+        </Translation>
+      </Location>
+    </NptgLocality>
+    <NptgLocality CreationDateTime="2005-11-17T00:00:00" ModificationDateTime="2009-07-22T11:48:53" Modification="revise" RevisionNumber="2">
+      <NptgLocalityCode>E0057890</NptgLocalityCode>
+      <Descriptor>
+        <LocalityName xml:lang="EN">Sheffield Centre</LocalityName>
+      </Descriptor>
+      <ParentNptgLocalityRef CreationDateTime="2005-10-14T00:00:00" ModificationDateTime="2006-11-10T10:37:09" Modification="revise" RevisionNumber="1">N0077767</ParentNptgLocalityRef>
+      <AdministrativeAreaRef>099</AdministrativeAreaRef>
+      <NptgDistrictRef>263</NptgDistrictRef>
+      <SourceLocalityType>US</SourceLocalityType>
+      <Location>
+        <Translation>
+          <Easting>435331</Easting>
+          <Northing>387240</Northing>
+          <Longitude>-1.470331</Longitude>
+          <Latitude>53.38084</Latitude>
+        </Translation>
+      </Location>
+    </NptgLocality>
+    <NptgLocality CreationDateTime="2005-10-05T10:48:39" ModificationDateTime="2005-10-05T10:48:39" RevisionNumber="0">
+      <NptgLocalityCode>N0060732</NptgLocalityCode>
+      <Descriptor>
+        <LocalityName xml:lang="EN">Hunters Bar</LocalityName>
+      </Descriptor>
+      <ParentNptgLocalityRef CreationDateTime="2005-10-14T00:00:00" ModificationDateTime="2006-11-10T10:37:09" Modification="revise" RevisionNumber="1">N0077767</ParentNptgLocalityRef>
+      <AdministrativeAreaRef>099</AdministrativeAreaRef>
+      <NptgDistrictRef>263</NptgDistrictRef>
+      <SourceLocalityType>Add</SourceLocalityType>
+      <Location>
+        <Translation>
+          <Easting>433217</Easting>
+          <Northing>385748</Northing>
+          <Longitude>-1.502266</Longitude>
+          <Latitude>53.36756</Latitude>
+        </Translation>
+      </Location>
+    </NptgLocality>
+  </NptgLocalities>
+  <PlusbusZones/>
+</NationalPublicTransportGazetteer>

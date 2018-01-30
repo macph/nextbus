@@ -88,8 +88,6 @@ def _element_text(function):
 def _element_as_dict(element, **modify):
     """ Helper function to create a dictionary from a XML element.
 
-        Each of the subelements must match a column in the model.
-
         :param element: XML Element object
         :param modify: Modify data with the keys to identify tags/
         columns and the values the functions used to modify these data. Each
@@ -99,11 +97,20 @@ def _element_as_dict(element, **modify):
     """
     data = {i.tag: i.text for i in element}
     for key, func in modify.items():
-        if key in data:
+        try:
             data[key] = func(data[key]) if data[key] is not None else None
-        else:
-            raise ValueError("Key %s does not match with any tag from the "
+        except KeyError:
+            raise ValueError("Key %r does not match with any tag from the "
                              "data." % key)
+        except TypeError as err:
+            if "positional argument" in str(err):
+                raise TypeError(
+                    "Functions modifying the values must receive only one "
+                    "argument; the function associated with key %r does not "
+                    "satisfy this." % key
+                ) from err
+            else:
+                raise
 
     return data
 
@@ -531,7 +538,7 @@ def _modify_stop_areas():
 
 
 
-def _get_naptan_data(naptan_paths, list_area_codes=None):
+def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
     """
@@ -569,9 +576,11 @@ def _get_naptan_data(naptan_paths, list_area_codes=None):
 
     click.echo("Applying XSLT transform to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
-    new_data.write_output(os.path.join(ROOT_DIR, NAPTAN_XML))
 
-    return NAPTAN_XML
+    file_path = NAPTAN_XML if out_file is None else out_file
+    new_data.write_output(os.path.join(ROOT_DIR, file_path))
+
+    return file_path
 
 
 def commit_naptan_data(naptan_files=None):

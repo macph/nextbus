@@ -34,23 +34,24 @@ def _fix_parentheses(query, opening='(', closing=')'):
         :param closing: Closing parenthesis to check, with ')' as default.
         :returns: String with equal numbers of opening and closing parentheses.
     """
+    string = str(query)
     open_p = 0
-    for i, char in enumerate(query):
+    # Remove any opening parentheses from end of string
+    while string[-1] == opening:
+        string = string[:-1]
+    for i, char in enumerate(string):
         if char == opening:
             open_p += 1
         elif char == closing:
             open_p -= 1
         if open_p < 0:
             # Remove the stray closing parenthesis and try again
-            cut_string = query[:i] + query[i+1:]
+            cut_string = string[:i] + string[i+1:]
             new_query = _fix_parentheses(cut_string, opening, closing)
             break
     else:
         # Check if the parentheses are closed - add extra ones if necessary
-        if open_p > 0:
-            new_query = query + open_p * closing
-        else:
-            new_query = query
+        new_query = string + open_p * closing if open_p > 0 else string
 
     return new_query
 
@@ -58,19 +59,33 @@ def _fix_parentheses(query, opening='(', closing=')'):
 class Operator(object):
     """ Base class for operators in a search query. """
     operator = None
+    rank = None
+    operands = list()
 
     def __init__(self):
-        if self.operator is None:
-            raise NotImplementedError("The operator must be defined with a "
-                                      "new subclass.")
+        if self.operator is None or self.rank is None:
+            raise NotImplementedError("The operator and rank must be defined "
+                                      "with a new subclass.")
 
-    @staticmethod
-    def to_string(operand):
-        """ Converts an operand to string form using the stringify method. """
-        try:
-            return operand.stringify()
-        except AttributeError:
-            return operand
+    def combine_operands(self):
+        """ Returns sequence of operands converted to strings with the
+            stringify method.
+        """
+        sequence = []
+        for op in self.operands:
+            try:
+                if self.rank > op.rank:
+                    # Inner operand is lower ranked, therefore needs to be
+                    # wrapped in parentheses
+                    string = '(%s)' % op.stringify() 
+                else:
+                    string = op.stringify()
+            except AttributeError:
+                # No stringify method, therefore a string
+                string = op
+            sequence.append(string)
+
+        return sequence
 
 
 class UnaryOperator(Operator):
@@ -87,7 +102,7 @@ class UnaryOperator(Operator):
 
     def stringify(self):
         """ Returns the parsed query in string form. """
-        return self.operator + self.to_string(self.operands[0])
+        return self.operator + self.combine_operands()[0]
 
 
 class BinaryOperator(Operator):
@@ -104,44 +119,48 @@ class BinaryOperator(Operator):
 
     def stringify(self):
         """ Returns the parsed query in string form. """
-        return self.operator.join(self.to_string(op) for op in self.operands)
-
-
-class Not(UnaryOperator):
-    """ Unary NOT operator. """
-    operator = '!'
+        return self.operator.join(self.combine_operands())
 
 
 class At(BinaryOperator):
     """ Unary 'at' operator, to identify places. """
     operator = '@'
+    rank = 0
 
     def stringify(self):
         """ Returns a tuple of two strings - one for stops/places and another
             for areas.
         """
-        return tuple(self.to_string(op) for op in self.operands)
+        return tuple(self.combine_operands())
+
+
+class Not(UnaryOperator):
+    """ Unary NOT operator. """
+    operator = '!'
+    rank = 2
 
 
 class And(BinaryOperator):
     """ Binary AND operator. """
     operator = '&'
+    rank = 1
 
 
 class Or(BinaryOperator):
     """ Binary OR operator. """
     operator = '|'
+    rank = 0
 
 
 class TSQueryParser(object):
     """ Class to parse query strings to make them suitable for the PostgreSQL
         ``to_tsquery()`` function.
 
-        The ``to_tsquery`` function accepts the following operators:
+        The PostgreSQL function accepts the following operators:
         - ``&`` for AND between words
         - ``|`` for OR between words
-        - ``!`` to exclude from query
-        - ``()`` to evaluate inner expression separately.
+        - ``!`` to exclude word from query
+        - ``()`` to evaluate inner expressions separately.
 
         All operators must be explicit, that is, a search query ``foo bar``
         must be inputted as ``foo & bar``. This parser converts a search query
@@ -152,9 +171,9 @@ class TSQueryParser(object):
         - ``foo bar`` or ``foo & bar`` to include both words
         - ``foo or bar`` and ``foo | bar`` to use either words
         - ``foo (bar or baz)`` to evaluate the OR expression first
-        - ``foo @ bar``, ``foo at bar`` and ``foo in bar`` to create two
-        expressions, each evaluated separately, such that place or area ``bar``
-        matches stops or places ``foo``.
+        - ``foo @ bar``, ``foo at bar``, ``foo, bar`` and ``foo in bar`` to
+        create two expressions, each evaluated separately, such that place or
+        area ``bar`` matches stops or places ``foo``.
 
         Spaces between words or parentheses are parsed as implicit AND
         expressions.
@@ -175,7 +194,7 @@ class TSQueryParser(object):
         """
         try:
             new_query = _fix_parentheses(search_query)
-            output = self.parse_string(new_query)
+            output = self.parser.parseString(new_query)
         except pp.ParseException as err:
             raise ValueError("Parser ran into an error with the search query "
                              "%r:\n%s" % (search_query, err)) from err
@@ -201,12 +220,12 @@ class TSQueryParser(object):
         in_at = pp.CaselessKeyword('in') | pp.CaselessKeyword('at')
         op_not = pp.CaselessKeyword('not') | pp.Literal('!')
         op_and = and_ | pp.Literal('&')
-        op_at = in_at | pp.Literal('@')
+        op_at = in_at | pp.Literal('@') | pp.Literal(',')
         op_or = or_ | pp.Literal('|')
 
         punctuation = ''.join(
             c for c in pp.printables
-            if c not in pp.alphanums and c not in '!&|()@'
+            if c not in pp.alphanums and c not in "!&|()@,"
         ) + pp.punc8bit
 
         def get_operators(word, exclude_characters, suppress_characters):
@@ -230,51 +249,15 @@ class TSQueryParser(object):
         # part of search query. 'not' is higher in precedence and doesn't have
         # this problem
         illegal = pp.Word(punctuation)
-        illegal_at = pp.Word(punctuation + '@')
+        illegal_at = pp.Word(punctuation + "@,")
         word = ~and_ + ~or_ + pp.Word(pp.alphanums + pp.alphas8bit)
         # If search query is split into before and after @ operator, the first
         # part should not suppress or ignore 'at'/@ but the second part should
-        search_bef_at = get_operators(~in_at + word, illegal, pp.Word('!&|'))
-        search_aft_at = get_operators(word, illegal_at, pp.Word('!&|@'))
+        search_bef_at = get_operators(~in_at + word, illegal, pp.Word("!&|"))
+        search_aft_at = get_operators(word, illegal_at, pp.Word("!&|@,"))
 
         # Either 2 search terms plus @ operator or a single operator
         return (
             pp.Group(search_bef_at + op_at + search_aft_at).setParseAction(At)
             | search_bef_at + pp.Optional(pp.Word('@').suppress())
         ) + pp.stringEnd()
-
-    def parse_string(self, query):
-        """ Parses a search query.
-
-            :param query: String from search query.
-            :returns: ParseResults object with results from parsing.
-        """
-        return self.parser.parseString(query)
-
-
-def main():
-    """ Testing... """
-    parser = TSQueryParser()
-    print("Enter a query (or nothing to quit):")
-    query = input("> ")
-    while query:
-        try:
-            new_q = _fix_parentheses(query)
-            output = parser(new_q)
-        except pp.ParseException as err:
-            print("Problem with parser: %s" % err)
-            query = input("> ")
-            continue
-        result = output[0] if len(output) == 1 else output
-        try:
-            tsquery = result.stringify()
-        except AttributeError:
-            tsquery = result
-        print("Search query %r parsed as\n%s\nand formatted as %r."
-              % (query, output.dump(), tsquery))
-
-        query = input("> ")
-
-
-if __name__ == "__main__":
-    main()

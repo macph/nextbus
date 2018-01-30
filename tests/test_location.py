@@ -1,8 +1,6 @@
 """
 Testing the populate module.
 """
-import os
-import tempfile
 import unittest
 
 from nextbus import location
@@ -124,6 +122,9 @@ class LondonDistanceTests(BaseLocationTests):
 
 
 class LondonBoxTests(BaseLocationTests):
+    """ Test whether coordinates exist within or outwith boxes centred around
+        coordinates
+    """
 
     def test_south_outwith_square(self):
         boundaries = location.bounding_box(PLACES['Tottenham Court Road'], 920)

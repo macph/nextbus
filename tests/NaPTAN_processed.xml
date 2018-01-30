@@ -1,0 +1,4083 @@
+<?xml version="1.0"?>
+<Data xmlns:n="http://www.naptan.org.uk/">
+  <StopPoints>
+    <StopPoint>
+      <atco_code>370010113</atco_code>
+      <naptan_code>37010113</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange A4</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>A3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435710</easting>
+      <northing>387182</northing>
+      <longitude>-1.46464037211</longitude>
+      <latitude>53.3802896499</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010114</atco_code>
+      <naptan_code>37010114</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange A5</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>A4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435710</easting>
+      <northing>387167</northing>
+      <longitude>-1.46464206231</longitude>
+      <latitude>53.38015482699</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010115</atco_code>
+      <naptan_code>37010115</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange A6</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>A5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435715</easting>
+      <northing>387144</northing>
+      <longitude>-1.46456949377</longitude>
+      <latitude>53.37994776163</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010119</atco_code>
+      <naptan_code>37010119</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange B3</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435720</easting>
+      <northing>387189</northing>
+      <longitude>-1.46448926164</longitude>
+      <latitude>53.38035189342</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010120</atco_code>
+      <naptan_code>37010120</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange B4</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435722</easting>
+      <northing>387169</northing>
+      <longitude>-1.46446145165</longitude>
+      <latitude>53.38017199475</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010121</atco_code>
+      <naptan_code>37010121</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange B5</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435725</easting>
+      <northing>387151</northing>
+      <longitude>-1.4644183844</longitude>
+      <latitude>53.38001000506</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010122</atco_code>
+      <naptan_code>37010122</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange B6</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435727</easting>
+      <northing>387133</northing>
+      <longitude>-1.46439034947</longitude>
+      <latitude>53.37984808276</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010123</atco_code>
+      <naptan_code>37010123</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C1</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435741</easting>
+      <northing>387222</northing>
+      <longitude>-1.46416986434</longitude>
+      <latitude>53.38064708809</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010124</atco_code>
+      <naptan_code>37010124</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C2</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435743</easting>
+      <northing>387205</northing>
+      <longitude>-1.46414171716</longitude>
+      <latitude>53.38049415394</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010125</atco_code>
+      <naptan_code>37010125</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C3</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435745</easting>
+      <northing>387187</northing>
+      <longitude>-1.46411368297</longitude>
+      <latitude>53.38033223159</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010126</atco_code>
+      <naptan_code>37010126</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C4</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435747</easting>
+      <northing>387166</northing>
+      <longitude>-1.46408598738</longitude>
+      <latitude>53.38014334464</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010127</atco_code>
+      <naptan_code>37010127</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C5</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435750</easting>
+      <northing>387147</northing>
+      <longitude>-1.46404303438</longitude>
+      <latitude>53.37997236663</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010128</atco_code>
+      <naptan_code>37010128</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange C6</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>C6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435751</easting>
+      <northing>387129</northing>
+      <longitude>-1.46403003288</longitude>
+      <latitude>53.37981051169</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010130</atco_code>
+      <naptan_code>37010130</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange D2</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>D2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435760</easting>
+      <northing>387206</northing>
+      <longitude>-1.46388605658</longitude>
+      <latitude>53.38050199541</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010131</atco_code>
+      <naptan_code>37010131</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange D3</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>D3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435762</easting>
+      <northing>387189</northing>
+      <longitude>-1.46385791052</longitude>
+      <latitude>53.3803490612</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010132</atco_code>
+      <naptan_code>37010132</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange D4</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>D4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435763</easting>
+      <northing>387165</northing>
+      <longitude>-1.46384558669</longitude>
+      <latitude>53.38013327709</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010133</atco_code>
+      <naptan_code>37010133</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange D5</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>D5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435766</easting>
+      <northing>387149</northing>
+      <longitude>-1.4638022961</longitude>
+      <latitude>53.37998926357</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010134</atco_code>
+      <naptan_code>37010134</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange D6</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>D6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435768</easting>
+      <northing>387131</northing>
+      <longitude>-1.46377426352</longitude>
+      <latitude>53.37982734113</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010140</atco_code>
+      <naptan_code>37010140</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E6</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435783</easting>
+      <northing>387131</northing>
+      <longitude>-1.46354878376</longitude>
+      <latitude>53.37982632866</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010143</atco_code>
+      <naptan_code>37010143</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E9</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435780</easting>
+      <northing>387168</northing>
+      <longitude>-1.46358970243</longitude>
+      <latitude>53.38015909433</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010216</atco_code>
+      <naptan_code>37010216</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E1</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435778</easting>
+      <northing>387214</northing>
+      <longitude>-1.46361457342</longitude>
+      <latitude>53.38057268618</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010217</atco_code>
+      <naptan_code>37010217</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E2</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435776</easting>
+      <northing>387196</northing>
+      <longitude>-1.46364666994</longitude>
+      <latitude>53.38041103373</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010218</atco_code>
+      <naptan_code>37010218</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E3</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435778</easting>
+      <northing>387184</northing>
+      <longitude>-1.46361796031</longitude>
+      <latitude>53.38030304042</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010219</atco_code>
+      <naptan_code>37010219</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>Sheffield Interchange E5</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>E5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435781</easting>
+      <northing>387150</northing>
+      <longitude>-1.46357670259</longitude>
+      <latitude>53.37999723935</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010231</atco_code>
+      <naptan_code>37010231</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>10231</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435716</easting>
+      <northing>387210</northing>
+      <longitude>-1.46454702362</longitude>
+      <latitude>53.38054091504</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010232</atco_code>
+      <naptan_code>37010232</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>10232</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>A1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435707</easting>
+      <northing>387209</northing>
+      <longitude>-1.46468242643</longitude>
+      <latitude>53.38053253325</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010233</atco_code>
+      <naptan_code>37010233</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>10233</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>A2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435709</easting>
+      <northing>387193</northing>
+      <longitude>-1.46465416481</longitude>
+      <latitude>53.38038858741</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370010234</atco_code>
+      <naptan_code>37010234</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>10234</landmark>
+      <street>Sheffield Interchange</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>B2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435718</easting>
+      <northing>387200</northing>
+      <longitude>-1.46451808621</longitude>
+      <latitude>53.38045089833</latitude>
+      <stop_type>BCS</stop_type>
+      <bearing/>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020360</atco_code>
+      <naptan_code>37020360</naptan_code>
+      <name>Fitzwilliam Street</name>
+      <landmark>Opposite The Cavendish</landmark>
+      <street>West Street</street>
+      <crossing>Fitzwilliam Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434708</easting>
+      <northing>387146</northing>
+      <longitude>-1.47970655813</longitude>
+      <latitude>53.38003263375</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100955</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2010-11-17T12:15:06</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020361</atco_code>
+      <naptan_code>37020361</naptan_code>
+      <name>Mappin Street</name>
+      <landmark>20361</landmark>
+      <street>West Street</street>
+      <crossing>Mappin Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434744</easting>
+      <northing>387171</northing>
+      <longitude>-1.47916266221</longitude>
+      <latitude>53.3802549807</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G100955</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020362</atco_code>
+      <naptan_code>37020362</naptan_code>
+      <name>Rockingham Street</name>
+      <landmark>Job Centre</landmark>
+      <street>West Street</street>
+      <crossing>Rockingham Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434990</easting>
+      <northing>387264</northing>
+      <longitude>-1.47545448212</longitude>
+      <latitude>53.38107470245</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G100952</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020364</atco_code>
+      <naptan_code>37020364</naptan_code>
+      <name>Beet Street</name>
+      <landmark>Sheffield University Buildings</landmark>
+      <street>Broad Lane</street>
+      <crossing>Beet Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434590</easting>
+      <northing>387380</northing>
+      <longitude>-1.48145480704</longitude>
+      <latitude>53.38214358973</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020378</atco_code>
+      <naptan_code>37020378</naptan_code>
+      <name>Gell Street</name>
+      <landmark>Opposite Barracks</landmark>
+      <street>Glossop Road</street>
+      <crossing>Gell Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434510</easting>
+      <northing>387147</northing>
+      <longitude>-1.48268280526</longitude>
+      <latitude>53.38005454947</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100959</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020581</atco_code>
+      <naptan_code>37020581</naptan_code>
+      <name>Rustlings Road</name>
+      <landmark>Endcliffe Park</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Rustlings Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433034</easting>
+      <northing>385672</northing>
+      <longitude>-1.50502390866</longitude>
+      <latitude>53.36689089495</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G100887</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-19T02:25:19</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020582</atco_code>
+      <naptan_code>37020582</naptan_code>
+      <name>Rustlings Road</name>
+      <landmark>Outside Trinity Church</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Rustlings Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433017</easting>
+      <northing>385650</northing>
+      <longitude>-1.50528166621</longitude>
+      <latitude>53.36669421145</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G100887</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020584</atco_code>
+      <naptan_code>37020584</naptan_code>
+      <name>Junction Road</name>
+      <landmark>Hunters Bar Roundabout</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Junction Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433162</easting>
+      <northing>385700</northing>
+      <longitude>-1.50309745868</longitude>
+      <latitude>53.36713457917</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-10-20T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020585</atco_code>
+      <naptan_code>37020585</naptan_code>
+      <name>Neill Road</name>
+      <landmark>Hunters Bar</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Neill Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433312</easting>
+      <northing>385808</northing>
+      <longitude>-1.50083197691</longitude>
+      <latitude>53.36809591209</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G102732</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-22T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020586</atco_code>
+      <naptan_code>37020586</naptan_code>
+      <name>Ecclesall Road</name>
+      <landmark>Roundabout</landmark>
+      <street>Brocco Bank</street>
+      <crossing>Ecclesall Road</crossing>
+      <indicator>at</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433240</easting>
+      <northing>385796</northing>
+      <longitude>-1.50191524632</longitude>
+      <latitude>53.36799257021</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100883</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-08T12:16:57</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020587</atco_code>
+      <naptan_code>37020587</naptan_code>
+      <name>Neill Road</name>
+      <landmark>Hunters Bar</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Neill Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433308</easting>
+      <northing>385788</northing>
+      <longitude>-1.50089418867</longitude>
+      <latitude>53.36791639803</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G102732</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-15T12:16:21</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020588</atco_code>
+      <naptan_code>37020588</naptan_code>
+      <name>Newington Road</name>
+      <landmark>St Augustines Church</landmark>
+      <street>Brocco Bank</street>
+      <crossing>Newington Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433245</easting>
+      <northing>385860</northing>
+      <longitude>-1.50183339947</longitude>
+      <latitude>53.36856750577</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100883</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-08T12:16:57</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020592</atco_code>
+      <naptan_code>37020592</naptan_code>
+      <name>Hunter House Road</name>
+      <landmark>Hunters Bar School</landmark>
+      <street>Junction Road</street>
+      <crossing>Hunter House Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433248</easting>
+      <northing>385675</northing>
+      <longitude>-1.50180770458</longitude>
+      <latitude>53.36690448859</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NW</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-13T12:15:19</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020593</atco_code>
+      <naptan_code>37020593</naptan_code>
+      <name>Penrhyn Road</name>
+      <landmark>Opp No 41</landmark>
+      <street>Junction Road</street>
+      <crossing>Penrhyn Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433336</easting>
+      <northing>385625</northing>
+      <longitude>-1.50049053654</longitude>
+      <latitude>53.36644955176</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-13T12:15:19</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020621</atco_code>
+      <naptan_code>37020621</naptan_code>
+      <name>Greystones Road</name>
+      <landmark>Opposite Harry Ramsden's</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Greystones Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>432831</easting>
+      <northing>385409</northing>
+      <longitude>-1.50810171222</longitude>
+      <latitude>53.36453958185</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100890</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-23T02:32:24</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020622</atco_code>
+      <naptan_code>37020622</naptan_code>
+      <name>Greystones Road</name>
+      <landmark>Adj. to Church</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Greystones Road</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432837</easting>
+      <northing>385290</northing>
+      <longitude>-1.50802386665</longitude>
+      <latitude>53.3634696052</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100890</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-15T12:16:21</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020623</atco_code>
+      <naptan_code>37020623</naptan_code>
+      <name>Huntingtower Road</name>
+      <landmark>Opp. Marmion Road</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Huntingtower Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432815</easting>
+      <northing>385144</northing>
+      <longitude>-1.50836954346</longitude>
+      <latitude>53.36215867737</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-27T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020624</atco_code>
+      <naptan_code>37020624</naptan_code>
+      <name>Huntingtower Road</name>
+      <landmark>Adj. The Banner Cross</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Huntingtower Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432827</easting>
+      <northing>385059</northing>
+      <longitude>-1.50819802535</longitude>
+      <latitude>53.3613939309</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100894</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-01-18T12:23:25</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020625</atco_code>
+      <naptan_code>37020625</naptan_code>
+      <name>Glenalmond Road</name>
+      <landmark>Outside The Salon</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Glenalmond Road</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432818</easting>
+      <northing>385019</northing>
+      <longitude>-1.50833739205</longitude>
+      <latitude>53.36103495633</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100894</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-16T12:16:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020626</atco_code>
+      <naptan_code>37020626</naptan_code>
+      <name>Ecclesall Road</name>
+      <landmark>20626</landmark>
+      <street>Psalter Lane</street>
+      <crossing>Ecclesall Road</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432856</easting>
+      <northing>384995</northing>
+      <longitude>-1.50776890865</longitude>
+      <latitude>53.36081688555</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-02T09:09:02</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020627</atco_code>
+      <naptan_code>37020627</naptan_code>
+      <name>Ecclesall Road</name>
+      <landmark>20627</landmark>
+      <street>Psalter Lane</street>
+      <crossing>Ecclesall Road</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432893</easting>
+      <northing>385058</northing>
+      <longitude>-1.50720643945</longitude>
+      <latitude>53.3613808547</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-03-30T12:16:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020629</atco_code>
+      <naptan_code>37020629</naptan_code>
+      <name>Carrington Road</name>
+      <landmark>20629</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Carrington Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>432864</easting>
+      <northing>385478</northing>
+      <longitude>-1.50759868422</longitude>
+      <latitude>53.36515772961</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G104626</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020630</atco_code>
+      <naptan_code>37020630</naptan_code>
+      <name>Carrington Road</name>
+      <landmark>Outside Beauty Salon</landmark>
+      <street>Ecclesall Road</street>
+      <crossing>Carrington Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>432871</easting>
+      <northing>385535</northing>
+      <longitude>-1.5074875905</longitude>
+      <latitude>53.36566962766</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G104626</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-28T12:15:23</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020637</atco_code>
+      <naptan_code>37020637</naptan_code>
+      <name>Ecclesall Road</name>
+      <landmark>Outside Victoria Wines</landmark>
+      <street>Rustlings Road</street>
+      <crossing>Ecclesall Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>432878</easting>
+      <northing>385657</northing>
+      <longitude>-1.50736975817</longitude>
+      <latitude>53.36676576344</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100888</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-16T12:16:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020638</atco_code>
+      <naptan_code>37020638</naptan_code>
+      <name>Ecclesall Road</name>
+      <landmark>Opposite Victoria Wines/Outsid</landmark>
+      <street>Rustlings Road</street>
+      <crossing>Ecclesall Road</crossing>
+      <indicator>nr</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>432910</easting>
+      <northing>385662</northing>
+      <longitude>-1.50688835988</longitude>
+      <latitude>53.36680872034</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G100888</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-16T12:16:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370020788</atco_code>
+      <naptan_code>37020788</naptan_code>
+      <name>Endcliffe Terrace Road</name>
+      <landmark>After Park Entrance</landmark>
+      <street>Brocco Bank</street>
+      <crossing>Endcliffe Terrace Road</crossing>
+      <indicator>opp</indicator>
+      <locality_code>N0060732</locality_code>
+      <easting>433329</easting>
+      <northing>386130</northing>
+      <longitude>-1.50054266765</longitude>
+      <latitude>53.37098906416</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-08T12:16:57</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370021541</atco_code>
+      <naptan_code>37021541</naptan_code>
+      <name>Ringinglow Road</name>
+      <landmark>O/S No 52</landmark>
+      <street>Ecclesall Road South</street>
+      <crossing>Ringinglow Road</crossing>
+      <indicator>Adj</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432726</easting>
+      <northing>384686</northing>
+      <longitude>-1.50975407031</longitude>
+      <latitude>53.35804753912</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-15T12:16:21</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370021542</atco_code>
+      <naptan_code>37021542</naptan_code>
+      <name>Brincliffe Edge Road</name>
+      <landmark>O/S No 27</landmark>
+      <street>Ecclesall Road South</street>
+      <crossing>Brincliffe Edge Road</crossing>
+      <indicator>Adj</indicator>
+      <locality_code>E0029982</locality_code>
+      <easting>432825</easting>
+      <northing>384841</northing>
+      <longitude>-1.50825062308</longitude>
+      <latitude>53.35943460844</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-15T12:16:21</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022737</atco_code>
+      <naptan_code>37022737</naptan_code>
+      <name>Moor Market MF3</name>
+      <landmark>Moor Market MF3</landmark>
+      <street>Fitzwilliam Gate</street>
+      <crossing>Moor Market MF3</crossing>
+      <indicator>MF3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434988</easting>
+      <northing>386632</northing>
+      <longitude>-1.47555430781</longitude>
+      <latitude>53.37539428397</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G102499</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:01:38</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022739</atco_code>
+      <naptan_code>37022739</naptan_code>
+      <name>Moor Market MF4</name>
+      <landmark>Moor Market MF4</landmark>
+      <street>Fitzwilliam Gate</street>
+      <crossing>Moor Market MF4</crossing>
+      <indicator>MF4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435002</easting>
+      <northing>386623</northing>
+      <longitude>-1.47534487514</longitude>
+      <latitude>53.37531246588</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G102499</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022788</atco_code>
+      <naptan_code>37022788</naptan_code>
+      <name>Fitzalan Square</name>
+      <landmark>Bingo Hall</landmark>
+      <street>Flat Street</street>
+      <crossing>Fitzalan Square</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435697</easting>
+      <northing>387356</northing>
+      <longitude>-1.46481618997</longitude>
+      <latitude>53.3818544712</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100651</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-03-10T02:42:36</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022789</atco_code>
+      <naptan_code>37022789</naptan_code>
+      <name>Bower Spring</name>
+      <landmark>22789</landmark>
+      <street>Gibraltar Street</street>
+      <crossing>Bower Spring</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435259</easting>
+      <northing>387883</northing>
+      <longitude>-1.4713418748</longitude>
+      <latitude>53.38662057097</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G101072</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2010-11-02T01:44:51</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022796</atco_code>
+      <naptan_code>37022796</naptan_code>
+      <name>City Hall CH1</name>
+      <landmark>All Bar One</landmark>
+      <street>Leopold Street</street>
+      <crossing>City Hall CH1</crossing>
+      <indicator>CH1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435271</easting>
+      <northing>387351</northing>
+      <longitude>-1.47122068251</longitude>
+      <latitude>53.38183805133</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G100951</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022801</atco_code>
+      <naptan_code>37022801</naptan_code>
+      <name>AG9</name>
+      <landmark>O/S O2 Academy</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag9</crossing>
+      <indicator>AG9</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435629</easting>
+      <northing>387373</northing>
+      <longitude>-1.46583650237</longitude>
+      <latitude>53.38201184619</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022802</atco_code>
+      <naptan_code>37022802</naptan_code>
+      <name>AG3</name>
+      <landmark>Newsagent</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag3</crossing>
+      <indicator>AG3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435605</easting>
+      <northing>387379</northing>
+      <longitude>-1.46619661445</longitude>
+      <latitude>53.38206738823</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022803</atco_code>
+      <naptan_code>37022803</naptan_code>
+      <name>AG2</name>
+      <landmark>Mulberry Tavern</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag2</crossing>
+      <indicator>AG2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435606</easting>
+      <northing>387399</northing>
+      <longitude>-1.4661793344</longitude>
+      <latitude>53.38224708491</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022805</atco_code>
+      <naptan_code>37022805</naptan_code>
+      <name>CG10</name>
+      <landmark>Opposite Co-op</landmark>
+      <street>Castle Street</street>
+      <crossing>Cg10</crossing>
+      <indicator>CG10</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435661</easting>
+      <northing>387628</northing>
+      <longitude>-1.46532675534</longitude>
+      <latitude>53.3843016826</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G100626</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022809</atco_code>
+      <naptan_code>37022809</naptan_code>
+      <name>Wicker Arches</name>
+      <landmark>Wicker Arches</landmark>
+      <street>Wicker</street>
+      <crossing>Wicker Arches</crossing>
+      <indicator>WK4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435904</easting>
+      <northing>388039</northing>
+      <longitude>-1.46162702086</longitude>
+      <latitude>53.387979417</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100020</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-08T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022810</atco_code>
+      <naptan_code>37022810</naptan_code>
+      <name>Wharf Street</name>
+      <landmark>Victoria Quays</landmark>
+      <street>Exchange Street</street>
+      <crossing>Wharf Street</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435952</easting>
+      <northing>387648</northing>
+      <longitude>-1.46094972128</longitude>
+      <latitude>53.38446178413</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022813</atco_code>
+      <naptan_code>37022813</naptan_code>
+      <name>CG11</name>
+      <landmark>22813</landmark>
+      <street>Waingate</street>
+      <crossing>Cg11</crossing>
+      <indicator>CG11</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435713</easting>
+      <northing>387667</northing>
+      <longitude>-1.46454061409</longitude>
+      <latitude>53.38464872016</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022814</atco_code>
+      <naptan_code>37022814</naptan_code>
+      <name>CG12</name>
+      <landmark>22814</landmark>
+      <street>Waingate</street>
+      <crossing>Cg12</crossing>
+      <indicator>CG12</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435706</easting>
+      <northing>387688</northing>
+      <longitude>-1.46464348324</longitude>
+      <latitude>53.38483794379</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022815</atco_code>
+      <naptan_code>37022815</naptan_code>
+      <name>CG19</name>
+      <landmark>22815</landmark>
+      <street>Waingate</street>
+      <crossing>Cg19</crossing>
+      <indicator>CG19</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435737</easting>
+      <northing>387658</northing>
+      <longitude>-1.46418082084</longitude>
+      <latitude>53.38456620855</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022816</atco_code>
+      <naptan_code>37022816</naptan_code>
+      <name>CG21</name>
+      <landmark>22816</landmark>
+      <street>Haymarket</street>
+      <crossing>Cg21</crossing>
+      <indicator>CG21</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435739</easting>
+      <northing>387566</northing>
+      <longitude>-1.46416113094</longitude>
+      <latitude>53.38373916043</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G102495</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-13T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022817</atco_code>
+      <naptan_code>37022817</naptan_code>
+      <name>CG1</name>
+      <landmark>Ponds Forge</landmark>
+      <street>Commercial Street</street>
+      <crossing>Cg1</crossing>
+      <indicator>CG1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435811</easting>
+      <northing>387470</northing>
+      <longitude>-1.46308957889</longitude>
+      <latitude>53.38287143401</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100650</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022819</atco_code>
+      <naptan_code>37022819</naptan_code>
+      <name>FS3</name>
+      <landmark>22819</landmark>
+      <street>Flat Street</street>
+      <crossing>Fs3</crossing>
+      <indicator>FS3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435680</easting>
+      <northing>387333</northing>
+      <longitude>-1.46507433557</longitude>
+      <latitude>53.38164888752</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100651</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-24T12:21:59</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022822</atco_code>
+      <naptan_code>37022822</naptan_code>
+      <name>Harmer Lane</name>
+      <landmark>Bus Station</landmark>
+      <street>Pond Street</street>
+      <crossing>Harmer Lane</crossing>
+      <indicator>FS5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435697</easting>
+      <northing>387183</northing>
+      <longitude>-1.46483567742</longitude>
+      <latitude>53.38029951381</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-10T12:15:30</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022825</atco_code>
+      <naptan_code>37022825</naptan_code>
+      <name>CG18</name>
+      <landmark>22825</landmark>
+      <street>Waingate</street>
+      <crossing>Cg18</crossing>
+      <indicator>CG18</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435731</easting>
+      <northing>387673</northing>
+      <longitude>-1.46426933113</longitude>
+      <latitude>53.38470143593</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022826</atco_code>
+      <naptan_code>37022826</naptan_code>
+      <name>CG20</name>
+      <landmark>22826</landmark>
+      <street>Haymarket</street>
+      <crossing>Cg20</crossing>
+      <indicator>CG20</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435743</easting>
+      <northing>387584</northing>
+      <longitude>-1.46409896694</longitude>
+      <latitude>53.38390067805</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G102495</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-07-19T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022831</atco_code>
+      <naptan_code>37022831</naptan_code>
+      <name>FS1</name>
+      <landmark>Fitzalan Square</landmark>
+      <street>Flat Street</street>
+      <crossing>Fs1</crossing>
+      <indicator>FS1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435685</easting>
+      <northing>387390</northing>
+      <longitude>-1.46499275356</longitude>
+      <latitude>53.38216087784</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100651</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022832</atco_code>
+      <naptan_code>37022832</naptan_code>
+      <name>FS2</name>
+      <landmark>22832</landmark>
+      <street>Flat Street</street>
+      <crossing>Fs2</crossing>
+      <indicator>FS2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435679</easting>
+      <northing>387354</northing>
+      <longitude>-1.46508700378</longitude>
+      <latitude>53.38183770688</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100651</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-08T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022835</atco_code>
+      <naptan_code>37022835</naptan_code>
+      <name>FS4</name>
+      <landmark>Sheffield Interchange</landmark>
+      <street>Flat Street</street>
+      <crossing>Fs4</crossing>
+      <indicator>FS4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435684</easting>
+      <northing>387303</northing>
+      <longitude>-1.46501758324</longitude>
+      <latitude>53.38137897244</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100651</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T04:26:36</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022838</atco_code>
+      <naptan_code>37022838</naptan_code>
+      <name>CG17</name>
+      <landmark>22838</landmark>
+      <street>Waingate</street>
+      <crossing>Cg17</crossing>
+      <indicator>CG17</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435725</easting>
+      <northing>387692</northing>
+      <longitude>-1.46435739094</longitude>
+      <latitude>53.384872616</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022839</atco_code>
+      <naptan_code>37022839</naptan_code>
+      <name>CG16</name>
+      <landmark>22839</landmark>
+      <street>Waingate</street>
+      <crossing>Cg16</crossing>
+      <indicator>CG16</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435722</easting>
+      <northing>387707</northing>
+      <longitude>-1.46440080099</longitude>
+      <latitude>53.38500764103</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-01-24T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022840</atco_code>
+      <naptan_code>37022840</naptan_code>
+      <name>CG13</name>
+      <landmark>22840</landmark>
+      <street>Waingate</street>
+      <crossing>Cg13</crossing>
+      <indicator>CG13</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435703</easting>
+      <northing>387717</northing>
+      <longitude>-1.4646853165</longitude>
+      <latitude>53.38509880333</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100018</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022843</atco_code>
+      <naptan_code>37022843</naptan_code>
+      <name>CG14</name>
+      <landmark>Opposite Hancock and Lant/New</landmark>
+      <street>Castlegate</street>
+      <crossing>Cg14</crossing>
+      <indicator>CG14</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435762</easting>
+      <northing>387731</northing>
+      <longitude>-1.46379673956</longitude>
+      <latitude>53.3852206596</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G101330</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-27T12:15:06</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022844</atco_code>
+      <naptan_code>37022844</naptan_code>
+      <name>CG15</name>
+      <landmark>Opposite Hancock and Lant/New</landmark>
+      <street>Castlegate</street>
+      <crossing>Cg15</crossing>
+      <indicator>CG15</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435780</easting>
+      <northing>387731</northing>
+      <longitude>-1.46352612966</longitude>
+      <latitude>53.38521944455</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G101330</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022846</atco_code>
+      <naptan_code>37022846</naptan_code>
+      <name>WK1</name>
+      <landmark>Pharmacy</landmark>
+      <street>Wicker</street>
+      <crossing>Wk1</crossing>
+      <indicator>WK1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435855</easting>
+      <northing>387971</northing>
+      <longitude>-1.46237142548</longitude>
+      <latitude>53.38737153882</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100020</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022848</atco_code>
+      <naptan_code>37022848</naptan_code>
+      <name>Wicker</name>
+      <landmark>22848</landmark>
+      <street>Wicker</street>
+      <crossing>Wicker</crossing>
+      <indicator>WK3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435897</easting>
+      <northing>388028</northing>
+      <longitude>-1.46173351138</longitude>
+      <latitude>53.38788102133</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100020</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-17T02:58:20</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022850</atco_code>
+      <naptan_code>37022850</naptan_code>
+      <name>CG9</name>
+      <landmark>Magistrates Court</landmark>
+      <street>Snig Hill</street>
+      <crossing>Cg9</crossing>
+      <indicator>CG9</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435604</easting>
+      <northing>387677</northing>
+      <longitude>-1.46617816231</longitude>
+      <latitude>53.38474593646</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G102497</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022854</atco_code>
+      <naptan_code>37022854</naptan_code>
+      <name>CG5</name>
+      <landmark>Opp. Police Station</landmark>
+      <street>Snig Hill</street>
+      <crossing>Cg5</crossing>
+      <indicator>CG5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435589</easting>
+      <northing>387664</northing>
+      <longitude>-1.4664051284</longitude>
+      <latitude>53.38463009756</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NW</bearing>
+      <stop_area_code>370G102497</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022855</atco_code>
+      <naptan_code>37022855</naptan_code>
+      <name>CG4</name>
+      <landmark>Premier Inn</landmark>
+      <street>Angel Street</street>
+      <crossing>Cg4</crossing>
+      <indicator>CG4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435617</easting>
+      <northing>387608</northing>
+      <longitude>-1.46599048046</longitude>
+      <latitude>53.38412487781</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101095</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-13T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022856</atco_code>
+      <naptan_code>37022856</naptan_code>
+      <name>CG3</name>
+      <landmark>22856</landmark>
+      <street>Angel Street</street>
+      <crossing>Cg3</crossing>
+      <indicator>CG3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435615</easting>
+      <northing>387589</northing>
+      <longitude>-1.46602268315</longitude>
+      <latitude>53.38395423661</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101095</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-03-13T12:15:09</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022857</atco_code>
+      <naptan_code>37022857</naptan_code>
+      <name>AG4</name>
+      <landmark>Opp. O2 Academy</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag4</crossing>
+      <indicator>AG4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435603</easting>
+      <northing>387307</northing>
+      <longitude>-1.46623476929</longitude>
+      <latitude>53.38142037262</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022858</atco_code>
+      <naptan_code>37022858</naptan_code>
+      <name>Town Hall TH3</name>
+      <landmark>Town Hall TH3</landmark>
+      <street>Pinstone Street</street>
+      <crossing>Town Hall TH3</crossing>
+      <indicator>TH3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435337</easting>
+      <northing>387085</northing>
+      <longitude>-1.47025818318</longitude>
+      <latitude>53.37944279344</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100722</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T02:49:59</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022859</atco_code>
+      <naptan_code>37022859</naptan_code>
+      <name>Town Hall TH2</name>
+      <landmark>Town Hall TH2</landmark>
+      <street>Pinstone Street</street>
+      <crossing>Town Hall TH2</crossing>
+      <indicator>TH2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435337</easting>
+      <northing>387104</northing>
+      <longitude>-1.47025606478</longitude>
+      <latitude>53.3796135693</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100722</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022860</atco_code>
+      <naptan_code>37022860</naptan_code>
+      <name>Town Hall TH1</name>
+      <landmark>Town Hall TH1</landmark>
+      <street>Pinstone Street</street>
+      <crossing>Town Hall TH1</crossing>
+      <indicator>TH1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435337</easting>
+      <northing>387122</northing>
+      <longitude>-1.47025405787</longitude>
+      <latitude>53.37977535696</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100722</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022870</atco_code>
+      <naptan_code>37022870</naptan_code>
+      <name>High Street HS5</name>
+      <landmark>Cathedral</landmark>
+      <street>Church Street</street>
+      <crossing>High Street HS5</crossing>
+      <indicator>HS5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435387</easting>
+      <northing>387417</northing>
+      <longitude>-1.46946951826</longitude>
+      <latitude>53.38242354014</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G102493</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022871</atco_code>
+      <naptan_code>37022871</naptan_code>
+      <name>High Street HS4</name>
+      <landmark>Cathedral</landmark>
+      <street>Church Street</street>
+      <crossing>High Street HS4</crossing>
+      <indicator>HS4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435429</easting>
+      <northing>387420</northing>
+      <longitude>-1.46883780057</longitude>
+      <latitude>53.38244769877</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G102493</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022880</atco_code>
+      <naptan_code>37022880</naptan_code>
+      <name>HS2</name>
+      <landmark>Outside Nat West Bank</landmark>
+      <street>High Street</street>
+      <crossing>Hs2</crossing>
+      <indicator>HS2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435528</easting>
+      <northing>387454</northing>
+      <longitude>-1.46734572976</longitude>
+      <latitude>53.38274667012</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100950</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-12T11:23:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022881</atco_code>
+      <naptan_code>37022881</naptan_code>
+      <name>HS3</name>
+      <landmark>O/S Mcdonalds</landmark>
+      <street>High Street</street>
+      <crossing>Hs3</crossing>
+      <indicator>HS3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435492</easting>
+      <northing>387439</northing>
+      <longitude>-1.46788859866</longitude>
+      <latitude>53.38261425928</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100950</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-25T12:15:14</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370022889</atco_code>
+      <naptan_code>37022889</naptan_code>
+      <name>West Bar</name>
+      <landmark>Law Courts</landmark>
+      <street>West Bar</street>
+      <crossing>West Bar</crossing>
+      <indicator>WB1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435371</easting>
+      <northing>387727</northing>
+      <longitude>-1.46967543941</longitude>
+      <latitude>53.38521094893</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G101070</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-03-10T08:28:58</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023089</atco_code>
+      <naptan_code>37023089</naptan_code>
+      <name>Sheffield Station</name>
+      <landmark>Sheffield Station</landmark>
+      <street>Suffolk Road</street>
+      <crossing>Sheffield Station</crossing>
+      <indicator>SS4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435702</easting>
+      <northing>386830</northing>
+      <longitude>-1.46480028003</longitude>
+      <latitude>53.37712634367</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100589</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:28:29</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023104</atco_code>
+      <naptan_code>37023104</naptan_code>
+      <name>Granville Square</name>
+      <landmark>Opposite Casino</landmark>
+      <street>Queens Road</street>
+      <crossing>Granville Square</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435805</easting>
+      <northing>386413</northing>
+      <longitude>-1.46329918244</longitude>
+      <latitude>53.37337131715</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100595</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-03-25T12:16:14</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023105</atco_code>
+      <naptan_code>37023105</naptan_code>
+      <name>Farm Road</name>
+      <landmark>Adj. Mcdonalds Drive-Thru</landmark>
+      <street>Queens Road</street>
+      <crossing>Farm Road</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435822</easting>
+      <northing>386394</northing>
+      <longitude>-1.46304582414</longitude>
+      <latitude>53.3731993929</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100595</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-03-25T12:16:14</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023116</atco_code>
+      <naptan_code>37023116</naptan_code>
+      <name>Moor Market MF10</name>
+      <landmark>Moor Market MF10</landmark>
+      <street>South Lane</street>
+      <crossing>Moor Market MF10</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435049</easting>
+      <northing>386479</northing>
+      <longitude>-1.4746543646</longitude>
+      <latitude>53.37401505747</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100730</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:01:38</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023117</atco_code>
+      <naptan_code>37023117</naptan_code>
+      <name>Moor Market MF9</name>
+      <landmark>Moor Market MF9</landmark>
+      <street>South Lane</street>
+      <crossing>Moor Market MF9</crossing>
+      <indicator>MF9</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435056</easting>
+      <northing>386490</northing>
+      <longitude>-1.47454793859</longitude>
+      <latitude>53.37411346505</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100730</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:01:38</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023118</atco_code>
+      <naptan_code>37023118</naptan_code>
+      <name>Moor Market MF8</name>
+      <landmark>Moor Market MF8</landmark>
+      <street>South Lane</street>
+      <crossing>Moor Market MF8</crossing>
+      <indicator>MF8</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435085</easting>
+      <northing>386537</northing>
+      <longitude>-1.47410686754</longitude>
+      <latitude>53.3745339929</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100730</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023119</atco_code>
+      <naptan_code>37023119</naptan_code>
+      <name>Moor Market MF5</name>
+      <landmark>Moor Market MF5</landmark>
+      <street>Fitzwilliam Gate</street>
+      <crossing>Moor Market MF5</crossing>
+      <indicator>MF5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435030</easting>
+      <northing>386606</northing>
+      <longitude>-1.47492590172</longitude>
+      <latitude>53.37515781682</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G102499</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-10-04T12:58:34</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023120</atco_code>
+      <naptan_code>37023120</naptan_code>
+      <name>Moor Market MF6</name>
+      <landmark>Moor Market MF6</landmark>
+      <street>Cumberland Street</street>
+      <crossing>Moor Market MF6</crossing>
+      <indicator>MF6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435075</easting>
+      <northing>386580</northing>
+      <longitude>-1.47425241177</longitude>
+      <latitude>53.37492114789</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G100728</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:01:38</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023121</atco_code>
+      <naptan_code>37023121</naptan_code>
+      <name>Moor Market ES5</name>
+      <landmark>Moor Market ES5</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moor Market ES5</crossing>
+      <indicator>ES5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435206</easting>
+      <northing>386589</northing>
+      <longitude>-1.47228244585</longitude>
+      <latitude>53.37499335859</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G100665</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:06:17</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023122</atco_code>
+      <naptan_code>37023122</naptan_code>
+      <name>Moor Market MF7</name>
+      <landmark>Moor Market MF7</landmark>
+      <street>Cumberland Street</street>
+      <crossing>Moor Market MF7</crossing>
+      <indicator>MF7</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435105</easting>
+      <northing>386562</northing>
+      <longitude>-1.47380349645</longitude>
+      <latitude>53.37475737435</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G100728</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023125</atco_code>
+      <naptan_code>37023125</naptan_code>
+      <name>Moorhead ES4</name>
+      <landmark>Moorhead</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moorhead ES4</crossing>
+      <indicator>ES4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435329</easting>
+      <northing>386783</northing>
+      <longitude>-1.47041209881</longitude>
+      <latitude>53.37672888861</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101328</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-11-08T12:15:06</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023126</atco_code>
+      <naptan_code>37023126</naptan_code>
+      <name>Charles Street</name>
+      <landmark>Charles Street</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Charles Street</crossing>
+      <indicator>CS1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435417</easting>
+      <northing>386916</northing>
+      <longitude>-1.46907451855</longitude>
+      <latitude>53.37791844776</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G100663</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-07-08T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023127</atco_code>
+      <naptan_code>37023127</naptan_code>
+      <name>Charles Street</name>
+      <landmark>Charles Street</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Charles Street</crossing>
+      <indicator>CS2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435379</easting>
+      <northing>386909</northing>
+      <longitude>-1.46964649026</longitude>
+      <latitude>53.37785806791</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100663</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023130</atco_code>
+      <naptan_code>37023130</naptan_code>
+      <name>Moor Market MF2</name>
+      <landmark>Moor Market MF2</landmark>
+      <street>Charter Row</street>
+      <crossing>Moor Market MF2</crossing>
+      <indicator>MF2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434993</easting>
+      <northing>386693</northing>
+      <longitude>-1.47547242237</longitude>
+      <latitude>53.37594223518</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100725</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023131</atco_code>
+      <naptan_code>37023131</naptan_code>
+      <name>Moor Market MF1</name>
+      <landmark>Moor Market MF1</landmark>
+      <street>Charter Row</street>
+      <crossing>Moor Market MF1</crossing>
+      <indicator>MF1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435002</easting>
+      <northing>386707</northing>
+      <longitude>-1.47533560083</longitude>
+      <latitude>53.37606747606</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100725</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023132</atco_code>
+      <naptan_code>37023132</naptan_code>
+      <name>Moorhead MH5</name>
+      <landmark>Light Cinema</landmark>
+      <street>Charter Row</street>
+      <crossing>Moorhead MH5</crossing>
+      <indicator>MH5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435074</easting>
+      <northing>386828</northing>
+      <longitude>-1.47424000367</longitude>
+      <latitude>53.3771502912</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100726</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-10-20T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023134</atco_code>
+      <naptan_code>37023134</naptan_code>
+      <name>Moorhead MH4</name>
+      <landmark>Light Cinema</landmark>
+      <street>Charter Row</street>
+      <crossing>Moorhead MH4</crossing>
+      <indicator>MH4</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435096</easting>
+      <northing>386864</northing>
+      <longitude>-1.47390533441</longitude>
+      <latitude>53.37747241077</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100726</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T02:55:26</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023135</atco_code>
+      <naptan_code>37023135</naptan_code>
+      <name>Moorhead MH3</name>
+      <landmark>Light Cinema</landmark>
+      <street>Charter Row</street>
+      <crossing>Moorhead MH3</crossing>
+      <indicator>MH3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435106</easting>
+      <northing>386882</northing>
+      <longitude>-1.47375302911</longitude>
+      <latitude>53.37763353642</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100726</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-10-10T10:55:25</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023139</atco_code>
+      <naptan_code>37023139</naptan_code>
+      <name>Moorhead MH2</name>
+      <landmark>Moorhead</landmark>
+      <street>Furnival Gate</street>
+      <crossing>Moorhead MH2</crossing>
+      <indicator>MH2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435267</easting>
+      <northing>386888</northing>
+      <longitude>-1.47133233331</longitude>
+      <latitude>53.37767677886</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-10-20T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023143</atco_code>
+      <naptan_code>37023143</naptan_code>
+      <name>Arundel Lane</name>
+      <landmark>O/S No. 20</landmark>
+      <street>Furnival Street</street>
+      <crossing>Arundel Lane</crossing>
+      <indicator>opp</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435484</easting>
+      <northing>386763</northing>
+      <longitude>-1.46808454735</longitude>
+      <latitude>53.37653877178</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NW</bearing>
+      <stop_area_code>370G102031</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023144</atco_code>
+      <naptan_code>37023144</naptan_code>
+      <name>Arundel Lane</name>
+      <landmark>Adj Cantor House</landmark>
+      <street>Furnival Street</street>
+      <crossing>Arundel Lane</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435500</easting>
+      <northing>386764</northing>
+      <longitude>-1.46784394198</longitude>
+      <latitude>53.37654668874</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G102031</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023164</atco_code>
+      <naptan_code>37023164</naptan_code>
+      <name>Moor Market ES6</name>
+      <landmark>Moor Market ES6</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moor Market ES6</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435128</easting>
+      <northing>386502</northing>
+      <longitude>-1.47346444927</longitude>
+      <latitude>53.37421655794</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100665</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023167</atco_code>
+      <naptan_code>37023167</naptan_code>
+      <name>Moorhead ES1</name>
+      <landmark>Moorhead ES1</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moorhead ES1</crossing>
+      <indicator>ES1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435278</easting>
+      <northing>386741</northing>
+      <longitude>-1.47118334935</longitude>
+      <latitude>53.37635478028</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G101328</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-11-08T12:15:06</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023168</atco_code>
+      <naptan_code>37023168</naptan_code>
+      <name>AG5</name>
+      <landmark>Crucible and Lyceum Theatres</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag5</crossing>
+      <indicator>AG5</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435602</easting>
+      <northing>387280</northing>
+      <longitude>-1.46625283515</longitude>
+      <latitude>53.38117775853</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023169</atco_code>
+      <naptan_code>37023169</naptan_code>
+      <name>AG6</name>
+      <landmark>Crucible and Lyceum Theatres</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag6</crossing>
+      <indicator>AG6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435600</easting>
+      <northing>387221</northing>
+      <longitude>-1.46628952791</longitude>
+      <latitude>53.38064758935</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023170</atco_code>
+      <naptan_code>37023170</naptan_code>
+      <name>AG7</name>
+      <landmark>Crucible and Lyceum Theatres</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag7</crossing>
+      <indicator>AG7</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435599</easting>
+      <northing>387201</northing>
+      <longitude>-1.4663068068</longitude>
+      <latitude>53.38046789259</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023171</atco_code>
+      <naptan_code>37023171</naptan_code>
+      <name>AG8</name>
+      <landmark>Crucible and Lyceum Theatres</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag8</crossing>
+      <indicator>AG8</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435602</easting>
+      <northing>387177</northing>
+      <longitude>-1.46626440628</longitude>
+      <latitude>53.38025197438</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023176</atco_code>
+      <naptan_code>37023176</naptan_code>
+      <name>Moorhead MH1</name>
+      <landmark>Moorhead MH1</landmark>
+      <street>Pinstone Street</street>
+      <crossing>Moorhead MH1</crossing>
+      <indicator>MH1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435271</easting>
+      <northing>386969</northing>
+      <longitude>-1.47126319502</longitude>
+      <latitude>53.37840455749</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-01-14T12:19:25</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023483</atco_code>
+      <naptan_code>37023483</naptan_code>
+      <name>Tesco</name>
+      <landmark>Tesco</landmark>
+      <street>Savile Street</street>
+      <crossing>Tesco</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>436165</easting>
+      <northing>388193</northing>
+      <longitude>-1.45768534359</longitude>
+      <latitude>53.38934584522</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-02-03T10:11:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023628</atco_code>
+      <naptan_code>37023628</naptan_code>
+      <name>CG2</name>
+      <landmark>23628</landmark>
+      <street>Commercial Street</street>
+      <crossing>Cg2</crossing>
+      <indicator>CG2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435792</easting>
+      <northing>387477</northing>
+      <longitude>-1.46337441624</longitude>
+      <latitude>53.38293563487</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NW</bearing>
+      <stop_area_code>370G100650</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:49:30</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023677</atco_code>
+      <naptan_code>37023677</naptan_code>
+      <name>Regent Terrace</name>
+      <landmark>23677</landmark>
+      <street>Glossop Road</street>
+      <crossing>Regent Terrace</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434586</easting>
+      <northing>387155</northing>
+      <longitude>-1.4815394921</longitude>
+      <latitude>53.38012150192</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G100959</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023697</atco_code>
+      <naptan_code>37023697</naptan_code>
+      <name>City Hall</name>
+      <landmark>City Hall</landmark>
+      <street>West Street</street>
+      <crossing>City Hall</crossing>
+      <indicator>CH3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435086</easting>
+      <northing>387286</northing>
+      <longitude>-1.47400893136</longitude>
+      <latitude>53.38126609691</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code>370G100952</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-12T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023715</atco_code>
+      <naptan_code>37023715</naptan_code>
+      <name>AG1</name>
+      <landmark>O/S Heart Foundation</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag1</crossing>
+      <indicator>AG1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435607</easting>
+      <northing>387423</northing>
+      <longitude>-1.46616160473</longitude>
+      <latitude>53.38246273436</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023792</atco_code>
+      <naptan_code>37023792</naptan_code>
+      <name>Paradise Street</name>
+      <landmark>23792</landmark>
+      <street>Queen Street</street>
+      <crossing>Paradise Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435369</easting>
+      <northing>387630</northing>
+      <longitude>-1.46971633537</longitude>
+      <latitude>53.38433922755</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>W</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-02-25T12:15:11</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023808</atco_code>
+      <naptan_code>37023808</naptan_code>
+      <name>Tenter Street</name>
+      <landmark>23808</landmark>
+      <street>Townhead Street</street>
+      <crossing>Tenter Street</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435114</easting>
+      <northing>387481</northing>
+      <longitude>-1.47356641383</longitude>
+      <latitude>53.38301694248</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023844</atco_code>
+      <naptan_code>37023844</naptan_code>
+      <name>CG22</name>
+      <landmark>O/S Old Court House</landmark>
+      <street>Castle Street</street>
+      <crossing>Cg22</crossing>
+      <indicator>CG22</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435706</easting>
+      <northing>387631</northing>
+      <longitude>-1.46464990693</longitude>
+      <latitude>53.3843256171</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G100626</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T01:54:43</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023849</atco_code>
+      <naptan_code>37023849</naptan_code>
+      <name>Johnson Street</name>
+      <landmark>23849</landmark>
+      <street>Nursery Street</street>
+      <crossing>Johnson Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435621</easting>
+      <northing>388030</northing>
+      <longitude>-1.46588289807</longitude>
+      <latitude>53.38791762391</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101151</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370023893</atco_code>
+      <naptan_code>37023893</naptan_code>
+      <name>City Hall CH2</name>
+      <landmark>Orchard Square</landmark>
+      <street>Leopold Street</street>
+      <crossing>City Hall CH2</crossing>
+      <indicator>CH2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435317</easting>
+      <northing>387276</northing>
+      <longitude>-1.47053753619</longitude>
+      <latitude>53.38116087308</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SE</bearing>
+      <stop_area_code>370G100951</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-09-29T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026699</atco_code>
+      <naptan_code>37026699</naptan_code>
+      <name>AG11</name>
+      <landmark>Outside Library</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag11</crossing>
+      <indicator>AG11</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435601</easting>
+      <northing>387152</northing>
+      <longitude>-1.46628224677</longitude>
+      <latitude>53.38002733664</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026701</atco_code>
+      <naptan_code>37026701</naptan_code>
+      <name>Howard Street</name>
+      <landmark>Millennium Gallery</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Howard Street</crossing>
+      <indicator>AG10</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435550</easting>
+      <northing>387032</northing>
+      <longitude>-1.46706234215</longitude>
+      <latitude>53.37895217591</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code>370G100656</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-12-15T01:58:45</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026712</atco_code>
+      <naptan_code>37026712</naptan_code>
+      <name>Showroom Cinema</name>
+      <landmark>Opp Showroom Cinema</landmark>
+      <street>Paternoster Row</street>
+      <crossing>Showroom Cinema</crossing>
+      <indicator>SS2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435666</easting>
+      <northing>386901</northing>
+      <longitude>-1.46533340832</longitude>
+      <latitude>53.37776692927</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G100587</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-11-08T12:15:06</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026715</atco_code>
+      <naptan_code>37026715</naptan_code>
+      <name>Tesco</name>
+      <landmark>Tesco</landmark>
+      <street>Savile Street</street>
+      <crossing>Tesco</crossing>
+      <indicator>opp</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>436044</easting>
+      <northing>388119</northing>
+      <longitude>-1.45951303901</longitude>
+      <latitude>53.38868896584</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>SW</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-11-24T12:15:08</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026733</atco_code>
+      <naptan_code>37026733</naptan_code>
+      <name>WK2</name>
+      <landmark>Wk2</landmark>
+      <street>Wicker</street>
+      <crossing>Wk2</crossing>
+      <indicator>WK2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435799</easting>
+      <northing>387864</northing>
+      <longitude>-1.46322545701</longitude>
+      <latitude>53.38641358974</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100020</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370026739</atco_code>
+      <naptan_code>37026739</naptan_code>
+      <name>Portobello Lane</name>
+      <landmark>Sheffield University Buildings</landmark>
+      <street>Mappin Street</street>
+      <crossing>Portobello Lane</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434743</easting>
+      <northing>387285</northing>
+      <longitude>-1.47916519746</longitude>
+      <latitude>53.38127970267</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-06T09:44:28</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027122</atco_code>
+      <naptan_code>37027122</naptan_code>
+      <name>Mortimer Street</name>
+      <landmark>27122</landmark>
+      <street>Leadmill Street</street>
+      <crossing>Mortimer Street</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435618</easting>
+      <northing>386652</northing>
+      <longitude>-1.46608288773</longitude>
+      <latitude>53.37553209462</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NW</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027175</atco_code>
+      <naptan_code>37027175</naptan_code>
+      <name>The Law Courts</name>
+      <landmark>The Law Courts</landmark>
+      <street>West Bar</street>
+      <crossing>The Law Courts</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435396</easting>
+      <northing>387745</northing>
+      <longitude>-1.4692975811</longitude>
+      <latitude>53.38537106719</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>E</bearing>
+      <stop_area_code>370G101070</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027198</atco_code>
+      <naptan_code>37027198</naptan_code>
+      <name>Sheffield Station</name>
+      <landmark>Opp Sheffield Station</landmark>
+      <street>Sheaf Street</street>
+      <crossing>Sheffield Station</crossing>
+      <indicator>SS3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435701</easting>
+      <northing>386893</northing>
+      <longitude>-1.46480821524</longitude>
+      <latitude>53.37769266753</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G100589</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:28:29</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027199</atco_code>
+      <naptan_code>37027199</naptan_code>
+      <name>Howard Hotel</name>
+      <landmark>Howard Hotel</landmark>
+      <street>Pond Street</street>
+      <crossing>Howard Hotel</crossing>
+      <indicator>SS1</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435705</easting>
+      <northing>386935</northing>
+      <longitude>-1.46474335908</longitude>
+      <latitude>53.37806990241</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100587</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:28:29</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027242</atco_code>
+      <naptan_code>37027242</naptan_code>
+      <name>Wellington Street</name>
+      <landmark>27242</landmark>
+      <street>Fitzwilliam Street</street>
+      <crossing>Wellington Street</crossing>
+      <indicator>opp</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434781</easting>
+      <northing>386923</northing>
+      <longitude>-1.47863368535</longitude>
+      <latitude>53.37802347665</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027281</atco_code>
+      <naptan_code>37027281</naptan_code>
+      <name>Ag 12</name>
+      <landmark>Hallam University</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Ag 12</crossing>
+      <indicator>AG12</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435627</easting>
+      <northing>387403</northing>
+      <longitude>-1.465863195</longitude>
+      <latitude>53.38228162643</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027294</atco_code>
+      <naptan_code>37027294</naptan_code>
+      <name>Lambert Street</name>
+      <landmark>27294</landmark>
+      <street>Gibraltar Street</street>
+      <crossing>Lambert Street</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435268</easting>
+      <northing>387848</northing>
+      <longitude>-1.47121046151</longitude>
+      <latitude>53.38630538527</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101072</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-12-15T01:58:45</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027298</atco_code>
+      <naptan_code>37027298</naptan_code>
+      <name>Johnson Street</name>
+      <landmark>27298</landmark>
+      <street>Nursery Street</street>
+      <crossing>Johnson Street</crossing>
+      <indicator>nr</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435688</easting>
+      <northing>387897</northing>
+      <longitude>-1.46489054746</longitude>
+      <latitude>53.38671768716</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027302</atco_code>
+      <naptan_code>37027302</naptan_code>
+      <name>Spitalfields</name>
+      <landmark>27302</landmark>
+      <street>Nursery Street</street>
+      <crossing>Spitalfields</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435574</easting>
+      <northing>388077</northing>
+      <longitude>-1.46658425738</longitude>
+      <latitude>53.38834322609</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101151</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-04-23T12:15:39</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027314</atco_code>
+      <naptan_code>37027314</naptan_code>
+      <name>Moorhead ES2</name>
+      <landmark>Outside Plug</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moorhead ES2</crossing>
+      <indicator>ES2</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435262</easting>
+      <northing>386712</northing>
+      <longitude>-1.47142706765</longitude>
+      <latitude>53.37609518671</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101328</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-28T12:15:10</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027315</atco_code>
+      <naptan_code>37027315</naptan_code>
+      <name>Moor Market ES3</name>
+      <landmark>Moor Market ES3</landmark>
+      <street>Eyre Street</street>
+      <crossing>Moor Market ES3</crossing>
+      <indicator>ES3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435208</easting>
+      <northing>386626</northing>
+      <longitude>-1.47224827614</longitude>
+      <latitude>53.37532578964</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G101328</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-06-27T03:07:29</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027392</atco_code>
+      <naptan_code>37027392</naptan_code>
+      <name>Charles Street CS3</name>
+      <landmark>O/S Sainsburys</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Charles Street CS3</crossing>
+      <indicator>CS3</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435478</easting>
+      <northing>387006</northing>
+      <longitude>-1.4681475339</longitude>
+      <latitude>53.37872330673</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code>370G100656</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-01-12T12:17:56</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027393</atco_code>
+      <naptan_code>37027393</naptan_code>
+      <name>CG6</name>
+      <landmark>27393</landmark>
+      <street>Snig Hill</street>
+      <crossing>Cg6</crossing>
+      <indicator>CG6</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435559</easting>
+      <northing>387705</northing>
+      <longitude>-1.46685153737</longitude>
+      <latitude>53.3850006272</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102497</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027436</atco_code>
+      <naptan_code>37027436</naptan_code>
+      <name>Arundel Gate Ag13</name>
+      <landmark>Opp. Library</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Arundel Gate Ag13</crossing>
+      <indicator>AG13</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435618</easting>
+      <northing>387153</northing>
+      <longitude>-1.46602658936</longitude>
+      <latitude>53.3800351827</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code>370G102474</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2012-04-14T12:15:07</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027552</atco_code>
+      <naptan_code>37027552</naptan_code>
+      <name>Plum Lane</name>
+      <landmark>27552</landmark>
+      <street>Millsands</street>
+      <crossing>Plum Lane</crossing>
+      <indicator>27552</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435554</easting>
+      <northing>387946</northing>
+      <longitude>-1.46689966018</longitude>
+      <latitude>53.3871671161</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2017-04-21T03:13:41</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027553</atco_code>
+      <naptan_code>37027553</naptan_code>
+      <name>Bridge Street</name>
+      <landmark>27553</landmark>
+      <street>Millsands</street>
+      <crossing>Bridge Street</crossing>
+      <indicator>27553</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435614</easting>
+      <northing>387812</northing>
+      <longitude>-1.46601264971</longitude>
+      <latitude>53.38595866993</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>N</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2017-04-21T03:22:56</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027564</atco_code>
+      <naptan_code>37027564</naptan_code>
+      <name>Charles Street Cs4</name>
+      <landmark>O/S Sainsbury's</landmark>
+      <street>Arundel Gate</street>
+      <crossing>Charles Street Cs4</crossing>
+      <indicator>adj</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435479</easting>
+      <northing>387006</northing>
+      <longitude>-1.4681325023</longitude>
+      <latitude>53.37872323979</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>NE</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2017-11-14T12:25:15</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370027568</atco_code>
+      <naptan_code>37027568</naptan_code>
+      <name>Plum Lane</name>
+      <landmark>Riverside Offices</landmark>
+      <street>Millsands</street>
+      <crossing>Plum Lane</crossing>
+      <indicator>opp</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435558</easting>
+      <northing>387938</northing>
+      <longitude>-1.46684041983</longitude>
+      <latitude>53.38709494221</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code/>
+      <admin_area_code>099</admin_area_code>
+      <modified>2018-01-11T11:28:21</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>370070005</atco_code>
+      <naptan_code>37070005</naptan_code>
+      <name>Sheffield Interchange</name>
+      <landmark>70005</landmark>
+      <street>Pond Street</street>
+      <crossing>Sheffield Interchange</crossing>
+      <indicator>at</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435769</easting>
+      <northing>387183</northing>
+      <longitude>-1.46375336254</longitude>
+      <latitude>53.38029465968</latitude>
+      <stop_type>BCT</stop_type>
+      <bearing>S</bearing>
+      <stop_area_code>370G100004</stop_area_code>
+      <admin_area_code>099</admin_area_code>
+      <modified>2011-05-13T09:40:31</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCAS1</atco_code>
+      <naptan_code>37090117</naptan_code>
+      <name>Castle Square (Sheffield Supertram)</name>
+      <landmark>Jct High Street</landmark>
+      <street>Jct of Arundel Gate and Angel Street</street>
+      <crossing/>
+      <indicator>To Cathedral</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435613</easting>
+      <northing>387489</northing>
+      <longitude>-1.4660639895</longitude>
+      <latitude>53.3830555519</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCAS</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:35:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCAS2</atco_code>
+      <naptan_code>37090116</naptan_code>
+      <name>Castle Square (Sheffield Supertram)</name>
+      <landmark>Jct High Street</landmark>
+      <street>Jct of Arundel Gate and Angel Street</street>
+      <crossing/>
+      <indicator>From Cathedral</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435612</easting>
+      <northing>387497</northing>
+      <longitude>-1.46607812352</longitude>
+      <latitude>53.38312752464</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCAS</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:36:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCAT1</atco_code>
+      <naptan_code>37090118</naptan_code>
+      <name>Cathedral (Sheffield Supertram)</name>
+      <landmark>Sheffield Cathedral</landmark>
+      <street>Church Street</street>
+      <crossing/>
+      <indicator>To City Hall</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435415</easting>
+      <northing>387430</northing>
+      <longitude>-1.46904714384</longitude>
+      <latitude>53.38253851643</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCAT</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:38:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCAT2</atco_code>
+      <naptan_code>37090119</naptan_code>
+      <name>Cathedral (Sheffield Supertram)</name>
+      <landmark>Sheffield Cathedral</landmark>
+      <street>Church Street</street>
+      <crossing/>
+      <indicator>From City Hall</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435414</easting>
+      <northing>387439</northing>
+      <longitude>-1.46906117097</longitude>
+      <latitude>53.38261947702</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCAT</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:39:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCYH1</atco_code>
+      <naptan_code>37090121</naptan_code>
+      <name>City Hall (Sheffield Supertram)</name>
+      <landmark>The City Hall</landmark>
+      <street>West Street</street>
+      <crossing/>
+      <indicator>From Cathedral</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435130</easting>
+      <northing>387308</northing>
+      <longitude>-1.47334506199</longitude>
+      <latitude>53.38146092296</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCYH</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:41:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYCYH2</atco_code>
+      <naptan_code>37090120</naptan_code>
+      <name>City Hall (Sheffield Supertram)</name>
+      <landmark>The City Hall</landmark>
+      <street>West Street</street>
+      <crossing/>
+      <indicator>To Cathedral</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435194</easting>
+      <northing>387375</northing>
+      <longitude>-1.47237553602</longitude>
+      <latitude>53.38205888676</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYCYH</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T10:42:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYFIZ1</atco_code>
+      <naptan_code>37090129</naptan_code>
+      <name>Fitzalan Sq - Ponds Forge (Sheffield Supertram)</name>
+      <landmark>Barclays Bank</landmark>
+      <street>Commercial Street</street>
+      <crossing/>
+      <indicator>To City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435758</easting>
+      <northing>387499</northing>
+      <longitude>-1.46388305822</longitude>
+      <latitude>53.38313567017</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYFIZ</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T13:50:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYFIZ2</atco_code>
+      <naptan_code>37090128</naptan_code>
+      <name>Fitzalan Sq - Ponds Forge (Sheffield Supertram)</name>
+      <landmark>Barclays Bank</landmark>
+      <street>Commercial Street</street>
+      <crossing/>
+      <indicator>From City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435757</easting>
+      <northing>387507</northing>
+      <longitude>-1.46389718858</longitude>
+      <latitude>53.38320764315</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYFIZ</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T13:51:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYSHU1</atco_code>
+      <naptan_code>37090138</naptan_code>
+      <name>Sheffield Stn - Hallam Uni (Supertram)</name>
+      <landmark>Main Train Station</landmark>
+      <street>Off Sheaf Street</street>
+      <crossing/>
+      <indicator>From City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435941</easting>
+      <northing>386910</northing>
+      <longitude>-1.46119879283</longitude>
+      <latitude>53.37782924792</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYSHU</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T16:36:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYSHU2</atco_code>
+      <naptan_code>37090139</naptan_code>
+      <name>Sheffield Stn - Hallam Uni (Supertram)</name>
+      <landmark>Main Train Station</landmark>
+      <street>Off Sheaf Street</street>
+      <crossing/>
+      <indicator>To City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>435930</easting>
+      <northing>386912</northing>
+      <longitude>-1.46136391014</longitude>
+      <latitude>53.37784797006</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYSHU</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T16:38:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYWTS1</atco_code>
+      <naptan_code>37090149</naptan_code>
+      <name>West Street (Sheffield Supertram)</name>
+      <landmark>Portobello Centre</landmark>
+      <street>West Street</street>
+      <crossing/>
+      <indicator>From City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434834</easting>
+      <northing>387190</northing>
+      <longitude>-1.47780767871</longitude>
+      <latitude>53.3804198499</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYWTS</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T17:00:00</modified>
+    </StopPoint>
+    <StopPoint>
+      <atco_code>9400ZZSYWTS2</atco_code>
+      <naptan_code>37090148</naptan_code>
+      <name>West Street (Sheffield Supertram)</name>
+      <landmark>Portobello Centre</landmark>
+      <street>West Street</street>
+      <crossing/>
+      <indicator>To City</indicator>
+      <locality_code>E0057890</locality_code>
+      <easting>434878</easting>
+      <northing>387219</northing>
+      <longitude>-1.47714306938</longitude>
+      <latitude>53.38067761465</latitude>
+      <stop_type>PLT</stop_type>
+      <bearing/>
+      <stop_area_code>940GZZSYWTS</stop_area_code>
+      <admin_area_code>147</admin_area_code>
+      <modified>2008-08-19T17:01:00</modified>
+    </StopPoint>
+  </StopPoints>
+  <StopAreas>
+    <StopArea>
+      <code>370G100004</code>
+      <name>Sheffield Interchange</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GBCS</stop_area_type>
+      <easting>435753</easting>
+      <northing>387184</northing>
+      <longitude>-1.46399376411</longitude>
+      <latitude>53.38030472742</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100018</code>
+      <name>Sheffield - Waingate</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435718</easting>
+      <northing>387698</northing>
+      <longitude>-1.46446195086</longitude>
+      <latitude>53.38492701697</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100020</code>
+      <name>Sheffield - Wicker</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435875</easting>
+      <northing>387989</northing>
+      <longitude>-1.46206869421</longitude>
+      <latitude>53.38753197234</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100489</code>
+      <name>Greystones Road - Onslow Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432789</easting>
+      <northing>385369</northing>
+      <longitude>-1.50873696739</longitude>
+      <latitude>53.36418264838</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100587</code>
+      <name>Paternoster Row - Sheffield Science Park</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435690</easting>
+      <northing>386916</northing>
+      <longitude>-1.46497096903</longitude>
+      <latitude>53.37790013684</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100589</code>
+      <name>Leadmill Road - Suffolk Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435702</easting>
+      <northing>386830</northing>
+      <longitude>-1.46480028003</longitude>
+      <latitude>53.37712634367</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100595</code>
+      <name>Sheffield - Queens Road Mecca Social Club</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435813</easting>
+      <northing>386403</northing>
+      <longitude>-1.46318007436</longitude>
+      <latitude>53.37328089477</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100626</code>
+      <name>Sheffield - Castle Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435692</easting>
+      <northing>387633</northing>
+      <longitude>-1.46486015163</longitude>
+      <latitude>53.38434453658</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100650</code>
+      <name>Sheffield - Commercial Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435798</easting>
+      <northing>387467</northing>
+      <longitude>-1.46328534754</longitude>
+      <latitude>53.38284534773</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100651</code>
+      <name>Sheffield - Flat Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435681</easting>
+      <northing>387345</northing>
+      <longitude>-1.46505795177</longitude>
+      <latitude>53.38175667851</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100656</code>
+      <name>Sheffield - Arundel Gate Hallam University</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435561</easting>
+      <northing>387034</northing>
+      <longitude>-1.46689676923</longitude>
+      <latitude>53.37896941443</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100663</code>
+      <name>Sheffield - Arundel Gate/Furnival Square</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435398</easting>
+      <northing>386910</northing>
+      <longitude>-1.4693607838</longitude>
+      <latitude>53.37786578767</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100665</code>
+      <name>Sheffield - Eyre Street/Cumberland Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435152</easting>
+      <northing>386526</northing>
+      <longitude>-1.47310106753</longitude>
+      <latitude>53.37443068435</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100722</code>
+      <name>Sheffield - Town Hall Pinstone Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435338</easting>
+      <northing>387129</northing>
+      <longitude>-1.47023824539</longitude>
+      <latitude>53.37983820771</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100725</code>
+      <name>Sheffield - Charter Row/Fitzwilliam Gate</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434993</easting>
+      <northing>386704</northing>
+      <longitude>-1.47547120817</longitude>
+      <latitude>53.37604110556</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100726</code>
+      <name>Sheffield - Charter Row/Rockingham Gate</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435085</easting>
+      <northing>386833</northing>
+      <longitude>-1.47407410853</longitude>
+      <latitude>53.37719450435</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100728</code>
+      <name>Sheffield - Cumberland Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435092</easting>
+      <northing>386575</northing>
+      <longitude>-1.47399745042</longitude>
+      <latitude>53.37487508181</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100730</code>
+      <name>Sheffield - South Lane</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435062</easting>
+      <northing>386507</northing>
+      <longitude>-1.4744558786</longitude>
+      <latitude>53.37426586798</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100804</code>
+      <name>Cemetery Road - Pembroke Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434457</easting>
+      <northing>386010</northing>
+      <longitude>-1.4836030751</longitude>
+      <latitude>53.36983838064</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100806</code>
+      <name>Cemetery Road - Grange Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434264</easting>
+      <northing>385851</northing>
+      <longitude>-1.48652075655</longitude>
+      <latitude>53.36842175578</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100808</code>
+      <name>Psalter Lane - Cemetery Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434093</easting>
+      <northing>385716</northing>
+      <longitude>-1.48910505944</longitude>
+      <latitude>53.367219363</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100809</code>
+      <name>Psalter Lane - Bagshot Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433794</easting>
+      <northing>385561</northing>
+      <longitude>-1.49361482816</longitude>
+      <latitude>53.36584531963</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100814</code>
+      <name>Psalter Lane - Osborne Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433215</easting>
+      <northing>385382</northing>
+      <longitude>-1.5023342871</longitude>
+      <latitude>53.36427299318</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100816</code>
+      <name>Psalter Lane - Brincliffe Gardens</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433064</easting>
+      <northing>385291</northing>
+      <longitude>-1.50461278678</longitude>
+      <latitude>53.36346449361</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100818</code>
+      <name>Washington Road - Mackenzie Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434552</easting>
+      <northing>385967</northing>
+      <longitude>-1.48218005102</longitude>
+      <latitude>53.369445705</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100819</code>
+      <name>Wolstenholme Road - Washington Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434668</easting>
+      <northing>385743</northing>
+      <longitude>-1.48046124414</longitude>
+      <latitude>53.36742476943</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100871</code>
+      <name>Moore Street - Ecclesall Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434657</easting>
+      <northing>386404</northing>
+      <longitude>-1.48055431294</longitude>
+      <latitude>53.37336670972</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100873</code>
+      <name>Ecclesall Road - Pear Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434275</easting>
+      <northing>386269</northing>
+      <longitude>-1.48631027381</longitude>
+      <latitude>53.37217812936</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100875</code>
+      <name>Ecclesall Road - Collegiate Crescent</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434039</easting>
+      <northing>386136</northing>
+      <longitude>-1.48987147645</longitude>
+      <latitude>53.37099789532</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100877</code>
+      <name>Ecclesall Road - Thompson Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433787</easting>
+      <northing>385982</northing>
+      <longitude>-1.49367517625</longitude>
+      <latitude>53.36962982069</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100881</code>
+      <name>Ecclesall Road - Hickmott Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433552</easting>
+      <northing>385895</northing>
+      <longitude>-1.49721607004</longitude>
+      <latitude>53.36886276207</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100883</code>
+      <name>Hunters Bar - Brocco Bank</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433242</easting>
+      <northing>385828</northing>
+      <longitude>-1.50188183719</longitude>
+      <latitude>53.36828006934</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100887</code>
+      <name>Ecclesall Road/Rustlings Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433008</easting>
+      <northing>385655</northing>
+      <longitude>-1.50541639314</longitude>
+      <latitude>53.36673971296</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100888</code>
+      <name>Rustlings Road - Ecclesall Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432900</easting>
+      <northing>385655</northing>
+      <longitude>-1.50703936082</longitude>
+      <latitude>53.36674642278</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100890</code>
+      <name>Ecclesall Road - Greystones Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432834</easting>
+      <northing>385314</northing>
+      <longitude>-1.5080664623</longitude>
+      <latitude>53.36368550962</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100893</code>
+      <name>Greystones Road - Greystones Grange Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432506</easting>
+      <northing>385358</northing>
+      <longitude>-1.51299061951</longitude>
+      <latitude>53.36410119373</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100894</code>
+      <name>Ecclesall Road South - Psalter Lane</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432820</easting>
+      <northing>385063</northing>
+      <longitude>-1.5083027909</longitude>
+      <latitude>53.36143031712</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100895</code>
+      <name>Greystones Road - Greystones Drive</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432300</easting>
+      <northing>385398</northing>
+      <longitude>-1.51608202138</longitude>
+      <latitude>53.36447330775</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100899</code>
+      <name>High Storrs Road - Greystones</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>431938</easting>
+      <northing>385184</northing>
+      <longitude>-1.52154322775</longitude>
+      <latitude>53.36257172859</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100901</code>
+      <name>High Storrs Road - High Storrs Drive</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>431914</easting>
+      <northing>384987</northing>
+      <longitude>-1.52192366153</longitude>
+      <latitude>53.36080247735</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100903</code>
+      <name>High Storrs Road - School</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>431950</easting>
+      <northing>384785</northing>
+      <longitude>-1.52140307857</longitude>
+      <latitude>53.35898467348</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100950</code>
+      <name>Sheffield - High Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435529</easting>
+      <northing>387449</northing>
+      <longitude>-1.46733125736</longitude>
+      <latitude>53.38270166211</latitude>
+      <modified>2010-02-09T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100951</code>
+      <name>Sheffield - Leopold Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435297</easting>
+      <northing>387317</northing>
+      <longitude>-1.47083361904</longitude>
+      <latitude>53.38153072162</latitude>
+      <modified>2009-09-09T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100952</code>
+      <name>West Street - Holly Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435037</easting>
+      <northing>387276</northing>
+      <longitude>-1.47474663028</longitude>
+      <latitude>53.38117945619</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G100955</code>
+      <name>West Street - Fitzwilliam Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434721</easting>
+      <northing>387159</northing>
+      <longitude>-1.47950971677</longitude>
+      <latitude>53.38014862918</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101070</code>
+      <name>West Bar - North Church Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435380</easting>
+      <northing>387734</northing>
+      <longitude>-1.46953935268</longitude>
+      <latitude>53.3852732655</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101072</code>
+      <name>Gibraltar Street - West Bar</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435264</easting>
+      <northing>387860</northing>
+      <longitude>-1.47126926295</longitude>
+      <latitude>53.3864135098</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101095</code>
+      <name>Sheffield - Angel Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435616</easting>
+      <northing>387598</northing>
+      <longitude>-1.46600663804</longitude>
+      <latitude>53.38403506312</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101151</code>
+      <name>Nursery Street - Joiner Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435597</easting>
+      <northing>388053</northing>
+      <longitude>-1.46624114962</longitude>
+      <latitude>53.38812596501</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101160</code>
+      <name>Endcliffe - Endcliffe Vale Road/Woodvale Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432637</easting>
+      <northing>386256</northing>
+      <longitude>-1.5109297561</longitude>
+      <latitude>53.3721646236</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101328</code>
+      <name>Sheffield - Eyre Street Berlins Night Club</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435274</easting>
+      <northing>386718</northing>
+      <longitude>-1.47124603175</longitude>
+      <latitude>53.37614831763</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G101330</code>
+      <name>Sheffield - Castlegate</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435771</easting>
+      <northing>387731</northing>
+      <longitude>-1.46366143461</longitude>
+      <latitude>53.38522005215</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102031</code>
+      <name>Furnival Street - Brown Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435491</easting>
+      <northing>386758</northing>
+      <longitude>-1.4679798913</longitude>
+      <latitude>53.37649336215</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102474</code>
+      <name>Arundel Gate Mini Interchange</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GBCS</stop_area_type>
+      <easting>435604</easting>
+      <northing>387307</northing>
+      <longitude>-1.46621973673</longitude>
+      <latitude>53.38142030544</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102482</code>
+      <name>Sheffield - Boston Street/London Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434824</easting>
+      <northing>386248</northing>
+      <longitude>-1.47806147821</longitude>
+      <latitude>53.37195360422</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102493</code>
+      <name>Sheffield - Church Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435404</easting>
+      <northing>387415</northing>
+      <longitude>-1.46921418221</longitude>
+      <latitude>53.3824044284</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102495</code>
+      <name>Sheffield - Haymarket</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>435745</easting>
+      <northing>387556</northing>
+      <longitude>-1.4640720589</longitude>
+      <latitude>53.38364887389</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102497</code>
+      <name>Sheffield - Snig Hill</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435603</easting>
+      <northing>387662</northing>
+      <longitude>-1.4661948816</longitude>
+      <latitude>53.3846111808</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102499</code>
+      <name>Sheffield - Fitzwilliam Gate</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>435005</easting>
+      <northing>386628</northing>
+      <longitude>-1.47529923179</longitude>
+      <latitude>53.37535720889</latitude>
+      <modified>2008-10-03T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G102732</code>
+      <name>Hunters Bar - Ecclesall Road/Neill Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>433305</easting>
+      <northing>385791</northing>
+      <longitude>-1.50093895734</longitude>
+      <latitude>53.36794355122</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G104054</code>
+      <name>Cemetery Road - Cliffe Street</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>434711</easting>
+      <northing>386205</northing>
+      <longitude>-1.47976449035</longitude>
+      <latitude>53.37157451993</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G104626</code>
+      <name>Ecclesall Road - Carrington Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GPBS</stop_area_type>
+      <easting>432867</easting>
+      <northing>385506</northing>
+      <longitude>-1.507550703</longitude>
+      <latitude>53.3654092155</latitude>
+      <modified>2010-11-15T12:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G105178</code>
+      <name>Norborough Road/ Lifford Road</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>459520</easting>
+      <northing>404801</northing>
+      <longitude>-1.10341731882</longitude>
+      <latitude>53.53649754227</latitude>
+      <modified>2016-09-08T09:33:05</modified>
+    </StopArea>
+    <StopArea>
+      <code>370G105180</code>
+      <name>Welfare Road/Fifth Avenue</name>
+      <admin_area_code>099</admin_area_code>
+      <stop_area_type>GCLS</stop_area_type>
+      <easting>453887</easting>
+      <northing>407410</northing>
+      <longitude>-1.18795101801</longitude>
+      <latitude>53.56055252859</latitude>
+      <modified>2016-03-08T10:49:47</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYCAS</code>
+      <name>Castle Square (Sheffield Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>435613</easting>
+      <northing>387493</northing>
+      <longitude>-1.46606353993</longitude>
+      <latitude>53.38309150467</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYCAT</code>
+      <name>Cathedral (Sheffield Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>435415</easting>
+      <northing>387435</northing>
+      <longitude>-1.46904658503</longitude>
+      <latitude>53.38258345741</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYCYH</code>
+      <name>City Hall (Sheffield Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>435162</easting>
+      <northing>387342</northing>
+      <longitude>-1.47286024693</longitude>
+      <latitude>53.38176439996</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYFIZ</code>
+      <name>Fitzalan Square - Ponds Forge (Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>435758</easting>
+      <northing>387503</northing>
+      <longitude>-1.46388260682</longitude>
+      <latitude>53.38317162292</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYSHU</code>
+      <name>Sheffield Station - Hallam Univ (Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>435936</easting>
+      <northing>386911</northing>
+      <longitude>-1.46127383583</longitude>
+      <latitude>53.37783857512</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+    <StopArea>
+      <code>940GZZSYWTS</code>
+      <name>West Street (Sheffield Supertram)</name>
+      <admin_area_code>147</admin_area_code>
+      <stop_area_type>GTMU</stop_area_type>
+      <easting>434856</easting>
+      <northing>387205</northing>
+      <longitude>-1.47747532006</longitude>
+      <latitude>53.38055322685</latitude>
+      <modified>2007-05-17T10:00:00</modified>
+    </StopArea>
+  </StopAreas>
+</Data>

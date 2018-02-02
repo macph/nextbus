@@ -193,40 +193,44 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 let row = document.createElement('a');
                 row.className = 'row-service';
 
-                let cellNumber = document.createElement('div');
-                let cellNumberInner = document.createElement('div');
-                cellNumber.className = 'row-service-line';
-                cellNumberInner.className = 'row-service-line-inner' + ` area-color-${self.atcoCode.slice(0, 3)}`;
+                let cNum = document.createElement('div');
+                let cNumInner = document.createElement('div');
+                cNum.className = 'row-service-line';
+                cNumInner.className = 'row-service-line-inner' + ' ' + `area-color-${self.atcoCode.slice(0, 3)}`;
                 if (s.name.length > 6) {
-                    cellNumberInner.className += ' row-service-line-small';
+                    cNumInner.className += ' row-service-line-small';
                 }
-                cellNumberInner.appendChild(document.createTextNode(s.name));
-                cellNumber.appendChild(cellNumberInner);
+                cNumInner.appendChild(document.createTextNode(s.name));
+                cNum.appendChild(cNumInner);
 
-                let cellDest = document.createElement('div');
-                cellDest.className = 'row-service-dest';
-                cellDest.appendChild(document.createTextNode(s.dest));
+                let cDest = document.createElement('div');
+                cDest.className = 'row-service-dest';
+                cDest.appendChild(document.createTextNode(s.dest));
 
-                let cellExp = document.createElement('div');
-                cellExp.className = 'row-service-exp';
+                let cExp = document.createElement('div');
+                cExp.className = 'row-service-exp';
 
-                let cellExpNext = document.createElement('span');
+                let cExpNext = document.createElement('span');
                 if (s.expected[0].live) {
-                    cellExpNext.className = clLive;
+                    cExpNext.className = clLive;
                 }
-                cellExpNext.appendChild(document.createTextNode(strDue(s.expected[0].sec)));
-                cellExp.appendChild(cellExpNext);
+                cExpNext.appendChild(
+                    document.createTextNode(strDue(s.expected[0].secs))
+                );
+                cExp.appendChild(cExpNext);
 
-                let cellAfter = document.createElement('div');
-                cellAfter.className = 'row-service-after';
+                let cAfter = document.createElement('div');
+                cAfter.className = 'row-service-after';
 
                 if (s.expected.length == 2) {
                     let firstMin = document.createElement('span');
                     if (s.expected[1].live) {
                         firstMin.className = clLive;
                     }
-                    firstMin.appendChild(document.createTextNode(strDue(s.expected[1].sec)))
-                    cellAfter.appendChild(firstMin);
+                    firstMin.appendChild(
+                        document.createTextNode(strDue(s.expected[1].secs))
+                    );
+                    cAfter.appendChild(firstMin);
                 } else if (s.expected.length > 2) {
                     let firstMin = document.createElement('span');
                     if (s.expected[1].live) {
@@ -236,17 +240,21 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                     if (s.expected[2].live) {
                         secondMin.className = clLive;
                     }
-                    firstMin.appendChild(document.createTextNode(strDue(s.expected[1].sec).replace(' min', ' and')));
-                    secondMin.appendChild(document.createTextNode(strDue(s.expected[2].sec)))
-                    cellAfter.appendChild(firstMin);
-                    cellAfter.appendChild(document.createTextNode(' '));
-                    cellAfter.appendChild(secondMin);
+                    firstMin.appendChild(
+                        document.createTextNode(strDue(s.expected[1].secs).replace('min', 'and'))
+                    );
+                    secondMin.appendChild(
+                        document.createTextNode(strDue(s.expected[2].secs))
+                    );
+                    cAfter.appendChild(firstMin);
+                    cAfter.appendChild(document.createTextNode(' '));
+                    cAfter.appendChild(secondMin);
                 }
 
-                table.appendChild(cellNumber);
-                table.appendChild(cellDest);
-                table.appendChild(cellExp);
-                table.appendChild(cellAfter);
+                table.appendChild(cNum);
+                table.appendChild(cDest);
+                table.appendChild(cExp);
+                table.appendChild(cAfter);
             }
             // Remove all existing elements
             let last = self.table.lastChild;
@@ -271,7 +279,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
         var dtNow = new Date();
         for (s of self.data.services) {
             for (e of s.expected) {
-                let expDate = new Date((e.live) ? e.live_date: e.exp_date);
+                let expDate = new Date(e.exp_date);
                 e.sec = Math.round((expDate - dtNow) / 1000);
                 if (e.sec < 0) {
                     let index = s.expected.indexOf(e);

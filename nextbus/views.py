@@ -493,7 +493,7 @@ def stop_get_times():
                                  "than POST")
         abort(405)
     try:
-        nxb = tapi.parse_nextbus_times(data['code'])
+        nxb = tapi.get_nextbus_times(data['code'])
     except (KeyError, ValueError) as err:
         # Malformed request; no ATCO code
         current_app.logger.error(err)

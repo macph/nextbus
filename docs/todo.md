@@ -248,7 +248,7 @@ div.area-color-490 {
 - Sort out response handling for:
     - `stop_get_times()` POST response; need to pass on any errors from retrieving data to the JS
     - `LiveData` JS object; need to handle errors (eg 400, 404, 500) gracefully and let the user know.
-    - `get_nextbus_times()` function for accessing API; need to pass on the right errors.
+    - `get_live_data()` function for accessing API; need to pass on the right errors.
 - Change JS to report on live data status (timed out, server unavailable, can't reach API, etc)
     - When POST request is sent, change heading to 'Updating live data' or 'Retrieving live data'.
     - Change back to 'Live times at HH:MM:SS' when data is retrieved and parsed.

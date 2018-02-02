@@ -11,8 +11,6 @@ import sqlalchemy
 from nextbus import db, create_app, models
 
 
-TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-
 REGION = {
     "code": "Y",
     "name": "Yorkshire",
@@ -121,18 +119,18 @@ class ModelTests(DBTests):
             self.assertEqual(LOCALITY, queried_attrs)
 
     def test_foreign_key(self):
-        with self.assertRaisesRegex(sqlalchemy.exc.IntegrityError,
-                                    "foreign key"):
-            with self.app.app_context():
-                # Set district code to one that doesn't exist
-                new_area = ADMIN_AREA.copy()
-                new_area['region_code'] = "L"
-                objects = [
-                    models.Region(**REGION),
-                    models.AdminArea(**new_area)
-                ]
-                db.session.add_all(objects)
-                db.session.commit()
+        with self.app.app_context(),\
+                self.assertRaisesRegex(sqlalchemy.exc.IntegrityError,
+                                       "foreign key"):
+            # Set district code to one that doesn't exist
+            new_area = ADMIN_AREA.copy()
+            new_area['region_code'] = "L"
+            objects = [
+                models.Region(**REGION),
+                models.AdminArea(**new_area)
+            ]
+            db.session.add_all(objects)
+            db.session.commit()
 
 
 class RelationshipTests(DBTests):

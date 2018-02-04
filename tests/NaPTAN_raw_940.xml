@@ -1,0 +1,768 @@
+<NaPTAN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" CreationDateTime="2018-01-30T20:13:00" ModificationDateTime="2018-01-30T20:13:00" Modification="revise" RevisionNumber="0" FileName="Naptan.xml" SchemaVersion="2.1" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NaPTAN.xsd">
+  <StopPoints>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <AtcoCode>9400ZZSYCAS</AtcoCode>
+      <Descriptor>
+        <CommonName>Castle Square (Sheffield Supertram)</CommonName>
+        <Landmark>Jct High Street</Landmark>
+        <Street>Jct of Arundel Gate and Angel Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435613</Easting>
+            <Northing>387493</Northing>
+            <Longitude>-1.46606353993</Longitude>
+            <Latitude>53.38309150467</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:35:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCAS1</AtcoCode>
+      <NaptanCode>37090117</NaptanCode>
+      <Descriptor>
+        <CommonName>Castle Square (Sheffield Supertram)</CommonName>
+        <Landmark>Jct High Street</Landmark>
+        <Street>Jct of Arundel Gate and Angel Street</Street>
+        <Indicator>To Cathedral</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435613</Easting>
+            <Northing>387489</Northing>
+            <Longitude>-1.4660639895</Longitude>
+            <Latitude>53.3830555519</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:35:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:36:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCAS2</AtcoCode>
+      <NaptanCode>37090116</NaptanCode>
+      <Descriptor>
+        <CommonName>Castle Square (Sheffield Supertram)</CommonName>
+        <Landmark>Jct High Street</Landmark>
+        <Street>Jct of Arundel Gate and Angel Street</Street>
+        <Indicator>From Cathedral</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435612</Easting>
+            <Northing>387497</Northing>
+            <Longitude>-1.46607812352</Longitude>
+            <Latitude>53.38312752464</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:36:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:26:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCAT</AtcoCode>
+      <Descriptor>
+        <CommonName>Cathedral (Sheffield Supertram)</CommonName>
+        <Landmark>Sheffield Cathedral</Landmark>
+        <Street>Church Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435415</Easting>
+            <Northing>387435</Northing>
+            <Longitude>-1.46904658503</Longitude>
+            <Latitude>53.38258345741</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAT</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:26:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:38:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCAT1</AtcoCode>
+      <NaptanCode>37090118</NaptanCode>
+      <Descriptor>
+        <CommonName>Cathedral (Sheffield Supertram)</CommonName>
+        <Landmark>Sheffield Cathedral</Landmark>
+        <Street>Church Street</Street>
+        <Indicator>To City Hall</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435415</Easting>
+            <Northing>387430</Northing>
+            <Longitude>-1.46904714384</Longitude>
+            <Latitude>53.38253851643</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAT</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:38:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:39:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCAT2</AtcoCode>
+      <NaptanCode>37090119</NaptanCode>
+      <Descriptor>
+        <CommonName>Cathedral (Sheffield Supertram)</CommonName>
+        <Landmark>Sheffield Cathedral</Landmark>
+        <Street>Church Street</Street>
+        <Indicator>From City Hall</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435414</Easting>
+            <Northing>387439</Northing>
+            <Longitude>-1.46906117097</Longitude>
+            <Latitude>53.38261947702</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCAT</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:39:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:34:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCYH</AtcoCode>
+      <Descriptor>
+        <CommonName>City Hall (Sheffield Supertram)</CommonName>
+        <Landmark>The City Hall</Landmark>
+        <Street>West Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435162</Easting>
+            <Northing>387342</Northing>
+            <Longitude>-1.47286024693</Longitude>
+            <Latitude>53.38176439996</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCYH</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:34:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:41:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCYH1</AtcoCode>
+      <NaptanCode>37090121</NaptanCode>
+      <Descriptor>
+        <CommonName>City Hall (Sheffield Supertram)</CommonName>
+        <Landmark>The City Hall</Landmark>
+        <Street>West Street</Street>
+        <Indicator>From Cathedral</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435130</Easting>
+            <Northing>387308</Northing>
+            <Longitude>-1.47334506199</Longitude>
+            <Latitude>53.38146092296</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCYH</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:41:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:42:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYCYH2</AtcoCode>
+      <NaptanCode>37090120</NaptanCode>
+      <Descriptor>
+        <CommonName>City Hall (Sheffield Supertram)</CommonName>
+        <Landmark>The City Hall</Landmark>
+        <Street>West Street</Street>
+        <Indicator>To Cathedral</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435194</Easting>
+            <Northing>387375</Northing>
+            <Longitude>-1.47237553602</Longitude>
+            <Latitude>53.38205888676</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYCYH</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T10:42:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:53:00" Modification="revise" RevisionNumber="2" Status="active">
+      <AtcoCode>9400ZZSYFIZ</AtcoCode>
+      <Descriptor>
+        <CommonName>Fitzalan Sq - Ponds Forge (Sheffield Supertram)</CommonName>
+        <Landmark>Barclays Bank</Landmark>
+        <Street>Commercial Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435758</Easting>
+            <Northing>387503</Northing>
+            <Longitude>-1.46388260682</Longitude>
+            <Latitude>53.38317162292</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYFIZ</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T13:53:00" Modification="revise" RevisionNumber="2" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T13:50:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYFIZ1</AtcoCode>
+      <NaptanCode>37090129</NaptanCode>
+      <Descriptor>
+        <CommonName>Fitzalan Sq - Ponds Forge (Sheffield Supertram)</CommonName>
+        <Landmark>Barclays Bank</Landmark>
+        <Street>Commercial Street</Street>
+        <Indicator>To City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435758</Easting>
+            <Northing>387499</Northing>
+            <Longitude>-1.46388305822</Longitude>
+            <Latitude>53.38313567017</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYFIZ</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T13:50:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T13:51:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYFIZ2</AtcoCode>
+      <NaptanCode>37090128</NaptanCode>
+      <Descriptor>
+        <CommonName>Fitzalan Sq - Ponds Forge (Sheffield Supertram)</CommonName>
+        <Landmark>Barclays Bank</Landmark>
+        <Street>Commercial Street</Street>
+        <Indicator>From City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435757</Easting>
+            <Northing>387507</Northing>
+            <Longitude>-1.46389718858</Longitude>
+            <Latitude>53.38320764315</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYFIZ</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T13:51:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T14:16:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYSHU</AtcoCode>
+      <Descriptor>
+        <CommonName>Sheffield Stn - Hallam Uni (Supertram)</CommonName>
+        <Landmark>Main Train Station</Landmark>
+        <Street>Off Sheaf Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>1</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435936</Easting>
+            <Northing>386911</Northing>
+            <Longitude>-1.46127383583</Longitude>
+            <Latitude>53.37783857512</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYSHU</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T14:16:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T16:36:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYSHU1</AtcoCode>
+      <NaptanCode>37090138</NaptanCode>
+      <Descriptor>
+        <CommonName>Sheffield Stn - Hallam Uni (Supertram)</CommonName>
+        <Landmark>Main Train Station</Landmark>
+        <Street>Off Sheaf Street</Street>
+        <Indicator>From City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435941</Easting>
+            <Northing>386910</Northing>
+            <Longitude>-1.46119879283</Longitude>
+            <Latitude>53.37782924792</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYSHU</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T16:36:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T16:38:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYSHU2</AtcoCode>
+      <NaptanCode>37090139</NaptanCode>
+      <Descriptor>
+        <CommonName>Sheffield Stn - Hallam Uni (Supertram)</CommonName>
+        <Landmark>Main Train Station</Landmark>
+        <Street>Off Sheaf Street</Street>
+        <Indicator>To City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>435930</Easting>
+            <Northing>386912</Northing>
+            <Longitude>-1.46136391014</Longitude>
+            <Latitude>53.37784797006</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYSHU</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T16:38:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T14:21:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYWTS</AtcoCode>
+      <Descriptor>
+        <CommonName>West Street (Sheffield Supertram)</CommonName>
+        <Landmark>Portobello Centre</Landmark>
+        <Street>West Street</Street>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>434856</Easting>
+            <Northing>387205</Northing>
+            <Longitude>-1.47747532006</Longitude>
+            <Latitude>53.38055322685</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>MET</StopType>
+        <OffStreet>
+          <Metro>
+            <AccessArea/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYWTS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-09-16T14:21:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T17:00:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYWTS1</AtcoCode>
+      <NaptanCode>37090149</NaptanCode>
+      <Descriptor>
+        <CommonName>West Street (Sheffield Supertram)</CommonName>
+        <Landmark>Portobello Centre</Landmark>
+        <Street>West Street</Street>
+        <Indicator>From City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>434834</Easting>
+            <Northing>387190</Northing>
+            <Longitude>-1.47780767871</Longitude>
+            <Latitude>53.3804198499</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYWTS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T17:00:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+    <StopPoint CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T17:01:00" Modification="revise" RevisionNumber="1" Status="active">
+      <AtcoCode>9400ZZSYWTS2</AtcoCode>
+      <NaptanCode>37090148</NaptanCode>
+      <Descriptor>
+        <CommonName>West Street (Sheffield Supertram)</CommonName>
+        <Landmark>Portobello Centre</Landmark>
+        <Street>West Street</Street>
+        <Indicator>To City</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0057890</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>434878</Easting>
+            <Northing>387219</Northing>
+            <Longitude>-1.47714306938</Longitude>
+            <Latitude>53.38067761465</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>PLT</StopType>
+        <OffStreet>
+          <Metro>
+            <Platform/>
+          </Metro>
+        </OffStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2007-05-17T00:00:00" ModificationDateTime="2007-05-17T00:00:00" Modification="new" RevisionNumber="0" Status="active">940GZZSYWTS</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <PlusbusZones>
+        <PlusbusZoneRef CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2008-08-19T17:01:00" Modification="revise" RevisionNumber="1" Status="active">SHEFFLD</PlusbusZoneRef>
+      </PlusbusZones>
+    </StopPoint>
+  </StopPoints>
+  <StopAreas>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYCAS</StopAreaCode>
+      <Name>Castle Square (Sheffield Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>435613</Easting>
+          <Northing>387493</Northing>
+          <Longitude>-1.46606353993</Longitude>
+          <Latitude>53.38309150467</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYCAT</StopAreaCode>
+      <Name>Cathedral (Sheffield Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>435415</Easting>
+          <Northing>387435</Northing>
+          <Longitude>-1.46904658503</Longitude>
+          <Latitude>53.38258345741</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYCYH</StopAreaCode>
+      <Name>City Hall (Sheffield Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>435162</Easting>
+          <Northing>387342</Northing>
+          <Longitude>-1.47286024693</Longitude>
+          <Latitude>53.38176439996</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYFIZ</StopAreaCode>
+      <Name>Fitzalan Square - Ponds Forge (Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>435758</Easting>
+          <Northing>387503</Northing>
+          <Longitude>-1.46388260682</Longitude>
+          <Latitude>53.38317162292</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYSHU</StopAreaCode>
+      <Name>Sheffield Station - Hallam Univ (Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>435936</Easting>
+          <Northing>386911</Northing>
+          <Longitude>-1.46127383583</Longitude>
+          <Latitude>53.37783857512</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+    <StopArea CreationDateTime="2007-05-17T10:00:00" ModificationDateTime="2007-05-17T10:00:00" Modification="new" RevisionNumber="0" Status="active">
+      <StopAreaCode>940GZZSYWTS</StopAreaCode>
+      <Name>West Street (Sheffield Supertram)</Name>
+      <AdministrativeAreaRef>147</AdministrativeAreaRef>
+      <StopAreaType>GTMU</StopAreaType>
+      <Location>
+        <Translation>
+          <GridType>UKOS</GridType>
+          <Easting>434856</Easting>
+          <Northing>387205</Northing>
+          <Longitude>-1.47747532006</Longitude>
+          <Latitude>53.38055322685</Latitude>
+        </Translation>
+      </Location>
+    </StopArea>
+  </StopAreas>
+</NaPTAN>

@@ -124,8 +124,8 @@ def _get_atco_codes():
         # Add ATCO area code 940 for trams
         try:
             codes = [int(i) for i in get_atco_codes]
-        except TypeError as err:
-            raise TypeError("All ATCO codes must be integers.") from err
+        except ValueError as err:
+            raise ValueError("All ATCO codes must be integers.") from err
         if 940 not in codes:
             codes.append(940)
     else:
@@ -179,7 +179,7 @@ class _DBEntries(object):
         self.entries = collections.OrderedDict()
         self.conflicts = {}
 
-    def add(self, xpath_query, model, label=None, parse=None, constraint=None,
+    def add(self, xpath_query, model, label=None, func=None, constraint=None,
             indices=None):
         """ Iterates through a list of elements, creating a list of dicts.
 
@@ -191,7 +191,7 @@ class _DBEntries(object):
             :param xpath_query: XPath query to retrieve list of elements
             :param model: Database model
             :param label: Label for the progress bar
-            :param parse: Function to evaluate each new object, with two
+            :param func: Function to evaluate each new object, with two
             arguments - list of existing objects and the current object being
             evaluated. Not expected to return anything
             :param constraint: Name of constraint to evaluate in case of a
@@ -214,17 +214,17 @@ class _DBEntries(object):
             self.conflicts[model] = {'indices': indices, 'columns':columns}
 
         # Create list for model and iterate over all elements
-        self.entries[model] = []
+        new_entries = self.entries.setdefault(model, [])
         with progress_bar(list_elements, label=label) as iter_elements:
             for element in iter_elements:
                 data = _element_as_dict(
                     element, modified=dateutil.parser.parse
                 )
-                if not parse:
-                    self.entries[model].append(data)
+                if not func:
+                    new_entries.append(data)
                     continue
                 try:
-                    parse(self.entries[model], data)
+                    func(new_entries, data)
                 except TypeError as err:
                     if 'positional argument' in str(err):
                         raise TypeError(
@@ -309,10 +309,17 @@ def _remove_districts():
         db.session.close()
 
 
-def _get_nptg_data(nptg_file, atco_codes=None):
+def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
-        if atco_codes is None). Returns path of file with new XML data.
+        if atco_codes is None).
+        
+        :param nptg_file: Path to XML file with NPTG data
+        :param atco_codes: List of ATCO area codes to filter by, or all of them
+        if set to None
+        :param out_file: Path of file to write processed data to, relative to
+        the project directory. If None the data as a XML ElementTree object is
+        returned instead
     """
     click.echo("Opening NPTG file %r" % nptg_file)
     data = et.parse(nptg_file)
@@ -363,9 +370,10 @@ def _get_nptg_data(nptg_file, atco_codes=None):
 
     click.echo("Applying XSLT transform to NPTG data")
     new_data = data.xslt(transform, extensions=ext)
-    new_data.write_output(os.path.join(ROOT_DIR, NPTG_XML))
-
-    return NPTG_XML
+    if out_file:
+        new_data.write_output(os.path.join(ROOT_DIR, NPTG_XML))
+    else:
+        return new_data
 
 
 def commit_nptg_data(nptg_file=None):
@@ -380,8 +388,8 @@ def commit_nptg_data(nptg_file=None):
     else:
         nptg_path = nptg_file
 
-    new_data = _get_nptg_data(nptg_path, atco_codes)
-    nptg = _DBEntries(new_data)
+    _get_nptg_data(nptg_path, atco_codes, out_file=NPTG_XML)
+    nptg = _DBEntries(NPTG_XML)
     nptg.add("Regions/Region", models.Region, "Converting NPTG region data")
     nptg.add("AdminAreas/AdminArea", models.AdminArea,
              "Converting NPTG admin area data")
@@ -537,29 +545,49 @@ def _modify_stop_areas():
         db.session.close()
 
 
+def _merge_naptan_data(naptan_paths):
+    """ Merge NaPTAN data from multiple XML files.
+
+        Each NaPTAN XML file has two elements: StopAreas and StopPoints. For
+        every additional XML file, all children from these elements are added
+        to the elements parsed from the first file, and the resulting element
+        tree is returned.
+    """
+    click.echo("Opening NaPTAN file %r" % naptan_paths[0])
+    data = et.parse(naptan_paths[0])
+
+    if len(naptan_paths) > 1:
+        # Create XPath queries for stop areas and points
+        names = {'n': data.xpath("namespace-uri(.)")}
+        def xpath(element, query):
+            return element.xpath(query, namespaces=names)
+
+        stop_areas = xpath(data, "n:StopAreas")[0]
+        stop_points = xpath(data, "n:StopPoints")[0]
+        # If more than one file: open each and use XPath queries to add all
+        # points and areas to the first dataset
+        for add_file in naptan_paths[1:]:
+            click.echo("Adding data from file %r" % add_file)
+            new_data = et.parse(add_file)
+            for area in xpath(new_data, "n:StopAreas/n:StopArea"):
+                stop_areas.append(area)
+            for point in xpath(new_data, "n:StopPoints/n:StopPoint"):
+                stop_points.append(point)
+
+    return data
+
 
 def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
+
+        :param naptan_paths: List of paths for NaPTAN XML files
+        :param list_area_codes: List of administrative area codes
+        :param out_file: File path to write transformed data to, relative to
+        the project directory. If None the data is returned as a XML
+        ElementTree object
     """
-    click.echo("Opening NaPTAN file %r" % naptan_paths[0])
-    naptan_data = et.parse(naptan_paths[0])
-
-    if len(naptan_paths) > 1:
-        # Create XPath queries for stop areas and points
-        _n = {'n': naptan_data.xpath("namespace-uri(.)")}
-        stop_areas = naptan_data.xpath("n:StopAreas", namespaces=_n)[0]
-        stop_points = naptan_data.xpath("n:StopPoints", namespaces=_n)[0]
-        # If more than one file: open each and use XPath queries to add all
-        # points and areas to the first dataset
-        for _file in naptan_paths[1:]:
-            click.echo("Adding data from file %r" % _file)
-            data = et.parse(_file)
-            for area in data.xpath("n:StopAreas/n:StopArea", namespaces=_n):
-                stop_areas.append(area)
-            for point in data.xpath("n:StopPoints/n:StopPoint", namespaces=_n):
-                stop_points.append(point)
-
+    naptan_data = _merge_naptan_data(naptan_paths)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
     ext = et.Extension(_ExtFunctions(), None, ns=NXB_EXT_URI)
 
@@ -577,10 +605,10 @@ def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
     click.echo("Applying XSLT transform to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
 
-    file_path = NAPTAN_XML if out_file is None else out_file
-    new_data.write_output(os.path.join(ROOT_DIR, file_path))
-
-    return file_path
+    if out_file:
+        new_data.write_output(os.path.join(ROOT_DIR, out_file))
+    else:
+        return new_data
 
 
 def commit_naptan_data(naptan_files=None):
@@ -599,7 +627,7 @@ def commit_naptan_data(naptan_files=None):
     if not query_areas or not query_local:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data."
-                         "Run the commit NPTG data function first.")
+                         "Populate the database with NPTG data first.")
 
     if atco_codes:
         area_codes = set(a.code for a in query_areas)
@@ -607,9 +635,9 @@ def commit_naptan_data(naptan_files=None):
     else:
         area_codes, local_codes = None, None
 
-    new_data = _get_naptan_data(naptan_paths, area_codes)
+    _get_naptan_data(naptan_paths, area_codes, out_file=NAPTAN_XML)
     eval_stops = _NaPTANStops(local_codes)
-    naptan = _DBEntries(new_data)
+    naptan = _DBEntries(NAPTAN_XML)
     naptan.add("StopAreas/StopArea", models.StopArea,
                "Converting stop area data", eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,

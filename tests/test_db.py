@@ -42,9 +42,41 @@ LOCALITY = {
     "latitude": 53.36747,
     "modified": datetime.datetime.now()
 }
+STOP_AREA = {
+    "code": "370G100809",
+    "name": "Psalter Lane - Bagshot Street",
+    "admin_area_code": "099",
+    "locality_code": "E0030518",
+    "stop_area_type": "GPBS",
+    "easting": 433794,
+    "northing": 385561,
+    "longitude": -1.49361482816,
+    "latitude": 53.36584531963,
+    "modified": datetime.datetime.now()
+}
+STOP_POINT = {
+    "atco_code": "370020602",
+    "naptan_code": "37020602",
+    "name": "Cherry Tree Road",
+    "landmark": "20602",
+    "street": "Psalter Lane",
+    "crossing": "Cherry Tree Road",
+    "indicator": "adj",
+    "short_ind": "adj",
+    "locality_code": "E0030518",
+    "admin_area_code": "099",
+    "stop_area_code": "370G100809",
+    "easting": 433780,
+    "northing": 385542,
+    "longitude": -1.49382723113,
+    "latitude": 53.36567543456,
+    "stop_type": "BCT",
+    "bearing": "SW",
+    "modified": datetime.datetime.now()
+}
 
 
-class DBTests(unittest.TestCase):
+class BaseDBTests(unittest.TestCase):
     """ Base class for testing with the app and database """
     ENV_VAR = "TEST_DATABASE_URI"
 
@@ -82,7 +114,7 @@ class DBTests(unittest.TestCase):
         return {c: getattr(model_object, c) for c in columns}
 
 
-class ModelTests(DBTests):
+class ModelTests(BaseDBTests):
     """ Testing creation of model objects and querying them """
 
     def setUp(self):
@@ -133,7 +165,7 @@ class ModelTests(DBTests):
             db.session.commit()
 
 
-class RelationshipTests(DBTests):
+class RelationshipTests(BaseDBTests):
     """ Testing relations between different models """
 
     @classmethod

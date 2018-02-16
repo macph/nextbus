@@ -1,26 +1,22 @@
 """
 Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
+import collections
+import functools
+import operator
 import os
 import re
-import functools
-import collections
-import dateutil.parser
+
 import lxml.etree as et
 import click
-from flask import current_app
-import sqlalchemy.dialects.postgresql as pg_sql
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import file_ops, progress_bar
+from nextbus.populate import (DBEntries, file_ops, get_atco_codes, NXB_EXT_URI,
+                              XSLTExtFunctions)
 
 
-NXB_EXT_URI = r"http://nextbus.org/functions"
-NPTG_URL = r'http://naptan.app.dft.gov.uk/datarequest/nptg.ashx'
-NAPTAN_URL = r'http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx'
-NPTG_XSLT = r"nextbus/populate/nptg.xslt"
-NPTG_XML = r"temp/nptg_data.xml"
+NAPTAN_URL = r"http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx"
 NAPTAN_XSLT = r"nextbus/populate/naptan.xslt"
 NAPTAN_XML = r"temp/naptan_data.xml"
 
@@ -47,362 +43,6 @@ def download_naptan_data(atco_codes=None):
                                 params=params)
 
     return new
-
-
-def download_nptg_data():
-    """ Downloads NPTG data from the DfT. Comes in a zipped file so the NPTG
-        XML file is extracted first.
-    """
-    params = {'format': 'xml'}
-    temp_path = os.path.join(ROOT_DIR, 'temp')
-    files = ['NPTG.xml']
-
-    new = file_ops.download_zip(NPTG_URL, files, directory=temp_path,
-                                params=params)
-
-    return new
-
-
-def _element_text(function):
-    """ Converts XPath query result to a string by taking the text content from
-        the only element in list before passing it to the extension function.
-        If the XPath query returned nothing, the wrapped function will return
-        None.
-    """
-    @functools.wraps(function)
-    def _function_with_text(instance, context, result, *args, **kwargs):
-        if len(result) == 1:
-            try:
-                text = result[0].text
-            except AttributeError:
-                text = str(result[0])
-            return function(instance, context, text, *args, **kwargs)
-        elif len(result) > 1:
-            raise ValueError("XPath query returned multiple elements.")
-        else:
-            return None
-
-    return _function_with_text
-
-
-def _element_as_dict(element, **modify):
-    """ Helper function to create a dictionary from a XML element.
-
-        :param element: XML Element object
-        :param modify: Modify data with the keys to identify tags/
-        columns and the values the functions used to modify these data. Each
-        function must accept one argument.
-        :returns: A dictionary with keys matching subelement tags in the
-        element.
-    """
-    data = {i.tag: i.text for i in element}
-    for key, func in modify.items():
-        try:
-            data[key] = func(data[key]) if data[key] is not None else None
-        except KeyError:
-            raise ValueError("Key %r does not match with any tag from the "
-                             "data." % key)
-        except TypeError as err:
-            if "positional argument" in str(err):
-                raise TypeError(
-                    "Functions modifying the values must receive only one "
-                    "argument; the function associated with key %r does not "
-                    "satisfy this." % key
-                ) from err
-            else:
-                raise
-
-    return data
-
-
-def _get_atco_codes():
-    """ Helper function to get list of ATCO codes from config. """
-    get_atco_codes = current_app.config.get('ATCO_CODES')
-    if get_atco_codes == 'all':
-        codes = None
-    elif isinstance(get_atco_codes, list):
-        # Add ATCO area code 940 for trams
-        try:
-            codes = [int(i) for i in get_atco_codes]
-        except ValueError as err:
-            raise ValueError("All ATCO codes must be integers.") from err
-        if 940 not in codes:
-            codes.append(940)
-    else:
-        raise ValueError("ATCO codes must be set to either 'all' or a list of "
-                         "codes to filter.")
-
-    return codes
-
-
-class _ExtFunctions(object):
-    """ Extension for modifying data in NaPTAN/NPTG data. """
-
-    @_element_text
-    def replace(self, _, result, original, substitute):
-        """ Replace substrings within content. """
-        return result.replace(original, substitute)
-
-    @_element_text
-    def upper(self, _, result):
-        """ Convert all letters in content to uppercase. """
-        return result.upper()
-
-    @_element_text
-    def lower(self, _, result):
-        """ Convert all letters in content to lowercase. """
-        return result.lower()
-
-    @_element_text
-    def remove_spaces(self, _, result):
-        """ Remove all spaces from content. """
-        return ''.join(result.strip())
-
-    @_element_text
-    def capitalize(self, _, result):
-        """ Capitalises every word in a string, include these enclosed within
-            brackets and excluding apostrophes.
-        """
-        list_words = result.lower().split()
-        for _w, word in enumerate(list_words):
-            for _c, char in enumerate(word):
-                if char.isalpha():
-                    list_words[_w] = word[:_c] + char.upper() + word[_c+1:]
-                    break
-        return ' '.join(list_words)
-
-
-class _DBEntries(object):
-    """ Collects a list of database entries from XML data and commits them. """
-    def __init__(self, xml_data):
-        self.data = et.parse(xml_data)
-        self.entries = collections.OrderedDict()
-        self.conflicts = {}
-
-    def add(self, xpath_query, model, label=None, func=None, constraint=None,
-            indices=None):
-        """ Iterates through a list of elements, creating a list of dicts.
-
-            With a parsing function, each entry can be filtered out or
-            modified. Can add constraint or indices to use in PostgreSQL's
-            INSERT ON CONFLICT DO UPDATE statements. All existing rows are
-            deleted before iterating.
-
-            :param xpath_query: XPath query to retrieve list of elements
-            :param model: Database model
-            :param label: Label for the progress bar
-            :param func: Function to evaluate each new object, with two
-            arguments - list of existing objects and the current object being
-            evaluated. Not expected to return anything
-            :param constraint: Name of constraint to evaluate in case of a
-            ON CONFLICT DO UPDATE statement
-            :param indices: Sequence of string or Column objects to assess
-            in a ON CONFLICT DO UPDATE statement
-        """
-        # Find all elements matching query
-        list_elements = self.data.xpath(xpath_query)
-        # Assuming keys in every entry are equal
-        columns = _element_as_dict(list_elements[0]).keys()
-
-        if constraint is not None and indices is not None:
-            raise TypeError("The 'constraint' and 'indices' arguments are "
-                            "mutually exclusive.")
-        elif constraint is not None:
-            self.conflicts[model] = {'constraint': constraint,
-                                     'columns': columns}
-        elif indices is not None:
-            self.conflicts[model] = {'indices': indices, 'columns':columns}
-
-        # Create list for model and iterate over all elements
-        new_entries = self.entries.setdefault(model, [])
-        with progress_bar(list_elements, label=label) as iter_elements:
-            for element in iter_elements:
-                data = _element_as_dict(
-                    element, modified=dateutil.parser.parse
-                )
-                if not func:
-                    new_entries.append(data)
-                    continue
-                try:
-                    func(new_entries, data)
-                except TypeError as err:
-                    if 'positional argument' in str(err):
-                        raise TypeError(
-                            "Filter function must receive two arguments: list "
-                            "of existing objects and the current object."
-                        ) from err
-                    else:
-                        raise
-
-    def _create_insert_statement(self, model):
-        """ Creates an insert statement, depending on whether constraints or
-            indices were added.
-
-            :param model: Database model
-            :returns: Insert statement to be used by the session.execute()
-            function. Values are not included as the execute
-            function will add them
-        """
-        table = model.__table__
-        if self.conflicts.get(model):
-            # Constraint or indices have been specified; make a INSERT ON
-            # CONFLICT DO UPDATE statement
-            insert = pg_sql.insert(table)
-            # Create arguments, add index elements or constraints
-            # 'excluded' is a specific property used in ON CONFLICT statements
-            # referring to the inserted row conflicting with an existing row
-            args = {
-                'set_': {c: getattr(insert.excluded, c) for c in
-                         self.conflicts[model]['columns']},
-                'where': table.c.modified < insert.excluded.modified
-            }
-            if 'constraint' in self.conflicts[model]:
-                args['constraint'] = self.conflicts[model]['constraint']
-            else:
-                args['index_elements'] = self.conflicts[model]['indices']
-            statement = insert.on_conflict_do_update(**args)
-        else:
-            # Else, a simple INSERT statement
-            statement = table.insert()
-
-        return statement
-
-    def commit(self):
-        """ Commits all entries to database. """
-        if not self.entries:
-            raise ValueError("No data have been added yet.")
-        try:
-            for model, data in self.entries.items():
-                click.echo("Adding %d %s objects to session"
-                           % (len(data), model.__name__))
-                # Delete existing rows
-                db.session.execute(model.__table__.delete())
-                # Add new rows
-                db.session.execute(self._create_insert_statement(model), data)
-            click.echo("Committing changes to database")
-            db.session.commit()
-        except:
-            db.session.rollback()
-            raise
-        finally:
-            db.session.close()
-
-
-def _remove_districts():
-    """ Removes districts without associated localities. """
-    query_districts = (
-        db.session.query(models.District.code)
-        .outerjoin(models.District.localities)
-        .filter(models.Locality.code.is_(None))
-    )
-    orphaned_districts = [d.code for d in query_districts.all()]
-    try:
-        click.echo("Deleting %d orphaned districts" % len(orphaned_districts))
-        models.District.query.filter(
-            models.District.code.in_(orphaned_districts)
-        ).delete(synchronize_session='fetch')
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.close()
-
-
-def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
-    """ Parses NPTG XML data, getting lists of regions, administrative areas,
-        districts and localities that fit specified ATCO code (or all of them
-        if atco_codes is None).
-        
-        :param nptg_file: Path to XML file with NPTG data
-        :param atco_codes: List of ATCO area codes to filter by, or all of them
-        if set to None
-        :param out_file: Path of file to write processed data to, relative to
-        the project directory. If None the data as a XML ElementTree object is
-        returned instead
-    """
-    click.echo("Opening NPTG file %r" % nptg_file)
-    data = et.parse(nptg_file)
-    names = {'n': data.xpath("namespace-uri(.)")}
-    transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
-    ext = et.Extension(_ExtFunctions(), None, ns=NXB_EXT_URI)
-
-    if atco_codes:
-        # Filter by ATCO area - use NPTG data to find correct admin area codes
-        click.echo("Checking ATCO areas")
-        admin_areas = []
-        invalid_codes = []
-        for code in atco_codes:
-            area = data.xpath("//n:AdministrativeArea[n:AtcoAreaCode='%s']"
-                              % code, namespaces=names)
-            if area:
-                admin_areas.append(area[0])
-            else:
-                invalid_codes.append(code)
-        if invalid_codes:
-            raise click.BadOptionUsage(
-                "The following ATCO codes cannot be found: %s."
-                % ", ".join(repr(i) for i in invalid_codes)
-            )
-        area_codes = [area.xpath("n:AdministrativeAreaCode/text()",
-                                 namespaces=names)[0]
-                      for area in admin_areas]
-        area_query = ' or '.join(".='%s'" % code for code in area_codes)
-
-        # Create new conditions to attach to XPath queries for filtering
-        # administrative areas; for example, can do
-        # 'n:Element[condition1][condition2]' instead of
-        # 'n:Element[condition1 and condition2]'.
-        area_ref = {
-            'regions': "[.//n:AdministrativeAreaCode[%s]]" % area_query,
-            'areas': "[n:AdministrativeAreaCode[%s]]" % area_query,
-            'districts': "[ancestor::n:AdministrativeArea/"
-                         "n:AdministrativeAreaCode[%s]]" % area_query,
-            'localities': "[n:AdministrativeAreaRef[%s]]" % area_query
-        }
-
-        # Modify the XPath queries to filter by admin area
-        xsl_names = {'xsl': transform.xpath('namespace-uri(.)')}
-        for k, ref in area_ref.items():
-            param = transform.xpath("//xsl:param[@name='%s']" % k,
-                                    namespaces=xsl_names)[0]
-            param.attrib['select'] += ref
-
-    click.echo("Applying XSLT transform to NPTG data")
-    new_data = data.xslt(transform, extensions=ext)
-    if out_file:
-        new_data.write_output(os.path.join(ROOT_DIR, NPTG_XML))
-    else:
-        return new_data
-
-
-def commit_nptg_data(nptg_file=None):
-    """ Convert NPTG data (regions admin areas, districts and localities) to
-        database objects and commit them to the application database.
-    """
-    atco_codes = _get_atco_codes()
-    if nptg_file is None:
-        click.echo("Downloading NPTG data")
-        downloaded_files = download_nptg_data()
-        nptg_path = downloaded_files[0]
-    else:
-        nptg_path = nptg_file
-
-    _get_nptg_data(nptg_path, atco_codes, out_file=NPTG_XML)
-    nptg = _DBEntries(NPTG_XML)
-    nptg.add("Regions/Region", models.Region, "Converting NPTG region data")
-    nptg.add("AdminAreas/AdminArea", models.AdminArea,
-             "Converting NPTG admin area data")
-    nptg.add("Districts/District", models.District,
-             "Converting NPTG district data")
-    nptg.add("Localities/Locality", models.Locality,
-             "Converting NPTG locality data")
-    # Commit changes to database
-    nptg.commit()
-    # Remove all orphaned districts
-    _remove_districts()
-
-    click.echo("NPTG population done.")
 
 
 class _NaPTANStops(object):
@@ -589,7 +229,7 @@ def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
     """
     naptan_data = _merge_naptan_data(naptan_paths)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
-    ext = et.Extension(_ExtFunctions(), None, ns=NXB_EXT_URI)
+    ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
 
     if list_area_codes:
         area_query = ' or '.join(".='%s'" % a for a in list_area_codes)
@@ -615,7 +255,7 @@ def commit_naptan_data(naptan_files=None):
     """ Convert NaPTAN data (stop points and areas) to database objects and
         commit them to the application database.
     """
-    atco_codes = _get_atco_codes()
+    atco_codes = get_atco_codes()
     if not naptan_files:
         click.echo("Downloading NaPTAN data")
         naptan_paths = download_naptan_data(atco_codes)
@@ -637,7 +277,7 @@ def commit_naptan_data(naptan_files=None):
 
     _get_naptan_data(naptan_paths, area_codes, out_file=NAPTAN_XML)
     eval_stops = _NaPTANStops(local_codes)
-    naptan = _DBEntries(NAPTAN_XML)
+    naptan = DBEntries(NAPTAN_XML)
     naptan.add("StopAreas/StopArea", models.StopArea,
                "Converting stop area data", eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
@@ -652,8 +292,8 @@ def commit_naptan_data(naptan_files=None):
 
 
 if __name__ == "__main__":
+    from flask import current_app
+
     NAPTAN = os.path.join(ROOT_DIR, "temp/Naptan.xml")
-    NPTG = os.path.join(ROOT_DIR, "temp/NPTG.xml")
     with current_app.app_context():
-        commit_nptg_data(nptg_file=NPTG)
         commit_naptan_data(naptan_files=(NAPTAN,))

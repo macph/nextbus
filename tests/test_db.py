@@ -1,5 +1,5 @@
 """
-Testing the populate module.
+Testing the database.
 """
 import os
 import datetime

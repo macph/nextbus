@@ -55,7 +55,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify,
              backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
-    from nextbus.populate import file_ops, modifications, naptan, nspl
+    from nextbus.populate import file_ops, modifications, naptan, nptg, nspl
 
     errors = False
     use_backup = False
@@ -100,7 +100,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify,
             file_ops.backup_database(backup_f)
         try:
             if options['g']:
-                naptan.commit_nptg_data(nptg_file=nptg_f)
+                nptg.commit_nptg_data(nptg_file=nptg_f)
             if options['n']:
                 naptan.commit_naptan_data(naptan_files=naptan_f)
             if options['p']:

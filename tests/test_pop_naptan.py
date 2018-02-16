@@ -11,8 +11,8 @@ import lxml.etree as et
 from flask import current_app
 
 from nextbus import create_app, db, models
-from nextbus.populate.naptan import (_get_naptan_data, _modify_stop_areas,
-                                     _NaPTANStops, commit_naptan_data)
+from nextbus.populate.naptan import (_create_ind_parser, _get_naptan_data,
+    _modify_stop_areas, _NaPTANStops, commit_naptan_data)
 from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
                                    commit_nptg_data)
 import test_db
@@ -114,9 +114,9 @@ class ParseStopPointTests(unittest.TestCase):
         add short indicators to stop points.
     """
     indicators = [
-        ("22000003", "22000."),
+        ("22000003", "2200."),
         ("24m East of Balgownie Way", "24M EAST"),
-        ("4 Victoria St", "4 VICT. ST"),
+        ("4 Victoria St", "4 VICT."),
         ("Adj", "adj"),
         ("adj New Road", "adj NEW"),
         ("after", "aft"),
@@ -129,17 +129,17 @@ class ParseStopPointTests(unittest.TestCase):
         ("By", "by"),
         ("by Post box", "by POST"),
         ("corner", "cnr"),
-        ("corner of Orange Grove", "cnr ORAN."),
+        ("corner of Orange Grove", "cnr OF"),
         ("E-bound", ">E"),
         ("East-bound", ">E"),
         ("Gate K", "K"),
         (">N", ">N"),
         ("->N", ">N"),
         ("n-bound", ">N"),
-        ("near", "nr"),
-        ("near Crossing", "nr CROS."),
+        ("near", "near"),
+        ("near Crossing", "near CROS."),
         ("ne-bound", ">NE"),
-        ("NET NW- bound", "NET >NE"),
+        ("NET NW- bound", "NET >NW"),
         ("northbound", ">N"),
         ("North Bound", ">N"),
         ("Near", "near"),
@@ -171,16 +171,22 @@ class ParseStopPointTests(unittest.TestCase):
         ("Stop ->S", ">S"),
         ("->SW", ">SW"),
         ("sw-bound", ">SW"),
-        ("To Cathedral", "TO CATH."),
+        ("To Cathedral", "to CATH."),
         ("twixt bus station and Church Street", "TWIXT BUS"),
         ("W - Bound", ">W"),
         ("Westbound", ">W")
     ]
 
+    def setUp(self):
+        self.parser = _create_ind_parser()
+    
+    def tearDown(self):
+        del self.parser
+
     def test_short_ind(self):
         for ind, expected in self.indicators:
             with self.subTest(indicator=ind):
-                pass
+                self.assertEqual(self.parser(ind), expected)
 
 
 class PostprocessingTests(test_db.BaseDBTests):

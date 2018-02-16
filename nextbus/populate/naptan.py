@@ -5,10 +5,10 @@ import collections
 import functools
 import operator
 import os
-import re
 
 import lxml.etree as et
 import click
+import pyparsing as pp
 
 from definitions import ROOT_DIR
 from nextbus import db, models
@@ -19,6 +19,8 @@ from nextbus.populate import (DBEntries, file_ops, get_atco_codes, NXB_EXT_URI,
 NAPTAN_URL = r"http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx"
 NAPTAN_XSLT = r"nextbus/populate/naptan.xslt"
 NAPTAN_XML = r"temp/naptan_data.xml"
+IND_MAX_CHARS = 5
+IND_MAX_WORDS = 2
 
 
 def download_naptan_data(atco_codes=None):
@@ -45,51 +47,126 @@ def download_naptan_data(atco_codes=None):
     return new
 
 
-class _NaPTANStops(object):
-    """ Filters NaPTAN stop points and areas by checking duplicates and
-        ensuring only stop areas belonging to stop points within specified
-        ATCO areas are filtered.
-    """
-    regex_no_word = re.compile(r"^[^\w]*$")
-    indicator_regex = [
-        (re.compile(r"(adjacent|adj)", re.I), "adj"),
-        (re.compile(r"after", re.I), "aft"),
-        (re.compile(r"before", re.I), "bef"),
-        (re.compile(r"^(near|nr)$", re.I), "near"),
-        (re.compile(r"(opposite|opp)", re.I), "opp"),
-        (re.compile(r"^(outside|o/s|os)$", re.I), "o/s"),
-        (re.compile(r"^at$", re.I), "at"),
-        (re.compile(r"^by$", re.I), "by"),
-        (re.compile(r"^on$", re.I), "on"),
-        (re.compile(r"^(cnr|corner)$", re.I), "cnr"),
-        (re.compile(r"(Bay|Gate|Stance|Stand|Stop) ([A-Za-z0-9]+)", re.I), r"\2"),
-        (re.compile(r"([ENSW]+)[-\s]?bound", re.I), r">\1"),
-        (re.compile(r"->([ENSW]+)", re.I), r">\1"),
-        (re.compile(r"(East|North|South|West)[-\s]?bound", re.I),
-         lambda m: ">" + m.group(0)[0].upper()),
-        (re.compile(r"(\w{6,})", re.I), lambda m: m.group(0)[:4] + '.'),
-        (re.compile(r"(\w+.?) (\w+\.?) .*", re.I), r"\1 \2")
-    ]
+def _create_ind_parser():
+    """ Creates the parser for shortening indicator text for stop points. """
 
+    def kw_one_of(*words, replace=None):
+        """ Creates an expression of multiple caseless keywords with bitwise
+            OR operators.
+
+            If `replace` is specified, a new parse action replacing matched
+            keywords with `repl` is added.
+        """
+        if not words:
+            raise TypeError("Arguments must include at least one word.")
+        expr = functools.reduce(
+            operator.or_, map(pp.CaselessKeyword, words)
+        )
+        if replace is not None:
+            expr = expr.setParseAction(pp.replaceWith(replace))
+
+        return expr
+
+    def action_upper(tokens):
+        """ Uppercase the matched substring. """
+        return tokens[0].upper()
+
+    def action_abbrv(tokens):
+        """ Abbreviates a number of words. """
+        return "".join(w[0].upper() for w in tokens)
+
+    def action_arrow(tokens):
+        """ Adds arrow to matched substring. """
+        return ">" + tokens[0].upper()
+
+    def action_truncate(tokens):
+        """ Truncate words to make them fit within indicators. """
+        word = tokens[0]
+        if len(word) > IND_MAX_CHARS:
+            return word[:IND_MAX_CHARS - 1] + "."
+
+    # indicator keywords, eg adjacent or opposite, should be lowercase
+    sub_keywords = functools.reduce(operator.or_, [
+        kw_one_of("adj", "adjacent", replace="adj"),
+        kw_one_of("aft", "after", "beyond", replace="aft"),
+        kw_one_of("bef", "before", "behind", replace="bef"),
+        kw_one_of("beside", replace="by"),
+        kw_one_of("cnr", "corner", replace="cnr"),
+        kw_one_of("from", replace="from"),
+        kw_one_of("inside", replace="in"),
+        kw_one_of("n/r", "near", replace="near"),
+        kw_one_of("opp", "opposite", replace="opp"),
+        kw_one_of("o/s", "outside", replace="o/s"),
+        kw_one_of("towards", replace="to")
+    ])
+    # First word only; 2-letter words can be confused for valid stop indicators
+    # (eg Stop OS or Stop BY)
+    first_keywords = functools.reduce(operator.or_, [
+        kw_one_of("at", replace="at"),
+        kw_one_of("by", replace="by"),
+        kw_one_of("in", replace="in"),
+        kw_one_of("nr", replace="near"),
+        kw_one_of("os", replace="o/s"),
+        kw_one_of("to", replace="to")
+    ])
+    # Exclude common words, eg 'Stop' or 'Bay'. 
+    excluded_words = kw_one_of(
+        "and", "bay", "gate", "no.", "platform", "stance", "stances", "stand",
+        "stop", "the", "to"
+    ).suppress()
+    # Also exclude any punctuation on their own
+    excluded_punct = pp.Word(
+        "".join(c for c in pp.printables if c not in pp.alphanums)
+    ).suppress()
+
+    # Define directions
+    initials = pp.Word("ENSWensw").setParseAction(action_upper)
+    directions = pp.oneOf("east north south west", caseless=True)
+    # Convert '->NW', '>NW', etc
+    dir_arrow = (pp.Optional("-").suppress() + pp.Literal(">").suppress()
+                 + initials).setParseAction(action_arrow)
+    # or 'nw-bound', 'north west bound', etc to '>NW'
+    dir_bound = (
+        (pp.OneOrMore(directions).setParseAction(action_abbrv) | initials)
+        .setParseAction(action_arrow)
+        + pp.Optional("-").suppress() + pp.CaselessLiteral("bound").suppress()
+    )
+    # All other words should be uppercase and truncated if too long; can
+    # include punctuation as well, eg 'A&E'
+    other_words = (
+        pp.Combine(pp.Word(pp.alphanums) + pp.Optional(pp.Word(pp.printables)))
+        .addParseAction(action_upper)
+        .addParseAction(action_truncate)
+    )
+    # Merge all above expressions
+    keywords = functools.reduce(operator.or_, [
+        sub_keywords, dir_arrow, dir_bound, excluded_words, excluded_punct
+    ])
+    first_word = first_keywords | keywords
+    # Final expression
+    expr = pp.Optional(first_word) + pp.ZeroOrMore(keywords | other_words)
+
+    @functools.lru_cache(maxsize=256)
+    def parse_indicator(ind_text):
+        """ Uses the parser to return a shorter, abbreviated indicator text
+            with at most two words. Uses LRU cache to store previous results.
+        """
+        result = expr.parseString(ind_text)
+        new_ind = " ".join(result[:IND_MAX_WORDS])
+    
+        return new_ind
+
+    return parse_indicator
+
+class _NaPTANStops(object):
+    """ Filters NaPTAN stop points and areas by ensuring only stop areas 
+        belonging to stop points within specified ATCO areas are filtered.
+    """
     def __init__(self, list_locality_codes=None):
         self.area_codes = set([])
         self.locality_codes = list_locality_codes
         self.indicators = {}
-
-    def _replace_ind(self, ind_text):
-        """ Shortens indicator text to fit inside sign. """
-        if ind_text not in self.indicators:
-            # Calculate new short indicator
-            short_indicator = ind_text.upper()
-            for regex, repl in self.indicator_regex:
-                short_indicator = regex.sub(repl, short_indicator)
-            # Add new short indicator to list
-            self.indicators[ind_text] = short_indicator
-        else:
-            # short indicator text already in list; use it
-            short_indicator = self.indicators.get(ind_text)
-
-        return short_indicator
+        self.ind_parser = _create_ind_parser()
 
     def parse_areas(self, list_objects, area):
         """ Parses stop areas. """
@@ -106,7 +183,7 @@ class _NaPTANStops(object):
 
         # Create short indicator for display
         if point['indicator'] is not None:
-            point['short_ind'] = self._replace_ind(point['indicator'])
+            point['short_ind'] = self.ind_parser(point['indicator'])
         else:
             point['indicator'] = ''
             point['short_ind'] = ''

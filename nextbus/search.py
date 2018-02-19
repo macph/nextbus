@@ -120,7 +120,7 @@ def _fts_location_search_exists(tsquery_name, tsquery_location):
             models.District.code
         ).select_from(models.District)
         .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
+              models.AdminArea.code == models.District.admin_area_ref)
         .filter(db.func.to_tsvector('english', models.District.name)
                 .match(tsquery_name, postgresql_regconfig='english'),
                 db.func.to_tsvector('english', models.AdminArea.name)
@@ -132,9 +132,9 @@ def _fts_location_search_exists(tsquery_name, tsquery_location):
         ).select_from(models.Locality)
         .outerjoin(models.Locality.stop_points)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
+              models.AdminArea.code == models.Locality.admin_area_ref)
         .filter(
             db.func.to_tsvector('english', models.Locality.name)
             .match(tsquery_name, postgresql_regconfig='english'),
@@ -152,11 +152,11 @@ def _fts_location_search_exists(tsquery_name, tsquery_location):
             models.StopArea.code
         ).select_from(models.StopArea)
         .outerjoin(models.Locality,
-                   models.Locality.code == models.StopArea.locality_code)
+                   models.Locality.code == models.StopArea.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.StopArea.admin_area_code)
+              models.AdminArea.code == models.StopArea.admin_area_ref)
         .filter(
             db.func.to_tsvector('english', models.StopArea.name)
             .match(tsquery_name, postgresql_regconfig='english'),
@@ -175,11 +175,11 @@ def _fts_location_search_exists(tsquery_name, tsquery_location):
             models.StopPoint.atco_code
         ).select_from(models.StopPoint)
         .join(models.Locality,
-              models.Locality.code == models.StopPoint.locality_code)
+              models.Locality.code == models.StopPoint.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.StopPoint.admin_area_code)
+              models.AdminArea.code == models.StopPoint.admin_area_ref)
         .filter(
             db.or_(
                 db.func.to_tsvector('english', models.StopPoint.name)
@@ -236,7 +236,7 @@ def _fts_search_all(tsquery):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(models.District)
         .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
+              models.AdminArea.code == models.District.admin_area_ref)
         .filter(db.func.to_tsvector('english', models.District.name)
                 .match(tsquery, postgresql_regconfig='english'))
     )
@@ -244,8 +244,8 @@ def _fts_search_all(tsquery):
         db.session.query(
             models.Locality.code,
             models.Locality.name,
-            models.Locality.district_code,
-            models.Locality.admin_area_code
+            models.Locality.district_ref,
+            models.Locality.admin_area_ref
         ).outerjoin(models.Locality.stop_points)
         .group_by(models.Locality.code)
         .filter(db.func.to_tsvector('english', models.Locality.name)
@@ -265,9 +265,9 @@ def _fts_search_all(tsquery):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(sub_locality)
         .outerjoin(models.District,
-                   models.District.code == sub_locality.c.district_code)
+                   models.District.code == sub_locality.c.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == sub_locality.c.admin_area_code)
+              models.AdminArea.code == sub_locality.c.admin_area_ref)
     )
     # Subquery required to count number of stops in stop area and group by stop
     # area code before joining with locality and admin area
@@ -275,8 +275,8 @@ def _fts_search_all(tsquery):
         db.session.query(
             models.StopArea.code.label('code'),
             models.StopArea.name.label('name'),
-            models.StopArea.locality_code.label('locality_code'),
-            models.StopArea.admin_area_code.label('admin_area_code'),
+            models.StopArea.locality_ref.label('locality_ref'),
+            models.StopArea.admin_area_ref.label('admin_area_ref'),
             db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code)
@@ -296,11 +296,11 @@ def _fts_search_all(tsquery):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(sub_stop_area)
         .outerjoin(models.Locality,
-                   models.Locality.code == sub_stop_area.c.locality_code)
+                   models.Locality.code == sub_stop_area.c.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == sub_stop_area.c.admin_area_code)
+              models.AdminArea.code == sub_stop_area.c.admin_area_ref)
     )
     stop = (
         db.session.query(
@@ -315,13 +315,13 @@ def _fts_search_all(tsquery):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(models.StopPoint)
         .outerjoin(models.StopArea,
-                   models.StopArea.code == models.StopPoint.stop_area_code)
+                   models.StopArea.code == models.StopPoint.stop_area_ref)
         .join(models.Locality,
-              models.Locality.code == models.StopPoint.locality_code)
+              models.Locality.code == models.StopPoint.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
+              models.AdminArea.code == models.Locality.admin_area_ref)
         # Include stops with name or street matching query but exclude these
         # within areas that have already been found - prevent duplicates
         .filter(
@@ -333,7 +333,7 @@ def _fts_search_all(tsquery):
             ),
             db.not_(
                 db.and_(
-                    models.StopPoint.stop_area_code.isnot(None),
+                    models.StopPoint.stop_area_ref.isnot(None),
                     db.func.to_tsvector('english', models.StopArea.name)
                     .match(tsquery, postgresql_regconfig='english')
                 )
@@ -366,7 +366,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(models.District)
         .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
+              models.AdminArea.code == models.District.admin_area_ref)
         .filter(db.func.to_tsvector('english', models.District.name)
                 .match(tsquery_name, postgresql_regconfig='english'),
                 db.func.to_tsvector('english', models.AdminArea.name)
@@ -376,8 +376,8 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
         db.session.query(
             models.Locality.code,
             models.Locality.name,
-            models.Locality.district_code,
-            models.Locality.admin_area_code
+            models.Locality.district_ref,
+            models.Locality.admin_area_ref
         ).outerjoin(models.Locality.stop_points)
         .group_by(models.Locality.code)
         .filter(db.func.to_tsvector('english', models.Locality.name)
@@ -397,9 +397,9 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(sub_locality)
         .outerjoin(models.District,
-                   models.District.code == sub_locality.c.district_code)
+                   models.District.code == sub_locality.c.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == sub_locality.c.admin_area_code)
+              models.AdminArea.code == sub_locality.c.admin_area_ref)
         .filter(db.or_(
             db.func.to_tsvector('english', models.District.name)
             .match(tsquery_location, postgresql_regconfig='english'),
@@ -413,8 +413,8 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
         db.session.query(
             models.StopArea.code.label('code'),
             models.StopArea.name.label('name'),
-            models.StopArea.locality_code.label('locality_code'),
-            models.StopArea.admin_area_code.label('admin_area_code'),
+            models.StopArea.locality_ref.label('locality_ref'),
+            models.StopArea.admin_area_ref.label('admin_area_ref'),
             db.cast(db.func.count(models.StopArea.code), db.Text).label('ind'),
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code)
@@ -434,11 +434,11 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(sub_stop_area)
         .outerjoin(models.Locality,
-                   models.Locality.code == sub_stop_area.c.locality_code)
+                   models.Locality.code == sub_stop_area.c.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == sub_stop_area.c.admin_area_code)
+              models.AdminArea.code == sub_stop_area.c.admin_area_ref)
         .filter(db.or_(
             db.func.to_tsvector('english', models.Locality.name)
             .match(tsquery_location, postgresql_regconfig='english'),
@@ -461,13 +461,13 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
             models.AdminArea.name.label('admin_area_name')
         ).select_from(models.StopPoint)
         .outerjoin(models.StopArea,
-                   models.StopArea.code == models.StopPoint.stop_area_code)
+                   models.StopArea.code == models.StopPoint.stop_area_ref)
         .join(models.Locality,
-              models.Locality.code == models.StopPoint.locality_code)
+              models.Locality.code == models.StopPoint.locality_ref)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
+              models.AdminArea.code == models.Locality.admin_area_ref)
         # Include stops with name or street matching query but exclude these
         # within areas that have already been found - prevent duplicates
         .filter(
@@ -479,7 +479,7 @@ def _fts_location_search_all(tsquery_name, tsquery_location):
             ),
             db.not_(
                 db.and_(
-                    models.StopPoint.stop_area_code.isnot(None),
+                    models.StopPoint.stop_area_ref.isnot(None),
                     db.func.to_tsvector('english', models.StopArea.name)
                     .match(tsquery_name, postgresql_regconfig='english')
                 )

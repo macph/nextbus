@@ -9,15 +9,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>A3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435710</easting>
       <northing>387182</northing>
       <longitude>-1.46464037211</longitude>
       <latitude>53.3802896499</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -28,15 +28,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>A4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435710</easting>
       <northing>387167</northing>
       <longitude>-1.46464206231</longitude>
       <latitude>53.38015482699</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -47,15 +47,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>A5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435715</easting>
       <northing>387144</northing>
       <longitude>-1.46456949377</longitude>
       <latitude>53.37994776163</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -66,15 +66,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435720</easting>
       <northing>387189</northing>
       <longitude>-1.46448926164</longitude>
       <latitude>53.38035189342</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -85,15 +85,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435722</easting>
       <northing>387169</northing>
       <longitude>-1.46446145165</longitude>
       <latitude>53.38017199475</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -104,15 +104,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435725</easting>
       <northing>387151</northing>
       <longitude>-1.4644183844</longitude>
       <latitude>53.38001000506</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -123,15 +123,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435727</easting>
       <northing>387133</northing>
       <longitude>-1.46439034947</longitude>
       <latitude>53.37984808276</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -142,15 +142,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435741</easting>
       <northing>387222</northing>
       <longitude>-1.46416986434</longitude>
       <latitude>53.38064708809</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -161,15 +161,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435743</easting>
       <northing>387205</northing>
       <longitude>-1.46414171716</longitude>
       <latitude>53.38049415394</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -180,15 +180,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435745</easting>
       <northing>387187</northing>
       <longitude>-1.46411368297</longitude>
       <latitude>53.38033223159</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -199,15 +199,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435747</easting>
       <northing>387166</northing>
       <longitude>-1.46408598738</longitude>
       <latitude>53.38014334464</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -218,15 +218,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435750</easting>
       <northing>387147</northing>
       <longitude>-1.46404303438</longitude>
       <latitude>53.37997236663</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -237,15 +237,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>C6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435751</easting>
       <northing>387129</northing>
       <longitude>-1.46403003288</longitude>
       <latitude>53.37981051169</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -256,15 +256,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>D2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435760</easting>
       <northing>387206</northing>
       <longitude>-1.46388605658</longitude>
       <latitude>53.38050199541</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -275,15 +275,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>D3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435762</easting>
       <northing>387189</northing>
       <longitude>-1.46385791052</longitude>
       <latitude>53.3803490612</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -294,15 +294,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>D4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435763</easting>
       <northing>387165</northing>
       <longitude>-1.46384558669</longitude>
       <latitude>53.38013327709</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -313,15 +313,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>D5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435766</easting>
       <northing>387149</northing>
       <longitude>-1.4638022961</longitude>
       <latitude>53.37998926357</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -332,15 +332,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>D6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435768</easting>
       <northing>387131</northing>
       <longitude>-1.46377426352</longitude>
       <latitude>53.37982734113</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -351,15 +351,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435783</easting>
       <northing>387131</northing>
       <longitude>-1.46354878376</longitude>
       <latitude>53.37982632866</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -370,15 +370,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435780</easting>
       <northing>387168</northing>
       <longitude>-1.46358970243</longitude>
       <latitude>53.38015909433</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -389,15 +389,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435778</easting>
       <northing>387214</northing>
       <longitude>-1.46361457342</longitude>
       <latitude>53.38057268618</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -408,15 +408,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435776</easting>
       <northing>387196</northing>
       <longitude>-1.46364666994</longitude>
       <latitude>53.38041103373</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -427,15 +427,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435778</easting>
       <northing>387184</northing>
       <longitude>-1.46361796031</longitude>
       <latitude>53.38030304042</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -446,15 +446,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>E5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435781</easting>
       <northing>387150</northing>
       <longitude>-1.46357670259</longitude>
       <latitude>53.37999723935</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -465,15 +465,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435716</easting>
       <northing>387210</northing>
       <longitude>-1.46454702362</longitude>
       <latitude>53.38054091504</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -484,15 +484,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>A1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435707</easting>
       <northing>387209</northing>
       <longitude>-1.46468242643</longitude>
       <latitude>53.38053253325</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -503,15 +503,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>A2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435709</easting>
       <northing>387193</northing>
       <longitude>-1.46465416481</longitude>
       <latitude>53.38038858741</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -522,15 +522,15 @@
       <street>Sheffield Interchange</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>B2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435718</easting>
       <northing>387200</northing>
       <longitude>-1.46451808621</longitude>
       <latitude>53.38045089833</latitude>
       <stop_type>BCS</stop_type>
       <bearing/>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -541,15 +541,15 @@
       <street>West Street</street>
       <crossing>Fitzwilliam Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434708</easting>
       <northing>387146</northing>
       <longitude>-1.47970655813</longitude>
       <latitude>53.38003263375</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100955</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100955</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2010-11-17T12:15:06</modified>
     </StopPoint>
     <StopPoint>
@@ -560,15 +560,15 @@
       <street>West Street</street>
       <crossing>Mappin Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434744</easting>
       <northing>387171</northing>
       <longitude>-1.47916266221</longitude>
       <latitude>53.3802549807</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G100955</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100955</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -579,15 +579,15 @@
       <street>West Street</street>
       <crossing>Rockingham Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434990</easting>
       <northing>387264</northing>
       <longitude>-1.47545448212</longitude>
       <latitude>53.38107470245</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G100952</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100952</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -598,15 +598,15 @@
       <street>Broad Lane</street>
       <crossing>Beet Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434590</easting>
       <northing>387380</northing>
       <longitude>-1.48145480704</longitude>
       <latitude>53.38214358973</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -617,15 +617,15 @@
       <street>Glossop Road</street>
       <crossing>Gell Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434510</easting>
       <northing>387147</northing>
       <longitude>-1.48268280526</longitude>
       <latitude>53.38005454947</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100959</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100959</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -636,15 +636,15 @@
       <street>Ecclesall Road</street>
       <crossing>Rustlings Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433034</easting>
       <northing>385672</northing>
       <longitude>-1.50502390866</longitude>
       <latitude>53.36689089495</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G100887</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100887</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-19T02:25:19</modified>
     </StopPoint>
     <StopPoint>
@@ -655,15 +655,15 @@
       <street>Ecclesall Road</street>
       <crossing>Rustlings Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433017</easting>
       <northing>385650</northing>
       <longitude>-1.50528166621</longitude>
       <latitude>53.36669421145</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G100887</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100887</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -674,15 +674,15 @@
       <street>Ecclesall Road</street>
       <crossing>Junction Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433162</easting>
       <northing>385700</northing>
       <longitude>-1.50309745868</longitude>
       <latitude>53.36713457917</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-10-20T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -693,15 +693,15 @@
       <street>Ecclesall Road</street>
       <crossing>Neill Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433312</easting>
       <northing>385808</northing>
       <longitude>-1.50083197691</longitude>
       <latitude>53.36809591209</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G102732</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102732</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-22T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -712,15 +712,15 @@
       <street>Brocco Bank</street>
       <crossing>Ecclesall Road</crossing>
       <indicator>at</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433240</easting>
       <northing>385796</northing>
       <longitude>-1.50191524632</longitude>
       <latitude>53.36799257021</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100883</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100883</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-08T12:16:57</modified>
     </StopPoint>
     <StopPoint>
@@ -731,15 +731,15 @@
       <street>Ecclesall Road</street>
       <crossing>Neill Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433308</easting>
       <northing>385788</northing>
       <longitude>-1.50089418867</longitude>
       <latitude>53.36791639803</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G102732</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102732</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-15T12:16:21</modified>
     </StopPoint>
     <StopPoint>
@@ -750,15 +750,15 @@
       <street>Brocco Bank</street>
       <crossing>Newington Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433245</easting>
       <northing>385860</northing>
       <longitude>-1.50183339947</longitude>
       <latitude>53.36856750577</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100883</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100883</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-08T12:16:57</modified>
     </StopPoint>
     <StopPoint>
@@ -769,15 +769,15 @@
       <street>Junction Road</street>
       <crossing>Hunter House Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433248</easting>
       <northing>385675</northing>
       <longitude>-1.50180770458</longitude>
       <latitude>53.36690448859</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NW</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-13T12:15:19</modified>
     </StopPoint>
     <StopPoint>
@@ -788,15 +788,15 @@
       <street>Junction Road</street>
       <crossing>Penrhyn Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433336</easting>
       <northing>385625</northing>
       <longitude>-1.50049053654</longitude>
       <latitude>53.36644955176</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-13T12:15:19</modified>
     </StopPoint>
     <StopPoint>
@@ -807,15 +807,15 @@
       <street>Ecclesall Road</street>
       <crossing>Greystones Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>432831</easting>
       <northing>385409</northing>
       <longitude>-1.50810171222</longitude>
       <latitude>53.36453958185</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100890</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100890</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-23T02:32:24</modified>
     </StopPoint>
     <StopPoint>
@@ -826,15 +826,15 @@
       <street>Ecclesall Road</street>
       <crossing>Greystones Road</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432837</easting>
       <northing>385290</northing>
       <longitude>-1.50802386665</longitude>
       <latitude>53.3634696052</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100890</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100890</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-15T12:16:21</modified>
     </StopPoint>
     <StopPoint>
@@ -845,15 +845,15 @@
       <street>Ecclesall Road</street>
       <crossing>Huntingtower Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432815</easting>
       <northing>385144</northing>
       <longitude>-1.50836954346</longitude>
       <latitude>53.36215867737</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-27T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -864,15 +864,15 @@
       <street>Ecclesall Road</street>
       <crossing>Huntingtower Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432827</easting>
       <northing>385059</northing>
       <longitude>-1.50819802535</longitude>
       <latitude>53.3613939309</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100894</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100894</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-01-18T12:23:25</modified>
     </StopPoint>
     <StopPoint>
@@ -883,15 +883,15 @@
       <street>Ecclesall Road</street>
       <crossing>Glenalmond Road</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432818</easting>
       <northing>385019</northing>
       <longitude>-1.50833739205</longitude>
       <latitude>53.36103495633</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100894</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100894</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-16T12:16:00</modified>
     </StopPoint>
     <StopPoint>
@@ -902,15 +902,15 @@
       <street>Psalter Lane</street>
       <crossing>Ecclesall Road</crossing>
       <indicator>at</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432856</easting>
       <northing>384995</northing>
       <longitude>-1.50776890865</longitude>
       <latitude>53.36081688555</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-02T09:09:02</modified>
     </StopPoint>
     <StopPoint>
@@ -921,15 +921,15 @@
       <street>Psalter Lane</street>
       <crossing>Ecclesall Road</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432893</easting>
       <northing>385058</northing>
       <longitude>-1.50720643945</longitude>
       <latitude>53.3613808547</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-03-30T12:16:09</modified>
     </StopPoint>
     <StopPoint>
@@ -940,15 +940,15 @@
       <street>Ecclesall Road</street>
       <crossing>Carrington Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>432864</easting>
       <northing>385478</northing>
       <longitude>-1.50759868422</longitude>
       <latitude>53.36515772961</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G104626</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G104626</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -959,15 +959,15 @@
       <street>Ecclesall Road</street>
       <crossing>Carrington Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>432871</easting>
       <northing>385535</northing>
       <longitude>-1.5074875905</longitude>
       <latitude>53.36566962766</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G104626</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G104626</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-28T12:15:23</modified>
     </StopPoint>
     <StopPoint>
@@ -978,15 +978,15 @@
       <street>Rustlings Road</street>
       <crossing>Ecclesall Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>432878</easting>
       <northing>385657</northing>
       <longitude>-1.50736975817</longitude>
       <latitude>53.36676576344</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100888</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100888</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-16T12:16:00</modified>
     </StopPoint>
     <StopPoint>
@@ -997,15 +997,15 @@
       <street>Rustlings Road</street>
       <crossing>Ecclesall Road</crossing>
       <indicator>nr</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>432910</easting>
       <northing>385662</northing>
       <longitude>-1.50688835988</longitude>
       <latitude>53.36680872034</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G100888</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100888</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-16T12:16:00</modified>
     </StopPoint>
     <StopPoint>
@@ -1016,15 +1016,15 @@
       <street>Brocco Bank</street>
       <crossing>Endcliffe Terrace Road</crossing>
       <indicator>opp</indicator>
-      <locality_code>N0060732</locality_code>
+      <locality_ref>N0060732</locality_ref>
       <easting>433329</easting>
       <northing>386130</northing>
       <longitude>-1.50054266765</longitude>
       <latitude>53.37098906416</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-08T12:16:57</modified>
     </StopPoint>
     <StopPoint>
@@ -1035,15 +1035,15 @@
       <street>Ecclesall Road South</street>
       <crossing>Ringinglow Road</crossing>
       <indicator>Adj</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432726</easting>
       <northing>384686</northing>
       <longitude>-1.50975407031</longitude>
       <latitude>53.35804753912</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-15T12:16:21</modified>
     </StopPoint>
     <StopPoint>
@@ -1054,15 +1054,15 @@
       <street>Ecclesall Road South</street>
       <crossing>Brincliffe Edge Road</crossing>
       <indicator>Adj</indicator>
-      <locality_code>E0029982</locality_code>
+      <locality_ref>E0029982</locality_ref>
       <easting>432825</easting>
       <northing>384841</northing>
       <longitude>-1.50825062308</longitude>
       <latitude>53.35943460844</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-15T12:16:21</modified>
     </StopPoint>
     <StopPoint>
@@ -1073,15 +1073,15 @@
       <street>Fitzwilliam Gate</street>
       <crossing>Moor Market MF3</crossing>
       <indicator>MF3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434988</easting>
       <northing>386632</northing>
       <longitude>-1.47555430781</longitude>
       <latitude>53.37539428397</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G102499</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102499</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:01:38</modified>
     </StopPoint>
     <StopPoint>
@@ -1092,15 +1092,15 @@
       <street>Fitzwilliam Gate</street>
       <crossing>Moor Market MF4</crossing>
       <indicator>MF4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435002</easting>
       <northing>386623</northing>
       <longitude>-1.47534487514</longitude>
       <latitude>53.37531246588</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G102499</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102499</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1111,15 +1111,15 @@
       <street>Flat Street</street>
       <crossing>Fitzalan Square</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435697</easting>
       <northing>387356</northing>
       <longitude>-1.46481618997</longitude>
       <latitude>53.3818544712</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100651</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100651</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-03-10T02:42:36</modified>
     </StopPoint>
     <StopPoint>
@@ -1130,15 +1130,15 @@
       <street>Gibraltar Street</street>
       <crossing>Bower Spring</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435259</easting>
       <northing>387883</northing>
       <longitude>-1.4713418748</longitude>
       <latitude>53.38662057097</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G101072</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101072</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2010-11-02T01:44:51</modified>
     </StopPoint>
     <StopPoint>
@@ -1149,15 +1149,15 @@
       <street>Leopold Street</street>
       <crossing>City Hall CH1</crossing>
       <indicator>CH1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435271</easting>
       <northing>387351</northing>
       <longitude>-1.47122068251</longitude>
       <latitude>53.38183805133</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G100951</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100951</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1168,15 +1168,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag9</crossing>
       <indicator>AG9</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435629</easting>
       <northing>387373</northing>
       <longitude>-1.46583650237</longitude>
       <latitude>53.38201184619</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1187,15 +1187,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag3</crossing>
       <indicator>AG3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435605</easting>
       <northing>387379</northing>
       <longitude>-1.46619661445</longitude>
       <latitude>53.38206738823</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1206,15 +1206,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag2</crossing>
       <indicator>AG2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435606</easting>
       <northing>387399</northing>
       <longitude>-1.4661793344</longitude>
       <latitude>53.38224708491</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1225,15 +1225,15 @@
       <street>Castle Street</street>
       <crossing>Cg10</crossing>
       <indicator>CG10</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435661</easting>
       <northing>387628</northing>
       <longitude>-1.46532675534</longitude>
       <latitude>53.3843016826</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G100626</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100626</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1244,15 +1244,15 @@
       <street>Wicker</street>
       <crossing>Wicker Arches</crossing>
       <indicator>WK4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435904</easting>
       <northing>388039</northing>
       <longitude>-1.46162702086</longitude>
       <latitude>53.387979417</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100020</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100020</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-08T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1263,15 +1263,15 @@
       <street>Exchange Street</street>
       <crossing>Wharf Street</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435952</easting>
       <northing>387648</northing>
       <longitude>-1.46094972128</longitude>
       <latitude>53.38446178413</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -1282,15 +1282,15 @@
       <street>Waingate</street>
       <crossing>Cg11</crossing>
       <indicator>CG11</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435713</easting>
       <northing>387667</northing>
       <longitude>-1.46454061409</longitude>
       <latitude>53.38464872016</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1301,15 +1301,15 @@
       <street>Waingate</street>
       <crossing>Cg12</crossing>
       <indicator>CG12</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435706</easting>
       <northing>387688</northing>
       <longitude>-1.46464348324</longitude>
       <latitude>53.38483794379</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1320,15 +1320,15 @@
       <street>Waingate</street>
       <crossing>Cg19</crossing>
       <indicator>CG19</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435737</easting>
       <northing>387658</northing>
       <longitude>-1.46418082084</longitude>
       <latitude>53.38456620855</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1339,15 +1339,15 @@
       <street>Haymarket</street>
       <crossing>Cg21</crossing>
       <indicator>CG21</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435739</easting>
       <northing>387566</northing>
       <longitude>-1.46416113094</longitude>
       <latitude>53.38373916043</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G102495</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102495</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-13T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1358,15 +1358,15 @@
       <street>Commercial Street</street>
       <crossing>Cg1</crossing>
       <indicator>CG1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435811</easting>
       <northing>387470</northing>
       <longitude>-1.46308957889</longitude>
       <latitude>53.38287143401</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100650</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100650</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1377,15 +1377,15 @@
       <street>Flat Street</street>
       <crossing>Fs3</crossing>
       <indicator>FS3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435680</easting>
       <northing>387333</northing>
       <longitude>-1.46507433557</longitude>
       <latitude>53.38164888752</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100651</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100651</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-24T12:21:59</modified>
     </StopPoint>
     <StopPoint>
@@ -1396,15 +1396,15 @@
       <street>Pond Street</street>
       <crossing>Harmer Lane</crossing>
       <indicator>FS5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435697</easting>
       <northing>387183</northing>
       <longitude>-1.46483567742</longitude>
       <latitude>53.38029951381</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-10T12:15:30</modified>
     </StopPoint>
     <StopPoint>
@@ -1415,15 +1415,15 @@
       <street>Waingate</street>
       <crossing>Cg18</crossing>
       <indicator>CG18</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435731</easting>
       <northing>387673</northing>
       <longitude>-1.46426933113</longitude>
       <latitude>53.38470143593</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1434,15 +1434,15 @@
       <street>Haymarket</street>
       <crossing>Cg20</crossing>
       <indicator>CG20</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435743</easting>
       <northing>387584</northing>
       <longitude>-1.46409896694</longitude>
       <latitude>53.38390067805</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G102495</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102495</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-07-19T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1453,15 +1453,15 @@
       <street>Flat Street</street>
       <crossing>Fs1</crossing>
       <indicator>FS1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435685</easting>
       <northing>387390</northing>
       <longitude>-1.46499275356</longitude>
       <latitude>53.38216087784</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100651</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100651</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -1472,15 +1472,15 @@
       <street>Flat Street</street>
       <crossing>Fs2</crossing>
       <indicator>FS2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435679</easting>
       <northing>387354</northing>
       <longitude>-1.46508700378</longitude>
       <latitude>53.38183770688</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100651</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100651</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-08T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1491,15 +1491,15 @@
       <street>Flat Street</street>
       <crossing>Fs4</crossing>
       <indicator>FS4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435684</easting>
       <northing>387303</northing>
       <longitude>-1.46501758324</longitude>
       <latitude>53.38137897244</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100651</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100651</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T04:26:36</modified>
     </StopPoint>
     <StopPoint>
@@ -1510,15 +1510,15 @@
       <street>Waingate</street>
       <crossing>Cg17</crossing>
       <indicator>CG17</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435725</easting>
       <northing>387692</northing>
       <longitude>-1.46435739094</longitude>
       <latitude>53.384872616</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1529,15 +1529,15 @@
       <street>Waingate</street>
       <crossing>Cg16</crossing>
       <indicator>CG16</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435722</easting>
       <northing>387707</northing>
       <longitude>-1.46440080099</longitude>
       <latitude>53.38500764103</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-01-24T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1548,15 +1548,15 @@
       <street>Waingate</street>
       <crossing>Cg13</crossing>
       <indicator>CG13</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435703</easting>
       <northing>387717</northing>
       <longitude>-1.4646853165</longitude>
       <latitude>53.38509880333</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100018</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100018</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1567,15 +1567,15 @@
       <street>Castlegate</street>
       <crossing>Cg14</crossing>
       <indicator>CG14</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435762</easting>
       <northing>387731</northing>
       <longitude>-1.46379673956</longitude>
       <latitude>53.3852206596</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G101330</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101330</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-27T12:15:06</modified>
     </StopPoint>
     <StopPoint>
@@ -1586,15 +1586,15 @@
       <street>Castlegate</street>
       <crossing>Cg15</crossing>
       <indicator>CG15</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435780</easting>
       <northing>387731</northing>
       <longitude>-1.46352612966</longitude>
       <latitude>53.38521944455</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G101330</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101330</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1605,15 +1605,15 @@
       <street>Wicker</street>
       <crossing>Wk1</crossing>
       <indicator>WK1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435855</easting>
       <northing>387971</northing>
       <longitude>-1.46237142548</longitude>
       <latitude>53.38737153882</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100020</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100020</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -1624,15 +1624,15 @@
       <street>Wicker</street>
       <crossing>Wicker</crossing>
       <indicator>WK3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435897</easting>
       <northing>388028</northing>
       <longitude>-1.46173351138</longitude>
       <latitude>53.38788102133</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100020</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100020</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-17T02:58:20</modified>
     </StopPoint>
     <StopPoint>
@@ -1643,15 +1643,15 @@
       <street>Snig Hill</street>
       <crossing>Cg9</crossing>
       <indicator>CG9</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435604</easting>
       <northing>387677</northing>
       <longitude>-1.46617816231</longitude>
       <latitude>53.38474593646</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G102497</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102497</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1662,15 +1662,15 @@
       <street>Snig Hill</street>
       <crossing>Cg5</crossing>
       <indicator>CG5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435589</easting>
       <northing>387664</northing>
       <longitude>-1.4664051284</longitude>
       <latitude>53.38463009756</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NW</bearing>
-      <stop_area_code>370G102497</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102497</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -1681,15 +1681,15 @@
       <street>Angel Street</street>
       <crossing>Cg4</crossing>
       <indicator>CG4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435617</easting>
       <northing>387608</northing>
       <longitude>-1.46599048046</longitude>
       <latitude>53.38412487781</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101095</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101095</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-13T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1700,15 +1700,15 @@
       <street>Angel Street</street>
       <crossing>Cg3</crossing>
       <indicator>CG3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435615</easting>
       <northing>387589</northing>
       <longitude>-1.46602268315</longitude>
       <latitude>53.38395423661</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101095</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101095</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-03-13T12:15:09</modified>
     </StopPoint>
     <StopPoint>
@@ -1719,15 +1719,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag4</crossing>
       <indicator>AG4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435603</easting>
       <northing>387307</northing>
       <longitude>-1.46623476929</longitude>
       <latitude>53.38142037262</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1738,15 +1738,15 @@
       <street>Pinstone Street</street>
       <crossing>Town Hall TH3</crossing>
       <indicator>TH3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435337</easting>
       <northing>387085</northing>
       <longitude>-1.47025818318</longitude>
       <latitude>53.37944279344</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100722</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100722</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T02:49:59</modified>
     </StopPoint>
     <StopPoint>
@@ -1757,15 +1757,15 @@
       <street>Pinstone Street</street>
       <crossing>Town Hall TH2</crossing>
       <indicator>TH2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435337</easting>
       <northing>387104</northing>
       <longitude>-1.47025606478</longitude>
       <latitude>53.3796135693</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100722</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100722</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1776,15 +1776,15 @@
       <street>Pinstone Street</street>
       <crossing>Town Hall TH1</crossing>
       <indicator>TH1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435337</easting>
       <northing>387122</northing>
       <longitude>-1.47025405787</longitude>
       <latitude>53.37977535696</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100722</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100722</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -1795,15 +1795,15 @@
       <street>Church Street</street>
       <crossing>High Street HS5</crossing>
       <indicator>HS5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435387</easting>
       <northing>387417</northing>
       <longitude>-1.46946951826</longitude>
       <latitude>53.38242354014</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G102493</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102493</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1814,15 +1814,15 @@
       <street>Church Street</street>
       <crossing>High Street HS4</crossing>
       <indicator>HS4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435429</easting>
       <northing>387420</northing>
       <longitude>-1.46883780057</longitude>
       <latitude>53.38244769877</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G102493</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102493</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -1833,15 +1833,15 @@
       <street>High Street</street>
       <crossing>Hs2</crossing>
       <indicator>HS2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435528</easting>
       <northing>387454</northing>
       <longitude>-1.46734572976</longitude>
       <latitude>53.38274667012</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100950</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100950</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-12T11:23:00</modified>
     </StopPoint>
     <StopPoint>
@@ -1852,15 +1852,15 @@
       <street>High Street</street>
       <crossing>Hs3</crossing>
       <indicator>HS3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435492</easting>
       <northing>387439</northing>
       <longitude>-1.46788859866</longitude>
       <latitude>53.38261425928</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100950</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100950</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-25T12:15:14</modified>
     </StopPoint>
     <StopPoint>
@@ -1871,15 +1871,15 @@
       <street>West Bar</street>
       <crossing>West Bar</crossing>
       <indicator>WB1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435371</easting>
       <northing>387727</northing>
       <longitude>-1.46967543941</longitude>
       <latitude>53.38521094893</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G101070</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101070</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-03-10T08:28:58</modified>
     </StopPoint>
     <StopPoint>
@@ -1890,15 +1890,15 @@
       <street>Suffolk Road</street>
       <crossing>Sheffield Station</crossing>
       <indicator>SS4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435702</easting>
       <northing>386830</northing>
       <longitude>-1.46480028003</longitude>
       <latitude>53.37712634367</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100589</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100589</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:28:29</modified>
     </StopPoint>
     <StopPoint>
@@ -1909,15 +1909,15 @@
       <street>Queens Road</street>
       <crossing>Granville Square</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435805</easting>
       <northing>386413</northing>
       <longitude>-1.46329918244</longitude>
       <latitude>53.37337131715</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100595</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100595</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-03-25T12:16:14</modified>
     </StopPoint>
     <StopPoint>
@@ -1928,15 +1928,15 @@
       <street>Queens Road</street>
       <crossing>Farm Road</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435822</easting>
       <northing>386394</northing>
       <longitude>-1.46304582414</longitude>
       <latitude>53.3731993929</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100595</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100595</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-03-25T12:16:14</modified>
     </StopPoint>
     <StopPoint>
@@ -1947,15 +1947,15 @@
       <street>South Lane</street>
       <crossing>Moor Market MF10</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435049</easting>
       <northing>386479</northing>
       <longitude>-1.4746543646</longitude>
       <latitude>53.37401505747</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100730</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100730</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:01:38</modified>
     </StopPoint>
     <StopPoint>
@@ -1966,15 +1966,15 @@
       <street>South Lane</street>
       <crossing>Moor Market MF9</crossing>
       <indicator>MF9</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435056</easting>
       <northing>386490</northing>
       <longitude>-1.47454793859</longitude>
       <latitude>53.37411346505</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100730</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100730</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:01:38</modified>
     </StopPoint>
     <StopPoint>
@@ -1985,15 +1985,15 @@
       <street>South Lane</street>
       <crossing>Moor Market MF8</crossing>
       <indicator>MF8</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435085</easting>
       <northing>386537</northing>
       <longitude>-1.47410686754</longitude>
       <latitude>53.3745339929</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100730</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100730</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2004,15 +2004,15 @@
       <street>Fitzwilliam Gate</street>
       <crossing>Moor Market MF5</crossing>
       <indicator>MF5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435030</easting>
       <northing>386606</northing>
       <longitude>-1.47492590172</longitude>
       <latitude>53.37515781682</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G102499</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102499</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-10-04T12:58:34</modified>
     </StopPoint>
     <StopPoint>
@@ -2023,15 +2023,15 @@
       <street>Cumberland Street</street>
       <crossing>Moor Market MF6</crossing>
       <indicator>MF6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435075</easting>
       <northing>386580</northing>
       <longitude>-1.47425241177</longitude>
       <latitude>53.37492114789</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G100728</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100728</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:01:38</modified>
     </StopPoint>
     <StopPoint>
@@ -2042,15 +2042,15 @@
       <street>Eyre Street</street>
       <crossing>Moor Market ES5</crossing>
       <indicator>ES5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435206</easting>
       <northing>386589</northing>
       <longitude>-1.47228244585</longitude>
       <latitude>53.37499335859</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G100665</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100665</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:06:17</modified>
     </StopPoint>
     <StopPoint>
@@ -2061,15 +2061,15 @@
       <street>Cumberland Street</street>
       <crossing>Moor Market MF7</crossing>
       <indicator>MF7</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435105</easting>
       <northing>386562</northing>
       <longitude>-1.47380349645</longitude>
       <latitude>53.37475737435</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G100728</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100728</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2080,15 +2080,15 @@
       <street>Eyre Street</street>
       <crossing>Moorhead ES4</crossing>
       <indicator>ES4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435329</easting>
       <northing>386783</northing>
       <longitude>-1.47041209881</longitude>
       <latitude>53.37672888861</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101328</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101328</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-11-08T12:15:06</modified>
     </StopPoint>
     <StopPoint>
@@ -2099,15 +2099,15 @@
       <street>Arundel Gate</street>
       <crossing>Charles Street</crossing>
       <indicator>CS1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435417</easting>
       <northing>386916</northing>
       <longitude>-1.46907451855</longitude>
       <latitude>53.37791844776</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G100663</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100663</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-07-08T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2118,15 +2118,15 @@
       <street>Arundel Gate</street>
       <crossing>Charles Street</crossing>
       <indicator>CS2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435379</easting>
       <northing>386909</northing>
       <longitude>-1.46964649026</longitude>
       <latitude>53.37785806791</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100663</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100663</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2137,15 +2137,15 @@
       <street>Charter Row</street>
       <crossing>Moor Market MF2</crossing>
       <indicator>MF2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434993</easting>
       <northing>386693</northing>
       <longitude>-1.47547242237</longitude>
       <latitude>53.37594223518</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100725</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100725</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2156,15 +2156,15 @@
       <street>Charter Row</street>
       <crossing>Moor Market MF1</crossing>
       <indicator>MF1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435002</easting>
       <northing>386707</northing>
       <longitude>-1.47533560083</longitude>
       <latitude>53.37606747606</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100725</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100725</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2175,15 +2175,15 @@
       <street>Charter Row</street>
       <crossing>Moorhead MH5</crossing>
       <indicator>MH5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435074</easting>
       <northing>386828</northing>
       <longitude>-1.47424000367</longitude>
       <latitude>53.3771502912</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100726</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100726</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-10-20T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2194,15 +2194,15 @@
       <street>Charter Row</street>
       <crossing>Moorhead MH4</crossing>
       <indicator>MH4</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435096</easting>
       <northing>386864</northing>
       <longitude>-1.47390533441</longitude>
       <latitude>53.37747241077</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100726</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100726</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T02:55:26</modified>
     </StopPoint>
     <StopPoint>
@@ -2213,15 +2213,15 @@
       <street>Charter Row</street>
       <crossing>Moorhead MH3</crossing>
       <indicator>MH3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435106</easting>
       <northing>386882</northing>
       <longitude>-1.47375302911</longitude>
       <latitude>53.37763353642</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100726</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100726</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-10-10T10:55:25</modified>
     </StopPoint>
     <StopPoint>
@@ -2232,15 +2232,15 @@
       <street>Furnival Gate</street>
       <crossing>Moorhead MH2</crossing>
       <indicator>MH2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435267</easting>
       <northing>386888</northing>
       <longitude>-1.47133233331</longitude>
       <latitude>53.37767677886</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-10-20T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2251,15 +2251,15 @@
       <street>Furnival Street</street>
       <crossing>Arundel Lane</crossing>
       <indicator>opp</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435484</easting>
       <northing>386763</northing>
       <longitude>-1.46808454735</longitude>
       <latitude>53.37653877178</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NW</bearing>
-      <stop_area_code>370G102031</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102031</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2270,15 +2270,15 @@
       <street>Furnival Street</street>
       <crossing>Arundel Lane</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435500</easting>
       <northing>386764</northing>
       <longitude>-1.46784394198</longitude>
       <latitude>53.37654668874</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G102031</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102031</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2289,15 +2289,15 @@
       <street>Eyre Street</street>
       <crossing>Moor Market ES6</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435128</easting>
       <northing>386502</northing>
       <longitude>-1.47346444927</longitude>
       <latitude>53.37421655794</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100665</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100665</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2308,15 +2308,15 @@
       <street>Eyre Street</street>
       <crossing>Moorhead ES1</crossing>
       <indicator>ES1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435278</easting>
       <northing>386741</northing>
       <longitude>-1.47118334935</longitude>
       <latitude>53.37635478028</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G101328</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101328</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-11-08T12:15:06</modified>
     </StopPoint>
     <StopPoint>
@@ -2327,15 +2327,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag5</crossing>
       <indicator>AG5</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435602</easting>
       <northing>387280</northing>
       <longitude>-1.46625283515</longitude>
       <latitude>53.38117775853</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2346,15 +2346,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag6</crossing>
       <indicator>AG6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435600</easting>
       <northing>387221</northing>
       <longitude>-1.46628952791</longitude>
       <latitude>53.38064758935</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2365,15 +2365,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag7</crossing>
       <indicator>AG7</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435599</easting>
       <northing>387201</northing>
       <longitude>-1.4663068068</longitude>
       <latitude>53.38046789259</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2384,15 +2384,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag8</crossing>
       <indicator>AG8</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435602</easting>
       <northing>387177</northing>
       <longitude>-1.46626440628</longitude>
       <latitude>53.38025197438</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2403,15 +2403,15 @@
       <street>Pinstone Street</street>
       <crossing>Moorhead MH1</crossing>
       <indicator>MH1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435271</easting>
       <northing>386969</northing>
       <longitude>-1.47126319502</longitude>
       <latitude>53.37840455749</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-01-14T12:19:25</modified>
     </StopPoint>
     <StopPoint>
@@ -2422,15 +2422,15 @@
       <street>Savile Street</street>
       <crossing>Tesco</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>436165</easting>
       <northing>388193</northing>
       <longitude>-1.45768534359</longitude>
       <latitude>53.38934584522</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-02-03T10:11:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2441,15 +2441,15 @@
       <street>Commercial Street</street>
       <crossing>Cg2</crossing>
       <indicator>CG2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435792</easting>
       <northing>387477</northing>
       <longitude>-1.46337441624</longitude>
       <latitude>53.38293563487</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NW</bearing>
-      <stop_area_code>370G100650</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100650</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:49:30</modified>
     </StopPoint>
     <StopPoint>
@@ -2460,15 +2460,15 @@
       <street>Glossop Road</street>
       <crossing>Regent Terrace</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434586</easting>
       <northing>387155</northing>
       <longitude>-1.4815394921</longitude>
       <latitude>53.38012150192</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G100959</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100959</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -2479,15 +2479,15 @@
       <street>West Street</street>
       <crossing>City Hall</crossing>
       <indicator>CH3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435086</easting>
       <northing>387286</northing>
       <longitude>-1.47400893136</longitude>
       <latitude>53.38126609691</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code>370G100952</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100952</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-12T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2498,15 +2498,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag1</crossing>
       <indicator>AG1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435607</easting>
       <northing>387423</northing>
       <longitude>-1.46616160473</longitude>
       <latitude>53.38246273436</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2517,15 +2517,15 @@
       <street>Queen Street</street>
       <crossing>Paradise Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435369</easting>
       <northing>387630</northing>
       <longitude>-1.46971633537</longitude>
       <latitude>53.38433922755</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-02-25T12:15:11</modified>
     </StopPoint>
     <StopPoint>
@@ -2536,15 +2536,15 @@
       <street>Townhead Street</street>
       <crossing>Tenter Street</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435114</easting>
       <northing>387481</northing>
       <longitude>-1.47356641383</longitude>
       <latitude>53.38301694248</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2555,15 +2555,15 @@
       <street>Castle Street</street>
       <crossing>Cg22</crossing>
       <indicator>CG22</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435706</easting>
       <northing>387631</northing>
       <longitude>-1.46464990693</longitude>
       <latitude>53.3843256171</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G100626</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100626</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T01:54:43</modified>
     </StopPoint>
     <StopPoint>
@@ -2574,15 +2574,15 @@
       <street>Nursery Street</street>
       <crossing>Johnson Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435621</easting>
       <northing>388030</northing>
       <longitude>-1.46588289807</longitude>
       <latitude>53.38791762391</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101151</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101151</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2593,15 +2593,15 @@
       <street>Leopold Street</street>
       <crossing>City Hall CH2</crossing>
       <indicator>CH2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435317</easting>
       <northing>387276</northing>
       <longitude>-1.47053753619</longitude>
       <latitude>53.38116087308</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SE</bearing>
-      <stop_area_code>370G100951</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100951</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-09-29T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2612,15 +2612,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag11</crossing>
       <indicator>AG11</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435601</easting>
       <northing>387152</northing>
       <longitude>-1.46628224677</longitude>
       <latitude>53.38002733664</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2631,15 +2631,15 @@
       <street>Arundel Gate</street>
       <crossing>Howard Street</crossing>
       <indicator>AG10</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435550</easting>
       <northing>387032</northing>
       <longitude>-1.46706234215</longitude>
       <latitude>53.37895217591</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code>370G100656</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100656</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-12-15T01:58:45</modified>
     </StopPoint>
     <StopPoint>
@@ -2650,15 +2650,15 @@
       <street>Paternoster Row</street>
       <crossing>Showroom Cinema</crossing>
       <indicator>SS2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435666</easting>
       <northing>386901</northing>
       <longitude>-1.46533340832</longitude>
       <latitude>53.37776692927</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G100587</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100587</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-11-08T12:15:06</modified>
     </StopPoint>
     <StopPoint>
@@ -2669,15 +2669,15 @@
       <street>Savile Street</street>
       <crossing>Tesco</crossing>
       <indicator>opp</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>436044</easting>
       <northing>388119</northing>
       <longitude>-1.45951303901</longitude>
       <latitude>53.38868896584</latitude>
       <stop_type>BCT</stop_type>
       <bearing>SW</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-11-24T12:15:08</modified>
     </StopPoint>
     <StopPoint>
@@ -2688,15 +2688,15 @@
       <street>Wicker</street>
       <crossing>Wk2</crossing>
       <indicator>WK2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435799</easting>
       <northing>387864</northing>
       <longitude>-1.46322545701</longitude>
       <latitude>53.38641358974</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100020</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100020</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2707,15 +2707,15 @@
       <street>Mappin Street</street>
       <crossing>Portobello Lane</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434743</easting>
       <northing>387285</northing>
       <longitude>-1.47916519746</longitude>
       <latitude>53.38127970267</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
     <StopPoint>
@@ -2726,15 +2726,15 @@
       <street>Leadmill Street</street>
       <crossing>Mortimer Street</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435618</easting>
       <northing>386652</northing>
       <longitude>-1.46608288773</longitude>
       <latitude>53.37553209462</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NW</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2745,15 +2745,15 @@
       <street>West Bar</street>
       <crossing>The Law Courts</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435396</easting>
       <northing>387745</northing>
       <longitude>-1.4692975811</longitude>
       <latitude>53.38537106719</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_code>370G101070</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101070</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2764,15 +2764,15 @@
       <street>Sheaf Street</street>
       <crossing>Sheffield Station</crossing>
       <indicator>SS3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435701</easting>
       <northing>386893</northing>
       <longitude>-1.46480821524</longitude>
       <latitude>53.37769266753</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G100589</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100589</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:28:29</modified>
     </StopPoint>
     <StopPoint>
@@ -2783,15 +2783,15 @@
       <street>Pond Street</street>
       <crossing>Howard Hotel</crossing>
       <indicator>SS1</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435705</easting>
       <northing>386935</northing>
       <longitude>-1.46474335908</longitude>
       <latitude>53.37806990241</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100587</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100587</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:28:29</modified>
     </StopPoint>
     <StopPoint>
@@ -2802,15 +2802,15 @@
       <street>Fitzwilliam Street</street>
       <crossing>Wellington Street</crossing>
       <indicator>opp</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434781</easting>
       <northing>386923</northing>
       <longitude>-1.47863368535</longitude>
       <latitude>53.37802347665</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2821,15 +2821,15 @@
       <street>Arundel Gate</street>
       <crossing>Ag 12</crossing>
       <indicator>AG12</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435627</easting>
       <northing>387403</northing>
       <longitude>-1.465863195</longitude>
       <latitude>53.38228162643</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2840,15 +2840,15 @@
       <street>Gibraltar Street</street>
       <crossing>Lambert Street</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435268</easting>
       <northing>387848</northing>
       <longitude>-1.47121046151</longitude>
       <latitude>53.38630538527</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101072</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101072</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-12-15T01:58:45</modified>
     </StopPoint>
     <StopPoint>
@@ -2859,15 +2859,15 @@
       <street>Nursery Street</street>
       <crossing>Johnson Street</crossing>
       <indicator>nr</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435688</easting>
       <northing>387897</northing>
       <longitude>-1.46489054746</longitude>
       <latitude>53.38671768716</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2878,15 +2878,15 @@
       <street>Nursery Street</street>
       <crossing>Spitalfields</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435574</easting>
       <northing>388077</northing>
       <longitude>-1.46658425738</longitude>
       <latitude>53.38834322609</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101151</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101151</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-23T12:15:39</modified>
     </StopPoint>
     <StopPoint>
@@ -2897,15 +2897,15 @@
       <street>Eyre Street</street>
       <crossing>Moorhead ES2</crossing>
       <indicator>ES2</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435262</easting>
       <northing>386712</northing>
       <longitude>-1.47142706765</longitude>
       <latitude>53.37609518671</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101328</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101328</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-28T12:15:10</modified>
     </StopPoint>
     <StopPoint>
@@ -2916,15 +2916,15 @@
       <street>Eyre Street</street>
       <crossing>Moor Market ES3</crossing>
       <indicator>ES3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435208</easting>
       <northing>386626</northing>
       <longitude>-1.47224827614</longitude>
       <latitude>53.37532578964</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G101328</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G101328</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-06-27T03:07:29</modified>
     </StopPoint>
     <StopPoint>
@@ -2935,15 +2935,15 @@
       <street>Arundel Gate</street>
       <crossing>Charles Street CS3</crossing>
       <indicator>CS3</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435478</easting>
       <northing>387006</northing>
       <longitude>-1.4681475339</longitude>
       <latitude>53.37872330673</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code>370G100656</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100656</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-01-12T12:17:56</modified>
     </StopPoint>
     <StopPoint>
@@ -2954,15 +2954,15 @@
       <street>Snig Hill</street>
       <crossing>Cg6</crossing>
       <indicator>CG6</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435559</easting>
       <northing>387705</northing>
       <longitude>-1.46685153737</longitude>
       <latitude>53.3850006272</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102497</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102497</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2973,15 +2973,15 @@
       <street>Arundel Gate</street>
       <crossing>Arundel Gate Ag13</crossing>
       <indicator>AG13</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435618</easting>
       <northing>387153</northing>
       <longitude>-1.46602658936</longitude>
       <latitude>53.3800351827</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code>370G102474</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G102474</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2012-04-14T12:15:07</modified>
     </StopPoint>
     <StopPoint>
@@ -2992,15 +2992,15 @@
       <street>Millsands</street>
       <crossing>Plum Lane</crossing>
       <indicator>27552</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435554</easting>
       <northing>387946</northing>
       <longitude>-1.46689966018</longitude>
       <latitude>53.3871671161</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2017-04-21T03:13:41</modified>
     </StopPoint>
     <StopPoint>
@@ -3011,15 +3011,15 @@
       <street>Millsands</street>
       <crossing>Bridge Street</crossing>
       <indicator>27553</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435614</easting>
       <northing>387812</northing>
       <longitude>-1.46601264971</longitude>
       <latitude>53.38595866993</latitude>
       <stop_type>BCT</stop_type>
       <bearing>N</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2017-04-21T03:22:56</modified>
     </StopPoint>
     <StopPoint>
@@ -3030,15 +3030,15 @@
       <street>Arundel Gate</street>
       <crossing>Charles Street Cs4</crossing>
       <indicator>adj</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435479</easting>
       <northing>387006</northing>
       <longitude>-1.4681325023</longitude>
       <latitude>53.37872323979</latitude>
       <stop_type>BCT</stop_type>
       <bearing>NE</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2017-11-14T12:25:15</modified>
     </StopPoint>
     <StopPoint>
@@ -3049,15 +3049,15 @@
       <street>Millsands</street>
       <crossing>Plum Lane</crossing>
       <indicator>opp</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435558</easting>
       <northing>387938</northing>
       <longitude>-1.46684041983</longitude>
       <latitude>53.38709494221</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code/>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref/>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2018-01-11T11:28:21</modified>
     </StopPoint>
     <StopPoint>
@@ -3068,15 +3068,15 @@
       <street>Pond Street</street>
       <crossing>Sheffield Interchange</crossing>
       <indicator>at</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435769</easting>
       <northing>387183</northing>
       <longitude>-1.46375336254</longitude>
       <latitude>53.38029465968</latitude>
       <stop_type>BCT</stop_type>
       <bearing>S</bearing>
-      <stop_area_code>370G100004</stop_area_code>
-      <admin_area_code>099</admin_area_code>
+      <stop_area_ref>370G100004</stop_area_ref>
+      <admin_area_ref>099</admin_area_ref>
       <modified>2011-05-13T09:40:31</modified>
     </StopPoint>
     <StopPoint>
@@ -3087,15 +3087,15 @@
       <street>Jct of Arundel Gate and Angel Street</street>
       <crossing/>
       <indicator>To Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435613</easting>
       <northing>387489</northing>
       <longitude>-1.4660639895</longitude>
       <latitude>53.3830555519</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:35:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3106,15 +3106,15 @@
       <street>Jct of Arundel Gate and Angel Street</street>
       <crossing/>
       <indicator>From Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435612</easting>
       <northing>387497</northing>
       <longitude>-1.46607812352</longitude>
       <latitude>53.38312752464</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:36:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3125,15 +3125,15 @@
       <street>Church Street</street>
       <crossing/>
       <indicator>To City Hall</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435415</easting>
       <northing>387430</northing>
       <longitude>-1.46904714384</longitude>
       <latitude>53.38253851643</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAT</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAT</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:38:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3144,15 +3144,15 @@
       <street>Church Street</street>
       <crossing/>
       <indicator>From City Hall</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435414</easting>
       <northing>387439</northing>
       <longitude>-1.46906117097</longitude>
       <latitude>53.38261947702</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAT</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAT</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:39:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3163,15 +3163,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>From Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435130</easting>
       <northing>387308</northing>
       <longitude>-1.47334506199</longitude>
       <latitude>53.38146092296</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCYH</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCYH</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:41:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3182,15 +3182,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>To Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435194</easting>
       <northing>387375</northing>
       <longitude>-1.47237553602</longitude>
       <latitude>53.38205888676</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCYH</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCYH</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:42:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3201,15 +3201,15 @@
       <street>Commercial Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435758</easting>
       <northing>387499</northing>
       <longitude>-1.46388305822</longitude>
       <latitude>53.38313567017</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYFIZ</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYFIZ</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T13:50:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3220,15 +3220,15 @@
       <street>Commercial Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435757</easting>
       <northing>387507</northing>
       <longitude>-1.46389718858</longitude>
       <latitude>53.38320764315</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYFIZ</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYFIZ</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T13:51:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3239,15 +3239,15 @@
       <street>Off Sheaf Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435941</easting>
       <northing>386910</northing>
       <longitude>-1.46119879283</longitude>
       <latitude>53.37782924792</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYSHU</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYSHU</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T16:36:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3258,15 +3258,15 @@
       <street>Off Sheaf Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435930</easting>
       <northing>386912</northing>
       <longitude>-1.46136391014</longitude>
       <latitude>53.37784797006</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYSHU</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYSHU</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T16:38:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3277,15 +3277,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434834</easting>
       <northing>387190</northing>
       <longitude>-1.47780767871</longitude>
       <latitude>53.3804198499</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYWTS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYWTS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T17:00:00</modified>
     </StopPoint>
     <StopPoint>
@@ -3296,15 +3296,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434878</easting>
       <northing>387219</northing>
       <longitude>-1.47714306938</longitude>
       <latitude>53.38067761465</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYWTS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYWTS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T17:01:00</modified>
     </StopPoint>
   </StopPoints>
@@ -3312,7 +3312,7 @@
     <StopArea>
       <code>370G100004</code>
       <name>Sheffield Interchange</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GBCS</stop_area_type>
       <easting>435753</easting>
       <northing>387184</northing>
@@ -3323,7 +3323,7 @@
     <StopArea>
       <code>370G100018</code>
       <name>Sheffield - Waingate</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435718</easting>
       <northing>387698</northing>
@@ -3334,7 +3334,7 @@
     <StopArea>
       <code>370G100020</code>
       <name>Sheffield - Wicker</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435875</easting>
       <northing>387989</northing>
@@ -3345,7 +3345,7 @@
     <StopArea>
       <code>370G100489</code>
       <name>Greystones Road - Onslow Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432789</easting>
       <northing>385369</northing>
@@ -3356,7 +3356,7 @@
     <StopArea>
       <code>370G100587</code>
       <name>Paternoster Row - Sheffield Science Park</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435690</easting>
       <northing>386916</northing>
@@ -3367,7 +3367,7 @@
     <StopArea>
       <code>370G100589</code>
       <name>Leadmill Road - Suffolk Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435702</easting>
       <northing>386830</northing>
@@ -3378,7 +3378,7 @@
     <StopArea>
       <code>370G100595</code>
       <name>Sheffield - Queens Road Mecca Social Club</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435813</easting>
       <northing>386403</northing>
@@ -3389,7 +3389,7 @@
     <StopArea>
       <code>370G100626</code>
       <name>Sheffield - Castle Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435692</easting>
       <northing>387633</northing>
@@ -3400,7 +3400,7 @@
     <StopArea>
       <code>370G100650</code>
       <name>Sheffield - Commercial Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435798</easting>
       <northing>387467</northing>
@@ -3411,7 +3411,7 @@
     <StopArea>
       <code>370G100651</code>
       <name>Sheffield - Flat Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435681</easting>
       <northing>387345</northing>
@@ -3422,7 +3422,7 @@
     <StopArea>
       <code>370G100656</code>
       <name>Sheffield - Arundel Gate Hallam University</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435561</easting>
       <northing>387034</northing>
@@ -3433,7 +3433,7 @@
     <StopArea>
       <code>370G100663</code>
       <name>Sheffield - Arundel Gate/Furnival Square</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435398</easting>
       <northing>386910</northing>
@@ -3444,7 +3444,7 @@
     <StopArea>
       <code>370G100665</code>
       <name>Sheffield - Eyre Street/Cumberland Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435152</easting>
       <northing>386526</northing>
@@ -3455,7 +3455,7 @@
     <StopArea>
       <code>370G100722</code>
       <name>Sheffield - Town Hall Pinstone Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435338</easting>
       <northing>387129</northing>
@@ -3466,7 +3466,7 @@
     <StopArea>
       <code>370G100725</code>
       <name>Sheffield - Charter Row/Fitzwilliam Gate</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434993</easting>
       <northing>386704</northing>
@@ -3477,7 +3477,7 @@
     <StopArea>
       <code>370G100726</code>
       <name>Sheffield - Charter Row/Rockingham Gate</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435085</easting>
       <northing>386833</northing>
@@ -3488,7 +3488,7 @@
     <StopArea>
       <code>370G100728</code>
       <name>Sheffield - Cumberland Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435092</easting>
       <northing>386575</northing>
@@ -3499,7 +3499,7 @@
     <StopArea>
       <code>370G100730</code>
       <name>Sheffield - South Lane</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435062</easting>
       <northing>386507</northing>
@@ -3510,7 +3510,7 @@
     <StopArea>
       <code>370G100804</code>
       <name>Cemetery Road - Pembroke Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434457</easting>
       <northing>386010</northing>
@@ -3521,7 +3521,7 @@
     <StopArea>
       <code>370G100806</code>
       <name>Cemetery Road - Grange Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434264</easting>
       <northing>385851</northing>
@@ -3532,7 +3532,7 @@
     <StopArea>
       <code>370G100808</code>
       <name>Psalter Lane - Cemetery Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434093</easting>
       <northing>385716</northing>
@@ -3543,7 +3543,7 @@
     <StopArea>
       <code>370G100809</code>
       <name>Psalter Lane - Bagshot Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433794</easting>
       <northing>385561</northing>
@@ -3554,7 +3554,7 @@
     <StopArea>
       <code>370G100814</code>
       <name>Psalter Lane - Osborne Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433215</easting>
       <northing>385382</northing>
@@ -3565,7 +3565,7 @@
     <StopArea>
       <code>370G100816</code>
       <name>Psalter Lane - Brincliffe Gardens</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433064</easting>
       <northing>385291</northing>
@@ -3576,7 +3576,7 @@
     <StopArea>
       <code>370G100818</code>
       <name>Washington Road - Mackenzie Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434552</easting>
       <northing>385967</northing>
@@ -3587,7 +3587,7 @@
     <StopArea>
       <code>370G100819</code>
       <name>Wolstenholme Road - Washington Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434668</easting>
       <northing>385743</northing>
@@ -3598,7 +3598,7 @@
     <StopArea>
       <code>370G100871</code>
       <name>Moore Street - Ecclesall Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434657</easting>
       <northing>386404</northing>
@@ -3609,7 +3609,7 @@
     <StopArea>
       <code>370G100873</code>
       <name>Ecclesall Road - Pear Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434275</easting>
       <northing>386269</northing>
@@ -3620,7 +3620,7 @@
     <StopArea>
       <code>370G100875</code>
       <name>Ecclesall Road - Collegiate Crescent</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434039</easting>
       <northing>386136</northing>
@@ -3631,7 +3631,7 @@
     <StopArea>
       <code>370G100877</code>
       <name>Ecclesall Road - Thompson Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433787</easting>
       <northing>385982</northing>
@@ -3642,7 +3642,7 @@
     <StopArea>
       <code>370G100881</code>
       <name>Ecclesall Road - Hickmott Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433552</easting>
       <northing>385895</northing>
@@ -3653,7 +3653,7 @@
     <StopArea>
       <code>370G100883</code>
       <name>Hunters Bar - Brocco Bank</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433242</easting>
       <northing>385828</northing>
@@ -3664,7 +3664,7 @@
     <StopArea>
       <code>370G100887</code>
       <name>Ecclesall Road/Rustlings Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433008</easting>
       <northing>385655</northing>
@@ -3675,7 +3675,7 @@
     <StopArea>
       <code>370G100888</code>
       <name>Rustlings Road - Ecclesall Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432900</easting>
       <northing>385655</northing>
@@ -3686,7 +3686,7 @@
     <StopArea>
       <code>370G100890</code>
       <name>Ecclesall Road - Greystones Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432834</easting>
       <northing>385314</northing>
@@ -3697,7 +3697,7 @@
     <StopArea>
       <code>370G100893</code>
       <name>Greystones Road - Greystones Grange Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432506</easting>
       <northing>385358</northing>
@@ -3708,7 +3708,7 @@
     <StopArea>
       <code>370G100894</code>
       <name>Ecclesall Road South - Psalter Lane</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432820</easting>
       <northing>385063</northing>
@@ -3719,7 +3719,7 @@
     <StopArea>
       <code>370G100895</code>
       <name>Greystones Road - Greystones Drive</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432300</easting>
       <northing>385398</northing>
@@ -3730,7 +3730,7 @@
     <StopArea>
       <code>370G100899</code>
       <name>High Storrs Road - Greystones</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>431938</easting>
       <northing>385184</northing>
@@ -3741,7 +3741,7 @@
     <StopArea>
       <code>370G100901</code>
       <name>High Storrs Road - High Storrs Drive</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>431914</easting>
       <northing>384987</northing>
@@ -3752,7 +3752,7 @@
     <StopArea>
       <code>370G100903</code>
       <name>High Storrs Road - School</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>431950</easting>
       <northing>384785</northing>
@@ -3763,7 +3763,7 @@
     <StopArea>
       <code>370G100950</code>
       <name>Sheffield - High Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435529</easting>
       <northing>387449</northing>
@@ -3774,7 +3774,7 @@
     <StopArea>
       <code>370G100951</code>
       <name>Sheffield - Leopold Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435297</easting>
       <northing>387317</northing>
@@ -3785,7 +3785,7 @@
     <StopArea>
       <code>370G100952</code>
       <name>West Street - Holly Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435037</easting>
       <northing>387276</northing>
@@ -3796,7 +3796,7 @@
     <StopArea>
       <code>370G100955</code>
       <name>West Street - Fitzwilliam Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434721</easting>
       <northing>387159</northing>
@@ -3807,7 +3807,7 @@
     <StopArea>
       <code>370G101070</code>
       <name>West Bar - North Church Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435380</easting>
       <northing>387734</northing>
@@ -3818,7 +3818,7 @@
     <StopArea>
       <code>370G101072</code>
       <name>Gibraltar Street - West Bar</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435264</easting>
       <northing>387860</northing>
@@ -3829,7 +3829,7 @@
     <StopArea>
       <code>370G101095</code>
       <name>Sheffield - Angel Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435616</easting>
       <northing>387598</northing>
@@ -3840,7 +3840,7 @@
     <StopArea>
       <code>370G101151</code>
       <name>Nursery Street - Joiner Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435597</easting>
       <northing>388053</northing>
@@ -3851,7 +3851,7 @@
     <StopArea>
       <code>370G101160</code>
       <name>Endcliffe - Endcliffe Vale Road/Woodvale Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432637</easting>
       <northing>386256</northing>
@@ -3862,7 +3862,7 @@
     <StopArea>
       <code>370G101328</code>
       <name>Sheffield - Eyre Street Berlins Night Club</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435274</easting>
       <northing>386718</northing>
@@ -3873,7 +3873,7 @@
     <StopArea>
       <code>370G101330</code>
       <name>Sheffield - Castlegate</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435771</easting>
       <northing>387731</northing>
@@ -3884,7 +3884,7 @@
     <StopArea>
       <code>370G102031</code>
       <name>Furnival Street - Brown Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435491</easting>
       <northing>386758</northing>
@@ -3895,7 +3895,7 @@
     <StopArea>
       <code>370G102474</code>
       <name>Arundel Gate Mini Interchange</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GBCS</stop_area_type>
       <easting>435604</easting>
       <northing>387307</northing>
@@ -3906,7 +3906,7 @@
     <StopArea>
       <code>370G102482</code>
       <name>Sheffield - Boston Street/London Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434824</easting>
       <northing>386248</northing>
@@ -3917,7 +3917,7 @@
     <StopArea>
       <code>370G102493</code>
       <name>Sheffield - Church Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435404</easting>
       <northing>387415</northing>
@@ -3928,7 +3928,7 @@
     <StopArea>
       <code>370G102495</code>
       <name>Sheffield - Haymarket</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>435745</easting>
       <northing>387556</northing>
@@ -3939,7 +3939,7 @@
     <StopArea>
       <code>370G102497</code>
       <name>Sheffield - Snig Hill</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435603</easting>
       <northing>387662</northing>
@@ -3950,7 +3950,7 @@
     <StopArea>
       <code>370G102499</code>
       <name>Sheffield - Fitzwilliam Gate</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>435005</easting>
       <northing>386628</northing>
@@ -3961,7 +3961,7 @@
     <StopArea>
       <code>370G102732</code>
       <name>Hunters Bar - Ecclesall Road/Neill Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>433305</easting>
       <northing>385791</northing>
@@ -3972,7 +3972,7 @@
     <StopArea>
       <code>370G104054</code>
       <name>Cemetery Road - Cliffe Street</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>434711</easting>
       <northing>386205</northing>
@@ -3983,7 +3983,7 @@
     <StopArea>
       <code>370G104626</code>
       <name>Ecclesall Road - Carrington Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GPBS</stop_area_type>
       <easting>432867</easting>
       <northing>385506</northing>
@@ -3994,7 +3994,7 @@
     <StopArea>
       <code>370G105178</code>
       <name>Norborough Road/ Lifford Road</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>459520</easting>
       <northing>404801</northing>
@@ -4005,7 +4005,7 @@
     <StopArea>
       <code>370G105180</code>
       <name>Welfare Road/Fifth Avenue</name>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <stop_area_type>GCLS</stop_area_type>
       <easting>453887</easting>
       <northing>407410</northing>
@@ -4016,7 +4016,7 @@
     <StopArea>
       <code>940GZZSYCAS</code>
       <name>Castle Square (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435613</easting>
       <northing>387493</northing>
@@ -4027,7 +4027,7 @@
     <StopArea>
       <code>940GZZSYCAT</code>
       <name>Cathedral (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435415</easting>
       <northing>387435</northing>
@@ -4038,7 +4038,7 @@
     <StopArea>
       <code>940GZZSYCYH</code>
       <name>City Hall (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435162</easting>
       <northing>387342</northing>
@@ -4049,7 +4049,7 @@
     <StopArea>
       <code>940GZZSYFIZ</code>
       <name>Fitzalan Square - Ponds Forge (Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435758</easting>
       <northing>387503</northing>
@@ -4060,7 +4060,7 @@
     <StopArea>
       <code>940GZZSYSHU</code>
       <name>Sheffield Station - Hallam Univ (Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435936</easting>
       <northing>386911</northing>
@@ -4071,7 +4071,7 @@
     <StopArea>
       <code>940GZZSYWTS</code>
       <name>West Street (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>434856</easting>
       <northing>387205</northing>

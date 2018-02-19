@@ -20,22 +20,22 @@ ADMIN_AREA = {
     "code": "099",
     "name": "South Yorkshire",
     "atco_code": "370",
-    "region_code": "Y",
+    "region_ref": "Y",
     "is_live": True,
     "modified": datetime.datetime.now()
 }
 DISTRICT = {
     "code": "263",
     "name": "Sheffield",
-    "admin_area_code": "099",
+    "admin_area_ref": "099",
     "modified": datetime.datetime.now()
 }
 LOCALITY = {
     "code": "E0030518",
     "name": "Sharrow Vale",
-    "parent_code": None,
-    "admin_area_code": "099",
-    "district_code": "263",
+    "parent_ref": None,
+    "admin_area_ref": "099",
+    "district_ref": "263",
     "easting": 433540,
     "northing": 385740,
     "longitude": -1.497413,
@@ -45,8 +45,8 @@ LOCALITY = {
 STOP_AREA = {
     "code": "370G100809",
     "name": "Psalter Lane - Bagshot Street",
-    "admin_area_code": "099",
-    "locality_code": "E0030518",
+    "admin_area_ref": "099",
+    "locality_ref": "E0030518",
     "stop_area_type": "GPBS",
     "easting": 433794,
     "northing": 385561,
@@ -63,9 +63,9 @@ STOP_POINT = {
     "crossing": "Cherry Tree Road",
     "indicator": "adj",
     "short_ind": "adj",
-    "locality_code": "E0030518",
-    "admin_area_code": "099",
-    "stop_area_code": "370G100809",
+    "locality_ref": "E0030518",
+    "admin_area_ref": "099",
+    "stop_area_ref": "370G100809",
     "easting": 433780,
     "northing": 385542,
     "longitude": -1.49382723113,
@@ -156,7 +156,7 @@ class ModelTests(BaseDBTests):
                                        "foreign key"):
             # Set district code to one that doesn't exist
             new_area = ADMIN_AREA.copy()
-            new_area['region_code'] = "L"
+            new_area['region_ref'] = "L"
             objects = [
                 models.Region(**REGION),
                 models.AdminArea(**new_area)

@@ -228,7 +228,7 @@ class PostprocessingTests(test_db.BaseDBTests):
     def test_add_locality(self):
         modified_stop_area = copy.deepcopy(test_db.STOP_AREA)
         # Remove the locality code
-        del modified_stop_area["locality_code"]
+        del modified_stop_area["locality_ref"]
 
         with self.app.app_context():
             objects = [
@@ -246,8 +246,8 @@ class PostprocessingTests(test_db.BaseDBTests):
             # Now check the stop areas; the single area should now have the
             # locality code
             area = models.StopArea.query.one()
-            self.assertEqual(area.locality_code,
-                             test_db.STOP_AREA["locality_code"])
+            self.assertEqual(area.locality_ref,
+                             test_db.STOP_AREA["locality_ref"])
 
     def test_remove_areas(self):
         new_stop_area = copy.deepcopy(test_db.STOP_AREA)

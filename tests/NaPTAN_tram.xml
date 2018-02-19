@@ -8,15 +8,15 @@
       <street>Jct of Arundel Gate and Angel Street</street>
       <crossing/>
       <indicator>To Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435613</easting>
       <northing>387489</northing>
       <longitude>-1.4660639895</longitude>
       <latitude>53.3830555519</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:35:00</modified>
     </StopPoint>
     <StopPoint>
@@ -27,15 +27,15 @@
       <street>Jct of Arundel Gate and Angel Street</street>
       <crossing/>
       <indicator>From Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435612</easting>
       <northing>387497</northing>
       <longitude>-1.46607812352</longitude>
       <latitude>53.38312752464</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:36:00</modified>
     </StopPoint>
     <StopPoint>
@@ -46,15 +46,15 @@
       <street>Church Street</street>
       <crossing/>
       <indicator>To City Hall</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435415</easting>
       <northing>387430</northing>
       <longitude>-1.46904714384</longitude>
       <latitude>53.38253851643</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAT</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAT</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:38:00</modified>
     </StopPoint>
     <StopPoint>
@@ -65,15 +65,15 @@
       <street>Church Street</street>
       <crossing/>
       <indicator>From City Hall</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435414</easting>
       <northing>387439</northing>
       <longitude>-1.46906117097</longitude>
       <latitude>53.38261947702</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCAT</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCAT</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:39:00</modified>
     </StopPoint>
     <StopPoint>
@@ -84,15 +84,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>From Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435130</easting>
       <northing>387308</northing>
       <longitude>-1.47334506199</longitude>
       <latitude>53.38146092296</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCYH</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCYH</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:41:00</modified>
     </StopPoint>
     <StopPoint>
@@ -103,15 +103,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>To Cathedral</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435194</easting>
       <northing>387375</northing>
       <longitude>-1.47237553602</longitude>
       <latitude>53.38205888676</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYCYH</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYCYH</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T10:42:00</modified>
     </StopPoint>
     <StopPoint>
@@ -122,15 +122,15 @@
       <street>Commercial Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435758</easting>
       <northing>387499</northing>
       <longitude>-1.46388305822</longitude>
       <latitude>53.38313567017</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYFIZ</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYFIZ</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T13:50:00</modified>
     </StopPoint>
     <StopPoint>
@@ -141,15 +141,15 @@
       <street>Commercial Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435757</easting>
       <northing>387507</northing>
       <longitude>-1.46389718858</longitude>
       <latitude>53.38320764315</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYFIZ</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYFIZ</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T13:51:00</modified>
     </StopPoint>
     <StopPoint>
@@ -160,15 +160,15 @@
       <street>Off Sheaf Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435941</easting>
       <northing>386910</northing>
       <longitude>-1.46119879283</longitude>
       <latitude>53.37782924792</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYSHU</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYSHU</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T16:36:00</modified>
     </StopPoint>
     <StopPoint>
@@ -179,15 +179,15 @@
       <street>Off Sheaf Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>435930</easting>
       <northing>386912</northing>
       <longitude>-1.46136391014</longitude>
       <latitude>53.37784797006</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYSHU</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYSHU</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T16:38:00</modified>
     </StopPoint>
     <StopPoint>
@@ -198,15 +198,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>From City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434834</easting>
       <northing>387190</northing>
       <longitude>-1.47780767871</longitude>
       <latitude>53.3804198499</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYWTS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYWTS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T17:00:00</modified>
     </StopPoint>
     <StopPoint>
@@ -217,15 +217,15 @@
       <street>West Street</street>
       <crossing/>
       <indicator>To City</indicator>
-      <locality_code>E0057890</locality_code>
+      <locality_ref>E0057890</locality_ref>
       <easting>434878</easting>
       <northing>387219</northing>
       <longitude>-1.47714306938</longitude>
       <latitude>53.38067761465</latitude>
       <stop_type>PLT</stop_type>
       <bearing/>
-      <stop_area_code>940GZZSYWTS</stop_area_code>
-      <admin_area_code>147</admin_area_code>
+      <stop_area_ref>940GZZSYWTS</stop_area_ref>
+      <admin_area_ref>147</admin_area_ref>
       <modified>2008-08-19T17:01:00</modified>
     </StopPoint>
   </StopPoints>
@@ -233,7 +233,7 @@
     <StopArea>
       <code>940GZZSYCAS</code>
       <name>Castle Square (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435613</easting>
       <northing>387493</northing>
@@ -244,7 +244,7 @@
     <StopArea>
       <code>940GZZSYCAT</code>
       <name>Cathedral (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435415</easting>
       <northing>387435</northing>
@@ -255,7 +255,7 @@
     <StopArea>
       <code>940GZZSYCYH</code>
       <name>City Hall (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435162</easting>
       <northing>387342</northing>
@@ -266,7 +266,7 @@
     <StopArea>
       <code>940GZZSYFIZ</code>
       <name>Fitzalan Square - Ponds Forge (Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435758</easting>
       <northing>387503</northing>
@@ -277,7 +277,7 @@
     <StopArea>
       <code>940GZZSYSHU</code>
       <name>Sheffield Station - Hallam Univ (Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>435936</easting>
       <northing>386911</northing>
@@ -288,7 +288,7 @@
     <StopArea>
       <code>940GZZSYWTS</code>
       <name>West Street (Sheffield Supertram)</name>
-      <admin_area_code>147</admin_area_code>
+      <admin_area_ref>147</admin_area_ref>
       <stop_area_type>GTMU</stop_area_type>
       <easting>434856</easting>
       <northing>387205</northing>

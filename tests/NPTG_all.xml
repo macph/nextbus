@@ -15,42 +15,42 @@
   <AdminAreas>
     <AdminArea>
       <code>110</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>910</atco_code>
       <name>National - National Rail</name>
       <modified>2008-12-08T19:05:00</modified>
     </AdminArea>
     <AdminArea>
       <code>143</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>900</atco_code>
       <name>National - National Coach</name>
       <modified>2008-12-08T19:05:00</modified>
     </AdminArea>
     <AdminArea>
       <code>145</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>920</atco_code>
       <name>National - National Air</name>
       <modified>2008-02-08T14:24:40</modified>
     </AdminArea>
     <AdminArea>
       <code>146</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>930</atco_code>
       <name>National - National Ferry</name>
       <modified>2008-02-08T14:37:30</modified>
     </AdminArea>
     <AdminArea>
       <code>147</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>940</atco_code>
       <name>National - National Tram</name>
       <modified>2008-02-08T14:41:15</modified>
     </AdminArea>
     <AdminArea>
       <code>099</code>
-      <region_code>Y</region_code>
+      <region_ref>Y</region_ref>
       <atco_code>370</atco_code>
       <name>South Yorkshire</name>
       <modified>2006-01-25T07:54:33</modified>
@@ -59,13 +59,13 @@
   <Districts>
     <District>
       <code>247</code>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <name>Doncaster</name>
       <modified>2006-01-25T07:54:36</modified>
     </District>
     <District>
       <code>263</code>
-      <admin_area_code>099</admin_area_code>
+      <admin_area_ref>099</admin_area_ref>
       <name>Sheffield</name>
       <modified>2006-01-25T07:54:36</modified>
     </District>
@@ -74,9 +74,9 @@
     <Locality>
       <code>E0029982</code>
       <name>Banner Cross</name>
-      <parent_code>N0077767</parent_code>
-      <admin_area_code>099</admin_area_code>
-      <district_code>263</district_code>
+      <parent_ref>N0077767</parent_ref>
+      <admin_area_ref>099</admin_area_ref>
+      <district_ref>263</district_ref>
       <easting>432828</easting>
       <northing>385109</northing>
       <longitude>-1.508178</longitude>
@@ -86,9 +86,9 @@
     <Locality>
       <code>E0057890</code>
       <name>Sheffield Centre</name>
-      <parent_code>N0077767</parent_code>
-      <admin_area_code>099</admin_area_code>
-      <district_code>263</district_code>
+      <parent_ref>N0077767</parent_ref>
+      <admin_area_ref>099</admin_area_ref>
+      <district_ref>263</district_ref>
       <easting>435331</easting>
       <northing>387240</northing>
       <longitude>-1.470331</longitude>
@@ -98,9 +98,9 @@
     <Locality>
       <code>N0060732</code>
       <name>Hunters Bar</name>
-      <parent_code>N0077767</parent_code>
-      <admin_area_code>099</admin_area_code>
-      <district_code>263</district_code>
+      <parent_ref>N0077767</parent_ref>
+      <admin_area_ref>099</admin_area_ref>
+      <district_ref>263</district_ref>
       <easting>433217</easting>
       <northing>385748</northing>
       <longitude>-1.502266</longitude>

@@ -214,7 +214,7 @@ def list_in_region(region_code):
             models.AdminArea.name
         ).outerjoin(models.AdminArea.districts)
         .filter(models.District.code.is_(None),
-                models.AdminArea.region_code == region.code)
+                models.AdminArea.region_ref == region.code)
     )
     q_district = (
         db.session.query(
@@ -223,8 +223,8 @@ def list_in_region(region_code):
             models.District.name
         ).select_from(models.District)
         .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
-        .filter(models.AdminArea.region_code == region.code)
+              models.AdminArea.code == models.District.admin_area_ref)
+        .filter(models.AdminArea.region_ref == region.code)
     )
     list_areas = sorted(q_area.union(q_district).all(), key=lambda a: a.name)
 
@@ -242,11 +242,11 @@ def list_in_area(area_code):
 
     region = (
         models.Region.query
-        .filter(models.Region.code == area.region_code)
+        .filter(models.Region.code == area.region_ref)
     ).one()
     ls_district = (
         models.District.query
-        .filter(models.District.admin_area_code == area.code)
+        .filter(models.District.admin_area_ref == area.code)
         .order_by(models.District.name)
     ).all()
     if not ls_district:
@@ -254,7 +254,7 @@ def list_in_area(area_code):
             models.Locality.query
             .outerjoin(models.Locality.stop_points)
             .filter(models.StopPoint.atco_code.isnot(None),
-                    models.Locality.admin_area_code == area.code)
+                    models.Locality.admin_area_ref == area.code)
             .order_by(models.Locality.name)
         ).all()
     else:
@@ -283,16 +283,16 @@ def list_in_district(district_code):
             models.AdminArea.name.label('area_name')
         ).select_from(models.District)
         .join(models.AdminArea,
-              models.AdminArea.code == models.District.admin_area_code)
+              models.AdminArea.code == models.District.admin_area_ref)
         .join(models.Region,
-              models.Region.code == models.AdminArea.region_code)
+              models.Region.code == models.AdminArea.region_ref)
         .filter(models.District.code == district.code)
     ).one()
     ls_local = (
         models.Locality.query
         .outerjoin(models.Locality.stop_points)
         .filter(models.StopPoint.atco_code.isnot(None),
-                models.Locality.district_code == district.code)
+                models.Locality.district_ref == district.code)
         .order_by(models.Locality.name)
     ).all()
     group_local = _group_places(ls_local, attr='name')
@@ -322,11 +322,11 @@ def list_in_locality(locality_code):
             models.District.name.label('district_name')
         ).select_from(models.Locality)
         .outerjoin(models.District,
-                   models.District.code == models.Locality.district_code)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-              models.AdminArea.code == models.Locality.admin_area_code)
+              models.AdminArea.code == models.Locality.admin_area_ref)
         .join(models.Region,
-              models.Region.code == models.AdminArea.region_code)
+              models.Region.code == models.AdminArea.region_ref)
         .filter(models.Locality.code == lty.code)
     ).one()
 
@@ -338,8 +338,8 @@ def list_in_locality(locality_code):
             models.StopPoint.name.label('name'),
             models.StopPoint.short_ind.label('ind')
         ).outerjoin(models.StopPoint.stop_area)
-        .filter(models.StopPoint.locality_code == lty.code,
-                models.StopPoint.stop_area_code.is_(None))
+        .filter(models.StopPoint.locality_ref == lty.code,
+                models.StopPoint.stop_area_ref.is_(None))
     )
     areas = (
         db.session.query(
@@ -349,7 +349,7 @@ def list_in_locality(locality_code):
             db.cast(db.func.count(models.StopArea.code), db.Text).label('ind')
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code)
-        .filter(models.StopArea.locality_code == lty.code)
+        .filter(models.StopArea.locality_ref == lty.code)
     )
     list_stops = stops.union(areas).order_by('name', 'ind').all()
     stops = _group_places(list_stops, attr='name')
@@ -407,7 +407,7 @@ def stop_area(stop_area_code):
         if s_area.code != stop_area_code:
             return redirect('/stop/naptan/%s' % s_area.code, code=301)
 
-    if s_area.locality_code is not None:
+    if s_area.locality_ref is not None:
         info = (
             db.session.query(
                 models.AdminArea.code.label('area_code'),
@@ -418,11 +418,11 @@ def stop_area(stop_area_code):
                 models.Locality.name.label('locality_name')
             ).select_from(models.StopArea)
             .join(models.Locality,
-                  models.Locality.code == models.StopArea.locality_code)
+                  models.Locality.code == models.StopArea.locality_ref)
             .outerjoin(models.District,
-                       models.District.code == models.Locality.district_code)
+                       models.District.code == models.Locality.district_ref)
             .join(models.AdminArea,
-                  models.AdminArea.code == models.Locality.admin_area_code)
+                  models.AdminArea.code == models.Locality.admin_area_ref)
             .filter(models.StopArea.code == s_area.code)
         ).one()
     else:
@@ -440,7 +440,7 @@ def stop_area(stop_area_code):
             models.StopPoint.street,
             models.StopPoint.latitude,
             models.StopPoint.longitude
-        ).filter(models.StopPoint.stop_area_code == s_area.code)
+        ).filter(models.StopPoint.stop_area_ref == s_area.code)
         .order_by('name', 'short_ind')
     )
     list_stops = [r._asdict() for r in query_stops.all()]

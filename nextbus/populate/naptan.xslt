@@ -47,15 +47,15 @@
         </xsl:call-template>
       </crossing>
       <indicator><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
-      <locality_code><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_code>
+      <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>
       <easting><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
       <northing><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
       <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
       <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
       <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
       <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
-      <stop_area_code><xsl:value-of select="n:StopAreas/n:StopAreaRef"/></stop_area_code>
-      <admin_area_code><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_code>
+      <stop_area_ref><xsl:value-of select="n:StopAreas/n:StopAreaRef"/></stop_area_ref>
+      <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <modified><xsl:value-of select="@ModificationDateTime"/></modified>
     </StopPoint>
   </xsl:template>
@@ -64,7 +64,7 @@
     <StopArea>
       <code><xsl:value-of select="func:upper(n:StopAreaCode)"/></code>
       <name><xsl:value-of select="func:replace(n:Name, '  ', ' / ')"/></name>
-      <admin_area_code><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_code>
+      <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <stop_area_type>
         <xsl:choose>
           <!-- Stop type GPBS regularly mispelled as GBPS -->

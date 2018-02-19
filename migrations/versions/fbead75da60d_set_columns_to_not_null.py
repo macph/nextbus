@@ -23,7 +23,7 @@ def upgrade():
     op.drop_column('stop_point', 'short_name')
     op.drop_column('stop_point', 'common_name')
 
-    op.add_column('stop_point', sa.Column('name', sa.Text(), nullable=True))
+    op.add_column('stop_point', sa.Column('name', sa.Text(), nullable=False))
     op.create_index(op.f('ix_stop_point_name'), 'stop_point', ['name'], unique=False)
     op.create_index('ix_stop_point_tsvector_name', 'stop_point',
                     [sa.text("to_tsvector('english', name)")], unique=False,

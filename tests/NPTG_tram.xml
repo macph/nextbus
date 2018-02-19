@@ -10,7 +10,7 @@
   <AdminAreas>
     <AdminArea>
       <code>147</code>
-      <region_code>GB</region_code>
+      <region_ref>GB</region_ref>
       <atco_code>940</atco_code>
       <name>National - National Tram</name>
       <modified>2008-02-08T14:41:15</modified>

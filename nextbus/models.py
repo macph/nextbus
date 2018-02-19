@@ -33,7 +33,7 @@ class AdminArea(db.Model):
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
     atco_code = db.Column(db.VARCHAR(3), unique=True, nullable=False)
-    region_code = db.Column(db.VARCHAR(2),
+    region_ref = db.Column(db.VARCHAR(2),
                             db.ForeignKey('region.code', ondelete='CASCADE'),
                             index=True, nullable=False)
     is_live = db.Column(db.Boolean, default=True)
@@ -61,7 +61,7 @@ class District(db.Model):
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
-    admin_area_code = db.Column(db.VARCHAR(3),
+    admin_area_ref = db.Column(db.VARCHAR(3),
                                 db.ForeignKey('admin_area.code', ondelete='CASCADE'),
                                 index=True, nullable=False)
     modified = db.Column(db.DateTime)
@@ -85,11 +85,11 @@ class Locality(db.Model):
     # TODO: Fix self-referential foreign keys deferring.
     code = db.Column(db.VARCHAR(8), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
-    parent_code = db.Column(db.VARCHAR(8), index=True)
-    admin_area_code = db.Column(db.VARCHAR(3),
+    parent_ref = db.Column(db.VARCHAR(8), index=True)
+    admin_area_ref = db.Column(db.VARCHAR(3),
                                 db.ForeignKey('admin_area.code', ondelete='CASCADE'),
                                 index=True, nullable=False)
-    district_code = db.Column(db.VARCHAR(3),
+    district_ref = db.Column(db.VARCHAR(3),
                               db.ForeignKey('district.code', ondelete='CASCADE'),
                               index=True)
     easting = db.Column(db.Integer, nullable=False)
@@ -119,10 +119,10 @@ class StopArea(db.Model):
 
     code = db.Column(db.VARCHAR(12), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
-    admin_area_code = db.Column(db.VARCHAR(3),
+    admin_area_ref = db.Column(db.VARCHAR(3),
                                 db.ForeignKey('admin_area.code', ondelete='CASCADE'),
                                 index=True, nullable=False)
-    locality_code = db.Column(db.VARCHAR(8),
+    locality_ref = db.Column(db.VARCHAR(8),
                               db.ForeignKey('locality.code', ondelete='CASCADE'),
                               index=True)
     stop_area_type = db.Column(db.VARCHAR(4), nullable=False)
@@ -158,15 +158,15 @@ class StopPoint(db.Model):
     crossing = db.Column(db.Text)
     indicator = db.Column(db.Text, default='', nullable=False)
     short_ind = db.Column(db.Text, index=True, default='', nullable=False)
-    locality_code = db.Column(db.VARCHAR(8),
-                              db.ForeignKey('locality.code', ondelete='CASCADE'),
-                              index=True, nullable=False)
-    admin_area_code = db.Column(db.VARCHAR(3),
-                                db.ForeignKey('admin_area.code', ondelete='CASCADE'),
-                                index=True, nullable=False)
-    stop_area_code = db.Column(db.VARCHAR(12),
-                               db.ForeignKey('stop_area.code', ondelete='CASCADE'),
-                               index=True)
+    locality_ref = db.Column(db.VARCHAR(8),
+                             db.ForeignKey('locality.code', ondelete='CASCADE'),
+                             index=True, nullable=False)
+    admin_area_ref = db.Column(db.VARCHAR(3),
+                               db.ForeignKey('admin_area.code', ondelete='CASCADE'),
+                               index=True, nullable=False)
+    stop_area_ref = db.Column(db.VARCHAR(12),
+                              db.ForeignKey('stop_area.code', ondelete='CASCADE'),
+                              index=True)
     easting = db.Column(db.Integer, nullable=False)
     northing = db.Column(db.Integer, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
@@ -176,34 +176,14 @@ class StopPoint(db.Model):
     modified = db.Column(db.DateTime)
 
     __table_args__ = (
-        db.Index('ix_stop_point_gin_name',
-                 db.text("to_tsvector('english', name)"),
+        db.Index('ix_stop_point_gin_name', db.text("to_tsvector('english', name)"),
                  postgresql_using='gin'),
-        db.Index('ix_stop_point_gin_street',
-                 db.text("to_tsvector('english', street)"),
+        db.Index('ix_stop_point_gin_street', db.text("to_tsvector('english', street)"),
                  postgresql_using='gin'),
     )
 
     def __repr__(self):
         return '<StopPoint(%r, %r, %r)>' % (self.atco_code, self.naptan_code, self.name)
-
-    @property
-    def direction(self):
-        """ Prints bearing in full (eg 'NW' returns 'northwest'). """
-        return self._text.get(self.bearing.upper())
-
-    def serialise(self):
-        """ Pass stop data in serialised form. """
-        attrs = [
-            'atco_code',
-            'name',
-            'indicator',
-            'short_ind',
-            'latitude',
-            'longitude'
-        ]
-
-        return {i: getattr(self, i) for i in attrs}
 
 
 class Postcode(db.Model):
@@ -213,12 +193,12 @@ class Postcode(db.Model):
 
     index = db.Column(db.VARCHAR(7), primary_key=True)
     text = db.Column(db.VARCHAR(8), index=True, unique=True, nullable=False)
-    admin_area_code = db.Column(db.VARCHAR(3),
-                                db.ForeignKey('admin_area.code', ondelete='CASCADE'),
-                                index=True, nullable=False)
-    district_code = db.Column(db.VARCHAR(3),
-                              db.ForeignKey('district.code', ondelete='CASCADE'),
-                              index=True)
+    admin_area_ref = db.Column(db.VARCHAR(3),
+                               db.ForeignKey('admin_area.code', ondelete='CASCADE'),
+                               index=True, nullable=False)
+    district_ref = db.Column(db.VARCHAR(3),
+                             db.ForeignKey('district.code', ondelete='CASCADE'),
+                             index=True)
     easting = db.Column(db.Integer, nullable=False)
     northing = db.Column(db.Integer, nullable=False)
     longitude = db.Column(db.Float, nullable=False)

@@ -178,7 +178,7 @@ class _NaPTANStops(object):
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
         if self.locality_codes:
-            if point['locality_code'] not in self.locality_codes:
+            if point['locality_ref'] not in self.locality_codes:
                 return
 
         # Create short indicator for display
@@ -188,8 +188,8 @@ class _NaPTANStops(object):
             point['indicator'] = ''
             point['short_ind'] = ''
 
-        if point['stop_area_code'] not in self.area_codes:
-            point['stop_area_code'] = None
+        if point['stop_area_ref'] not in self.area_codes:
+            point['stop_area_ref'] = None
 
         list_objects.append(point)
 
@@ -211,10 +211,10 @@ def _modify_stop_areas():
     c_stops = (
         db.session.query(
             models.StopArea.code.label('area_code'),
-            models.StopPoint.locality_code.label('local_code'),
+            models.StopPoint.locality_ref.label('local_code'),
             db.func.count(models.StopPoint.atco_code).label('num_stops')
         ).join(models.StopArea.stop_points)
-        .group_by(models.StopArea.code, models.StopPoint.locality_code)
+        .group_by(models.StopArea.code, models.StopPoint.locality_ref)
     ).subquery()
     m_stops = (
         db.session.query(
@@ -240,7 +240,7 @@ def _modify_stop_areas():
         dict_areas[row.area_code].append(row.local_code)
     for area, localities in dict_areas.items():
         if len(localities) == 1:
-            update_areas.append({'code': area, 'locality_code': localities[0]})
+            update_areas.append({'code': area, 'locality_ref': localities[0]})
         else:
             invalid_areas.append("Stop area %s has multiple localities %s"
                                  % (area, ', '.join(localities)))

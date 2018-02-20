@@ -14,7 +14,8 @@ from nextbus import db, create_app, models
 REGION = {
     "code": "Y",
     "name": "Yorkshire",
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_name": None
 }
 ADMIN_AREA = {
     "code": "099",
@@ -22,13 +23,15 @@ ADMIN_AREA = {
     "atco_code": "370",
     "region_ref": "Y",
     "is_live": True,
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_name": None
 }
 DISTRICT = {
     "code": "263",
     "name": "Sheffield",
     "admin_area_ref": "099",
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_name": None
 }
 LOCALITY = {
     "code": "E0030518",
@@ -40,7 +43,8 @@ LOCALITY = {
     "northing": 385740,
     "longitude": -1.497413,
     "latitude": 53.36747,
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_name": None
 }
 STOP_AREA = {
     "code": "370G100809",
@@ -52,7 +56,8 @@ STOP_AREA = {
     "northing": 385561,
     "longitude": -1.49361482816,
     "latitude": 53.36584531963,
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_name": None
 }
 STOP_POINT = {
     "atco_code": "370020602",
@@ -72,7 +77,10 @@ STOP_POINT = {
     "latitude": 53.36567543456,
     "stop_type": "BCT",
     "bearing": "SW",
-    "modified": datetime.datetime.now()
+    "modified": datetime.datetime.now(),
+    "tsv_both": None,
+    "tsv_name": None,
+    "tsv_street": None
 }
 
 

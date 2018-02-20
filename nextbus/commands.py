@@ -16,7 +16,7 @@ def run_cli_app(info):
     if config:
         app = create_app(config_file=config)
     else:
-        app = create_app()
+        app = create_app(config_obj="default_config.DevelopmentConfig")
 
     return app
 
@@ -46,18 +46,19 @@ def cli():
 @click.option("--nspl-path", "-P", "nspl_f", default=None,
               type=click.Path(exists=True),
               help="Add NSPL postcode data from specified JSON file.")
-@click.option("--modify", "-m", "modify", is_flag=True,
+@click.option("--modify", "-m", "modify_d", is_flag=True,
               help="Modify values in existing data with modify.xml.")
 @click.option("--backup", "-b", "backup", is_flag=True,
               help="Back up database before populating database.")
 @click.option("--backup-path", "-B", "backup_f", default=None,
               type=click.Path(), help="Back up database to a specified dump "
               "file before populating database.")
-def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify,
+def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
              backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
-    from nextbus.populate import file_ops, modify, naptan, nptg, nspl
+    from nextbus.populate import (file_ops, modify, naptan, nptg, nspl,
+                                  tsvector)
 
     errors = False
     use_backup = False
@@ -84,7 +85,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify,
     else:
         options["p"] = nspl_d or nspl_f
 
-    options["m"] = modify
+    options["m"] = modify_d
 
     if backup and backup_f:
         click.echo("Default (-p) and filepath (-P) options for backing up "
@@ -101,14 +102,13 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify,
         if use_backup:
             file_ops.backup_database(backup_f)
         try:
-            if options["g"]:
-                nptg.commit_nptg_data(nptg_file=nptg_f)
-            if options["n"]:
-                naptan.commit_naptan_data(naptan_files=naptan_f)
-            if options["p"]:
-                nspl.commit_nspl_data(nspl_file=nspl_f)
-            if options["m"]:
-                modify.modify_data()
+            if options["g"]: nptg.commit_nptg_data(nptg_file=nptg_f)
+            if options["n"]: naptan.commit_naptan_data(naptan_files=naptan_f)
+            if options["p"]: nspl.commit_nspl_data(nspl_file=nspl_f)
+            if options["m"]: modify.modify_data()
+            # Update tsvector columns after population
+            if options["g"] or options["m"]: tsvector.update_nptg_tsvector()
+            if options["n"] or options["m"]: tsvector.update_naptan_tsvector()
         except:
             # Restore DB if errors occur and raise
             if use_backup:

@@ -31,15 +31,15 @@ def download_naptan_data(atco_codes=None):
         all data in Great Britain (outwith IoM, Channel Islands and Northern
         Ireland) are retrieved.
     """
-    params = {'format': 'xml'}
-    temp_path = os.path.join(ROOT_DIR, 'temp')
+    params = {"format": "xml"}
+    temp_path = os.path.join(ROOT_DIR, "temp")
 
     if atco_codes:
         # Add tram/metro options (ATCO area code 940)
-        params['LA'] = '|'.join(str(i) for i in atco_codes + [940])
+        params["LA"] = "|".join(str(i) for i in atco_codes + [940])
         files = None
     else:
-        files = ['Naptan.xml']
+        files = ["Naptan.xml"]
 
     new = file_ops.download_zip(NAPTAN_URL, files, directory=temp_path,
                                 params=params)
@@ -170,7 +170,7 @@ class _NaPTANStops(object):
 
     def parse_areas(self, list_objects, area):
         """ Parses stop areas. """
-        self.area_codes.add(area['code'])
+        self.area_codes.add(area["code"])
         list_objects.append(area)
 
     def parse_points(self, list_objects, point):
@@ -178,18 +178,18 @@ class _NaPTANStops(object):
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
         if self.locality_codes:
-            if point['locality_ref'] not in self.locality_codes:
+            if point["locality_ref"] not in self.locality_codes:
                 return
 
         # Create short indicator for display
-        if point['indicator'] is not None:
-            point['short_ind'] = self.ind_parser(point['indicator'])
+        if point["indicator"] is not None:
+            point["short_ind"] = self.ind_parser(point["indicator"])
         else:
-            point['indicator'] = ''
-            point['short_ind'] = ''
+            point["indicator"] = ""
+            point["short_ind"] = ""
 
-        if point['stop_area_ref'] not in self.area_codes:
-            point['stop_area_ref'] = None
+        if point["stop_area_ref"] not in self.area_codes:
+            point["stop_area_ref"] = None
 
         list_objects.append(point)
 
@@ -210,16 +210,16 @@ def _modify_stop_areas():
     # Stop areas are repeated if there are multiple modes.
     c_stops = (
         db.session.query(
-            models.StopArea.code.label('area_code'),
-            models.StopPoint.locality_ref.label('local_code'),
-            db.func.count(models.StopPoint.atco_code).label('num_stops')
+            models.StopArea.code.label("area_code"),
+            models.StopPoint.locality_ref.label("local_code"),
+            db.func.count(models.StopPoint.atco_code).label("num_stops")
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code, models.StopPoint.locality_ref)
     ).subquery()
     m_stops = (
         db.session.query(
             c_stops.c.area_code, c_stops.c.local_code,
-            db.func.max(c_stops.c.num_stops).label('max_stops')
+            db.func.max(c_stops.c.num_stops).label("max_stops")
         ).group_by(c_stops.c.area_code, c_stops.c.local_code)
     ).subquery()
 
@@ -240,16 +240,16 @@ def _modify_stop_areas():
         dict_areas[row.area_code].append(row.local_code)
     for area, localities in dict_areas.items():
         if len(localities) == 1:
-            update_areas.append({'code': area, 'locality_ref': localities[0]})
+            update_areas.append({"code": area, "locality_ref": localities[0]})
         else:
             invalid_areas.append("Stop area %s has multiple localities %s"
-                                 % (area, ', '.join(localities)))
+                                 % (area, ", ".join(localities)))
 
     try:
         click.echo("Deleting orphaned stop areas")
         models.StopArea.query.filter(
             models.StopArea.code.in_(list_del)
-        ).delete(synchronize_session='fetch')
+        ).delete(synchronize_session="fetch")
         click.echo("Adding locality codes to stop areas")
         db.session.bulk_update_mappings(models.StopArea, update_areas)
         db.session.commit()
@@ -257,7 +257,7 @@ def _modify_stop_areas():
         db.session.rollback()
         raise
     else:
-        click.echo('\n'.join(invalid_areas))
+        click.echo("\n".join(invalid_areas))
     finally:
         db.session.close()
 
@@ -275,7 +275,7 @@ def _merge_naptan_data(naptan_paths):
 
     if len(naptan_paths) > 1:
         # Create XPath queries for stop areas and points
-        names = {'n': data.xpath("namespace-uri(.)")}
+        names = {"n": data.xpath("namespace-uri(.)")}
         def xpath(element, query):
             return element.xpath(query, namespaces=names)
 
@@ -309,15 +309,15 @@ def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
     ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
 
     if list_area_codes:
-        area_query = ' or '.join(".='%s'" % a for a in list_area_codes)
+        area_query = " or ".join(".='%s'" % a for a in list_area_codes)
         area_ref = "[n:AdministrativeAreaRef[%s]]" % area_query
 
         # Modify the XPath queries to filter by admin area
-        xsl_names = {'xsl': transform.xpath("namespace-uri(.)")}
-        for ref in ['stops', 'areas']:
+        xsl_names = {"xsl": transform.xpath("namespace-uri(.)")}
+        for ref in ["stops", "areas"]:
             param = transform.xpath("//xsl:param[@name='%s']" % ref,
                                     namespaces=xsl_names)[0]
-            param.attrib['select'] += area_ref
+            param.attrib["select"] += area_ref
 
     click.echo("Applying XSLT transform to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
@@ -359,7 +359,7 @@ def commit_naptan_data(naptan_files=None):
                "Converting stop area data", eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
                "Converting stop point data", eval_stops.parse_points,
-               indices=('naptan_code',))
+               indices=("naptan_code",))
     # Commit changes to database
     naptan.commit()
     # Remove all orphaned stop areas and add localities to other stop areas

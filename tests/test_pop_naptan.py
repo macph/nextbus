@@ -10,7 +10,7 @@ import datetime
 import lxml.etree as et
 from flask import current_app
 
-from nextbus import create_app, db, models
+from nextbus import db, models
 from nextbus.populate.naptan import (_create_ind_parser, _get_naptan_data,
     _modify_stop_areas, _NaPTANStops, commit_naptan_data)
 from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,

@@ -100,7 +100,7 @@ class XSLTExtFunctions(object):
     @ext_element_text
     def remove_spaces(self, _, result):
         """ Remove all spaces from content. """
-        return ''.join(result.strip())
+        return "".join(result.strip())
 
     @ext_element_text
     def capitalize(self, _, result):
@@ -113,13 +113,13 @@ class XSLTExtFunctions(object):
                 if char.isalpha():
                     list_words[_w] = word[:_c] + char.upper() + word[_c+1:]
                     break
-        return ' '.join(list_words)
+        return " ".join(list_words)
 
 
 def get_atco_codes():
     """ Helper function to get list of ATCO codes from config. """
-    get_atco_codes = current_app.config.get('ATCO_CODES')
-    if get_atco_codes == 'all':
+    get_atco_codes = current_app.config.get("ATCO_CODES")
+    if get_atco_codes == "all":
         codes = None
     elif isinstance(get_atco_codes, list):
         # Add ATCO area code 940 for trams
@@ -172,10 +172,10 @@ class DBEntries(object):
             raise TypeError("The 'constraint' and 'indices' arguments are "
                             "mutually exclusive.")
         elif constraint is not None:
-            self.conflicts[model] = {'constraint': constraint,
-                                     'columns': columns}
+            self.conflicts[model] = {"constraint": constraint,
+                                     "columns": columns}
         elif indices is not None:
-            self.conflicts[model] = {'indices': indices, 'columns':columns}
+            self.conflicts[model] = {"indices": indices, "columns":columns}
 
         # Create list for model and iterate over all elements
         new_entries = self.entries.setdefault(model, [])
@@ -188,7 +188,7 @@ class DBEntries(object):
                 try:
                     func(new_entries, data)
                 except TypeError as err:
-                    if 'positional argument' in str(err):
+                    if "positional argument" in str(err):
                         raise TypeError(
                             "Filter function must receive two arguments: list "
                             "of existing objects and the current object."
@@ -214,14 +214,14 @@ class DBEntries(object):
             # 'excluded' is a specific property used in ON CONFLICT statements
             # referring to the inserted row conflicting with an existing row
             args = {
-                'set_': {c: getattr(insert.excluded, c) for c in
-                         self.conflicts[model]['columns']},
-                'where': table.c.modified < insert.excluded.modified
+                "set_": {c: getattr(insert.excluded, c) for c in
+                         self.conflicts[model]["columns"]},
+                "where": table.c.modified < insert.excluded.modified
             }
-            if 'constraint' in self.conflicts[model]:
-                args['constraint'] = self.conflicts[model]['constraint']
+            if "constraint" in self.conflicts[model]:
+                args["constraint"] = self.conflicts[model]["constraint"]
             else:
-                args['index_elements'] = self.conflicts[model]['indices']
+                args["index_elements"] = self.conflicts[model]["indices"]
             statement = insert.on_conflict_do_update(**args)
         else:
             # Else, a simple INSERT statement

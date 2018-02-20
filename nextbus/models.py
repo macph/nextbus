@@ -1,6 +1,8 @@
 """
 Models for the nextbus database.
 """
+import sqlalchemy.dialects.postgresql as pg_sql
+
 from nextbus import db
 
 
@@ -14,12 +16,12 @@ class Region(db.Model):
     code = db.Column(db.VARCHAR(2), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
     modified = db.Column(db.DateTime)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
 
     areas = db.relationship('AdminArea', backref='region', order_by='AdminArea.name')
 
     __table_args__ = (
-        db.Index('ix_region_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
+        db.Index('ix_region_tsvector_name', tsv_name, postgresql_using='gin'),
     )
 
     def __repr__(self):
@@ -38,6 +40,7 @@ class AdminArea(db.Model):
                             index=True, nullable=False)
     is_live = db.Column(db.Boolean, default=True)
     modified = db.Column(db.DateTime)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
 
     districts = db.relationship('District', backref='admin_area', order_by='District.name')
     localities = db.relationship('Locality', backref='admin_area', order_by='Locality.name')
@@ -47,8 +50,7 @@ class AdminArea(db.Model):
     stop_areas = db.relationship('StopArea', backref='admin_area', order_by='StopArea.name')
 
     __table_args__ = (
-        db.Index('ix_admin_area_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
+        db.Index('ix_admin_area_tsvector_name', tsv_name, postgresql_using='gin'),
     )
 
     def __repr__(self):
@@ -65,13 +67,13 @@ class District(db.Model):
                                 db.ForeignKey('admin_area.code', ondelete='CASCADE'),
                                 index=True, nullable=False)
     modified = db.Column(db.DateTime)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
 
     localities = db.relationship('Locality', backref='district', order_by='Locality.name')
     postcodes = db.relationship('Postcode', backref='district', order_by='Postcode.text')
 
     __table_args__ = (
-        db.Index('ix_district_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
+        db.Index('ix_district_tsvector_name', tsv_name, postgresql_using='gin'),
     )
 
     def __repr__(self):
@@ -97,6 +99,7 @@ class Locality(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     modified = db.Column(db.DateTime)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
 
     stop_points = db.relationship('StopPoint', backref='locality',
                                   order_by='StopPoint.name, StopPoint.short_ind')
@@ -105,8 +108,7 @@ class Locality(db.Model):
     #                            order_by='Locality.name')
 
     __table_args__ = (
-        db.Index('ix_locality_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
+        db.Index('ix_locality_tsvector_name', tsv_name, postgresql_using='gin'),
     )
 
     def __repr__(self):
@@ -131,17 +133,25 @@ class StopArea(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     modified = db.Column(db.DateTime)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
 
     stop_points = db.relationship('StopPoint', backref='stop_area',
                                   order_by='StopPoint.name, StopPoint.short_ind')
 
     __table_args__ = (
-        db.Index('ix_stop_area_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
+        db.Index('ix_stop_area_tsvector_name', tsv_name, postgresql_using='gin'),
     )
 
     def __repr__(self):
         return '<StopArea(%r, %r)>' % (self.code, self.name)
+
+    @classmethod
+    def count_stops(cls):
+        """ Returns an ORM expression finding the number of associated stop
+            points. Requries an inner join with stop points and grouped by stop
+            area code.
+        """
+        return db.cast(db.func.count(cls.code), db.Text)
 
 
 class StopPoint(db.Model):
@@ -174,12 +184,14 @@ class StopPoint(db.Model):
     stop_type = db.Column(db.VARCHAR(3), nullable=False)
     bearing = db.Column(db.VARCHAR(2))
     modified = db.Column(db.DateTime)
+    tsv_both = db.Column(pg_sql.TSVECTOR)
+    tsv_name = db.Column(pg_sql.TSVECTOR)
+    tsv_street = db.Column(pg_sql.TSVECTOR)
 
     __table_args__ = (
-        db.Index('ix_stop_point_gin_name', db.text("to_tsvector('english', name)"),
-                 postgresql_using='gin'),
-        db.Index('ix_stop_point_gin_street', db.text("to_tsvector('english', street)"),
-                 postgresql_using='gin'),
+        db.Index('ix_stop_point_tsvector_both', tsv_both, postgresql_using='gin'),
+        db.Index('ix_stop_point_tsvector_name', tsv_name, postgresql_using='gin'),
+        db.Index('ix_stop_point_tsvector_street', tsv_street, postgresql_using='gin'),
     )
 
     def __repr__(self):

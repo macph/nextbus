@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired, InputRequired
 
 from nextbus import parser, search
 
-MIN_CHAR = 3
+MIN_CHAR = 2
 parse = parser.TSQueryParser(use_logger=True)
 
 
@@ -41,13 +41,14 @@ def _search_results(form, field):
         result = search.search_exists(field.data, parse)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
-                                 % (field.data, err))
+                                 % (field.data, err), exc_info=True)
         raise ValidationError("There was a problem with your search. Try "
                               "again.")
     except search.PostcodeException as err:
         current_app.logger.debug(str(err))
-        raise ValidationError("Postcode '%s' was not found." % err.postcode)
-
+        raise ValidationError("Postcode '%s' was not found; it may not exist "
+                              "or lies outside the area this website covers"
+                              % err.postcode)
     if result:
         form.query = field.data
         form.result = result
@@ -59,8 +60,8 @@ def _search_results(form, field):
 
 class SearchPlaces(FlaskForm):
     """ Full text search for places, stops and postcodes. """
-    search_query = StringField('search', validators=[InputRequired()])
-    submit_query = SubmitField('Search')
+    search_query = StringField("search", validators=[InputRequired()])
+    submit_query = SubmitField("Search")
 
 
 class SearchPlacesValidate(FlaskForm):
@@ -70,8 +71,8 @@ class SearchPlacesValidate(FlaskForm):
     """
     validators = [DataRequired("Can't search without any words!"),
                   _check_length, _search_results]
-    search_query = StringField('search', validators=validators)
-    submit_query = SubmitField('Search')
+    search_query = StringField("search", validators=validators)
+    submit_query = SubmitField("Search")
 
     def __init__(self, *args, **kwargs):
         super(SearchPlacesValidate, self).__init__(*args, **kwargs)

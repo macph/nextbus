@@ -10,7 +10,7 @@ import datetime
 import lxml.etree as et
 from flask import current_app
 
-from nextbus import create_app, db, models
+from nextbus import db, models
 import nextbus.populate.modify as mod
 import test_db
 

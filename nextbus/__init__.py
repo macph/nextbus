@@ -15,12 +15,19 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 
-def create_app(config_obj=None, config_file=None, force_echo=None):
-    """ App factory function for nextbus. """
+def create_app(config_obj=None, config_file=None):
+    """ App factory function for nextbus.
+
+        :param config_obj: A class with configuration parameters as variables,
+        or a string pointing to a class within a file.
+        :param config_file: Python file file with configuration parameters.
+        :returns: The nextbus Flask application.
+        :raises ValueError: Raised if either both or none of the two arguments
+        are specified.
+    """
     app = Flask(__name__)
-    if config_obj is None and config_file is None:
-        click.echo(" * Loading default configuration")
-        app.config.from_object(default_config.DevelopmentConfig)
+    if not bool(config_obj) ^ bool(config_file):
+        raise ValueError("A configuration object or file must be specified.")
     elif config_obj is not None:
         click.echo(" * Loading configuration from object %r" % config_obj)
         app.config.from_object(config_obj)
@@ -33,18 +40,13 @@ def create_app(config_obj=None, config_file=None, force_echo=None):
             file_path = os.path.join(ROOT_DIR, config_file)
         click.echo(" * Loading configuration from file '%s'" % file_path)
         app.config.from_pyfile(file_path)
-    else:
-        raise ValueError("Can't have both config object and config file")
-    if force_echo is not None:
-        app.config['SQLALCHEMY_ECHO'] = force_echo
 
     db.init_app(app)
     migrate.init_app(app, db)
     # Adding app, db and model objects to flask shell
     from nextbus import models
-    app.shell_context_processor(
-        lambda: {'app': app, 'db': db, 'models': models}
-    )
+    app.shell_context_processor(lambda: {"app": app, "db": db,
+                                         "models": models})
 
     from nextbus.views import api, page_search, page_no_search
     app.register_blueprint(api)

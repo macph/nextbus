@@ -62,10 +62,3 @@ class ParserTests(unittest.TestCase):
     def test_words_not(self):
         self.assertEqual(self.parser("!Parliament not Road"),
                          "!Parliament&!Road")
-
-    def test_words_at(self):
-        operators = ["at", "in", ",", "@"]
-        query = "(Parliament or Trafalgar) and not Square %s London"
-        expected = ("(Parliament|Trafalgar)&!Square", "London")
-        queries = [self.parser(query % op) for op in operators]
-        self.assertEqual(queries, [expected] * len(operators))

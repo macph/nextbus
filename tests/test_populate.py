@@ -119,7 +119,7 @@ class AtcoCodeTests(unittest.TestCase):
     """ Test the retrieval of ATCO codes from the config """
 
     def setUp(self):
-        self.app = create_app()
+        self.app = create_app(config_obj="default_config.TestConfig")
 
     def tearDown(self):
         del self.app
@@ -214,8 +214,8 @@ class EntryDBTests(test_db.BaseDBTests):
     """ Tests on _DBEntries and committing changes to database """
     xml = io.BytesIO(
         b"<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
-        b"<modified>2006-01-25T07:54:31</modified></Region></Regions>"
-        b"</Data>"
+        b"<modified>2006-01-25T07:54:31</modified><tsv_name/></Region>"
+        b"</Regions></Data>"
     )
 
     def setUp(self):
@@ -235,7 +235,7 @@ class EntryDBTests(test_db.BaseDBTests):
             insert.bind = db.engine
             statement = str(insert)
             self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified\) VALUES"
+                r"INSERT INTO region \(code, name, modified, tsv_name\) VALUES"
             )
             self.assertNotRegex(statement, r"ON CONFLICT.+?DO UPDATE")
 
@@ -248,11 +248,11 @@ class EntryDBTests(test_db.BaseDBTests):
             insert.bind = db.engine
             statement = str(insert)
             self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified\) "
+                r"INSERT INTO region \(code, name, modified, tsv_name\) "
                 r"VALUES \(.+?\) ON CONFLICT ON CONSTRAINT region_pkey "
                 r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-                r"modified = excluded.modified WHERE "
-                r"region.modified < excluded.modified"
+                r"modified = excluded.modified, tsv_name = excluded.tsv_name "
+                r"WHERE region.modified < excluded.modified"
             )
 
     def test_insert_statement_column(self):
@@ -263,11 +263,11 @@ class EntryDBTests(test_db.BaseDBTests):
             insert.bind = db.engine
             statement = str(insert)
             self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified\) "
+                r"INSERT INTO region \(code, name, modified, tsv_name\) "
                 r"VALUES \(.+?\) ON CONFLICT \(code\) "
                 r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-                r"modified = excluded.modified WHERE "
-                r"region.modified < excluded.modified"
+                r"modified = excluded.modified, tsv_name = excluded.tsv_name "
+                r"WHERE region.modified < excluded.modified"
             )
 
     def test_commit_changes(self):

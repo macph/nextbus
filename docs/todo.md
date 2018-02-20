@@ -120,13 +120,16 @@ def downgrade():
     - ~~When searching from the search results page, should any errors be loaded on the next page, rather than returning the same page but with errors? I don't know if the results will be cached.~~
     - How would we sort stops? Ranking? By name?
     - ~~How would we filter by area/place in list? For example, using the search query 'High Street Sheffield':~~ *Done with @; need to think more about whether this is possible without use of operators - use a combined GIN index and use ranking to order results??*
-        - We want to search stops with 'High Street' and 'Sheffield' separately.
-        - Ideally this would return stops with name or street 'High Street' that are located in place 'Sheffield' (eg 'Sheffield Centre' locality).
-        - But how do we know which keywords?
+        - ~~We want to search stops with 'High Street' and 'Sheffield' separately.
+        - ~~Ideally this would return stops with name or street 'High Street' that are located in place 'Sheffield' (eg 'Sheffield Centre' locality).~~
+        - ~~But how do we know which keywords?~~
         - ~~One option is to use parser and use a keyword. Then with 'High Street in Sheffield' we can do the above search.~~
-        - Keywords: `@` `at``area` `in`, `place`, `where`. Use a colon or is that too difficult? I think the `at`/`@` keyword is the best here. Add to pyparsing and do a second passthrough where multiple `@` expressions can be interpreted as `OR`.
+        - ~~Keywords: `@` `at``area` `in`, `place`, `where`. Use a colon or is that too difficult? I think the `at`/`@` keyword is the best here. Add to pyparsing and do a second passthrough where multiple `@` expressions can be interpreted as `OR`.~~
+        - **Solved by creating TSVector columns which contain lexemes for not just stops but also their localities/districts/areas, getting around having to use specific operators.**
+        - Still need to create a more graceful way of displaying results exceeding a limit.
+        - **Consider whether to concatenate TSVector columns from `locality` with `stop_area` or `stop_point` during search queries; this would save a lot of data duplication and enable us to have `name`, `street` and `name || street` TSVector values for stop point.** This would then let us do a `name street locality` search that still works.
     - ~~Set up pyparsing to label results. This lets us do a more refined search expression and identify specific phrases such as above.~~
-    - ~~Use regex to identify postcodes and automatically return error if no postcode was found. Eg, 'W1X1AA' is definitely a postcode but doesn't exist. No point in doing a full search.~~
+    - ~~Use regex to identify postcodes and automatically return error if no postcode was found. Eg, 'W1X1AA' is can be identifed as a postcode but doesn't exist. No point in doing a full search.~~
 
 ```sql
 SELECT atco_code, common_name, indicator

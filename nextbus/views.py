@@ -132,57 +132,49 @@ def search_results(query):
     # Check if query has enough alphanumeric characters
     if len(forms.strip_punctuation(s_query)) < forms.MIN_CHAR:
         return render_template(
-            'search.html', query=s_query, form_search=g.form,
-            error="Too few characters; try a longer phrase."
+            'search.html', query=s_query, error="Too few characters; try a "
+            "longer phrase."
         )
     try:
-        result = search.search_full(s_query, forms.parse)
+        results = search.search_full(s_query, forms.parse)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
-                                 % (query, err))
+                                 % (query, err), exc_info=True)
         return render_template(
-            'search.html', query=s_query, form_search=g.form,
-            error="There was a problem reading your search query."
+            'search.html', query=s_query, error="There was a problem reading "
+            "your search query."
         )
     except search.PostcodeException as err:
         current_app.logger.debug(str(err))
         return render_template(
-            'search.html', query=s_query, form_search=g.form,
-            error="Postcode '%s' was not found." % err.postcode
+            'search.html', query=s_query, error="Postcode '%s' was not found; "
+            "it may not exist or lies outside the area this website covers."
+            % err.postcode
         )
 
     # Redirect to postcode or stop if one was found
-    if isinstance(result, models.StopPoint):
-        return redirect('/stop/atco/%s' % result.atco_code)
-    elif isinstance(result, models.Postcode):
-        return redirect('/near/postcode/%s' % result.text.replace(' ', '+'))
-    elif not result:
+    if isinstance(results, models.StopPoint):
+        return redirect('/stop/atco/%s' % results.atco_code)
+    elif isinstance(results, models.Postcode):
+        return redirect('/near/postcode/%s' % results.text.replace(' ', '+'))
+    elif not results:
         return render_template(
-            'search.html', query=s_query, form_search=g.form,
-            error="No results were found."
+            'search.html', query=s_query, error="No results were found."
         )
-
-    dict_result = collections.defaultdict(list)
-    for row in result:
-        if row.table_name in ['admin_area', 'district']:
-            dict_result['area'].append(row)
-        elif row.table_name in ['stop_area', 'stop_point']:
-            dict_result['stop'].append(row)
-        else:
-            dict_result[row.table_name].append(row)
-    for group, rows in dict_result.items():
-        dict_result[group] = sorted(rows, key=lambda r: r.name)
-    # Throw message if too many stops were found
-    if len(dict_result.get('stop', [])) > search.STOPS_LIMIT:
-        del dict_result['stop']
-        stops_limit = True
     else:
-        stops_limit = False
+        # A dict of matching results. Truncate results list if they get
+        # too long
+        stops_limit = len(results.get("stop", [])) > search.STOPS_LIMIT
+        local_limit = len(results.get("locality", [])) > search.LOCAL_LIMIT
+        if stops_limit:
+            results["stop"] = results["stop"][:search.STOPS_LIMIT]
+        if local_limit:
+            results["locality"] = results["locality"][:search.LOCAL_LIMIT]
 
-    return render_template(
-        'search.html', query=s_query, results=dict_result,
-        stops_limit=stops_limit
-    )
+        return render_template(
+            'search.html', query=s_query, results=results,
+            stops_limit=stops_limit, local_limit=local_limit
+        )
 
 
 @page_search.route('/list/', methods=['GET', 'POST'])
@@ -346,7 +338,7 @@ def list_in_locality(locality_code):
             search.table_name_literal(models.StopArea, 'table'),
             models.StopArea.code,
             models.StopArea.name,
-            db.cast(db.func.count(models.StopArea.code), db.Text).label('ind')
+            models.StopArea.count_stops().label('ind')
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code)
         .filter(models.StopArea.locality_ref == lty.code)
@@ -493,9 +485,10 @@ def stop_get_times():
         abort(405)
     try:
         nxb = tapi.get_nextbus_times(data['code'])
-    except (KeyError, ValueError) as err:
+    except (KeyError, ValueError):
         # Malformed request; no ATCO code
-        current_app.logger.error(err)
+        current_app.logger.error("Error occured when retrieving live times "
+                                 "with data %r" % data, exc_info=True)
         abort(400)
     except HTTPError:
         # Problems with the API service

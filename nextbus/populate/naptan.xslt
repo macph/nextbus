@@ -7,8 +7,12 @@
                xmlns:re="http://exslt.org/regular-expressions"
                exclude-result-prefixes="func exsl re">
   <xsl:output method="xml" indent="yes"/>
-  <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode) and @Status='active' and n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]"/>
-  <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active' and n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]"/>
+  <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode)] 
+    [@Status='active'][n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]
+    [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
+  <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
+    [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
+    [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
 
   <xsl:template match="n:NaPTAN">
     <Data>

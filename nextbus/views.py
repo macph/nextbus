@@ -36,29 +36,28 @@ def _find_stops_in_range(coord):
         latter value.
     """
     lat_0, long_0, lat_1, long_1 = location.bounding_box(coord, MAX_DISTANCE)
-    query_nearby_stops = db.session.query(
-        models.StopPoint.atco_code,
-        models.StopPoint.naptan_code,
-        models.StopPoint.name,
-        models.StopPoint.indicator,
-        models.StopPoint.short_ind,
-        models.StopPoint.street,
-        models.StopPoint.latitude,
-        models.StopPoint.longitude
-    ).filter(
-        models.StopPoint.latitude > lat_0,
-        models.StopPoint.latitude < lat_1,
-        models.StopPoint.longitude > long_0,
-        models.StopPoint.longitude < long_1
-    )
-    stops = [
-        (stop._asdict(),
-         location.get_dist(coord, (stop.latitude, stop.longitude)))
-        for stop in query_nearby_stops.all()
-    ]
-    filter_stops = filter(lambda x: x[1] < MAX_DISTANCE, stops)
+    nearby_stops = (
+        db.session.query(
+            models.StopPoint.atco_code,
+            models.StopPoint.naptan_code,
+            models.StopPoint.name,
+            models.StopPoint.indicator,
+            models.StopPoint.short_ind,
+            models.StopPoint.street,
+            models.StopPoint.latitude,
+            models.StopPoint.longitude
+        ).filter(db.between(models.StopPoint.latitude, lat_0, lat_1),
+                 db.between(models.StopPoint.longitude, long_0, long_1))
+    ).all()
 
-    return sorted(filter_stops, key=lambda x: x[1])
+    stops = []
+    for stop in nearby_stops:
+        distance = location.get_dist(coord, (stop.latitude, stop.longitude))
+        if distance < MAX_DISTANCE:
+            stops.append((stop._asdict(), distance))
+    stops.sort(key=lambda x: x[1])
+
+    return stops
 
 
 def _group_places(list_places, attr=None, key=None):

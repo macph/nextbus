@@ -119,7 +119,7 @@ class AtcoCodeTests(unittest.TestCase):
     """ Test the retrieval of ATCO codes from the config """
 
     def setUp(self):
-        self.app = create_app(config_obj="default_config.TestConfig")
+        self.app = create_app(config_obj="default_config.DevelopmentConfig")
 
     def tearDown(self):
         del self.app

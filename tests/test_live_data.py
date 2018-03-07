@@ -47,7 +47,7 @@ class TAPITests(BaseRequestsTests):
     atco_code = "490013767D"
 
     def setUp(self):
-        self.app = create_app(config_obj="default_config.TestConfig")
+        self.app = create_app(config_obj="default_config.DevelopmentConfig")
         super(TAPITests, self).setUp()
 
     def tearDown(self):
@@ -254,7 +254,7 @@ class LiveDataTests(BaseRequestsTests):
     atco_code = "490013767D"
 
     def setUp(self):
-        self.app = create_app(config_obj="default_config.TestConfig")
+        self.app = create_app(config_obj="default_config.DevelopmentConfig")
         super(LiveDataTests, self).setUp()
 
     def tearDown(self):

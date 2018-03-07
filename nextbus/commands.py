@@ -1,18 +1,19 @@
 """
 CLI commands for the nextbus app.
 """
-import collections
 import os
 
 import click
 from flask.cli import FlaskGroup
 
+from definitions import CONFIG_ENV
 
-def run_cli_app(info):
+
+def run_cli_app(_):
     """ Runs app from CLI. """
     from nextbus import create_app
 
-    config = os.environ.get("FLASK_CONFIG")
+    config = os.environ.get(CONFIG_ENV)
     if config:
         app = create_app(config_file=config)
     else:

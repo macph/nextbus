@@ -7,8 +7,10 @@ class Config(object):
     """ Default config. """
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = None  # Location of PostgreSQL database
+    TEST_DATABASE_URI = None        # Location of test PostgreSQL database. Must be distinct from
+                                    # the above address
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False         # SQL queries not logged (default)
+    SQLALCHEMY_ECHO = False         # Must be kept False and let all SQLAlchemy queries be logged
     WTF_CSRF_ENABLED = True         # Enables CSRF in WTForms objects
     SECRET_KEY = None               # A different secret key must be set in production
     ATCO_CODES = "all"              # Filters ATCO areas when populating, either 'all' or a list
@@ -22,26 +24,8 @@ class Config(object):
 
 
 class DevelopmentConfig(Config):
-    """ Config for developing. All SQL queries are logged. """
+    """ Config for developing and testing. """
     SQLALCHEMY_DATABASE_URI = "postgres://localhost/nextbus"
+    TEST_DATABASE_URI = "postgres://localhost/nextbus_test"
     SECRET_KEY = "sup3r sekr3t k3y"
     DEBUG = True
-    SQLALCHEMY_ECHO = True
-
-
-class TestConfig(Config):
-    """ Config for testing. """
-    SQLALCHEMY_DATABASE_URI = "postgres://localhost/nextbus_test"
-    SECRET_KEY = "sup3r sekr3t k3y"
-    DEBUG = True
-    TESTING = True
-    SQLALCHEMY_ECHO = True
-
-
-class TestConfigYorkshire(object):
-    """ Config for testing populating from two admin areas only. """
-    SQLALCHEMY_DATABASE_URI = "postgres://localhost/nextbus_test"
-    SECRET_KEY = "sup3r sekr3t k3y"
-    DEBUG = True
-    TESTING = True
-    ATCO_CODES = [370, 450]

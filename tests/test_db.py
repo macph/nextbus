@@ -8,6 +8,7 @@ import unittest
 import psycopg2
 import sqlalchemy
 
+from definitions import CONFIG_ENV
 from nextbus import db, create_app, models
 
 
@@ -86,15 +87,26 @@ STOP_POINT = {
 
 class BaseDBTests(unittest.TestCase):
     """ Base class for testing with the app and database """
-    ENV_VAR = "TEST_DATABASE_URI"
+    MAIN = "SQLALCHEMY_DATABASE_URI"
+    TEST = "TEST_DATABASE_URI"
 
     @classmethod
     def setUpClass(cls):
-        # set up app
-        cls.app = create_app(config_obj="default_config.TestConfig")
-        new_uri = os.environ.get(cls.ENV_VAR)
-        if new_uri:
-            cls.app.config["SQLALCHEMY_DATABASE_URI"] = new_uri
+        config = os.environ.get(CONFIG_ENV)
+        if config:
+            cls.app = create_app(config_file=config)
+        else:
+            cls.app = create_app(config_obj="default_config.DevelopmentConfig")
+        # Find the test database address
+        if not cls.app.config.get(cls.TEST):
+            raise ValueError("No test database URI set in %s" % cls.TEST)
+        elif cls.app.config.get(cls.TEST) == cls.app.config.get(cls.MAIN):
+            raise ValueError("The %s and %s parameters must not be the same; "
+                             "the unittests will commit destructive edits."
+                             % (cls.TEST, cls.MAIN))
+        else:
+            # Set SQLAlchemy database address to test database address
+            cls.app.config[cls.MAIN] = cls.app.config.get(cls.TEST)
 
     @classmethod
     def tearDownClass(cls):

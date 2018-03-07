@@ -7,11 +7,14 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
+
+from nextbus import parser
 from nextbus._logging import load_log_config
 
 
 db = SQLAlchemy()
 migrate = Migrate()
+ts_parser = parser.TSQueryParser()
 
 
 def create_app(config_obj=None, config_file=None):

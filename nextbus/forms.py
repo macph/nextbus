@@ -7,38 +7,30 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, InputRequired
 
-from nextbus import parser, search
-
-MIN_CHAR = 2
-parse = parser.TSQueryParser(use_logger=True)
+from nextbus import search
+from nextbus.parser import SET_ALPHANUM
 
 
-def strip_punctuation(query):
-    """ Strips out all punctuation by using str.translate(). """
-    # Remove all punctuation, leaving behind alphanumeric characters to test
-    try:
-        translator = query.maketrans(dict.fromkeys(string.punctuation))
-        alphanumeric = query.translate(translator)
-    except AttributeError as err:
-        raise TypeError("query %r is not a valid string." % query) from err
-
-    return alphanumeric
+def check_alphanum(query):
+    """ Strips out all punctuation and whitespace by using character sets and
+        check if the remaining set has enough characters.
+    """
+    return bool(set(query) & SET_ALPHANUM)
 
 
-def _check_length(form, field):
+def _validate_length(form, field):
     """ Validator to check search query after stripping out punctuation
         characters.
     """
-    alpha_num = strip_punctuation(field.data)
-    if len(alpha_num) < MIN_CHAR:
-        raise ValidationError("Too few letters or digits; try using a longer "
+    if not check_alphanum(field.data):
+        raise ValidationError("Not enough letters or numbers; try a longer "
                               "phrase.")
 
 
 def _search_results(form, field):
     """ Does a search and check if any results pop up. """
     try:
-        result = search.search_exists(field.data, parse)
+        result = search.search_exists(field.data)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (field.data, err), exc_info=True)
@@ -70,7 +62,7 @@ class SearchPlacesValidate(FlaskForm):
         page.
     """
     validators = [DataRequired("Can't search without any words!"),
-                  _check_length, _search_results]
+                  _validate_length, _search_results]
     search_query = StringField("search", validators=validators)
     submit_query = SubmitField("Search")
 

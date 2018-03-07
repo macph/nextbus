@@ -3,11 +3,13 @@ Views for the nextbus website.
 """
 import collections
 import re
+
 from requests import HTTPError
 from sqlalchemy import literal_column, or_
 from sqlalchemy.orm import load_only
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
                    redirect, request)
+
 from nextbus import db, forms, location, models, search, tapi
 
 
@@ -130,13 +132,13 @@ def search_results(query):
     """ Shows a list of search results. """
     s_query = query.replace('+', ' ')
     # Check if query has enough alphanumeric characters
-    if len(forms.strip_punctuation(s_query)) < forms.MIN_CHAR:
+    if not forms.check_alphanum(s_query):
         return render_template(
             'search.html', query=s_query, error="Too few characters; try a "
             "longer phrase."
         )
     try:
-        results = search.search_full(s_query, forms.parse)
+        results = search.search_full(s_query)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (query, err), exc_info=True)

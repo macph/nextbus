@@ -1,8 +1,16 @@
 """
 Search query parser for the nextbus search module.
 """
+import re
+
 import pyparsing as pp
 from flask import current_app
+
+
+SET_ALPHANUM = set(pp.alphanums + pp.alphas8bit)
+SET_PRINT = set(pp.printables + pp.alphas8bit + pp.punc8bit)
+SET_PUNCT = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
+RE_VALID_CHAR = re.compile(r"[^\x00-\x7f\xa1-\xff]")
 
 
 def _fix_parentheses(query, opening="(", closing=")"):
@@ -16,9 +24,9 @@ def _fix_parentheses(query, opening="(", closing=")"):
     """
     string = str(query)
     open_p = 0
-    # Remove any opening parentheses from end of string
-    while string[-1] == opening:
-        string = string[:-1]
+    # Remove any stray parentheses from either side
+    string = string.lstrip(closing).rstrip(opening)
+
     for i, char in enumerate(string):
         if char == opening:
             open_p += 1
@@ -27,19 +35,19 @@ def _fix_parentheses(query, opening="(", closing=")"):
         if open_p < 0:
             # Remove the stray closing parenthesis and try again
             cut_string = string[:i] + string[i+1:]
-            new_query = _fix_parentheses(cut_string, opening, closing)
+            string = _fix_parentheses(cut_string, opening, closing)
             break
     else:
         # Check if the parentheses are closed - add extra ones if necessary
-        new_query = string + open_p * closing if open_p > 0 else string
+        if open_p > 0:
+            string += closing * open_p
 
-    return new_query
+    return string
 
 
 class Operator(object):
     """ Base class for operators in a search query. """
-    operator = None
-    rank = None
+    operator, rank = None, None
     operands = list()
 
     def __init__(self):
@@ -47,22 +55,26 @@ class Operator(object):
             raise NotImplementedError("The operator and rank must be defined "
                                       "with a new subclass.")
 
-    def combine_operands(self):
+    def combine_operands(self, exclude_op=None):
         """ Returns sequence of operands converted to strings with the
             stringify method.
+
+            :param exclude_op: List of operators, as strings, to exclude.
+            :returns: List of strings converted from operands.
         """
         sequence = []
         for op in self.operands:
             try:
+                if exclude_op is not None and op.operator in exclude_op:
+                    # Exclude this term
+                    continue
+                string = op.stringify(exclude_op)
                 if self.rank > op.rank:
                     # Lower ranked operands need to be wrapped in parentheses
-                    string = "(%s)" % op.stringify()
-                else:
-                    string = op.stringify()
+                    string = "(" + string + ")"
             except AttributeError:
                 # Should be an string already
                 string = op
-
             sequence.append(string)
 
         return sequence
@@ -74,15 +86,14 @@ class UnaryOperator(Operator):
 
     def __init__(self, tokens):
         super(UnaryOperator, self).__init__()
-        self.symbol = tokens[0][0]
         self.operands = [tokens[0][1]]
 
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
 
-    def stringify(self):
+    def stringify(self, exclude_op=None):
         """ Returns the parsed query in string form. """
-        return self.operator + self.combine_operands()[0]
+        return self.operator + self.combine_operands(exclude_op)[0]
 
 
 class BinaryOperator(Operator):
@@ -91,33 +102,39 @@ class BinaryOperator(Operator):
 
     def __init__(self, tokens):
         super(BinaryOperator, self).__init__()
-        self.symbol = tokens[0][1]
         self.operands = tokens[0][::2]
 
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
 
-    def stringify(self):
+    def stringify(self, exclude_op=None):
         """ Returns the parsed query in string form. """
-        return self.operator.join(self.combine_operands())
+        return self.operator.join(self.combine_operands(exclude_op))
 
 
 class Not(UnaryOperator):
     """ Unary NOT operator. """
-    operator = "!"
-    rank = 2
+    operator, rank = "!", 3
+
+
+class FollowedBy(BinaryOperator):
+    """ Binary operator for phrases. """
+    operator, rank = "<->", 2
+
+    def __init__(self, tokens):
+        super(FollowedBy, self).__init__(tokens)
+        # Override the operands
+        self.operands = tokens[0].strip("'" + '"').split()
 
 
 class And(BinaryOperator):
     """ Binary AND operator. """
-    operator = "&"
-    rank = 1
+    operator, rank = "&", 1
 
 
 class Or(BinaryOperator):
     """ Binary OR operator. """
-    operator = "|"
-    rank = 0
+    operator, rank = "|", 0
 
 
 class TSQueryParser(object):
@@ -125,84 +142,101 @@ class TSQueryParser(object):
         ``to_tsquery()`` function.
 
         The PostgreSQL function accepts the following operators:
+        - ``()`` to evaluate inner expressions separately
+        - ``<->`` to ensure words follow each other (eg phrase)
+        - ``!`` to exclude word from query
         - ``&`` for AND between words
         - ``|`` for OR between words
-        - ``!`` to exclude word from query
-        - ``()`` to evaluate inner expressions separately.
 
-        All operators must be explicit, that is, a search query ``foo bar``
-        must be inputted as ``foo & bar``. This parser converts a search query
-        into one that can be read by ``to_tsquery`` properly.
+        All operators used by the function must be explicit, that is, a search
+        query ``foo bar`` must be read as ``foo & bar`` by `to_tsquery()`.
 
         The parser accepts the following operators:
+        - ``foo (bar or baz)`` to evaluate the inner expression separately
+        - ``foo "bar baz"`` for phrases
         - ``not foobar`` or ``!foobar`` to exclude a word from searches
         - ``foo bar`` or ``foo & bar`` to include both words
         - ``foo or bar`` and ``foo | bar`` to use either words
-        - ``foo (bar or baz)`` to evaluate the OR expression first
 
         Spaces between words or parentheses are parsed as implicit AND
         expressions.
+
+        PostgreSQL's ``ts_rank()`` ignores operators within a tsquery value.
+        It is uncertain whether this is intentional or not but it makes
+        filtering by rank difficult when NOT operators are used. As a result
+        a method is used to return a pair of strings - one to use for matching,
+        and the other with all NOT terms excluded for ranking. See:
+        https://www.postgresql.org/message-id/11187.1487381065%40sss.pgh.pa.us
     """
-    def __init__(self, use_logger=False):
-        self.parser = self.create_parser()
-        self.use_logger = use_logger
+    def __init__(self):
+        self.parser = self._create_parser()
 
-    def __repr__(self):
-        return "<TSQueryParser(use_logger=%s)>" % self.use_logger
+    def __call__(self, query):
+        """ Uses the parser to create a nested result suitable for tsquery
+            parsing.
 
-    def __call__(self, search_query):
-        """ Uses the parser and the to_string method to convert a search query
-            to a string suitable for TSQuery objects.
-
-            :param query: String from query.
-            :returns: A string to be used in ``to_tsquery()``.
+            :param query: String from query. All characters not in the
+            extended ASCII set are stripped.
+            :returns: A nested list of words and operators defined by ``Not``,
+            ``FollowedBy``, ``And`` and ``Or`` instances.
         """
         try:
-            new_query = _fix_parentheses(search_query)
-            output = self.parser.parseString(new_query)
-        except pp.ParseException as err:
-            raise ValueError("Parser ran into an error with the search query "
-                             "%r:\n%s" % (search_query, err)) from err
-        # Getting rid of outer list if one exists
-        result = output[0] if len(output) == 1 else output
-        try:
-            tsquery = result.stringify()
-        except AttributeError:
-            tsquery = result
+            output = self.parser.parseString(query)
+        except pp.ParseException:
+            current_app.logger.error("Parser ran into an error with the "
+                                     "search query %r" % query, exc_info=1)
+            raise ValueError("Query %r cannot be parsed.")
+        return output
 
-        if self.use_logger:
-            current_app.logger.debug(
-                "Search query %r parsed as\n%s\nand formatted as %r."
-                % (search_query, output.dump(), tsquery)
-            )
+    def parse(self, query):
+        """ Formats parsed query to output two strings: one with including all
+            operators and the other excluding all NOT terms.
+
+            :param query: String from search query.
+            :returns: A tuple of two formatted strings suitable for ``tsquery``
+            use.
+        """
+        text = RE_VALID_CHAR.sub(r"", query)
+        text = _fix_parentheses(text)
+
+        output = self(text)
+        if not output:
+            raise ValueError("Query %r contained no valid words.")
+
+        op = output[0] if len(output) == 1 else output
+        try:
+            tsquery = op.stringify(), op.stringify(exclude_op="!")
+        except AttributeError:
+            tsquery = (op, op)
+        current_app.logger.debug("Search query %r parsed as %r and formatted "
+                                 "as %s." % (query, output.dump(), tsquery))
+
         return tsquery
 
     @staticmethod
-    def create_parser():
-        """ Creates the parser. """
+    def _create_parser():
+        """ Creates parser using recursive expressions with operators. """
         # Operators
         and_, or_ = pp.CaselessKeyword("and"), pp.CaselessKeyword("or")
         op_not = pp.CaselessKeyword("not") | pp.Literal("!")
-        op_and = and_ | pp.Literal("&")
+        op_and = pp.Optional(and_ | pp.Literal("&"), default="&")
         op_or = or_ | pp.Literal("|")
 
-        punctuation = "".join(
-            c for c in pp.printables
-            if c not in pp.alphanums and c not in "!&|()"
-        ) + pp.punc8bit
+        # Ignore operators and parentheses
+        char_no_operators = SET_PRINT - set("()!&|+")
+        word = ~or_ + ~and_ + pp.Word("".join(char_no_operators))
 
-        # Operators 'and' and 'or' are excluded from words as not to be
-        # part of search query. 'not' is higher in precedence and doesn't have
-        # this problem
-        illegal = pp.Word(punctuation)
-        word = ~and_ + ~or_ + pp.Word(pp.alphanums + pp.alphas8bit)
-        search_term = (pp.Optional(illegal.suppress()) + word
-                        + pp.Optional(illegal.suppress()))
-        # '&' added by default between words if not present
-        search_expr = pp.infixNotation(search_term, [
-            (op_not, 1, pp.opAssoc.RIGHT, Not),
-            (pp.Optional(op_and, default="&"), 2, pp.opAssoc.LEFT, And),
-            (op_or, 2, pp.opAssoc.LEFT, Or)
-        ]) + pp.Optional(pp.Word("!&|").suppress()) + pp.StringEnd()
+        # Declare empty parser and nested terms before before defining
+        expression = pp.Forward()
+        term = (pp.quotedString.setParseAction(FollowedBy) |
+                pp.Suppress("(") + expression + pp.Suppress(")") | word)
 
-        return search_expr
+        term_not = pp.Group(op_not + term).setParseAction(Not) | term
+        term_and = pp.Group(term_not + pp.OneOrMore(op_and + term_not)
+                           ).setParseAction(And) | term_not
+        term_or = pp.Group(term_and + pp.OneOrMore(op_or + term_and)
+                          ).setParseAction(Or) | term_and
+
+        expression <<= term_or | pp.Empty()
+
+        return expression

@@ -4,7 +4,9 @@ Search functions for the nextbus package.
 import collections
 import re
 
-from nextbus import db, models
+from flask import current_app
+
+from nextbus import db, models, ts_parser
 
 
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
@@ -31,32 +33,35 @@ def search_code(query):
     """ Queries stop points and postcodes to find an exact match, returning
         the model object, or None if no match is found.
     """
+    found = None
     postcode = REGEX_POSTCODE.match(query)
     if postcode:
         # Search postcode; make all upper and remove spaces first
         outward, inward = postcode.group(1), postcode.group(2)
         q_psc = (
-            models.Postcode.query
-            .options(db.load_only("text"))
+            models.Postcode.query.options(db.load_only("text"))
             .filter(models.Postcode.index == (outward + inward).upper())
         ).one_or_none()
         if q_psc is not None:
-            return q_psc
+            found = q_psc
         else:
             raise PostcodeException(query, (outward + " " + inward).upper())
 
-    # Search NaPTAN code & ATCO code
-    q_stop = (
-        models.StopPoint.query
-        .options(db.load_only("atco_code"))
-        .filter(db.or_(models.StopPoint.naptan_code == query.lower(),
-                       models.StopPoint.atco_code == query.upper()))
-    ).one_or_none()
-    if q_stop is not None:
-        return q_stop
+    if not found:
+        # Search NaPTAN code & ATCO code
+        q_stop = (
+            models.StopPoint.query.options(db.load_only("atco_code"))
+            .filter(db.or_(models.StopPoint.naptan_code == query.lower(),
+                           models.StopPoint.atco_code == query.upper()))
+        ).one_or_none()
+        if q_stop is not None:
+            found = q_stop
 
-    # Neither a stop nor a postcode was found
-    return
+    if found:
+        current_app.logger.info("Search query %r returned exact match %r"
+                                % (query, found))
+
+    return found
 
 
 def table_name_literal(model, name=None):
@@ -110,7 +115,7 @@ def _fts_search_exists(query_text):
     return admin_area.union(district, locality, stop_area, stop).all()
 
 
-def _fts_search_all(query_text, names_only=True):
+def _fts_search_all(query_text, rank_text=None, names_only=True):
     """ Does a PostgreSQL FTS search to find all stops and places matching
         query, returning a dictionary of lists with keys ``area``, ``locality``
         and ``stop`` and ordered by rank, name and indicator (if present).
@@ -140,16 +145,18 @@ def _fts_search_all(query_text, names_only=True):
         - Locality: ``rank > 0.5``
         - StopArea: ``rank > 0.5``
         - StopPoint: ``rank > 0.25``
-        
+
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
+    query_rank = query_text if rank_text is None else rank_text
+
     def ts_rank_func(tsvector):
         """ Creates an expression with the ``ts_rank`` function from a TSVector
             and a TSQuery made from the query text.
         """
         weights = "{0.125, 0.25, 0.5, 1.0}"
-        tsquery = db.func.to_tsquery("english", query_text)
+        tsquery = db.func.to_tsquery("english", query_rank)
 
         return db.func.ts_rank(weights, tsvector, tsquery)
 
@@ -330,19 +337,16 @@ def _fts_search_all(query_text, names_only=True):
     )
 
 
-def search_exists(query, parser=None):
+def search_exists(query):
     """ Searches for stop, postcodes and places that do exist, without
         information on areas, before redirecting to a search results page with
         the full data.
 
-        :param parser: Parser to use when searching for all results with
-        PostgreSQL"s full text search.
         :returns: Either a matching Postcode object, a matching StopPoint
         object, or a list of matching results.
         :raises ValueError: if a query without any words was submitted.
         :raises PostcodeException: if a query was identified as a postcode but
         it does not exist.
-        
     """
     if not "".join(query.split()):
         raise ValueError("No suitable query was entered.")
@@ -353,19 +357,17 @@ def search_exists(query, parser=None):
         return obj_matching
 
     # Else: do a full text search - format query string first
-    result = parser(query) if parser else query
-    results = _fts_search_exists(result)
+    tsquery, _ = ts_parser.parse(query)
+    results = _fts_search_exists(tsquery)
 
     return results
 
 
-def search_full(query, parser=None, raise_exception=True):
+def search_full(query):
     """ Searches for stops, postcodes and places, returning full data including
         area information.
 
         :param query: Query text returned from search form.
-        :param parser: Parser to use when searching for results with
-        PostgreSQL's full text search.
         :param raise_exception: Set to raise an exception when too many results
         are returned.
         :returns: Either a matching Postcode object, a matching StopPoint
@@ -384,7 +386,7 @@ def search_full(query, parser=None, raise_exception=True):
         return obj_matching
 
     # Else: do a full text search - format query string first
-    results = _fts_search_all(parser(query) if parser else query)
+    results = _fts_search_all(*ts_parser.parse(query))
 
     dict_results = collections.defaultdict(list)
     for row in results:
@@ -397,6 +399,11 @@ def search_full(query, parser=None, raise_exception=True):
         else:
             raise ValueError("Table name %s in row is not valid."
                              % row.table_name)
+
+    current_app.logger.info(
+        "Search query %r returned results %s" %
+        (query, {k: len(v) for k, v in dict_results.items()})
+    )
 
     # Results were already ordered in SQL query; no need to sort lists
     return dict_results

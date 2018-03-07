@@ -7,12 +7,12 @@ import operator
 import os
 
 import lxml.etree as et
-import click
 import pyparsing as pp
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import (DBEntries, file_ops, get_atco_codes, NXB_EXT_URI,
+from nextbus.populate import (DBEntries, database_session, file_ops,
+                              get_atco_codes, logger, NXB_EXT_URI,
                               XSLTExtFunctions)
 
 
@@ -158,6 +158,7 @@ def _create_ind_parser():
 
     return parse_indicator
 
+
 class _NaPTANStops(object):
     """ Filters NaPTAN stop points and areas by ensuring only stop areas 
         belonging to stop points within specified ATCO areas are filtered.
@@ -235,7 +236,7 @@ def _modify_stop_areas():
 
     dict_areas = collections.defaultdict(list)
     update_areas, invalid_areas = [], []
-    click.echo("Linking stop areas with localities")
+    logger.info("Linking stop areas with localities")
     for row in query_area_localities.all():
         dict_areas[row.area_code].append(row.local_code)
     for area, localities in dict_areas.items():
@@ -245,21 +246,17 @@ def _modify_stop_areas():
             invalid_areas.append("Stop area %s has multiple localities %s"
                                  % (area, ", ".join(localities)))
 
-    try:
-        click.echo("Deleting orphaned stop areas")
+    with database_session():
+        logger.info("Deleting orphaned stop areas")
         models.StopArea.query.filter(
             models.StopArea.code.in_(list_del)
         ).delete(synchronize_session="fetch")
-        click.echo("Adding locality codes to stop areas")
+        logger.info("Adding locality codes to stop areas")
         db.session.bulk_update_mappings(models.StopArea, update_areas)
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    else:
-        click.echo("\n".join(invalid_areas))
-    finally:
-        db.session.close()
+
+    if invalid_areas:
+        logger.warn("The following stop areas are associated with multiple "
+                    "localities:\n" + "\n".join(invalid_areas))
 
 
 def _merge_naptan_data(naptan_paths):
@@ -270,7 +267,7 @@ def _merge_naptan_data(naptan_paths):
         to the elements parsed from the first file, and the resulting element
         tree is returned.
     """
-    click.echo("Opening NaPTAN file %r" % naptan_paths[0])
+    logger.info("Opening NaPTAN file %r" % naptan_paths[0])
     data = et.parse(naptan_paths[0])
 
     if len(naptan_paths) > 1:
@@ -284,7 +281,7 @@ def _merge_naptan_data(naptan_paths):
         # If more than one file: open each and use XPath queries to add all
         # points and areas to the first dataset
         for add_file in naptan_paths[1:]:
-            click.echo("Adding data from file %r" % add_file)
+            logger.info("Adding data from file %r" % add_file)
             new_data = et.parse(add_file)
             for area in xpath(new_data, "n:StopAreas/n:StopArea"):
                 stop_areas.append(area)
@@ -319,7 +316,7 @@ def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += area_ref
 
-    click.echo("Applying XSLT transform to NaPTAN data")
+    logger.info("Applying XSLT to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
 
     if out_file:
@@ -334,7 +331,6 @@ def commit_naptan_data(naptan_files=None):
     """
     atco_codes = get_atco_codes()
     if not naptan_files:
-        click.echo("Downloading NaPTAN data")
         naptan_paths = download_naptan_data(atco_codes)
     else:
         naptan_paths = list(naptan_files)
@@ -355,22 +351,12 @@ def commit_naptan_data(naptan_files=None):
     _get_naptan_data(naptan_paths, area_codes, out_file=NAPTAN_XML)
     eval_stops = _NaPTANStops(local_codes)
     naptan = DBEntries(NAPTAN_XML)
-    naptan.add("StopAreas/StopArea", models.StopArea,
-               "Converting stop area data", eval_stops.parse_areas)
+    naptan.add("StopAreas/StopArea", models.StopArea, eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
-               "Converting stop point data", eval_stops.parse_points,
-               indices=("naptan_code",))
+               eval_stops.parse_points, indices=("naptan_code",))
     # Commit changes to database
     naptan.commit()
     # Remove all orphaned stop areas and add localities to other stop areas
     _modify_stop_areas()
 
-    click.echo("NaPTAN population done.")
-
-
-if __name__ == "__main__":
-    from flask import current_app
-
-    NAPTAN = os.path.join(ROOT_DIR, "temp/Naptan.xml")
-    with current_app.app_context():
-        commit_naptan_data(naptan_files=(NAPTAN,))
+    logger.info("NaPTAN population done")

@@ -113,8 +113,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         except:
             # Restore DB if errors occur and raise
             if use_backup:
-                click.echo("Errors occurred; restoring database first")
-                file_ops.restore_database(backup_f)
+                file_ops.restore_database(backup_f, error=True)
             raise
     else:
         click.echo("No option selected.")

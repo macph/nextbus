@@ -11,13 +11,13 @@ from flask import current_app
 import lxml.etree as et
 
 from nextbus import db, create_app, models
-from nextbus.populate import (DBEntries, element_as_dict, ext_element_text,
-                              get_atco_codes, XSLTExtFunctions)
+from nextbus.populate import (DBEntries, ext_function_text, get_atco_codes,
+                              xml_as_dict, XSLTExtFunctions)
 import test_db
 
 
 class ElementDictTests(unittest.TestCase):
-    """ Testing the ``_element_as_dict`` function. """
+    """ Testing the ``_xml_as_dict`` function. """
 
     def setUp(self):
         self.element = et.Element("data")
@@ -31,24 +31,8 @@ class ElementDictTests(unittest.TestCase):
         del self.expected
 
     def test_element_to_dict(self):
-        new_dict = element_as_dict(self.element)
+        new_dict = xml_as_dict(self.element)
         self.assertEqual(new_dict, self.expected)
-
-    def test_element_upper(self):
-        upper = lambda s: s.upper()
-        new_dict = element_as_dict(self.element, tag5=upper)
-        self.expected["tag5"] = self.expected["tag5"].upper()
-        self.assertEqual(new_dict, self.expected)
-
-    def test_element_wrong_key(self):
-        upper = lambda s: s.upper()
-        with self.assertRaises(ValueError):
-            new_dict = element_as_dict(self.element, tag10=upper)
-
-    def test_element_wrong_function(self):
-        replace = lambda s, o, n: s.replace(o, n)
-        with self.assertRaisesRegex(TypeError, "only one argument"):
-            new_dict = element_as_dict(self.element, tag5=replace)
 
 
 class ElementTextTests(unittest.TestCase):
@@ -58,7 +42,7 @@ class ElementTextTests(unittest.TestCase):
     """
 
     @staticmethod
-    @ext_element_text
+    @ext_function_text
     def passthrough(instance, context, result, *args, **kwargs):
         """ Simple function to pass through all arguments """
         return instance, context, result, args, kwargs

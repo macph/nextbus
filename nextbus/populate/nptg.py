@@ -4,11 +4,11 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 import os
 
 import lxml.etree as et
-import click
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import (DBEntries, file_ops, get_atco_codes, NXB_EXT_URI,
+from nextbus.populate import (DBEntries, database_session, file_ops,
+                              get_atco_codes, logger, NXB_EXT_URI,
                               XSLTExtFunctions)
 
 
@@ -39,17 +39,11 @@ def _remove_districts():
         .filter(models.Locality.code.is_(None))
     )
     orphaned_districts = [d.code for d in query_districts.all()]
-    try:
-        click.echo("Deleting %d orphaned districts" % len(orphaned_districts))
+    with database_session():
+        logger.info("Deleting %d orphaned districts" % len(orphaned_districts))
         models.District.query.filter(
             models.District.code.in_(orphaned_districts)
         ).delete(synchronize_session="fetch")
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.close()
 
 
 def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
@@ -64,7 +58,7 @@ def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
         the project directory. If None the data as a XML ElementTree object is
         returned instead
     """
-    click.echo("Opening NPTG file %r" % nptg_file)
+    logger.info("Opening NPTG file %r" % nptg_file)
     data = et.parse(nptg_file)
     names = {"n": data.xpath("namespace-uri(.)")}
     transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
@@ -72,7 +66,7 @@ def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
-        click.echo("Checking ATCO areas")
+        logger.info("Checking ATCO areas")
         admin_areas = []
         invalid_codes = []
         for code in atco_codes:
@@ -83,7 +77,7 @@ def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
             else:
                 invalid_codes.append(code)
         if invalid_codes:
-            raise click.BadOptionUsage(
+            raise ValueError(
                 "The following ATCO codes cannot be found: %s."
                 % ", ".join(repr(i) for i in invalid_codes)
             )
@@ -111,7 +105,7 @@ def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += ref
 
-    click.echo("Applying XSLT transform to NPTG data")
+    logger.info("Applying XSLT to NPTG data")
     new_data = data.xslt(transform, extensions=ext)
     if out_file:
         new_data.write_output(os.path.join(ROOT_DIR, NPTG_XML))
@@ -125,7 +119,6 @@ def commit_nptg_data(nptg_file=None):
     """
     atco_codes = get_atco_codes()
     if nptg_file is None:
-        click.echo("Downloading NPTG data")
         downloaded_files = download_nptg_data()
         nptg_path = downloaded_files[0]
     else:
@@ -133,24 +126,13 @@ def commit_nptg_data(nptg_file=None):
 
     _get_nptg_data(nptg_path, atco_codes, out_file=NPTG_XML)
     nptg = DBEntries(NPTG_XML)
-    nptg.add("Regions/Region", models.Region, "Converting NPTG region data")
-    nptg.add("AdminAreas/AdminArea", models.AdminArea,
-             "Converting NPTG admin area data")
-    nptg.add("Districts/District", models.District,
-             "Converting NPTG district data")
-    nptg.add("Localities/Locality", models.Locality,
-             "Converting NPTG locality data")
+    nptg.add("Regions/Region", models.Region)
+    nptg.add("AdminAreas/AdminArea", models.AdminArea)
+    nptg.add("Districts/District", models.District)
+    nptg.add("Localities/Locality", models.Locality)
     # Commit changes to database
     nptg.commit()
     # Remove all orphaned districts
     _remove_districts()
 
-    click.echo("NPTG population done.")
-
-
-if __name__ == "__main__":
-    from flask import current_app
-
-    NPTG = os.path.join(ROOT_DIR, "temp/NPTG.xml")
-    with current_app.app_context():
-        commit_nptg_data(nptg_file=NPTG)
+    logger.info("NPTG population done.")

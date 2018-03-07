@@ -2,7 +2,9 @@
 Populating database with data from NPTG, NaPTAN and NSPL.
 """
 import collections
+import contextlib
 import functools
+import logging
 
 import click
 import dateutil.parser as dp
@@ -15,49 +17,36 @@ from nextbus import db
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
 
-
-def progress_bar(iterable, **kwargs):
-    """ Returns click.progressbar with specific options. """
-    return click.progressbar(
-        iterable=iterable,
-        bar_template="%(label)-32s [%(bar)s] %(info)s",
-        show_pos=True,
-        width=50,
-        **kwargs
-    )
+logger = logging.getLogger().getChild("populate")
+logger.setLevel(logging.INFO)
 
 
-def element_as_dict(element, **modify):
+@contextlib.contextmanager
+def database_session():
+    """ Commits changes to database within context, or rollback changes and
+        raise exception if it runs into one, before closing the session.
+    """
+    try:
+        yield
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        db.session.remove()
+
+
+def xml_as_dict(element):
     """ Helper function to create a dictionary from a XML element.
 
         :param element: XML Element object
-        :param modify: Modify data with the keys to identify tags/
-        columns and the values the functions used to modify these data. Each
-        function must accept one argument.
         :returns: A dictionary with keys matching subelement tags in the
         element.
     """
-    data = {i.tag: i.text for i in element}
-    for key, func in modify.items():
-        try:
-            data[key] = func(data[key]) if data[key] is not None else None
-        except KeyError:
-            raise ValueError("Key %r does not match with any tag from the "
-                             "data." % key)
-        except TypeError as err:
-            if "positional argument" in str(err):
-                raise TypeError(
-                    "Functions modifying the values must receive only one "
-                    "argument; the function associated with key %r does not "
-                    "satisfy this." % key
-                ) from err
-            else:
-                raise
-
-    return data
+    return {i.tag: i.text for i in element}
 
 
-def ext_element_text(function):
+def ext_function_text(function):
     """ Converts XPath query result to a string by taking the text content from
         the only element in list before passing it to the extension function.
         If the XPath query returned nothing, the wrapped function will return
@@ -82,27 +71,27 @@ def ext_element_text(function):
 class XSLTExtFunctions(object):
     """ Extension for modifying data in NaPTAN/NPTG data. """
 
-    @ext_element_text
+    @ext_function_text
     def replace(self, _, result, original, substitute):
         """ Replace substrings within content. """
         return result.replace(original, substitute)
 
-    @ext_element_text
+    @ext_function_text
     def upper(self, _, result):
         """ Convert all letters in content to uppercase. """
         return result.upper()
 
-    @ext_element_text
+    @ext_function_text
     def lower(self, _, result):
         """ Convert all letters in content to lowercase. """
         return result.lower()
 
-    @ext_element_text
+    @ext_function_text
     def remove_spaces(self, _, result):
         """ Remove all spaces from content. """
         return "".join(result.strip())
 
-    @ext_element_text
+    @ext_function_text
     def capitalize(self, _, result):
         """ Capitalises every word in a string, include these enclosed within
             brackets and excluding apostrophes.
@@ -143,7 +132,7 @@ class DBEntries(object):
         self.entries = collections.OrderedDict()
         self.conflicts = {}
 
-    def add(self, xpath_query, model, label=None, func=None, constraint=None,
+    def add(self, xpath_query, model, func=None, constraint=None,
             indices=None):
         """ Iterates through a list of elements, creating a list of dicts.
 
@@ -166,7 +155,7 @@ class DBEntries(object):
         # Find all elements matching query
         list_elements = self.data.xpath(xpath_query)
         # Assuming keys in every entry are equal
-        columns = element_as_dict(list_elements[0]).keys()
+        columns = xml_as_dict(list_elements[0]).keys()
 
         if constraint is not None and indices is not None:
             raise TypeError("The 'constraint' and 'indices' arguments are "
@@ -179,22 +168,25 @@ class DBEntries(object):
 
         # Create list for model and iterate over all elements
         new_entries = self.entries.setdefault(model, [])
-        with progress_bar(list_elements, label=label) as iter_elements:
-            for element in iter_elements:
-                data = element_as_dict(element, modified=dp.parse)
-                if not func:
-                    new_entries.append(data)
-                    continue
-                try:
-                    func(new_entries, data)
-                except TypeError as err:
-                    if "positional argument" in str(err):
-                        raise TypeError(
-                            "Filter function must receive two arguments: list "
-                            "of existing objects and the current object."
-                        ) from err
-                    else:
-                        raise
+        logger.info("Parsing %d %s elements" %
+                    (len(list_elements), model.__name__))
+        for element in list_elements:
+            data = xml_as_dict(element)
+            if data.get("modified") is not None:
+                data["modified"] = dp.parse(data["modified"])
+            if not func:
+                new_entries.append(data)
+                continue
+            try:
+                func(new_entries, data)
+            except TypeError as err:
+                if "positional argument" in str(err):
+                    raise TypeError(
+                        "Filter function must receive two arguments: list "
+                        "of existing objects and the current object."
+                    ) from err
+                else:
+                    raise
 
     def _create_insert_statement(self, model):
         """ Creates an insert statement, depending on whether constraints or
@@ -233,18 +225,14 @@ class DBEntries(object):
         """ Commits all entries to database. """
         if not self.entries:
             raise ValueError("No data have been added yet.")
-        try:
+        with database_session():
             for model, data in self.entries.items():
-                click.echo("Adding %d %s objects to session"
-                           % (len(data), model.__name__))
                 # Delete existing rows
                 db.session.execute(model.__table__.delete())
                 # Add new rows
+                logger.info(
+                    "Deleting old objects and inserting %d %s object%s into "
+                    "database" % (len(data), model.__name__,
+                                  "" if len(data) == 1 else "s")
+                )
                 db.session.execute(self._create_insert_statement(model), data)
-            click.echo("Committing changes to database")
-            db.session.commit()
-        except:
-            db.session.rollback()
-            raise
-        finally:
-            db.session.remove()

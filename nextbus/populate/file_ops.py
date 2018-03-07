@@ -6,10 +6,11 @@ import os
 import subprocess
 import zipfile
 import requests
-import click
-from flask import current_app
-from definitions import ROOT_DIR
 
+from flask import current_app
+
+from definitions import ROOT_DIR
+from nextbus.populate import logger
 
 CHUNK_SIZE = 1024
 DUMP_FILE_PATH = r"temp/nextbus.db.dump"
@@ -39,7 +40,7 @@ def download(url, file_name, directory=None, **kwargs):
     dir_path = ROOT_DIR if directory is None else _get_full_path(directory)
     full_path = os.path.join(dir_path, file_name)
 
-    click.echo("Downloading %r from %r" % (file_name, url))
+    logger.info("Downloading %r from %r" % (file_name, url))
     req = requests.get(url, stream=True, **kwargs)
     with open(full_path, 'wb') as out_file:
         for chunk in req.iter_content(chunk_size=CHUNK_SIZE):
@@ -95,17 +96,19 @@ def backup_database(dump_file=None):
 
     with open(full_path, 'wb') as dump:
         process = subprocess.Popen(['pg_dump', '-Fc', db_uri], stdout=dump)
-        click.echo("Backing up database %r to %r" % (db_uri, file_path))
+        logger.info("Backing up database %r to %r" % (db_uri, file_path))
         # Wait for process to finish
         process.communicate()
 
 
-def restore_database(dump_file=None):
+def restore_database(dump_file=None, error=False):
     """ Calls the ``pg_restore`` command to restore data in case the
         populate command fails. Cleans the database beforehand.
 
         :param dump_file: Name of file to restore from
     """
+    if error:
+        logger.warn("Errors occured; restoring database to previous state")
     db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI')
     if db_uri is None:
         raise ValueError("The SQLALCHEMY_DATABASE_URI option is not defined.")
@@ -114,6 +117,6 @@ def restore_database(dump_file=None):
 
     process = subprocess.Popen(['pg_restore', '-c', '-Fc', '-d', db_uri,
                                 full_path])
-    click.echo("Restorting database %r from %r" % (db_uri, file_path))
+    logger.info("Restoring database %r from %r" % (db_uri, file_path))
     # Wait for process to finish
     process.communicate()

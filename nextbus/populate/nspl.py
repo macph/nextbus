@@ -3,12 +3,11 @@ Populate postcode data from NSPL.
 """
 import os
 import json
-import click
 from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import file_ops, progress_bar
+from nextbus.populate import database_session, file_ops, logger
 
 
 NSPL_API = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
@@ -104,54 +103,36 @@ def commit_nspl_data(nspl_file=None):
         atco_codes = None if get_atco_codes == "all" else get_atco_codes
 
     if nspl_file is None:
-        click.echo("Downloading NSPL data from Camden Open Data")
         nspl_path = download_nspl_data(atco_codes)
     else:
         nspl_path = nspl_file
 
-    click.echo("Opening file %r" % nspl_path)
+    logger.info("Opening file %r" % nspl_path)
     with open(nspl_path, "r") as json_file:
         data = json.load(json_file)
 
     list_postcodes = []
     local_auth = _get_dict_local_auth(atco_codes)
-    with progress_bar(data, label="Parsing postcode data") as iter_postcodes:
-        for row in iter_postcodes:
-            local_authority = local_auth[row["local_authority_code"]]
-            dict_postcode = {
-                "index":                "".join(row["postcode_3"].split()),
-                "text":                 row["postcode_3"],
-                "admin_area_ref":       local_authority["admin_area_code"],
-                "district_ref":         local_authority["district_code"],
-                "easting":              row["easting"],
-                "northing":             row["northing"],
-                "longitude":            row["longitude"],
-                "latitude":             row["latitude"]
-            }
-            list_postcodes.append(dict_postcode)
+    logger.info("Parsing %d postcodes" % len(data))
+    for row in data:
+        local_authority = local_auth[row["local_authority_code"]]
+        dict_postcode = {
+            "index":                "".join(row["postcode_3"].split()),
+            "text":                 row["postcode_3"],
+            "admin_area_ref":       local_authority["admin_area_code"],
+            "district_ref":         local_authority["district_code"],
+            "easting":              row["easting"],
+            "northing":             row["northing"],
+            "longitude":            row["longitude"],
+            "latitude":             row["latitude"]
+        }
+        list_postcodes.append(dict_postcode)
 
-    try:
-        click.echo("Deleting old records")
+    with database_session():
+        logger.info("Deleting previous rows")
         db.session.execute(models.Postcode.__table__.delete())
-        click.echo("Adding %d %s objects to session" %
-                   (len(list_postcodes), models.Postcode.__name__))
+        logger.info("Adding %d %s objects to database" %
+                    (len(list_postcodes), models.Postcode.__name__))
         db.session.execute(models.Postcode.__table__.insert(), list_postcodes)
-        click.echo("Committing changes to database")
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.close()
 
-    if nspl_file is None:
-        click.echo("NSPL population done. The file 'nspl.json' is saved in "
-                   "the Temp directory.")
-    else:
-        click.echo("NSPL population done.")
-
-
-if __name__ == "__main__":
-    NSPL = os.path.join(ROOT_DIR, "temp/nspl.csv")
-    with current_app.app_context():
-        commit_nspl_data(nspl_file=NSPL)
+    logger.info("NSPL population done.")

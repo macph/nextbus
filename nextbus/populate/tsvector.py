@@ -3,9 +3,8 @@ Update tsvector column values after populating databases for full text search.
 """
 import functools
 
-import click
-
 from nextbus import db, models
+from nextbus.populate import database_session, logger
 
 
 def _concat_tsvector(*columns):
@@ -78,8 +77,8 @@ def update_nptg_tsvector():
     district = models.District.__table__
     locality = models.Locality.__table__
 
-    try:
-        click.echo("Updating NPTG TSVector columns for full text search")
+    with database_session():
+        logger.info("Updating NPTG TSVector columns for full text search")
         db.session.execute(region.update()
                            .values(tsv_name=region_tsv.c.tsv_name)
                            .where(region_tsv.c.code == region.c.code))
@@ -92,12 +91,6 @@ def update_nptg_tsvector():
         db.session.execute(locality.update()
                            .values(tsv_name=locality_tsv.c.tsv_name)
                            .where(locality_tsv.c.code == locality.c.code))
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.remove()
 
 
 def update_naptan_tsvector():
@@ -153,15 +146,15 @@ def update_naptan_tsvector():
                              (models.AdminArea.name, "D")).label("tsv_street")
         ).select_from(models.StopPoint)
         .join(models.Locality,
-                models.Locality.code == models.StopPoint.locality_ref)
+              models.Locality.code == models.StopPoint.locality_ref)
         .outerjoin(models.District,
-                    models.District.code == models.Locality.district_ref)
+                   models.District.code == models.Locality.district_ref)
         .join(models.AdminArea,
-                models.AdminArea.code == models.StopPoint.admin_area_ref)
+              models.AdminArea.code == models.StopPoint.admin_area_ref)
     ).subquery()
 
-    try:
-        click.echo("Updating NaPTAN TSVector columns for full text search")
+    with database_session():
+        logger.info("Updating NaPTAN TSVector columns for full text search")
         db.session.execute(stop_area.update()
                            .values(tsv_name=stop_area_tsv.c.tsv_name)
                            .where(stop_area_tsv.c.code == stop_area.c.code))
@@ -171,9 +164,3 @@ def update_naptan_tsvector():
                                    tsv_street=stop_point_tsv.c.tsv_street)
                            .where(stop_point_tsv.c.atco_code
                                   == stop_point.c.atco_code))
-        db.session.commit()
-    except:
-        db.session.rollback()
-        raise
-    finally:
-        db.session.remove()

@@ -4,16 +4,14 @@ dict function.
 """
 import datetime
 import io
-import os
 import unittest
 
-from flask import current_app
 import lxml.etree as et
 
-from nextbus import db, create_app, models
+from nextbus import db, models
 from nextbus.populate import (DBEntries, ext_function_text, get_atco_codes,
                               xml_as_dict, XSLTExtFunctions)
-import test_db
+import utils
 
 
 class ElementDictTests(unittest.TestCase):
@@ -99,36 +97,27 @@ class ExtensionTests(unittest.TestCase):
         self.assertEqual(self.ext.capitalize(None, self.result),
                          "St James's Gate (Stop D)")
 
-class AtcoCodeTests(unittest.TestCase):
+class AtcoCodeTests(utils.BaseAppTests):
     """ Test the retrieval of ATCO codes from the config """
 
-    def setUp(self):
-        self.app = create_app(config_obj="default_config.DevelopmentConfig")
-
-    def tearDown(self):
-        del self.app
-
     def test_default_codes(self):
-        with self.app.app_context():
-            current_app.config["ATCO_CODES"] = "all"
-            self.assertEqual(get_atco_codes(), None)
+        self.app.config["ATCO_CODES"] = "all"
+        self.assertEqual(get_atco_codes(), None)
 
     def test_yorkshire_codes(self):
-        with self.app.app_context():
-            current_app.config["ATCO_CODES"] = [370, 450]
-            self.assertEqual(get_atco_codes(), [370, 450, 940])
+        self.app.config["ATCO_CODES"] = [370, 450]
+        self.assertEqual(get_atco_codes(), [370, 450, 940])
     
     def test_invalid_type(self):
-        with self.app.app_context():
-            current_app.config["ATCO_CODES"] = ["string", 370]
-            with self.assertRaisesRegex(ValueError, "must be integers"):
-                get_atco_codes()
+        self.app.config["ATCO_CODES"] = ["string", 370]
+        with self.assertRaisesRegex(ValueError, "must be integers"):
+            get_atco_codes()
 
     def test_invalid_string(self):
-        with self.app.app_context():
-            current_app.config["ATCO_CODES"] = "string"
-            with self.assertRaisesRegex(ValueError, "must be set to either"):
-                get_atco_codes()
+        self.app.config["ATCO_CODES"] = "string"
+        with self.assertRaisesRegex(ValueError, "must be set to either"):
+            get_atco_codes()
+
 
 class EntryTests(unittest.TestCase):
     """ Tests on _DBEntries without database commits """
@@ -194,7 +183,7 @@ class EntryTests(unittest.TestCase):
                                 indices=("code",), constraint="region_pkey")
 
 
-class EntryDBTests(test_db.BaseDBTests):
+class EntryDBTests(utils.BaseAppTests):
     """ Tests on _DBEntries and committing changes to database """
     xml = io.BytesIO(
         b"<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
@@ -213,54 +202,50 @@ class EntryDBTests(test_db.BaseDBTests):
 
     def test_insert_statement_no_conflict(self):
         self.db_entries.add("Regions/Region", models.Region)
-        with self.app.app_context():
-            insert = self.db_entries._create_insert_statement(models.Region)
-            # Add binding to engine
-            insert.bind = db.engine
-            statement = str(insert)
-            self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified, tsv_name\) VALUES"
-            )
-            self.assertNotRegex(statement, r"ON CONFLICT.+?DO UPDATE")
+        insert = self.db_entries._create_insert_statement(models.Region)
+        # Add binding to engine
+        insert.bind = db.engine
+        statement = str(insert)
+        self.assertRegex(statement,
+            r"INSERT INTO region \(code, name, modified, tsv_name\) VALUES"
+        )
+        self.assertNotRegex(statement, r"ON CONFLICT.+?DO UPDATE")
 
     def test_insert_statement_constraint(self):
         self.db_entries.add("Regions/Region", models.Region,
                             constraint="region_pkey")
-        with self.app.app_context():
-            insert = self.db_entries._create_insert_statement(models.Region)
-            # Bind statement to database engine
-            insert.bind = db.engine
-            statement = str(insert)
-            self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified, tsv_name\) "
-                r"VALUES \(.+?\) ON CONFLICT ON CONSTRAINT region_pkey "
-                r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-                r"modified = excluded.modified, tsv_name = excluded.tsv_name "
-                r"WHERE region.modified < excluded.modified"
-            )
+        insert = self.db_entries._create_insert_statement(models.Region)
+        # Bind statement to database engine
+        insert.bind = db.engine
+        statement = str(insert)
+        self.assertRegex(statement,
+            r"INSERT INTO region \(code, name, modified, tsv_name\) "
+            r"VALUES \(.+?\) ON CONFLICT ON CONSTRAINT region_pkey "
+            r"DO UPDATE SET code = excluded.code, name = excluded.name, "
+            r"modified = excluded.modified, tsv_name = excluded.tsv_name "
+            r"WHERE region.modified < excluded.modified"
+        )
 
     def test_insert_statement_column(self):
         self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        with self.app.app_context():
-            insert = self.db_entries._create_insert_statement(models.Region)
-            # Bind statement to database engine
-            insert.bind = db.engine
-            statement = str(insert)
-            self.assertRegex(statement,
-                r"INSERT INTO region \(code, name, modified, tsv_name\) "
-                r"VALUES \(.+?\) ON CONFLICT \(code\) "
-                r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-                r"modified = excluded.modified, tsv_name = excluded.tsv_name "
-                r"WHERE region.modified < excluded.modified"
-            )
+        insert = self.db_entries._create_insert_statement(models.Region)
+        # Bind statement to database engine
+        insert.bind = db.engine
+        statement = str(insert)
+        self.assertRegex(statement,
+            r"INSERT INTO region \(code, name, modified, tsv_name\) "
+            r"VALUES \(.+?\) ON CONFLICT \(code\) "
+            r"DO UPDATE SET code = excluded.code, name = excluded.name, "
+            r"modified = excluded.modified, tsv_name = excluded.tsv_name "
+            r"WHERE region.modified < excluded.modified"
+        )
 
     def test_commit_changes(self):
         self.db_entries.add("Regions/Region", models.Region)
-        with self.app.app_context():
-            self.db_entries.commit()
-            # Query the DB
-            region = models.Region.query.one()
-            self.assertEqual(
-                (region.code, region.name, region.modified),
-                ("Y", "Yorkshire", datetime.datetime(2006, 1, 25, 7, 54, 31))
-            )
+        self.db_entries.commit()
+        # Query the DB
+        region = models.Region.query.one()
+        self.assertEqual(
+            (region.code, region.name, region.modified),
+            ("Y", "Yorkshire", datetime.datetime(2006, 1, 25, 7, 54, 31))
+        )

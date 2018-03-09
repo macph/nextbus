@@ -3,19 +3,16 @@ Testing the populate functions.
 """
 import copy
 import os
-import io
 import unittest
-import datetime
 
 import lxml.etree as et
-from flask import current_app
 
 from nextbus import db, models
 from nextbus.populate.naptan import (_create_ind_parser, _get_naptan_data,
-    _modify_stop_areas, _NaPTANStops, commit_naptan_data)
+                                     _modify_stop_areas, commit_naptan_data)
 from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
                                    commit_nptg_data)
-import test_db
+import utils
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -29,47 +26,7 @@ NAPTAN_RAW_940 = os.path.join(TEST_DIR, "NaPTAN_raw_940.xml")
 NAPTAN_TRAM = os.path.join(TEST_DIR, "NaPTAN_tram.xml")
 
 
-class BaseXMLTests(unittest.TestCase):
-    """ Base tests for comparing XML files. """
-    # Use parser which removes blank text from transformed XML files
-    parser = et.XMLParser(remove_blank_text=True)
-
-    def assertXMLElementsEqual(self, e1, e2, msg=None, _path=None):
-        """ Compares two XML Element objects by iterating through each
-            tag recursively and comparing their tags, text, tails and
-            attributes.
-        """
-        message = []
-        # Check tags, text, tails, attributes and number of subelements
-        if e1.tag != e2.tag:
-            message.append("Tags %r != %r" % (e1.tag, e2.tag))
-        if e1.text != e2.text:
-            message.append("Text %r != %r" % (e1.text, e2.text))
-        if e1.tail != e2.tail:
-            message.append("Tail strings %r != %r" % (e1.tail, e2.tail))
-        if e1.attrib != e2.attrib:
-            message.append("Attributes %r != %r" % (e1.attrib, e1.attrib))
-        if len(e1) != len(e2):
-            message.append("%d != %d subelements" % (len(e1), len(e2)))
-
-        # Errors found: create message and raise exception
-        if message:
-            if _path is not None and e1.tag == e2.tag:
-                message.insert(0, "For element %s/%s:" % (_path, e1.tag))
-            elif _path is not None and e1.tag != e2.tag:
-                message.insert(0, "For subelements within %s:" % _path)
-
-            new_msg = self._formatMessage(msg, "\n".join(message))
-            raise self.failureException(new_msg)
-
-        # If elements compared have children, iterate through them recursively
-        if len(e1) > 0:
-            new_path = e1.tag if _path is None else _path + "/" + e1.tag 
-            for c1, c2 in zip(e1, e2):
-                self.assertXMLElementsEqual(c1, c2, _path=new_path)
-
-
-class NptgXsltTests(BaseXMLTests):
+class NptgXsltTests(utils.BaseXMLTests):
     """ Testing `_get_nptg_data` function which transforms NPTG data. """
 
     def test_nptg_transform_all_areas(self):
@@ -85,7 +42,7 @@ class NptgXsltTests(BaseXMLTests):
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
 
-class NaptanXsltTests(BaseXMLTests):
+class NaptanXsltTests(utils.BaseXMLTests):
     """ Testing `_get_naptan_data` function which transforms NPTG data. """
 
     def test_naptan_transform_all_areas(self):
@@ -110,8 +67,8 @@ class NaptanXsltTests(BaseXMLTests):
 
 
 class ParseStopPointTests(unittest.TestCase):
-    """ Testing the _NaPTANStops helper class which filters stop areas and
-        add short indicators to stop points.
+    """ Testing the stop indicator parser which adds short indicators to
+        stop points.
     """
     indicators = [
         ("22000003", "2200."),
@@ -189,7 +146,7 @@ class ParseStopPointTests(unittest.TestCase):
                 self.assertEqual(self.parser(ind), expected)
 
 
-class PostprocessingTests(test_db.BaseDBTests):
+class PostprocessingTests(utils.BaseAppTests):
     """ Testing functions which process data in the database after they have
         been populated.
     """
@@ -201,78 +158,73 @@ class PostprocessingTests(test_db.BaseDBTests):
 
     def test_remove_districts(self):
         # Create another district but leave it without any localities
-        new_district = copy.deepcopy(test_db.DISTRICT)
+        new_district = copy.deepcopy(utils.DISTRICT)
         new_district.update({
             "code": "247",
             "name": "Doncaster"
         })
 
-        with self.app.app_context():
-            objects = [
-                models.Region(**test_db.REGION),
-                models.AdminArea(**test_db.ADMIN_AREA),
-                models.District(**test_db.DISTRICT),
-                models.District(**new_district),
-                models.Locality(**test_db.LOCALITY)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-            # Remove orphaned districts
-            _remove_districts()
-            # Now check the districts; there should be only one
-            districts = models.District.query.all()
-            self.assertEqual(len(districts), 1)
-            self.assertEqual(test_db.DISTRICT,
-                             self.model_as_dict(districts[0]))
+        objects = [
+            models.Region(**utils.REGION),
+            models.AdminArea(**utils.ADMIN_AREA),
+            models.District(**utils.DISTRICT),
+            models.District(**new_district),
+            models.Locality(**utils.LOCALITY)
+        ]
+        db.session.add_all(objects)
+        db.session.commit()
+        # Remove orphaned districts
+        _remove_districts()
+        # Now check the districts; there should be only one
+        districts = models.District.query.all()
+        self.assertEqual(len(districts), 1)
+        self.assertEqual(utils.DISTRICT, self.model_as_dict(districts[0]))
 
     def test_add_locality(self):
-        modified_stop_area = copy.deepcopy(test_db.STOP_AREA)
+        modified_stop_area = copy.deepcopy(utils.STOP_AREA)
         # Remove the locality code
         del modified_stop_area["locality_ref"]
 
-        with self.app.app_context():
-            objects = [
-                models.Region(**test_db.REGION),
-                models.AdminArea(**test_db.ADMIN_AREA),
-                models.District(**test_db.DISTRICT),
-                models.Locality(**test_db.LOCALITY),
-                models.StopArea(**modified_stop_area),
-                models.StopPoint(**test_db.STOP_POINT)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-            # Identify the locality code and add it
-            _modify_stop_areas()
-            # Now check the stop areas; the single area should now have the
-            # locality code
-            area = models.StopArea.query.one()
-            self.assertEqual(area.locality_ref,
-                             test_db.STOP_AREA["locality_ref"])
+        objects = [
+            models.Region(**utils.REGION),
+            models.AdminArea(**utils.ADMIN_AREA),
+            models.District(**utils.DISTRICT),
+            models.Locality(**utils.LOCALITY),
+            models.StopArea(**modified_stop_area),
+            models.StopPoint(**utils.STOP_POINT)
+        ]
+        db.session.add_all(objects)
+        db.session.commit()
+        # Identify the locality code and add it
+        _modify_stop_areas()
+        # Now check the stop areas; the single area should now have the
+        # locality code
+        area = models.StopArea.query.one()
+        self.assertEqual(area.locality_ref, utils.STOP_AREA["locality_ref"])
 
     def test_remove_areas(self):
-        new_stop_area = copy.deepcopy(test_db.STOP_AREA)
+        new_stop_area = copy.deepcopy(utils.STOP_AREA)
         new_stop_area.update({"code": "370G100808"})
 
-        with self.app.app_context():
-            objects = [
-                models.Region(**test_db.REGION),
-                models.AdminArea(**test_db.ADMIN_AREA),
-                models.District(**test_db.DISTRICT),
-                models.Locality(**test_db.LOCALITY),
-                models.StopArea(**test_db.STOP_AREA),
-                models.StopArea(**new_stop_area),
-                models.StopPoint(**test_db.STOP_POINT)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-            # Remove orphaned stop areas
-            _modify_stop_areas()
-            # Now check the stop areas; there should be only one
-            areas = models.StopArea.query.all()
-            self.assertEqual(len(areas), 1)
-            self.assertEqual(test_db.STOP_AREA, self.model_as_dict(areas[0]))
+        objects = [
+            models.Region(**utils.REGION),
+            models.AdminArea(**utils.ADMIN_AREA),
+            models.District(**utils.DISTRICT),
+            models.Locality(**utils.LOCALITY),
+            models.StopArea(**utils.STOP_AREA),
+            models.StopArea(**new_stop_area),
+            models.StopPoint(**utils.STOP_POINT)
+        ]
+        db.session.add_all(objects)
+        db.session.commit()
+        # Remove orphaned stop areas
+        _modify_stop_areas()
+        # Now check the stop areas; there should be only one
+        areas = models.StopArea.query.all()
+        self.assertEqual(len(areas), 1)
+        self.assertEqual(utils.STOP_AREA, self.model_as_dict(areas[0]))
 
-class PopulateTests(test_db.BaseDBTests):
+class PopulateTests(utils.BaseAppTests):
 
     def setUp(self):
         self.create_tables()
@@ -281,50 +233,45 @@ class PopulateTests(test_db.BaseDBTests):
         self.drop_tables()
 
     def test_commit_nptg_data(self):
-        with self.app.app_context():
-            commit_nptg_data(nptg_file=NPTG_RAW)
+        commit_nptg_data(nptg_file=NPTG_RAW)
 
-            # Make queries to the DB to ensure data is populated correctly
-            with self.subTest("region"):
-                region_codes = (db.session.query(models.Region.code)
-                                .order_by("code").all())
-                self.assertEqual(region_codes, [("GB",), ("Y",)])
+        # Make queries to the DB to ensure data is populated correctly
+        with self.subTest("region"):
+            region_codes = (db.session.query(models.Region.code)
+                            .order_by("code").all())
+            self.assertEqual(region_codes, [("GB",), ("Y",)])
 
-            with self.subTest("admin areas"):
-                area_codes = (db.session.query(models.AdminArea.code)
+        with self.subTest("admin areas"):
+            area_codes = (db.session.query(models.AdminArea.code)
+                          .order_by("code").all())
+            self.assertEqual(area_codes,
+                [("099",), ("110",), ("143",), ("145",), ("146",), ("147",)]
+            )
+
+        with self.subTest("districts"):
+            district_codes = (db.session.query(models.District.code)
                               .order_by("code").all())
-                self.assertEqual(area_codes,
-                    [("099",), ("110",), ("143",), ("145",), ("146",),
-                     ("147",)]
-                )
+            # Should be only 1 district; the other has no associated localities
+            self.assertEqual(district_codes, [("263",)])
 
-            with self.subTest("districts"):
-                district_codes = (db.session.query(models.District.code)
-                                  .order_by("code").all())
-                # Should be only 1 district; the other has no associated
-                # localities
-                self.assertEqual(district_codes, [("263",)])
-
-            with self.subTest("localities"):
-                localities = models.Locality.query.all()
-                self.assertEqual(len(localities), 3)
+        with self.subTest("localities"):
+            localities = models.Locality.query.all()
+            self.assertEqual(len(localities), 3)
 
     def test_commit_naptan_data_no_nptg(self):
-        with self.app.app_context(),\
-                self.assertRaisesRegex(ValueError, "NPTG tables"):
+        with self.assertRaisesRegex(ValueError, "NPTG tables"):
             commit_naptan_data(naptan_files=[NAPTAN_RAW])
 
     def test_commit_naptan_data(self):
-        with self.app.app_context():
-            commit_nptg_data(nptg_file=NPTG_RAW)
-            commit_naptan_data(naptan_files=[NAPTAN_RAW])
+        commit_nptg_data(nptg_file=NPTG_RAW)
+        commit_naptan_data(naptan_files=[NAPTAN_RAW])
 
-            # Make queries to the DB to ensure data is populated correctly
-            with self.subTest("areas"):
-                areas = models.StopArea.query.all()
-                # Two stop areas do not have any stops, therefore 68 not 70
-                self.assertEqual(len(areas), 46)
+        # Make queries to the DB to ensure data is populated correctly
+        with self.subTest("areas"):
+            areas = models.StopArea.query.all()
+            # Two stop areas do not have any stops, therefore 68 not 70
+            self.assertEqual(len(areas), 46)
 
-            with self.subTest("stops"):
-                stops = models.StopPoint.query.all()
-                self.assertEqual(len(stops), 174)
+        with self.subTest("stops"):
+            stops = models.StopPoint.query.all()
+            self.assertEqual(len(stops), 174)

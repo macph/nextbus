@@ -9,7 +9,8 @@ import lxml.etree as et
 from nextbus import db, models
 from nextbus.populate import database_session
 from nextbus.populate.modify import _create, _delete, _replace, modify_data
-import test_db
+import utils
+
 
 MODIFY_XML = b"""\
 <data>
@@ -36,13 +37,15 @@ MODIFY_XML = b"""\
 </data>
 """
 
+
 def create_subelement(parent, tag, attrib=None, text=None):
     """ Helper function to add subelements and text at the same time. """
     new_element = et.SubElement(parent, tag, attrib=attrib)
     if text is not None:
         new_element.text = text
 
-class CreateEntryTests(test_db.BaseDBTests):
+
+class CreateEntryTests(utils.BaseAppTests):
     """ Testing the ``_create_rows()`` function for adding new rows after
         population.
     """
@@ -63,27 +66,25 @@ class CreateEntryTests(test_db.BaseDBTests):
         create_subelement(c_yorkshire, "name", text="Yorkshire")
         create_subelement(c_yorkshire, "modified", text="2006-01-25T07:54:31")
 
-        with self.app.app_context(), database_session():
+        with database_session():
             _create(models.Region, c_london)
             _create(models.Region, c_yorkshire)
 
-        with self.app.app_context():
-            regions = models.Region.query.order_by("code").all()
-            self.assertEqual(len(regions), 2)
-            self.assertEqual([regions[0].code, regions[0].name],
-                             ["L", "London"])
-            self.assertEqual([regions[1].code, regions[1].name],
-                             ["Y", "Yorkshire"])
+        regions = models.Region.query.order_by("code").all()
+        self.assertEqual(len(regions), 2)
+        self.assertEqual([regions[0].code, regions[0].name], ["L", "London"])
+        self.assertEqual([regions[1].code, regions[1].name],
+                         ["Y", "Yorkshire"])
 
 
-class DeleteEntryTests(test_db.BaseDBTests):
+class DeleteEntryTests(utils.BaseAppTests):
     """ Testing the ``_delete_rows()`` function for deleting rows after
         population.
     """
     def setUp(self):
         self.create_tables()
         with self.app.app_context():
-            region = models.Region(**test_db.REGION)
+            region = models.Region(**utils.REGION)
             db.session.add(region)
             db.session.commit()
             db.session.close()
@@ -93,30 +94,29 @@ class DeleteEntryTests(test_db.BaseDBTests):
 
     def test_row_deleted(self):
         d_yorkshire = et.Element("delete", attrib={"code": "Y"})
-        with self.app.app_context(), database_session():
+        with database_session():
             _delete(models.Region, d_yorkshire)
 
-        with self.app.app_context():
-            regions = models.Region.query.all()
-            self.assertFalse(regions)
+        regions = models.Region.query.all()
+        self.assertFalse(regions)
 
     def test_row_deleted_no_match(self):
         d_london = et.Element("delete", attrib={"code": "L"})
-        with self.app.app_context(), database_session(),\
-                self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs("populate.modify") as log:
             _delete(models.Region, d_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",
                       log.output[0])
 
-class ReplaceEntryTests(test_db.BaseDBTests):
+
+class ReplaceEntryTests(utils.BaseAppTests):
     """ Testing the ``_replace_rows()`` function for modifying rows after
         population.
     """
     def setUp(self):
         self.create_tables()
         with self.app.app_context():
-            region = models.Region(**test_db.REGION)
+            region = models.Region(**utils.REGION)
             db.session.add(region)
             db.session.commit()
             db.session.close()
@@ -127,13 +127,12 @@ class ReplaceEntryTests(test_db.BaseDBTests):
     def test_row_replaced(self):
         r_yorkshire = et.Element("replace", attrib={"code": "Y"})
         create_subelement(r_yorkshire, "name", text="Greater Yorkshire")
-        with self.app.app_context(), database_session():
+        with database_session():
             _replace(models.Region, r_yorkshire)
 
-        with self.app.app_context():
-            regions = models.Region.query.all()
-            self.assertEqual(len(regions), 1)
-            self.assertEqual(regions[0].name, "Greater Yorkshire")
+        regions = models.Region.query.all()
+        self.assertEqual(len(regions), 1)
+        self.assertEqual(regions[0].name, "Greater Yorkshire")
 
     def test_row_replaced_incorrect_value(self):
         r_yorkshire = et.Element("replace", attrib={"code": "Y"})
@@ -141,8 +140,7 @@ class ReplaceEntryTests(test_db.BaseDBTests):
                           attrib={"old": "Greater Yorkshire"},
                           text="Lesser Yorkshire")
 
-        with self.app.app_context(), database_session(),\
-                self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs("populate.modify") as log:
             _replace(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Greater Yorkshire' for {'code': 'Y'} "
@@ -154,8 +152,7 @@ class ReplaceEntryTests(test_db.BaseDBTests):
                           attrib={"old": "Greater Yorkshire"},
                           text="Yorkshire")
 
-        with self.app.app_context(), database_session(),\
-                self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs("populate.modify") as log:
             _replace(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Yorkshire' for {'code': 'Y'} already "
@@ -166,14 +163,14 @@ class ReplaceEntryTests(test_db.BaseDBTests):
         create_subelement(r_london, "name", attrib={"old": "London"},
                           text="Greater London")
 
-        with self.app.app_context(), self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs("populate.modify") as log:
             _replace(models.Region, r_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",
                       log.output[0])
 
 
-class ModifyDataTests(test_db.BaseDBTests):
+class ModifyDataTests(utils.BaseAppTests):
     """ Testing ``_ModifyData.process()`` and ``modify_data()`` functions.
     """
     def setUp(self):
@@ -186,23 +183,20 @@ class ModifyDataTests(test_db.BaseDBTests):
 
     def test_modify_data(self):
         xml_data = io.BytesIO(self.data)
-        with self.app.app_context():
-            modify_data(xml_data)
-            regions = models.Region.query.all()
-            self.assertEqual(len(regions), 1)
-            self.assertEqual([regions[0].code, regions[0].name],
-                             ["L", "Greater London"])
+        modify_data(xml_data)
+        regions = models.Region.query.all()
+        self.assertEqual(len(regions), 1)
+        self.assertEqual([regions[0].code, regions[0].name],
+                         ["L", "Greater London"])
 
     def test_modify_data_no_model(self):
         self.data = self.data.replace(b' model="Region"', b"")
         xml_data = io.BytesIO(self.data)
-        with self.app.app_context(),\
-                self.assertRaisesRegex(ValueError, "Every <table> element"):
+        with self.assertRaisesRegex(ValueError, "Every <table> element"):
             modify_data(xml_data)
 
     def test_modify_data_incorrect_model(self):
         self.data = self.data.replace(b'model="Region"', b'model="SomeTable"')
         xml_data = io.BytesIO(self.data)
-        with self.app.app_context(),\
-                self.assertRaisesRegex(ValueError, "Every <table> element"):
+        with self.assertRaisesRegex(ValueError, "Every <table> element"):
             modify_data(xml_data)

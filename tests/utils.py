@@ -1,12 +1,13 @@
 """
 Testing the database.
 """
-import os
 import datetime
+import functools
+import os
+import types
 import unittest
 
-import psycopg2
-import sqlalchemy
+import lxml.etree as et
 
 from definitions import CONFIG_ENV
 from nextbus import db, create_app, models
@@ -85,7 +86,37 @@ STOP_POINT = {
 }
 
 
-class BaseDBTests(unittest.TestCase):
+def wrap_app_context(func):
+    """ Executes the method within a Flask app context. The class instance
+        must have a 'app' attribute for a running Flask application.
+    """
+    @functools.wraps(func)
+    def func_within_context(instance, *args, **kwargs):
+        with instance.app.app_context():
+            return func(instance, *args, **kwargs)
+
+    return func_within_context
+
+
+class TestAppContext(type):
+    """ Metaclass to wrap every method with an app.with_context decorator.
+
+        The following methods are excluded: setUp, setUpClass, tearDown,
+        tearDownClass. Static and class methods are also excluded.
+    """
+    def __new__(meta, class_name, bases, attrs):
+        new_attrs = {}
+        excluded = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
+        for name, attr in attrs.items():
+            if isinstance(attr, types.FunctionType) and name not in excluded:
+                new_attrs[name] = wrap_app_context(attr)
+            else:
+                new_attrs[name] = attr
+
+        return type.__new__(meta, class_name, bases, new_attrs)
+
+
+class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
     """ Base class for testing with the app and database """
     MAIN = "SQLALCHEMY_DATABASE_URI"
     TEST = "TEST_DATABASE_URI"
@@ -134,88 +165,41 @@ class BaseDBTests(unittest.TestCase):
         return {c: getattr(model_object, c) for c in columns}
 
 
-class ModelTests(BaseDBTests):
-    """ Testing creation of model objects and querying them """
+class BaseXMLTests(unittest.TestCase):
+    """ Base tests for comparing XML files. """
+    # Use parser which removes blank text from transformed XML files
+    parser = et.XMLParser(remove_blank_text=True)
 
-    def setUp(self):
-        self.create_tables()
-    
-    def tearDown(self):
-        self.drop_tables()
+    def assertXMLElementsEqual(self, e1, e2, msg=None, _path=None):
+        """ Compares two XML Element objects by iterating through each
+            tag recursively and comparing their tags, text, tails and
+            attributes.
+        """
+        message = []
+        # Check tags, text, tails, attributes and number of subelements
+        if e1.tag != e2.tag:
+            message.append("Tags %r != %r" % (e1.tag, e2.tag))
+        if e1.text != e2.text:
+            message.append("Text %r != %r" % (e1.text, e2.text))
+        if e1.tail != e2.tail:
+            message.append("Tail strings %r != %r" % (e1.tail, e2.tail))
+        if e1.attrib != e2.attrib:
+            message.append("Attributes %r != %r" % (e1.attrib, e1.attrib))
+        if len(e1) != len(e2):
+            message.append("%d != %d subelements" % (len(e1), len(e2)))
 
-    def test_create_region(self):
-        with self.app.app_context():
-            region = models.Region(**REGION)
-            db.session.add(region)
-            db.session.commit()
+        # Errors found: create message and raise exception
+        if message:
+            if _path is not None and e1.tag == e2.tag:
+                message.insert(0, "For element %s/%s:" % (_path, e1.tag))
+            elif _path is not None and e1.tag != e2.tag:
+                message.insert(0, "For subelements within %s:" % _path)
 
-            regions = models.Region.query.all()
-            queried_attrs = self.model_as_dict(regions[0])
-            self.assertEqual(REGION, queried_attrs)
+            new_msg = self._formatMessage(msg, "\n".join(message))
+            raise self.failureException(new_msg)
 
-    def test_create_multiple(self):
-        with self.app.app_context():
-            objects = [
-                models.Region(**REGION),
-                models.AdminArea(**ADMIN_AREA),
-                models.District(**DISTRICT),
-                models.Locality(**LOCALITY)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-
-            locality = models.Locality.query.filter(
-                models.Locality.name == "Sharrow Vale"
-            ).one()
-            queried_attrs = self.model_as_dict(locality)
-            self.assertEqual(LOCALITY, queried_attrs)
-
-    def test_foreign_key(self):
-        with self.app.app_context(),\
-                self.assertRaisesRegex(sqlalchemy.exc.IntegrityError,
-                                       "foreign key"):
-            # Set district code to one that doesn't exist
-            new_area = ADMIN_AREA.copy()
-            new_area['region_ref'] = "L"
-            objects = [
-                models.Region(**REGION),
-                models.AdminArea(**new_area)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-
-
-class RelationshipTests(BaseDBTests):
-    """ Testing relations between different models """
-
-    @classmethod
-    def setUpClass(cls):
-        super(RelationshipTests, cls).setUpClass()
-        cls.create_tables()
-        with cls.app.app_context():
-            objects = [
-                models.Region(**REGION),
-                models.AdminArea(**ADMIN_AREA),
-                models.District(**DISTRICT),
-                models.Locality(**LOCALITY)
-            ]
-            db.session.add_all(objects)
-            db.session.commit()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.drop_tables()
-        super(RelationshipTests, cls).tearDownClass()
-
-    def test_region_areas(self):
-        with self.app.app_context():
-            region = models.Region.query.filter_by(code="Y").one()
-            admin_area = models.AdminArea.query.filter_by(code="099").one()
-            region_areas = region.areas
-            self.assertEqual(admin_area, region_areas[0])
-
-    def test_area_region(self):
-        with self.app.app_context():
-            region = models.Region.query.filter_by(code="Y").one()
-            admin_area = models.AdminArea.query.filter_by(code="099").one()
-            self.assertEqual(region, admin_area.region)
+        # If elements compared have children, iterate through them recursively
+        if len(e1) > 0:
+            new_path = e1.tag if _path is None else _path + "/" + e1.tag 
+            for c1, c2 in zip(e1, e2):
+                self.assertXMLElementsEqual(c1, c2, _path=new_path)

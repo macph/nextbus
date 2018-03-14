@@ -153,7 +153,7 @@ def _create_ind_parser():
         """
         result = expr.parseString(ind_text)
         new_ind = " ".join(result[:IND_MAX_WORDS])
-    
+
         return new_ind
 
     return parse_indicator
@@ -195,68 +195,166 @@ class _NaPTANStops(object):
         list_objects.append(point)
 
 
-def _modify_stop_areas():
-    """ Remove all stop areas that do not belong within specified admin areas,
-        and add locality info based on stops contained within the stop areas.
-    """
-    # Find all stop areas without any stop points (ie they are outside
-    # specified areas)
-    query_del = (
+def _remove_stop_areas():
+    """ Remove all stop areas without associated stop points. """
+    query_stop_area_del = (
         db.session.query(models.StopArea.code)
         .outerjoin(models.StopArea.stop_points)
         .filter(models.StopPoint.atco_code.is_(None))
-    )
-    list_del = [sa.code for sa in query_del.all()]
-    # Find locality codes as modes of stop points within each stop area.
-    # Stop areas are repeated if there are multiple modes.
-    c_stops = (
-        db.session.query(
-            models.StopArea.code.label("area_code"),
-            models.StopPoint.locality_ref.label("local_code"),
-            db.func.count(models.StopPoint.atco_code).label("num_stops")
-        ).join(models.StopArea.stop_points)
-        .group_by(models.StopArea.code, models.StopPoint.locality_ref)
     ).subquery()
-    m_stops = (
-        db.session.query(
-            c_stops.c.area_code, c_stops.c.local_code,
-            db.func.max(c_stops.c.num_stops).label("max_stops")
-        ).group_by(c_stops.c.area_code, c_stops.c.local_code)
-    ).subquery()
-
-    query_area_localities = (
-        db.session.query(
-            c_stops.c.area_code, c_stops.c.local_code
-        ).join(m_stops, db.and_(
-            c_stops.c.area_code == m_stops.c.area_code,
-            c_stops.c.local_code == m_stops.c.local_code,
-            c_stops.c.num_stops == m_stops.c.max_stops
-        ))
-    )
-
-    dict_areas = collections.defaultdict(list)
-    update_areas, invalid_areas = [], []
-    logger.info("Linking stop areas with localities")
-    for row in query_area_localities.all():
-        dict_areas[row.area_code].append(row.local_code)
-    for area, localities in dict_areas.items():
-        if len(localities) == 1:
-            update_areas.append({"code": area, "locality_ref": localities[0]})
-        else:
-            invalid_areas.append("Stop area %s has multiple localities %s"
-                                 % (area, ", ".join(localities)))
 
     with database_session():
         logger.info("Deleting orphaned stop areas")
         models.StopArea.query.filter(
-            models.StopArea.code.in_(list_del)
+            models.StopArea.code.in_(query_stop_area_del)
         ).delete(synchronize_session="fetch")
-        logger.info("Adding locality codes to stop areas")
-        db.session.bulk_update_mappings(models.StopArea, update_areas)
 
-    if invalid_areas:
-        logger.warn("The following stop areas are associated with multiple "
-                    "localities:\n" + "\n".join(invalid_areas))
+
+def _find_stop_area_mode(query_result, ref):
+    """ Helper function to find the mode of references for each stop area.
+
+        The query results must have 3 columns: primary key, foreign key
+        reference and number of stop points within each area matching that
+        reference, in that order.
+
+        :param ref: Name of the reference column.
+        :returns: Two lists; one to be to be used with ``bulk_update_mappings``
+        and the other strings for invalid areas.
+    """
+    # Group by stop area and reference
+    stop_areas = collections.defaultdict(dict)
+    for row in query_result:
+        stop_areas[row[0]][row[1]] = row[2]
+
+    # Check each area and find mode matching reference
+    update_areas = []
+    invalid_areas = {}
+    for sa, count in stop_areas.items():
+        max_count = [k for k, v in count.items() if v == max(count.values())]
+        if len(max_count) == 1:
+            update_areas.append({"code": sa, ref: max_count[0]})
+        else:
+            invalid_areas[sa] = max_count
+
+    return update_areas, invalid_areas
+
+
+def _find_locality_min_distance(ambiguous_areas):
+    """ Helper function to find the minimum distance between stop areas and
+        localities for these with ambiguous localities.
+    """
+    distance = db.func.sqrt(
+        db.func.power(models.StopArea.easting - models.Locality.easting, 2) +
+        db.func.power(models.StopArea.northing - models.Locality.northing, 2)
+    )
+    # Do another query over list of areas to find distance
+    query_dist = (
+        db.session.query(
+            models.StopArea.code.label("code"),
+            models.Locality.code.label("locality"),
+            distance.label("distance")
+        ).select_from(models.StopPoint)
+        .distinct(models.StopArea.code, models.Locality.code)
+        .join(models.Locality,
+              models.Locality.code == models.StopPoint.locality_ref)
+        .join(models.StopArea,
+              models.StopArea.code == models.StopPoint.stop_area_ref)
+        .filter(models.StopPoint.stop_area_ref.in_(ambiguous_areas))
+    )
+
+    # Group by stop area and locality reference
+    stop_areas = collections.defaultdict(dict)
+    for row in query_dist.all():
+        stop_areas[row.code][row.locality] = row.distance
+    # Check each area and find the minimum distance
+    update_areas = []
+    for sa, local in stop_areas.items():
+        min_dist = min(local.values())
+        local_min = [k for k, v in local.items() if v == min_dist]
+
+        # Check if associated localities are far away - may be wrong locality
+        for k, dist in local.items():
+            if dist > 2 * min_dist and dist > 1000:
+                logger.warning("Area %s: %.0f m away from %s" % (sa, dist, k))
+
+        # Else, check if only one locality matches min distance and set it
+        if len(local_min) == 1:
+            logger.debug("Area %s set to locality %s, dist %.0f m" %
+                         (sa, local_min[0], min_dist))
+            update_areas.append({"code": sa, "locality_ref": local_min[0]})
+        else:
+            logger.warning("Area %s: ambiguous localities %s" % (sa, min_dist))
+
+    return update_areas
+
+
+def _set_stop_area_locality():
+    """ Add locality info based on stops contained within the stop areas.
+    """
+    # Find stop areas with associated locality codes
+    query = (
+        db.session.query(
+            models.StopArea.code.label("code"),
+            models.StopPoint.locality_ref.label("ref"),
+            db.func.count(models.StopPoint.locality_ref).label("count")
+        ).select_from(models.StopPoint)
+        .join(models.StopArea,
+              models.StopArea.code == models.StopPoint.stop_area_ref)
+        .group_by(models.StopArea.code, models.StopPoint.locality_ref)
+    )
+    # Find locality for each stop area that contain the most stops
+    areas, ambiguous = _find_stop_area_mode(query.all(), "locality_ref")
+    # if still ambiguous, measure distance between stop area and each locality
+    # and add to above
+    if ambiguous:
+        add_areas = _find_locality_min_distance(ambiguous.keys())
+        areas.extend(add_areas)
+
+    with database_session():
+        logger.info("Adding locality codes to stop areas")
+        db.session.bulk_update_mappings(models.StopArea, areas)
+
+
+def _set_tram_admin_area():
+    """ Set admin area ref for tram stops and areas to be the same as their
+        localities.
+    """
+    tram_area = "147"
+
+    # Update stop points
+    select_ref = (
+        db.session.query(models.Locality.admin_area_ref)
+        .filter(models.Locality.code == models.StopPoint.locality_ref)
+    ).as_scalar()
+
+    with database_session():
+        logger.info("Updating tram stops with admin area ref")
+        (db.session.query(models.StopPoint)
+         .filter(models.StopPoint.admin_area_ref == tram_area)
+         .update({models.StopPoint.admin_area_ref: select_ref},
+                 synchronize_session=False)
+        )
+
+    # Find stop areas with associated admin area codes
+    query = (
+        db.session.query(
+            models.StopArea.code.label("code"),
+            models.StopPoint.admin_area_ref.label("ref"),
+            db.func.count(models.StopPoint.admin_area_ref).label("count")
+        ).select_from(models.StopPoint)
+        .join(models.StopArea,
+              models.StopArea.code == models.StopPoint.stop_area_ref)
+        .filter(models.StopArea.admin_area_ref == tram_area)
+        .group_by(models.StopArea.code, models.StopPoint.admin_area_ref)
+    )
+    areas, ambiguous = _find_stop_area_mode(query.all(), "admin_area_ref")
+
+    with database_session():
+        logger.info("Adding locality codes to stop areas")
+        db.session.bulk_update_mappings(models.StopArea, areas)
+
+    for area in ambiguous.items():
+        logger.warning("Area %s: ambiguous admin areas %s" % area)
 
 
 def _merge_naptan_data(naptan_paths):
@@ -357,6 +455,8 @@ def commit_naptan_data(naptan_files=None):
     # Commit changes to database
     naptan.commit()
     # Remove all orphaned stop areas and add localities to other stop areas
-    _modify_stop_areas()
+    _remove_stop_areas()
+    _set_stop_area_locality()
+    _set_tram_admin_area()
 
     logger.info("NaPTAN population done")

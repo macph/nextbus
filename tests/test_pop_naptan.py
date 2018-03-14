@@ -9,7 +9,7 @@ import lxml.etree as et
 
 from nextbus import db, models
 from nextbus.populate.naptan import (_create_ind_parser, _get_naptan_data,
-                                     _modify_stop_areas, commit_naptan_data)
+    _remove_stop_areas, _set_stop_area_locality, commit_naptan_data)
 from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
                                    commit_nptg_data)
 import utils
@@ -196,9 +196,44 @@ class PostprocessingTests(utils.BaseAppTests):
         db.session.add_all(objects)
         db.session.commit()
         # Identify the locality code and add it
-        _modify_stop_areas()
+        _set_stop_area_locality()
         # Now check the stop areas; the single area should now have the
         # locality code
+        area = models.StopArea.query.one()
+        self.assertEqual(area.locality_ref, utils.STOP_AREA["locality_ref"])
+
+    def test_add_locality_multiple(self):
+        new_locality = copy.deepcopy(utils.LOCALITY)
+        modified_stop_area = copy.deepcopy(utils.STOP_AREA)
+        new_stop_point = copy.deepcopy(utils.STOP_POINT)
+        # Modify locality to be different from that of LOCALITY
+        new_locality.update({
+            "code": "N0060732", "name": "Hunters Bar", "easting": 433217,
+            "northing": 385748, "longitude": -1.502266, "latitude": 53.36756
+        })
+        del modified_stop_area["locality_ref"] # Remove the locality code
+        # Modify stop point to be different from that of STOP_POINT but
+        # still have the same stop area
+        new_stop_point.update({
+            "atco_code": "370020581", "naptan_code": "37020581",
+            "name": "Rustlings Road", "locality_ref": "N0060732"
+        })
+
+        objects = [
+            models.Region(**utils.REGION),
+            models.AdminArea(**utils.ADMIN_AREA),
+            models.District(**utils.DISTRICT),
+            models.Locality(**utils.LOCALITY),
+            models.Locality(**new_locality),
+            models.StopArea(**modified_stop_area),
+            models.StopPoint(**utils.STOP_POINT),
+            models.StopPoint(**new_stop_point)
+        ]
+        db.session.add_all(objects)
+        db.session.commit()
+
+        _set_stop_area_locality()
+
         area = models.StopArea.query.one()
         self.assertEqual(area.locality_ref, utils.STOP_AREA["locality_ref"])
 
@@ -218,11 +253,10 @@ class PostprocessingTests(utils.BaseAppTests):
         db.session.add_all(objects)
         db.session.commit()
         # Remove orphaned stop areas
-        _modify_stop_areas()
+        _remove_stop_areas()
         # Now check the stop areas; there should be only one
-        areas = models.StopArea.query.all()
-        self.assertEqual(len(areas), 1)
-        self.assertEqual(utils.STOP_AREA, self.model_as_dict(areas[0]))
+        areas = models.StopArea.query.one()
+        self.assertEqual(utils.STOP_AREA, self.model_as_dict(areas))
 
 class PopulateTests(utils.BaseAppTests):
 

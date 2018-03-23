@@ -41,7 +41,7 @@ def _delete(model, element):
         :param element: A ``delete`` XML element.
         :returns: Number of rows deleted.
     """
-    if not element.attrib:
+    if not element.keys():
         raise ValueError("Each <delete> element requires at least one XML "
                          "attribute to filter rows.")
 
@@ -61,7 +61,7 @@ def _replace(model, element):
         :param element: A ``replace`` XML element.
         :returns: Number of rows replaced.
     """
-    if not element.attrib:
+    if not element.keys():
         raise ValueError("Each <replace> element requires at least one XML "
                          "attribute to filter rows.")
 
@@ -75,7 +75,7 @@ def _replace(model, element):
     updated_values = {}
     for value in element:
         column = value.tag
-        old_value = value.attrib.get("old")
+        old_value = value.get("old")
         new_value = value.text
         existing = set(getattr(r, column) for r in matching_entries)
         # Checks if new values already exist
@@ -139,14 +139,14 @@ def modify_data(xml_file=None):
     data = _load_xml_file(xml_file)
     list_tables = data.xpath("table")
 
-    if not all(t.attrib.get("model") in MODELS for t in list_tables):
+    if not all(t.get("model") in MODELS for t in list_tables):
         raise ValueError("Every <table> element in the data must have a "
                          "'model' attribute matching an existing table.")
 
     logger.info("Processing populated data")
     create, delete, replace = 0, 0, 0
     for table in list_tables:
-        model = getattr(models, table.attrib["model"])
+        model = getattr(models, table.get("model"))
         with database_session():
             create += sum(_create(model, e) for e in table.xpath("create"))
             delete += sum(_delete(model, e) for e in table.xpath("delete"))

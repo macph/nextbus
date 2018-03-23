@@ -1,85 +1,105 @@
 """
 File operations for opening datasets.
 """
-import datetime
+import itertools
 import os
+import re
 import subprocess
 import zipfile
-import requests
+import urllib
 
+import requests
 from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus.populate import logger
+
 
 CHUNK_SIZE = 1024
 DUMP_FILE_PATH = r"temp/nextbus.db.dump"
 
 
 def _get_full_path(path):
-    """ Find the absolute path, using the project directory for relative paths.
-    """
-    if not os.path.isabs(path):
-        full_path = os.path.join(ROOT_DIR, path)
+    """ Use the project directory for relative paths, or the absolute path. """
+    return path if os.path.isabs(path) else os.path.join(ROOT_DIR, path)
+
+
+def _get_file_name(url, response):
+    """ Gets the file name from the response header or the URL name. """
+    content = response.headers.get("content-disposition")
+    if content and "filename" in content:
+        file_name = re.search(r"filename=(.+)", content).group(1)
     else:
-        full_path = path
+        # Get the path and split it to get the rightmost part
+        path = urllib.parse.urlparse(url)[2]
+        file_name = path.split("/")[-1]
 
-    return full_path
+    return file_name
 
 
-def download(url, file_name, directory=None, **kwargs):
+def download(url, file_name=None, directory=None, **kwargs):
     """ Downloads files with requests.
 
         :param url: URL to download from.
         :param file_name: Name of file to be saved. Use 'directory' to specify
-        a path.
-        :param directory: Path for where to put the file.
-        :param args: Arguments to be passed on to requests.get().
+        a path. If None, the name is derived from the URL or the header.
+        :param directory: Path for directory. If directory is None, the root
+        directory is used instead.
         :param kwargs: Keyword arguments for requests.get().
     """
-    dir_path = ROOT_DIR if directory is None else _get_full_path(directory)
-    full_path = os.path.join(dir_path, file_name)
+    response = requests.get(url, stream=True, **kwargs)
 
-    logger.info("Downloading %r from %r" % (file_name, url))
-    req = requests.get(url, stream=True, **kwargs)
+    dir_path = ROOT_DIR if directory is None else _get_full_path(directory)
+    name = _get_file_name(url, response) if file_name is None else file_name
+    full_path = os.path.join(dir_path, name)
+
+    logger.info("Downloading %r from %r" % (name, url))
     with open(full_path, 'wb') as out_file:
-        for chunk in req.iter_content(chunk_size=CHUNK_SIZE):
+        for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
             if chunk:
                 out_file.write(chunk)
 
     return full_path
 
 
-def download_zip(url, files=None, directory=None, **kwargs):
-    """ Downloads zip file from an URL and extracts specified files from it.
+def iter_archive(archive):
+    """ Generator function iterating over all files in a zipped archive file.
 
-        :param url: URL to download from.
-        :param files: List of files to extract from archive. If None, all files
-        are extracted.
-        :param directory: Path for where to put the files in. The temporary zip
-        archive is also stored here.
-        :param args: Arguments to be passed on to requests.get().
-        :param kwargs: Keyword arguments for requests.get().
+        The generator will open each file, yielding its file-like object. This
+        file will be closed before opening the next file. When the iteration
+        is finished the archive is closed.
+
+        :param archive: Path to the archive file.
+        :returns: File-like object for current archived file.
     """
-    temp_file = 'TEMP_%d.zip' % int(datetime.datetime.now().timestamp())
-    temp_path = download(url, temp_file, directory, **kwargs)
-    dir_path = ROOT_DIR if directory is None else _get_full_path(directory)
+    zip_ = zipfile.ZipFile(archive)
+    for name in zip_.namelist():
+        with zip_.open(name) as current:
+            yield current
+    zip_.close()
 
-    try:
-        z_file = zipfile.ZipFile(temp_path)
-    except zipfile.BadZipFile as err:
-        raise ValueError("File downloaded is not a valid archive.") from err
-    try:
-        list_paths = []
-        list_files = files if files is not None else z_file.namelist()
-        for file_name in list_files:
-            new = z_file.extract(file_name, path=dir_path)
-            list_paths.append(new)
-    finally:
-        z_file.close()
-        os.remove(temp_path)
 
-    return list_paths
+def iter_archive_chunks(archive, chunk=100):
+    """ Generator function returning iterables for subsets of files in a
+        zipped archive.
+
+        :param archive: Path to the archive file.
+        :param chunk: Limit on number of objects from each iterable.
+        :returns: Shorter version of ``iter_archive``, limited by chunk size.
+    """
+    zip_ = zipfile.ZipFile(archive)
+    names = iter(zip_.namelist())
+
+    def iter_sub_list(list_files):
+        for name in list_files:
+            with zip_.open(name) as current:
+                yield current
+
+    sub_list = list(itertools.islice(names, chunk))
+    while sub_list:
+        yield iter_sub_list(sub_list)
+        sub_list = list(itertools.islice(names, chunk))
+    zip_.close()
 
 
 def backup_database(dump_file=None):

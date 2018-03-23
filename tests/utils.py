@@ -200,6 +200,6 @@ class BaseXMLTests(unittest.TestCase):
 
         # If elements compared have children, iterate through them recursively
         if len(e1) > 0:
-            new_path = e1.tag if _path is None else _path + "/" + e1.tag 
+            new_path = e1.tag if _path is None else _path + "/" + e1.tag
             for c1, c2 in zip(e1, e2):
                 self.assertXMLElementsEqual(c1, c2, _path=new_path)

@@ -35,13 +35,14 @@ def cli():
               help="Download NPTG locality data and add to database.")
 @click.option("--nptg-path", "-G", "nptg_f", default=None,
               type=click.Path(exists=True),
-              help="Add NPTG locality data from specified XML file.")
+              help="Add NPTG locality data from specified zip file with XML "
+              "files.")
 @click.option("--naptan", "-n", "naptan_d", is_flag=True,
               help="Download NaPTAN stop point data and add to database.")
-@click.option("--naptan-path", "-N", "naptan_f", default=None, multiple=True,
+@click.option("--naptan-path", "-N", "naptan_f", default=None,
               type=click.Path(exists=True),
-              help="Add NaPTAN stop point data from specified XML file. "
-              "Multiple files can be specified by repeating the option.")
+              help="Add NaPTAN stop point data from specified zip file with "
+              "XML files.")
 @click.option("--nspl", "-p", "nspl_d", is_flag=True,
               help="Download NSPL postcode data and add to database.")
 @click.option("--nspl-path", "-P", "nspl_f", default=None,
@@ -58,8 +59,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
              backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
-    from nextbus.populate import (file_ops, modify, naptan, nptg, nspl,
-                                  tsvector)
+    from nextbus.populate import file_ops, modify, naptan, nptg, nspl, tsvector
 
     errors = False
     use_backup = False
@@ -71,6 +71,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         errors = True
     else:
         options["g"] = nptg_d or nptg_f
+        nptg_file = nptg_f if nptg_f else None
 
     if naptan_d and naptan_f:
         click.echo("Download (-n) and filepath (-N) options for NaPTAN data "
@@ -78,6 +79,7 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         errors = True
     else:
         options["n"] = naptan_d or naptan_f
+        naptan_file = naptan_f if naptan_f else None
 
     if nspl_d and nspl_f:
         click.echo("Download (-p) and filepath (-P) options for NSPL data are "
@@ -103,9 +105,9 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         if use_backup:
             file_ops.backup_database(backup_f)
         try:
-            if options["g"]: nptg.commit_nptg_data(nptg_file=nptg_f)
-            if options["n"]: naptan.commit_naptan_data(naptan_files=naptan_f)
-            if options["p"]: nspl.commit_nspl_data(nspl_file=nspl_f)
+            if options["g"]: nptg.commit_nptg_data(archive=nptg_file)
+            if options["n"]: naptan.commit_naptan_data(archive=naptan_file)
+            if options["p"]: nspl.commit_nspl_data(file_=nspl_f)
             if options["m"]: modify.modify_data()
             # Update tsvector columns after population
             if options["g"] or options["m"]: tsvector.update_nptg_tsvector()

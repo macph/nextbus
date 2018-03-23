@@ -12,7 +12,7 @@ import pyparsing as pp
 from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import (DBEntries, database_session, file_ops,
-                              get_atco_codes, logger, NXB_EXT_URI,
+                              get_atco_codes, logger, merge_xml, NXB_EXT_URI,
                               XSLTExtFunctions)
 
 
@@ -32,17 +32,10 @@ def download_naptan_data(atco_codes=None):
         Ireland) are retrieved.
     """
     params = {"format": "xml"}
-    temp_path = os.path.join(ROOT_DIR, "temp")
-
     if atco_codes:
-        # Add tram/metro options (ATCO area code 940)
-        params["LA"] = "|".join(str(i) for i in atco_codes + [940])
-        files = None
-    else:
-        files = ["Naptan.xml"]
+        params["LA"] = "|".join(str(i) for i in atco_codes)
 
-    new = file_ops.download_zip(NAPTAN_URL, files, directory=temp_path,
-                                params=params)
+    new = file_ops.download(NAPTAN_URL, directory="temp", params=params)
 
     return new
 
@@ -109,7 +102,7 @@ def _create_ind_parser():
         kw_one_of("os", replace="o/s"),
         kw_one_of("to", replace="to")
     ])
-    # Exclude common words, eg 'Stop' or 'Bay'. 
+    # Exclude common words, eg 'Stop' or 'Bay'.
     excluded_words = kw_one_of(
         "and", "bay", "gate", "no.", "platform", "stance", "stances", "stand",
         "stop", "the", "to"
@@ -160,7 +153,7 @@ def _create_ind_parser():
 
 
 class _NaPTANStops(object):
-    """ Filters NaPTAN stop points and areas by ensuring only stop areas 
+    """ Filters NaPTAN stop points and areas by ensuring only stop areas
         belonging to stop points within specified ATCO areas are filtered.
     """
     def __init__(self, list_locality_codes=None):
@@ -357,49 +350,17 @@ def _set_tram_admin_area():
         logger.warning("Area %s: ambiguous admin areas %s" % area)
 
 
-def _merge_naptan_data(naptan_paths):
-    """ Merge NaPTAN data from multiple XML files.
-
-        Each NaPTAN XML file has two elements: StopAreas and StopPoints. For
-        every additional XML file, all children from these elements are added
-        to the elements parsed from the first file, and the resulting element
-        tree is returned.
-    """
-    logger.info("Opening NaPTAN file %r" % naptan_paths[0])
-    data = et.parse(naptan_paths[0])
-
-    if len(naptan_paths) > 1:
-        # Create XPath queries for stop areas and points
-        names = {"n": data.xpath("namespace-uri(.)")}
-        def xpath(element, query):
-            return element.xpath(query, namespaces=names)
-
-        stop_areas = xpath(data, "n:StopAreas")[0]
-        stop_points = xpath(data, "n:StopPoints")[0]
-        # If more than one file: open each and use XPath queries to add all
-        # points and areas to the first dataset
-        for add_file in naptan_paths[1:]:
-            logger.info("Adding data from file %r" % add_file)
-            new_data = et.parse(add_file)
-            for area in xpath(new_data, "n:StopAreas/n:StopArea"):
-                stop_areas.append(area)
-            for point in xpath(new_data, "n:StopPoints/n:StopPoint"):
-                stop_points.append(point)
-
-    return data
-
-
-def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
+def _get_naptan_data(naptan_files, list_area_codes=None, out_file=None):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
 
-        :param naptan_paths: List of paths for NaPTAN XML files
+        :param naptan_files: Iterator for list of NaPTAN XML files
         :param list_area_codes: List of administrative area codes
         :param out_file: File path to write transformed data to, relative to
         the project directory. If None the data is returned as a XML
         ElementTree object
     """
-    naptan_data = _merge_naptan_data(naptan_paths)
+    naptan_data = merge_xml(naptan_files)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
     ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
 
@@ -423,16 +384,26 @@ def _get_naptan_data(naptan_paths, list_area_codes=None, out_file=None):
         return new_data
 
 
-def commit_naptan_data(naptan_files=None):
+def commit_naptan_data(archive=None, list_files=None):
     """ Convert NaPTAN data (stop points and areas) to database objects and
         commit them to the application database.
-    """
-    atco_codes = get_atco_codes()
-    if not naptan_files:
-        naptan_paths = download_naptan_data(atco_codes)
-    else:
-        naptan_paths = list(naptan_files)
 
+        :param archive: Path to zipped archive file for NaPTAN XML files.
+        :param list_files: List of file paths for NaPTAN XML files.
+    """
+    downloaded = None
+    atco_codes = get_atco_codes()
+    if archive is not None and list_files is not None:
+        raise ValueError("Can't specify both archive file and list of files.")
+    elif archive is not None:
+        iter_files = file_ops.iter_archive(archive)
+    elif list_files is not None:
+        iter_files = iter(list_files)
+    else:
+        downloaded = download_naptan_data(atco_codes)
+        iter_files = file_ops.iter_archive(downloaded)
+
+    # Get list of admin areas and localities from NPTG data
     query_areas = db.session.query(models.AdminArea.code).all()
     query_local = db.session.query(models.Locality.code).all()
     if not query_areas or not query_local:
@@ -446,7 +417,7 @@ def commit_naptan_data(naptan_files=None):
     else:
         area_codes, local_codes = None, None
 
-    _get_naptan_data(naptan_paths, area_codes, out_file=NAPTAN_XML)
+    _get_naptan_data(iter_files, area_codes, out_file=NAPTAN_XML)
     eval_stops = _NaPTANStops(local_codes)
     naptan = DBEntries(NAPTAN_XML)
     naptan.add("StopAreas/StopArea", models.StopArea, eval_stops.parse_areas)
@@ -459,4 +430,6 @@ def commit_naptan_data(naptan_files=None):
     _set_stop_area_locality()
     _set_tram_admin_area()
 
+    if downloaded is not None:
+        logger.info("New file %r downloaded; can be deleted" % downloaded)
     logger.info("NaPTAN population done")

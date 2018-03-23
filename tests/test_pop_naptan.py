@@ -30,13 +30,13 @@ class NptgXsltTests(utils.BaseXMLTests):
     """ Testing `_get_nptg_data` function which transforms NPTG data. """
 
     def test_nptg_transform_all_areas(self):
-        data = _get_nptg_data(NPTG_RAW, atco_codes=None, out_file=None)
+        data = _get_nptg_data(iter([NPTG_RAW]))
 
         expected = et.parse(NPTG_ALL, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
     def test_nptg_transform_tram_only(self):
-        data = _get_nptg_data(NPTG_RAW, atco_codes=[940], out_file=None)
+        data = _get_nptg_data(iter([NPTG_RAW]), atco_codes=[940])
 
         expected = et.parse(NPTG_TRAM, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
@@ -46,21 +46,19 @@ class NaptanXsltTests(utils.BaseXMLTests):
     """ Testing `_get_naptan_data` function which transforms NPTG data. """
 
     def test_naptan_transform_all_areas(self):
-        data = _get_naptan_data([NAPTAN_RAW], list_area_codes=None,
-                                out_file=None)
+        data = _get_naptan_data(iter([NAPTAN_RAW]))
 
         expected = et.parse(NAPTAN_ALL, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
     def test_naptan_transform_split_files(self):
-        paths = [NAPTAN_RAW_370, NAPTAN_RAW_940]
-        data = _get_naptan_data(paths, list_area_codes=None, out_file=None)
+        iter_paths = iter([NAPTAN_RAW_370, NAPTAN_RAW_940])
+        data = _get_naptan_data(iter_paths)
         expected = et.parse(NAPTAN_ALL, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
     def test_naptan_trasform_tram_only(self):
-        data = _get_naptan_data([NAPTAN_RAW], list_area_codes=["147"],
-                              out_file=None)
+        data = _get_naptan_data(iter([NAPTAN_RAW]), list_area_codes=["147"])
 
         expected = et.parse(NAPTAN_TRAM, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
@@ -267,7 +265,7 @@ class PopulateTests(utils.BaseAppTests):
         self.drop_tables()
 
     def test_commit_nptg_data(self):
-        commit_nptg_data(nptg_file=NPTG_RAW)
+        commit_nptg_data(list_files=[NPTG_RAW])
 
         # Make queries to the DB to ensure data is populated correctly
         with self.subTest("region"):
@@ -294,11 +292,11 @@ class PopulateTests(utils.BaseAppTests):
 
     def test_commit_naptan_data_no_nptg(self):
         with self.assertRaisesRegex(ValueError, "NPTG tables"):
-            commit_naptan_data(naptan_files=[NAPTAN_RAW])
+            commit_naptan_data(list_files=[NAPTAN_RAW])
 
     def test_commit_naptan_data(self):
-        commit_nptg_data(nptg_file=NPTG_RAW)
-        commit_naptan_data(naptan_files=[NAPTAN_RAW])
+        commit_nptg_data(list_files=[NPTG_RAW])
+        commit_naptan_data(list_files=[NAPTAN_RAW])
 
         # Make queries to the DB to ensure data is populated correctly
         with self.subTest("areas"):

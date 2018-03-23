@@ -36,6 +36,43 @@ def database_session():
         db.session.remove()
 
 
+def merge_xml(iter_files, parser=None):
+    """ Merges multiple XML files with the same structure.
+
+        All XML files are assumed to have the same root element and namespace,
+        the same shared subelements, and these subelements contain lists of
+        subelements with the same names and structures.
+
+        :param iter_files: Iterator for list of file-like objects or file paths
+        (both are accepted by the XML parser).
+        :param kwargs: XML parser - if None the default parser is used
+        :returns: Merged XML data as ``et.ElementTree`` object
+    """
+    first_file = next(iter_files)
+    data = et.parse(first_file, parser=parser)
+    root = data.getroot()
+    ns_ = {"x": data.xpath("namespace-uri(.)")}
+
+    # Iterate over the rest
+    for file_ in iter_files:
+        new_data = et.parse(file_, parser=parser)
+        new_root = new_data.getroot()
+        new_uri = new_data.xpath("namespace-uri(.)")
+        if new_root.tag != root.tag or new_uri != ns_["x"]:
+            raise ValueError("XML files %r and %r do not have the same root "
+                             "or namespace." % (first_file, file_))
+        for sub_element in new_root:
+            # Strip namespace from tag if one exists
+            tag = sub_element.tag.split("}")[-1]
+            existing = root.xpath("x:" + tag, namespaces=ns_)
+            if existing:
+                existing[0].extend(sub_element)
+            else:
+                root.append(sub_element)
+
+    return data
+
+
 def xml_as_dict(element):
     """ Helper function to create a dictionary from a XML element.
 
@@ -107,13 +144,13 @@ class XSLTExtFunctions(object):
 
 def get_atco_codes():
     """ Helper function to get list of ATCO codes from config. """
-    get_atco_codes = current_app.config.get("ATCO_CODES")
-    if get_atco_codes == "all":
+    atco_codes = current_app.config.get("ATCO_CODES")
+    if atco_codes == "all":
         codes = None
-    elif isinstance(get_atco_codes, list):
+    elif isinstance(atco_codes, list):
         # Add ATCO area code 940 for trams
         try:
-            codes = [int(i) for i in get_atco_codes]
+            codes = [int(i) for i in atco_codes]
         except ValueError as err:
             raise ValueError("All ATCO codes must be integers.") from err
         if 940 not in codes:
@@ -228,11 +265,11 @@ class DBEntries(object):
         with database_session():
             for model, data in self.entries.items():
                 # Delete existing rows
+                logger.info("Deleting old %s objects" % model.__name__)
                 db.session.execute(model.__table__.delete())
                 # Add new rows
                 logger.info(
-                    "Deleting old objects and inserting %d %s object%s into "
-                    "database" % (len(data), model.__name__,
-                                  "" if len(data) == 1 else "s")
+                    "Inserting %d %s object%s into database" %
+                    (len(data), model.__name__, "" if len(data) == 1 else "s")
                 )
                 db.session.execute(self._create_insert_statement(model), data)

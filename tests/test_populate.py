@@ -10,12 +10,88 @@ import lxml.etree as et
 
 from nextbus import db, models
 from nextbus.populate import (DBEntries, ext_function_text, get_atco_codes,
-                              xml_as_dict, XSLTExtFunctions)
+                              merge_xml, xml_as_dict, XSLTExtFunctions)
 import utils
 
 
+XML_FIRST = io.BytesIO(b"""\
+<root xmlns="some/namespace">
+  <first>
+    <sub><a>1</a><b>2</b><c>3</c></sub>
+    <sub><a>4</a><b>5</b><c>6</c></sub>
+  </first>
+</root>
+""")
+
+XML_SECOND = io.BytesIO(b"""\
+<root xmlns="some/namespace">
+  <first>
+    <sub><a>7</a><b>8</b><c>9</c></sub>
+  </first>
+  <second>
+    <child><d>10</d><e>11</e><f>12</f></child>
+  </second>
+</root>
+""")
+
+XML_THIRD = io.BytesIO(b"""\
+<root xmlns="some/namespace">
+  <second>
+    <child><d>13</d><e>14</e><f>15</f></child>
+  </second>
+</root>
+""")
+
+XML_EXPECTED = io.BytesIO(b"""\
+<root xmlns="some/namespace">
+  <first>
+    <sub><a>1</a><b>2</b><c>3</c></sub>
+    <sub><a>4</a><b>5</b><c>6</c></sub>
+    <sub><a>7</a><b>8</b><c>9</c></sub>
+  </first>
+  <second>
+    <child><d>10</d><e>11</e><f>12</f></child>
+    <child><d>13</d><e>14</e><f>15</f></child>
+  </second>
+</root>
+""")
+
+XML_WRONG_ROOT = io.BytesIO(b"""\
+<data xmlns="some/namespace">
+  <first>
+    <sub><a>7</a><b>8</b><c>9</c></sub>
+  </first>
+</data>
+""")
+
+XML_WRONG_NAMESPACE = io.BytesIO(b"""\
+<root xmlns="other/namespace">
+  <first>
+    <sub><a>7</a><b>8</b><c>9</c></sub>
+  </first>
+</root>
+""")
+
+
+class MergeXMLTests(utils.BaseXMLTests):
+    """ Testing the ``merge_xml`` function. """
+    def test_correct_merge(self):
+        merged = merge_xml(iter([XML_FIRST, XML_SECOND, XML_THIRD]),
+                           parser=self.parser)
+        expected = et.parse(XML_EXPECTED, parser=self.parser)
+        self.assertXMLElementsEqual(merged.getroot(), expected.getroot())
+
+    def test_wrong_root(self):
+        with self.assertRaisesRegex(ValueError, "same root or namespace"):
+            merged = merge_xml(iter([XML_FIRST, XML_WRONG_ROOT]))
+
+    def test_wrong_namespace(self):
+        with self.assertRaisesRegex(ValueError, "same root or namespace"):
+            merged = merge_xml(iter([XML_FIRST, XML_WRONG_NAMESPACE]))
+
+
 class ElementDictTests(unittest.TestCase):
-    """ Testing the ``_xml_as_dict`` function. """
+    """ Testing the ``xml_as_dict`` function. """
 
     def setUp(self):
         self.element = et.Element("data")

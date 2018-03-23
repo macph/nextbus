@@ -29,22 +29,20 @@ LIST_COUNTRIES = [
 ]
 
 
-def download_nspl_data(atco_codes=None, token=None):
+def download_nspl_data(atco_codes=None):
     """ Downloads NSPL data from Camden's Socrata API. Requires an app token,
         which can be obtained from Camden's open data site. For more info, see
         https://dev.socrata.com/foundry/opendata.camden.gov.uk/ry6e-hbqy
 
+        The ``CAMDEN_API_TOKEN`` key in application config is used for access,
+        and while it is not necessary it will raise throttling limits on access
+        to the API.
+
         :param atco_codes: List of ATCO codes used to filter areas. If None,
         all postcodes in Great Britain (outwith IoM, Channel Islands and
         Northern Ireland) are retrieved.
-        :param token: Camden API token for retrieving NSPL data. This keyword
-        argument is checked first, then the 'CAMDEN_API_TOKEN' key in Flask
-        config, and if both are None no token is used. A token is not really
-        necessary but will raise throttling limits on access to the API.
     """
-    if token is not None:
-        headers = {"X-App-Token": token}
-    elif current_app.config.get("CAMDEN_API_TOKEN") is not None:
+    if current_app.config.get("CAMDEN_API_TOKEN") is not None:
         headers = {"X-App-Token": current_app.config.get("CAMDEN_API_TOKEN")}
     else:
         headers = {}
@@ -63,8 +61,7 @@ def download_nspl_data(atco_codes=None, token=None):
         "$where": "(%s) AND (positional_quality < 8)" % " OR ".join(codes),
         "$limit": 2000000
     }
-    new = file_ops.download(NSPL_API, "nspl.json",
-                            os.path.join(ROOT_DIR, "temp"),
+    new = file_ops.download(NSPL_API, file_name="nspl.json", directory="temp",
                             headers=headers, params=params)
 
     return new
@@ -88,11 +85,11 @@ def _get_dict_local_auth(atco_codes=None):
     return local_auth
 
 
-def commit_nspl_data(nspl_file=None):
+def commit_nspl_data(file_=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
 
-        :param nspl_file: Path for JSON file. If None, initiates download from
+        :param file_: Path for JSON file. If None, initiates download from
         the Camden Open Data API.
     """
     get_atco_codes = current_app.config.get("ATCO_CODES")
@@ -102,10 +99,12 @@ def commit_nspl_data(nspl_file=None):
     else:
         atco_codes = None if get_atco_codes == "all" else get_atco_codes
 
-    if nspl_file is None:
-        nspl_path = download_nspl_data(atco_codes)
+    downloaded_file = None
+    if file_ is None:
+        downloaded_file = download_nspl_data(atco_codes)
+        nspl_path = downloaded_file
     else:
-        nspl_path = nspl_file
+        nspl_path = file_
 
     logger.info("Opening file %r" % nspl_path)
     with open(nspl_path, "r") as json_file:
@@ -135,4 +134,6 @@ def commit_nspl_data(nspl_file=None):
                     (len(list_postcodes), models.Postcode.__name__))
         db.session.execute(models.Postcode.__table__.insert(), list_postcodes)
 
+    if downloaded_file is not None:
+        logger.info("New file %r downloaded; can be deleted" % downloaded_file)
     logger.info("NSPL population done.")

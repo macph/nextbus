@@ -8,7 +8,7 @@ import lxml.etree as et
 from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import (DBEntries, database_session, file_ops,
-                              get_atco_codes, logger, NXB_EXT_URI,
+                              get_atco_codes, logger, merge_xml, NXB_EXT_URI,
                               XSLTExtFunctions)
 
 
@@ -22,11 +22,7 @@ def download_nptg_data():
         XML file is extracted first.
     """
     params = {"format": "xml"}
-    temp_path = os.path.join(ROOT_DIR, "temp")
-    files = ["NPTG.xml"]
-
-    new = file_ops.download_zip(NPTG_URL, files, directory=temp_path,
-                                params=params)
+    new = file_ops.download(NPTG_URL, directory="temp", params=params)
 
     return new
 
@@ -46,20 +42,20 @@ def _remove_districts():
         ).delete(synchronize_session="fetch")
 
 
-def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
+def _get_nptg_data(nptg_files, atco_codes=None, out_file=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
         if atco_codes is None).
-        
-        :param nptg_file: Path to XML file with NPTG data
+
+        :param nptg_files: Iterator for list of NPTG XML files
         :param atco_codes: List of ATCO area codes to filter by, or all of them
         if set to None
         :param out_file: Path of file to write processed data to, relative to
         the project directory. If None the data as a XML ElementTree object is
         returned instead
     """
-    logger.info("Opening NPTG file %r" % nptg_file)
-    data = et.parse(nptg_file)
+    logger.info("Opening NPTG files")
+    data = merge_xml(nptg_files)
     names = {"n": data.xpath("namespace-uri(.)")}
     transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
     ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
@@ -113,18 +109,26 @@ def _get_nptg_data(nptg_file, atco_codes=None, out_file=None):
         return new_data
 
 
-def commit_nptg_data(nptg_file=None):
+def commit_nptg_data(archive=None, list_files=None):
     """ Convert NPTG data (regions admin areas, districts and localities) to
         database objects and commit them to the application database.
-    """
-    atco_codes = get_atco_codes()
-    if nptg_file is None:
-        downloaded_files = download_nptg_data()
-        nptg_path = downloaded_files[0]
-    else:
-        nptg_path = nptg_file
 
-    _get_nptg_data(nptg_path, atco_codes, out_file=NPTG_XML)
+        :param archive: Path to zipped archive file for NPTG XML files.
+        :param list_files: List of file paths for NPTG XML files.
+    """
+    downloaded = None
+    atco_codes = get_atco_codes()
+    if archive is not None and list_files is not None:
+        raise ValueError("Can't specify both archive file and list of files.")
+    elif archive is not None:
+        iter_files = file_ops.iter_archive(archive)
+    elif list_files is not None:
+        iter_files = iter(list_files)
+    else:
+        downloaded = download_nptg_data()
+        iter_files = file_ops.iter_archive(downloaded)
+
+    _get_nptg_data(iter_files, atco_codes, out_file=NPTG_XML)
     nptg = DBEntries(NPTG_XML)
     nptg.add("Regions/Region", models.Region)
     nptg.add("AdminAreas/AdminArea", models.AdminArea)
@@ -135,4 +139,6 @@ def commit_nptg_data(nptg_file=None):
     # Remove all orphaned districts
     _remove_districts()
 
-    logger.info("NPTG population done.")
+    if downloaded is not None:
+        logger.info("New file %r downloaded; can be deleted" % downloaded)
+    logger.info("NPTG population done")

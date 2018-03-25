@@ -46,13 +46,13 @@
 </div>
 {% endif %}
 {% if results.get('locality') %}
-<h2 id="hLocal">Places</h2>
+<h2 id="hPlace">Places</h2>
 {% if local_limit %}
 <p>Extra results for '{{ query }}' truncated. Try narrowing your search - for example, you can add the name of the area to the query.</p>
 {% endif %}
-<div class="list list-places-search" id="dLocal">
+<div class="list list-places-search" id="dPlace">
     {% for locality in results['locality'] %}
-    <a class="item-place item-local-search" data-admin-area="{{ locality.admin_area_name }}" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}, {{ locality.district_name if locality.district_name else locality.admin_area_name }}</a>
+    <a class="item-place item-place-search" data-admin-area="{{ locality.admin_area_name }}" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}, {{ locality.district_name if locality.district_name else locality.admin_area_name }}</a>
     {% endfor %}
 </div>
 {% endif %}

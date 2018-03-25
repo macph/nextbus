@@ -79,9 +79,9 @@ function MultiStopMap(mapElement, centre, listStops, isReady, selectCallback) {
                 map: self.map,
                 title: `${stop.name} (${stop.indicator})`,
                 label: {
-                    fontFamily: "Source Sans Pro, sans-serif",
+                    fontFamily: "europa, sans-serif",
                     fontWeight: "600",
-                    text: stop.short_ind
+                    text: (stop.short_ind != "") ? stop.short_ind : "stop"
                 }
             });
             // Add coordinates to boundary
@@ -642,7 +642,7 @@ function SearchFilterList() {
     this.divFilterAreas = document.getElementById('dFilterAreas');
     this.listElements = Array.prototype.slice.call(
         document.querySelectorAll(
-            ".item-area-search, .item-local-search, .item-stop-search"
+            ".item-area-search, .item-place-search, .item-stop-search"
         )
     );
     this.areaNames = new Set(self.listElements.map(i => i.dataset.adminArea));
@@ -653,7 +653,7 @@ function SearchFilterList() {
 
     this.headers = {
         area: new Section('hArea', 'dAreas'),
-        local: new Section('hLocal', 'dLocal'),
+        place: new Section('hPlace', 'dPlace'),
         stop: new Section('hStop', 'dStops')
     };
 
@@ -724,7 +724,7 @@ function SearchFilterList() {
             if (!showAreas && s.className.indexOf('item-area-search') > -1) {
                 showAreas = true;
             }
-            if (!showLocal && s.className.indexOf('item-local-search') > -1) {
+            if (!showLocal && s.className.indexOf('item-place-search') > -1) {
                 showLocal = true;
             }
             if (!showStops && s.className.indexOf('item-stop-search') > -1) {
@@ -738,11 +738,11 @@ function SearchFilterList() {
                 self.headers.area.hide();
             }
         }
-        if (self.headers.local.heading !== null) {
+        if (self.headers.place.heading !== null) {
             if (showLocal) {
-                self.headers.local.show();
+                self.headers.place.show();
             } else {
-                self.headers.local.hide();
+                self.headers.place.hide();
             }
         }
         if (self.headers.stop.heading !== null) {

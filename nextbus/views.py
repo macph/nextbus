@@ -296,16 +296,16 @@ def list_in_district(district_code):
     )
 
 
-@page_search.route('/list/locality/<locality_code>', methods=['GET', 'POST'])
+@page_search.route('/list/place/<locality_code>', methods=['GET', 'POST'])
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
     lty = models.Locality.query.get(locality_code.upper())
     if lty is None:
-        raise EntityNotFound("Locality with code '%s' does not exist."
+        raise EntityNotFound("Place with code '%s' does not exist."
                              % locality_code)
     else:
         if lty.code != locality_code:
-            return redirect('/list/locality/%s' % lty.code, code=301)
+            return redirect('/list/place/%s' % lty.code, code=301)
     info = (
         db.session.query(
             models.AdminArea.code.label('area_code'),
@@ -349,7 +349,7 @@ def list_in_locality(locality_code):
     stops = _group_places(list_stops, attr='name')
 
     return render_template(
-        'locality.html', info=info, locality=lty, stops=stops
+        'place.html', info=info, locality=lty, stops=stops
     )
 
 
@@ -399,7 +399,7 @@ def stop_area(stop_area_code):
                              % stop_area_code)
     else:
         if s_area.code != stop_area_code:
-            return redirect('/stop/naptan/%s' % s_area.code, code=301)
+            return redirect('/stop/sms/%s' % s_area.code, code=301)
 
     if s_area.locality_ref is not None:
         info = (
@@ -445,25 +445,25 @@ def stop_area(stop_area_code):
     )
 
 
-@page_search.route('/stop/naptan/<naptan_code>', methods=['GET', 'POST'])
-def stop_naptan(naptan_code):
+@page_search.route('/stop/sms/<sms_code>', methods=['GET', 'POST'])
+def stop_naptan(sms_code):
     """ Shows stop with NaPTAN code. """
     stop = models.StopPoint.query.filter(
-        models.StopPoint.naptan_code == naptan_code.lower()
+        models.StopPoint.naptan_code == sms_code.lower()
     ).one_or_none()
     if stop is None:
-        raise EntityNotFound("Bus stop with NaPTAN code %r does not exist"
-                             % naptan_code)
+        raise EntityNotFound("Bus stop with SMS code %r does not exist"
+                             % sms_code)
     else:
-        if stop.naptan_code != naptan_code:
-            return redirect('/stop/naptan/%s' % stop.naptan_code, code=301)
+        if stop.naptan_code != sms_code:
+            return redirect('/stop/sms/%s' % stop.naptan_code, code=301)
 
     return render_template('stop.html', stop=stop)
 
 
 @page_search.route('/stop/atco/<atco_code>', methods=['GET', 'POST'])
 def stop_atco(atco_code):
-    """ Shows stop with NaPTAN code. """
+    """ Shows stop with ATCO code. """
     stop = models.StopPoint.query.get(atco_code.upper())
     if stop is None:
         raise EntityNotFound("Bus stop with ATCO code %r does not exist"

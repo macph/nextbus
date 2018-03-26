@@ -9,5 +9,6 @@
 {% endblock %}
 
 {% block content %}
-<p>An internal error has occured. The administrator has been notified. Go back to the home page and try again.</p>
+<p>Something went wrong with the server! Don't worry about it, the administrator has already been notified.</p>
+<p><a href="{{ url_for('page_ns.index') }}">Go back to the home page</a></p>
 {% endblock %}

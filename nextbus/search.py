@@ -64,14 +64,6 @@ def search_code(query):
     return found
 
 
-def table_name_literal(model, name=None):
-    """ Helper function to create column with name of table. Adds column
-        name if one is specified.
-    """
-    col = db.literal_column("'%s'" % model.__tablename__)
-    return col.label(name) if name else col
-
-
 def _empty_col(column_name, value=None):
     """ Helper function to create a literal column with a value (empty text by
         default) and a label.
@@ -191,7 +183,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
 
     # Repeating column names are skipped so the second set are given labels
     admin_area = db.session.query(
-        table_name_literal(models.AdminArea),
+        models.table_name(models.AdminArea),
         models.AdminArea.code,
         models.AdminArea.name,
         _empty_col("indicator"),
@@ -205,7 +197,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
 
     district = (
         db.session.query(
-            table_name_literal(models.District),
+            models.table_name(models.District),
             models.District.code,
             models.District.name,
             _empty_col("indicator"),
@@ -240,7 +232,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
 
     locality = (
         db.session.query(
-            table_name_literal(models.Locality),
+            models.table_name(models.Locality),
             sub_locality.c.code,
             sub_locality.c.name,
             _empty_col("indicator"),
@@ -264,7 +256,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
             models.StopArea.name,
             models.StopArea.locality_ref,
             models.StopArea.admin_area_ref,
-            models.StopArea.count_stops().label("ind"),
+            models.StopArea.stop_count.label("ind"), #pylint: disable=E1101
             rank_stop_area.label("rank")
         ).join(models.StopArea.stop_points)
         .group_by(models.StopArea.code)
@@ -274,7 +266,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
 
     stop_area = (
         db.session.query(
-            table_name_literal(models.StopArea),
+            models.table_name(models.StopArea),
             sub_stop_area.c.code,
             sub_stop_area.c.name,
             sub_stop_area.c.ind,
@@ -299,7 +291,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
     # 'tsv_both' is non zero, else check 'tsv_name' as so on.
     stop_point = (
         db.session.query(
-            table_name_literal(models.StopPoint),
+            models.table_name(models.StopPoint),
             models.StopPoint.atco_code,
             models.StopPoint.name,
             models.StopPoint.short_ind,

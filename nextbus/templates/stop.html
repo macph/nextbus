@@ -1,15 +1,14 @@
 {% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
-{% set district = stop.locality.district|default(none) %}
 
 {% block nav %}
 {% if stop.locality is not none %}
 <ul class="breadcrumbs trailing">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
     <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
-    {% if district is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=district.code) }}">{{ district.name }}</a></li>
+    {% if stop.locality.district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
     {% endif %}
     <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{stop.locality.name }}</a></li>
 </ul>

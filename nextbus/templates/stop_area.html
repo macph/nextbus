@@ -5,13 +5,11 @@
 {% block nav %}
 <ul class="breadcrumbs trailing">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    {% if info is not none %}
-    <li><a href="{{ url_for('page.list_in_area', area_code=info.area_code) }}">{{ info.area_name }}</a></li>
-    {% if info.district_code is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=info.district_code) }}">{{ info.district_name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=stop_area.admin_area.code) }}">{{ stop_area.admin_area.name }}</a></li>
+    {% if stop_area.locality.district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=stop_area.locality.district.code) }}">{{ stop_area.locality.district.name }}</a></li>
     {% endif %}
-    <li><a href="{{ url_for('page.list_in_locality', locality_code=info.locality_code) }}">{{ info.locality_name }}</a></li>
-    {% endif %}
+    <li><a href="{{ url_for('page.list_in_locality', locality_code=stop_area.locality.code) }}">{{ stop_area.locality.name }}</a></li>
 </ul>
 {% endblock %}
 
@@ -28,20 +26,20 @@
 <h2>Stops</h2>
 {% if list_stops|length > 0 %}
 <div class="list list-stops-services">
-    {% for stop in list_stops %}
+    {% for stop in stop_area.stop_points %}
     <div id="stop{{ stop.atco_code }}" class="item-stop-services">
         <div class="item-stop-services-row">
             <div class="item-stop-services-head">
-                <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ stop.get('short_ind', '') }}</span></div>
-                <div class="stop-label">{{ stop['name'] }}</div>
+                <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ stop.short_ind|default('') }}</span></div>
+                <div class="stop-label">{{ stop.name }}</div>
             </div>
             <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-arrow"></a>
         </div>
         <div class="item-stop-services-content">
             <p>
                 {% set pipe = joiner() %}
-                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.get('street', '') }}</strong>{% endif %}<!--
-             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop['naptan_code'] }}</strong>{% endif %}
+                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
             </p>
             <div class="heading-inline">
                 <h2 class="stop-live-time">Retrieving live data...</h2>
@@ -57,7 +55,7 @@
 {% endif %}
 {{ f.resize_indicator("stop-ind") }}
 <script>
-    let area = {{ area_info|tojson }};
+    let area = {{ stop_area._asdict()|tojson }};
     let listStops = {{ list_stops|tojson }};
 
     var live = new ListLiveStops(

@@ -5,17 +5,17 @@
 {% block nav %}
 <ul class="breadcrumbs">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=info.region_code) }}">{{ info.region_name }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=info.area_code) }}">{{ info.area_name }}</a></li>
-    {% if info.district_code is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=info.district_code) }}">{{ info.district_name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
+    <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
+    {% if locality.district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
     {% endif %}
     <li>{{ locality.name }}</li>
 </ul>
 {% endblock %}
 
 {% block heading %}
-<h1>{{ locality.name }}, {{ info['district_name'] if info['district_code'] is not none else info['area_name'] }}</h1>
+<h1>{{ locality.name }}, {{ locality.district.name if locality.district is not none else locality.admin_area.name }}</h1>
 {% endblock %}
 
 {% block content %}

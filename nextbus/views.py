@@ -72,24 +72,10 @@ def add_search():
         return
 
 
-@page_no_search.route("/", methods=["GET", "POST"])
+@page_search.route("/", methods=["GET", "POST"])
 def index():
     """ The home page. """
-    f_search = forms.SearchPlacesValidate()
-    if f_search.submit_query.data and f_search.validate():
-        if isinstance(f_search.result, models.StopPoint):
-            return redirect(url_for("page.stop_atco",
-                                    atco_code=f_search.result.atco_code))
-        elif isinstance(f_search.result, models.Postcode):
-            return redirect(url_for(
-                "page.list_nr_postcode",
-                postcode=f_search.result.text.replace(" ", "+")
-            ))
-        else:
-            return redirect(url_for("page.search_results",
-                                    query=f_search.query.replace(" ", "+")))
-
-    return render_template("index.html", form_search=f_search)
+    return render_template("index.html")
 
 
 @page_no_search.route("/about")

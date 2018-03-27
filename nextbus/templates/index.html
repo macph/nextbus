@@ -8,23 +8,15 @@
 {% block content %}
 <h2>Search for bus stops</h2>
 <div class="search-box">
-    <form class="search-form" method="post" name="sms">
-        {{ form_search.hidden_tag() }}
+    <form class="search-form" method="post" name="search">
+        {{ g.form.hidden_tag() }}
         <div class="search-field">
-            {{ form_search.search_query(placeholder="eg 55677, SW1A 0AA or 'Westminster'") }}
+            {{ g.form.search_query(placeholder="eg 55677, SW1A 0AA or 'Westminster'", required=g.form.search_query.flags.required) }}
         </div>
         <div class="search-submit">
             <input class="form-submit" type="submit" name="submit_query" value=">">
         </div>
     </form>
-    <div class="search-error">
-        {% if form_search.search_query.errors %}
-        {% for error in form_search.search_query.errors %}
-        <p>{{ error }}</p>
-        {% endfor %}
-        {% endif %}
-    </div>
-    <!--<p>Use your location: <input class="form-submit" onclick="getLocation()" type="submit" value="go"></p><p>(note: won't work without HTTPS).</p>-->
     <p align="center"><a href="{{ url_for('page.list_regions') }}">Browse all regions</a></p>
 </div>
 {% endblock %}

@@ -72,41 +72,6 @@ def _empty_col(column_name, value=None):
     return db.literal_column(text).label(column_name)
 
 
-def _fts_search_exists(query_text):
-    """ Does a PostgreSQL FTS search to check if matching entries exist. """
-    def match_query(tsvector):
-        return tsvector.match(query_text, postgresql_regconfig="english")
-
-    admin_area = (
-        db.session.query(models.AdminArea.code)
-        .filter(match_query(models.AdminArea.tsv_name))
-    )
-    district = (
-        db.session.query(models.District.code)
-        .filter(match_query(models.District.tsv_name))
-    )
-    locality = (
-        db.session.query(models.Locality.code)
-        .outerjoin(models.Locality.stop_points)
-        .filter(match_query(models.Locality.tsv_name),
-                models.StopPoint.atco_code.isnot(None))
-    )
-    stop_area = (
-        db.session.query(models.StopArea.code)
-        .filter(match_query(models.StopArea.tsv_name))
-    )
-    stop = (
-        db.session.query(models.StopPoint.atco_code)
-        .filter(db.or_(
-            match_query(models.StopPoint.tsv_both),
-            match_query(models.StopPoint.tsv_name),
-            match_query(models.StopPoint.tsv_street)
-        ))
-    )
-
-    return admin_area.union(district, locality, stop_area, stop).all()
-
-
 def _fts_search_all(query_text, rank_text=None, names_only=True):
     """ Does a PostgreSQL FTS search to find all stops and places matching
         query, returning a dictionary of lists with keys ``area``, ``locality``
@@ -323,36 +288,10 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
         )
     )
 
-    return (
-        empty.union_all(admin_area, district, locality, stop_area, stop_point)
-        .order_by(db.desc("rank"), "name", "indicator").all()
-    )
+    all_tables = empty.union_all(admin_area, district, locality, stop_area,
+                                 stop_point)
 
-
-def search_exists(query):
-    """ Searches for stop, postcodes and places that do exist, without
-        information on areas, before redirecting to a search results page with
-        the full data.
-
-        :returns: Either a matching Postcode object, a matching StopPoint
-        object, or a list of matching results.
-        :raises ValueError: if a query without any words was submitted.
-        :raises PostcodeException: if a query was identified as a postcode but
-        it does not exist.
-    """
-    if not "".join(query.split()):
-        raise ValueError("No suitable query was entered.")
-
-    # Search stop points and postcodes for an exact match
-    obj_matching = search_code(query)
-    if obj_matching:
-        return obj_matching
-
-    # Else: do a full text search - format query string first
-    tsquery, _ = ts_parser.parse(query)
-    results = _fts_search_exists(tsquery)
-
-    return results
+    return all_tables.order_by(db.desc("rank"), "name", "indicator").all()
 
 
 def search_full(query):

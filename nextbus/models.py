@@ -196,7 +196,9 @@ class Locality(db.Model):
                 table_name(StopPoint).label("table"),
                 StopPoint.atco_code.label("code"),
                 StopPoint.name.label("name"),
-                StopPoint.short_ind.label("ind")
+                StopPoint.short_ind.label("short_ind"),
+                StopPoint.admin_area_ref.label("admin_area_ref"),
+                StopPoint.stop_type.label("stop_type")
             ).outerjoin(StopPoint.stop_area)
             .filter(StopPoint.locality_ref == self.code)
         )
@@ -209,14 +211,16 @@ class Locality(db.Model):
                 table_name(StopArea).label("table"),
                 StopArea.code.label("code"),
                 StopArea.name.label("name"),
-                StopArea.stop_count.label("ind") #pylint: disable=E1101
+                StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
+                StopArea.admin_area_ref.label("admin_area_ref"),
+                StopArea.stop_area_type.label("stop_type")
             ).join(StopArea.stop_points)
             .group_by(StopArea.code)
             .filter(StopArea.locality_ref == self.code)
         )
         query = stops_not_areas.union(stop_areas) if group_areas else stops
 
-        return query.order_by("name", "ind").all()
+        return query.order_by("name", "short_ind").all()
 
 
 class StopArea(BaseMixin, db.Model):

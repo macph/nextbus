@@ -1,5 +1,5 @@
 {% import 'functions.html' as f %}
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block title %}Search results{% endblock %}
 
 {% block nav %}
@@ -66,14 +66,14 @@
     {% if stop.table_name == 'stop_point' %}
     {% set sep = joiner() %}
     <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_atco', atco_code=stop.code) }}">
-        <div class="indicator stop-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}</span></div>
+        {{ f.print_stop_indicator(stop) }}
         <div class="stop-label">{{ stop.name }}</div>
         <div class="stop-label stop-description">{% if stop.street %}{{ sep() }}{{ stop.street }}{% endif %}{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{{ stop.district_name if stop.district_name else stop.admin_area_name }}</div>
     </a>
     {% elif stop.table_name == 'stop_area' %}
     {% set sep = joiner() %}
     <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_area', stop_area_code=stop.code) }}">
-        <div class="indicator stop-area-ind area-color-{{ stop.code[:3] }}"><span>{{ stop.indicator }}</span></div>
+        {{ f.print_stop_indicator(stop, area=true) }}
         <div class="stop-label">{{ stop.name }}</div>
         <div class="stop-label stop-description">{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{% if stop.district_name %}{{ stop.district_name }}{% else %}{{ stop.admin_area_name }}{% endif %}</div>
     </a>

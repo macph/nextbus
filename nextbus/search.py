@@ -81,14 +81,15 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
         - ``table_name`` Name of the table this result comes from
         - ``code`` Primary key for row
         - ``name`` Name of area/locality/stop
-        - ``indicator`` Indicator for stop point or number of stops for stop
+        - ``short_ind`` Indicator for stop point or number of stops for stop
         area; empty for other results
         - ``street`` Street stop point is on; empty for other results
+        - ``stop_type`` Type of stop or area
         - ``locality_name`` Locality name for stop points and areas; empty for
         other results
         - ``district_name`` District name for localities and stops; empty for
         other results
-        - ``admin_area`` Admin area code for filtering on search page
+        - ``admin_area_ref`` Admin area code for filtering on search page
         - ``admin_area_name`` Name of admin area for filtering on search page
         - ``rank`` Search rank - in case of stop point this is the first
         non-zero rank
@@ -137,11 +138,12 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
         _empty_col("table_name"),
         _empty_col("code"),
         _empty_col("name"),
-        _empty_col("indicator"),
+        _empty_col("short_ind"),
         _empty_col("street"),
+        _empty_col("stop_type"),
         _empty_col("locality_name"),
         _empty_col("district_name"),
-        _empty_col("admin_area"),
+        _empty_col("admin_area_ref"),
         _empty_col("admin_area_name"),
         _empty_col("rank", value=0)
     ).filter(db.false())
@@ -151,8 +153,9 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
         models.table_name(models.AdminArea),
         models.AdminArea.code,
         models.AdminArea.name,
-        _empty_col("indicator"),
+        _empty_col("short_ind"),
         _empty_col("street"),
+        _empty_col("stop_type"),
         _empty_col("locality_name"),
         _empty_col("district_name"),
         models.AdminArea.code.label("code_2"),
@@ -165,8 +168,9 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
             models.table_name(models.District),
             models.District.code,
             models.District.name,
-            _empty_col("indicator"),
+            _empty_col("short_ind"),
             _empty_col("street"),
+            _empty_col("stop_type"),
             _empty_col("locality_name"),
             _empty_col("district_name"),
             models.AdminArea.code,
@@ -200,8 +204,9 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
             models.table_name(models.Locality),
             sub_locality.c.code,
             sub_locality.c.name,
-            _empty_col("indicator"),
+            _empty_col("short_ind"),
             _empty_col("street"),
+            _empty_col("stop_type"),
             _empty_col("locality_name"),
             db.func.coalesce(models.District.name, ""),
             models.AdminArea.code,
@@ -219,6 +224,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
         db.session.query(
             models.StopArea.code,
             models.StopArea.name,
+            models.StopArea.stop_area_type,
             models.StopArea.locality_ref,
             models.StopArea.admin_area_ref,
             models.StopArea.stop_count.label("ind"), #pylint: disable=E1101
@@ -236,6 +242,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
             sub_stop_area.c.name,
             sub_stop_area.c.ind,
             _empty_col("street"),
+            sub_stop_area.c.stop_area_type,
             db.func.coalesce(models.Locality.name, ""),
             db.func.coalesce(models.District.name, ""),
             models.AdminArea.code,
@@ -261,6 +268,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
             models.StopPoint.name,
             models.StopPoint.short_ind,
             models.StopPoint.street,
+            models.StopPoint.stop_type,
             models.Locality.name,
             db.func.coalesce(models.District.name, ""),
             models.AdminArea.code,
@@ -291,7 +299,7 @@ def _fts_search_all(query_text, rank_text=None, names_only=True):
     all_tables = empty.union_all(admin_area, district, locality, stop_area,
                                  stop_point)
 
-    return all_tables.order_by(db.desc("rank"), "name", "indicator").all()
+    return all_tables.order_by(db.desc("rank"), "name", "short_ind").all()
 
 
 def search_full(query):

@@ -1,5 +1,5 @@
 {% import 'functions.html' as f %}
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block title %}{{ stop_area.name }}{% endblock %}
 
 {% block nav %}
@@ -30,7 +30,7 @@
     <div id="stop{{ stop.atco_code }}" class="item-stop-services">
         <div class="item-stop-services-row">
             <div class="item-stop-services-head">
-                <div class="indicator stop-ind {{ f.stop_css_class(stop) }}"><span>{{ stop.short_ind|default('') }}</span></div>
+                {{ f.print_stop_indicator(stop) }}
                 <div class="stop-label">{{ stop.name }}</div>
             </div>
             <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-arrow"></a>

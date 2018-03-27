@@ -113,15 +113,17 @@ function MultiStopMap(mapElement, centre, listStops, isReady, selectCallback) {
 /**
  * Retrieves live data and displays it in a table
  * @constructor
- * @param {string} atcoCode - ATCO code for stop
- * @param {string} postURL - URL to send requests to
- * @param {Element} tableElement - Table element in document
- * @param {Element} timeElement - Element in document showing time when data was retrieved
- * @param {Element} countdownElement - Element in document showing time before next refresh
+ * @param {string} atcoCode ATCO code for stop
+ * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
+ * @param {string} postURL URL to send requests to
+ * @param {Element} tableElement Table element in document
+ * @param {Element} timeElement Element in document showing time when data was retrieved
+ * @param {Element} countdownElement Element in document showing time before next refresh
  */
-function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement) {
+function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, countdownElement) {
     var self = this;
     this.atcoCode = atcoCode;
+    this.adminAreaCode = adminAreaCode;
     this.postURL = postURL;
     this.table = tableElement;
     this.headingTime = timeElement;
@@ -196,7 +198,7 @@ function LiveData(atcoCode, postURL, tableElement, timeElement, countdownElement
                 let cNum = document.createElement('div');
                 let cNumInner = document.createElement('div');
                 cNum.className = 'row-service-line';
-                cNumInner.className = 'row-service-line-inner' + ' ' + `area-color-${self.atcoCode.slice(0, 3)}`;
+                cNumInner.className = 'row-service-line-inner' + ' ' + `area-color-${self.adminAreaCode}`;
                 if (s.name.length > 6) {
                     cNumInner.className += ' row-service-line-small';
                 }
@@ -365,53 +367,46 @@ var TRAM = "tram-white.svg";
 /**
  * Resizes text within boxes
  * @param {string} className - name of class to modify data in
- * @param {string} busImage - link to bus logo SVG
- * @param {string} tramImage - link to tram logo SVG
  * @param {boolean} revert - Reverts colours of indicator
  */
-function resizeInd(className, busImage, tramImage, revert) {
+function resizeInd(className, revert) {
     var elements = document.getElementsByClassName(className);
     for (let i = 0; i < elements.length; i++) {
         let elt = elements[i];
-        let text = elt.getElementsByTagName('span')[0];
         let style = window.getComputedStyle(elt);
-        if (!text) {
-          return;
-        }
-        if (typeof revert !== 'undefined' && revert) {
-            let foreground = style.getPropertyValue('color');
-            let background = style.getPropertyValue('background-color');
-            elt.style.backgroundColor = foreground;
-            elt.style.color = background;
-        }
-        var ind = text.textContent;
-        if (/(Bay|Stan\.|Stand|Stop)/gi.test(ind) || ind.trim().length == 0) {
-            let fontSize = parseFloat(style.fontSize);
-            let imgSize = Math.round(2.8 * fontSize);
-            let imgElement = document.createElement('img');
-            imgElement.src = busImage
-            imgElement.width = Math.round(2.8 * fontSize);
-            text.remove();
-            elt.appendChild(imgElement);
-        } else {
-            text.textContent = ind;
-            var len = ind.replace(/(&#?\w+;)/, ' ').length;
-            switch(len) {
-            case 1:
-                text.className = "ind-len1";
-                break;
-            case 2:
-                text.className = "ind-len2";
-                break;
-            case 3:
-                text.className = "ind-len3";
-                break;
-            case 4:
-                text.className = "ind-len4";
-                break;
-            default:
-                text.className = "";
+        let span = elt.getElementsByTagName('span');
+        if (span.length !== 0) {let text = span[0];
+            if (typeof revert !== 'undefined' && revert) {
+                let foreground = style.getPropertyValue('color');
+                let background = style.getPropertyValue('background-color');
+                elt.style.backgroundColor = foreground;
+                elt.style.color = background;
             }
+            let ind = text.textContent;
+            let len = ind.replace(/(&#?\w+;)/, ' ').length;
+            switch(len) {
+                case 1:
+                    text.className = "ind-len1";
+                    break;
+                case 2:
+                    text.className = "ind-len2";
+                    break;
+                case 3:
+                    text.className = "ind-len3";
+                    break;
+                case 4:
+                    text.className = "ind-len4";
+                    break;
+                default:
+                    text.className = "";
+            }
+        } else {
+            let img = elt.getElementsByTagName('img')[0];
+            if (typeof img === 'undefined') {
+                throw 'No span or image elements within stop indicator';
+            }
+            let fontSize = parseFloat(style.fontSize);
+            img.width = Math.round(2.8 * fontSize);
         }
     }
 }
@@ -480,6 +475,7 @@ function ListLiveStops(url, listStops) {
                 content: content,
                 data: new LiveData(
                     s.atco_code,
+                    s.admin_area_ref,
                     url,
                     row.getElementsByClassName("stop-live-services")[0],
                     row.getElementsByClassName("stop-live-time")[0],

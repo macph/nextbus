@@ -1,21 +1,24 @@
 {% macro stop_full_name(stop) -%}
-{{ stop.name }}{{ " (%s)"|format(stop.indicator) if stop.indicator is not none }}
+{{ stop.name }}{{ ' (%s)'|format(stop.indicator) if stop.indicator }}
 {%- endmacro %}
 
-{% macro stop_css_class(stop) -%}
-area-color-{{ stop.atco_code[:3] }}
-{%- endmacro %}
-
-{% macro resize_indicator(class_name, reverse=false) %}
+{% macro resize_indicator(class_name, reverse=false) -%}
 {% set param = 'true' if reverse else 'false' %}
 <script>
-    resizeInd(
-        "{{ class_name }}",
-        "{{ url_for('static', filename='img/bus-white.svg') }}",
-        "{{ url_for('static', filename='img/tram-white.svg') }}",
-        {{ param }}
-    );
+    resizeInd("{{ class_name }}", {{ param }});
 </script>
+{%- endmacro %}
+
+{% macro print_stop_indicator(stop, area=false) %}
+<div class="indicator {{ 'stop-area-ind' if area else 'stop-ind' }} area-color-{{ stop.admin_area_ref }}">
+    {% if stop.short_ind != '' %}
+    <span>{{ stop.short_ind }}</span>
+    {% elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] %}
+    <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="28px">
+    {% elif stop.stop_type in ['PLT', 'GTMU'] %}
+    <img src="{{ url_for('static', filename='img/tram-white.svg') }}" width="28px">
+    {% endif %}
+</div>
 {%- endmacro %}
 
 {% macro print_localities(list, warning=true) -%}
@@ -27,5 +30,38 @@ area-color-{{ stop.atco_code[:3] }}
 </div>
 {% elif warning %}
 <p>No localitites found.</p>
+{% endif %}
+{%- endmacro %}
+
+{% macro print_list_stops_dist(list_stops, warning=true) -%}
+{% if list_stops|length > 0 %}
+<div class="list list-stops-services">
+    {% for stop, distance in list_stops %}
+    <div id="stop{{ stop.atco_code }}" class="item-stop-services">
+        <div class="item-stop-services-row">
+            <div class="item-stop-services-head item-stop-dist">
+                {{ print_stop_indicator(stop) }}
+                <div class="stop-label">{{ stop.name }}</div>
+                <div class="stop-label stop-dist">{{ '%.0f m'|format(distance) }}</div>
+            </div>
+            <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-arrow"></a>
+        </div>
+        <div class="item-stop-services-content">
+            <p>
+                {% set pipe = joiner() %}
+                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
+            </p>
+            <div class="heading-inline">
+                <h2 class="stop-live-time">Retrieving live data...</h2>
+                <span class="stop-live-countdown"></span>
+            </div>
+            <div class="stop-live-services"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% elif warning %}
+<p>No stops found.</p>
 {% endif %}
 {%- endmacro %}

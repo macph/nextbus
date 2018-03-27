@@ -8,7 +8,7 @@ from requests import HTTPError
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
                    redirect, request, url_for)
 
-from nextbus import db, forms, models, search, tapi
+from nextbus import db, forms, location, models, search, tapi
 
 
 MIN_GROUPED = 72
@@ -246,9 +246,10 @@ def list_nr_postcode(postcode):
             ), code=301)
 
     stops = models.StopPoint.in_range((psc.latitude, psc.longitude))
-    stops = [(stop._asdict(), dist) for stop, dist in stops]
+    stop_data = [stop._asdict() for stop, _ in stops]
 
-    return render_template("postcode.html", postcode=psc, list_stops=stops)
+    return render_template("postcode.html", postcode=psc, list_stops=stops,
+                           stop_data=stop_data)
 
 
 @page_search.route("/near/location/<lat_long>", methods=["GET", "POST"])
@@ -266,9 +267,11 @@ def list_nr_location(lat_long):
                              "Great Britain only.")
 
     stops = models.StopPoint.in_range(coord)
-    stops = [(stop._asdict(), dist) for stop, dist in stops]
+    stop_data = [stop._asdict() for stop, _ in stops]
+    str_coord = location.format_dms(*coord)
 
-    return render_template("location.html", coord=coord, list_stops=stops)
+    return render_template("location.html", coord=coord, str_coord=str_coord,
+                           list_stops=stops, stop_data=stop_data)
 
 
 @page_search.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])

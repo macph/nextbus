@@ -496,58 +496,58 @@ span.text-red {
     color: red;
 }
 
-/* specific colours for areas, using ATCO area codes */
+/* specific colours for areas, using admin area codes */
+/* Cardiff */
+div.area-color-011 {
+    background: rgb(5, 139, 136);
+    border-color: rgb(5, 139, 136);
+}
+
+/* Nottingham */
+div.area-color-039 {
+    background: rgb(0, 89, 77);
+    border-color: rgb(0, 89, 77);
+}
+
+/* London */
+div.area-color-082 {
+    background: rgb(220, 36, 31);
+    border-color: rgb(220, 36, 31);
+}
+
 /* Greater Manchester */
-div.area-color-180 {
+div.area-color-083 {
     background: rgb(64, 64, 62);
     border-color: rgb(64, 64, 62);
 }
 
 /* Merseyside */
-div.area-color-280 {
+div.area-color-090 {
     background: rgb(239, 224, 0);
     border-color: rgb(239, 224, 0);
     color: rgb(51, 51, 51);
 }
 
-/* Nottingham */
-div.area-color-339 {
-    background: rgb(0, 89, 77);
-    border-color: rgb(0, 89, 77);
-}
-
 /* West Yorkshire */
-div.area-color-450 {
+div.area-color-107 {
     background: rgb(6, 65, 126);
     border-color: rgb(6, 65, 126);
 }
 
-/* London */
-div.area-color-490 {
-    background: rgb(220, 36, 31);
-    border-color: rgb(220, 36, 31);
-}
-
-/* Cardiff */
-div.area-color-571 {
-    background: rgb(5, 139, 136);
-    border-color: rgb(5, 139, 136);
-}
-
-/* Glasgow */
-div.area-color-609 {
-    background: rgb(255, 98, 0);
-    border-color: rgb(255, 98, 0);
-}
-
 /* Edinburgh */
-div.area-color-620 {
+div.area-color-124 {
     background: rgb(118, 19, 21);
     border-color: rgb(118, 19, 21);
 }
 
+/* Glasgow */
+div.area-color-127 {
+    background: rgb(255, 98, 0);
+    border-color: rgb(255, 98, 0);
+}
+
 /* Trams */
-div.area-color-940 {
+div.area-color-147 {
     background: dimgrey;
     border-color: dimgrey;
 }

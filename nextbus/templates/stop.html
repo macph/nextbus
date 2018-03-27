@@ -1,5 +1,5 @@
 {% import 'functions.html' as f %}
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
 
 {% block nav %}
@@ -18,9 +18,7 @@
 {% block heading %}
 <div class="heading-stop">
     <div class="heading-stop-indicator">
-        <div class="indicator stop-ind {{ f.stop_css_class(stop) }}">
-            <span>{{ stop.short_ind }}</span>
-        </div>
+        {{ f.print_stop_indicator(stop) }}
         {{ f.resize_indicator("stop-ind") }}
     </div>
     <h1>{{ stop.name }}</h1>
@@ -42,6 +40,7 @@
 <script>
     var ld = new LiveData(
         "{{ stop.atco_code }}",
+        "{{ stop.admin_area_ref }}",
         "{{ url_for('api.stop_get_times') }}",
         document.getElementById("services"),
         document.getElementById("liveTime"),

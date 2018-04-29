@@ -41,7 +41,9 @@ class ParserTests(utils.BaseAppTests):
     @classmethod
     def setUpClass(cls):
         super(ParserTests, cls).setUpClass()
-        cls.parser = parser.TSQueryParser()
+        # Defining a function within class method causes it to be treated like
+        # an instance method; use staticmethod decorator
+        cls.parser = staticmethod(parser.create_tsquery_parser())
 
     @classmethod
     def tearDownClass(cls):
@@ -50,31 +52,42 @@ class ParserTests(utils.BaseAppTests):
 
     def test_words_parentheses(self):
         query = "(Trafalgar or Parliament) !(Square or Road)"
-        expected = ("(Trafalgar|Parliament)&!(Square|Road)",
-                    "(Trafalgar|Parliament)")
-        self.assertEqual(self.parser.parse(query), expected)
+        expected = "(Trafalgar|Parliament)&!(Square|Road)"
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
 
     def test_words_and(self):
         query = "Great Titchfield Street and Oxford & Circus"
         expected = "Great&Titchfield&Street&Oxford&Circus"
-        self.assertEqual(self.parser.parse(query), (expected, expected))
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
 
     def test_words_or(self):
         query = "Trafalgar or Parliament | Leicester"
         expected = "Trafalgar|Parliament|Leicester"
-        self.assertEqual(self.parser.parse(query), (expected, expected))
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
 
     def test_words_not(self):
         query = "Parliament not Road or !Square"
-        expected = ("Parliament&!Road|!Square", "Parliament")
-        self.assertEqual(self.parser.parse(query), expected)
+        expected = "Parliament&!Road|!Square"
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
+
+    def test_words_exclude_not(self):
+        query = "Parliament and not (Square or Road) or Trafalgar"
+        expected = "Parliament|Trafalgar"
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(exclude_not=True), expected)
 
     def test_words_phrase(self):
         query = "'Parliament Square' not Road"
-        expected = ("Parliament<->Square&!Road", "Parliament<->Square")
-        self.assertEqual(self.parser.parse(query), expected)
+        expected = "Parliament<->Square&!Road"
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
 
     def test_words_broken_quotes(self):
         query = "\"Parliament and Square' or Road"
         expected = "\"Parliament&Square'|Road"
-        self.assertEqual(self.parser.parse(query), (expected, expected))
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)

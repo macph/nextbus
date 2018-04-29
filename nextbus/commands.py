@@ -105,13 +105,19 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         if use_backup:
             file_ops.backup_database(backup_f)
         try:
-            if options["g"]: nptg.commit_nptg_data(archive=nptg_file)
-            if options["n"]: naptan.commit_naptan_data(archive=naptan_file)
-            if options["p"]: nspl.commit_nspl_data(file_=nspl_f)
-            if options["m"]: modify.modify_data()
+            if options["g"]:
+                nptg.commit_nptg_data(archive=nptg_file)
+            if options["n"]:
+                naptan.commit_naptan_data(archive=naptan_file)
+            if options["p"]:
+                nspl.commit_nspl_data(file_=nspl_f)
+            if options["m"]:
+                modify.modify_data()
             # Update tsvector columns after population
-            if options["g"] or options["m"]: tsvector.update_nptg_tsvector()
-            if options["n"] or options["m"]: tsvector.update_naptan_tsvector()
+            if options["g"] or options["m"]:
+                tsvector.update_nptg_tsvector()
+            if options["n"] or options["m"]:
+                tsvector.update_naptan_tsvector()
         except:
             # Restore DB if errors occur and raise
             if use_backup:

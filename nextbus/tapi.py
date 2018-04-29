@@ -71,8 +71,8 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             file_name = "samples/tapi_live.json"
         with open(os.path.join(ROOT_DIR, file_name), "r") as sample_file:
             data = json.load(sample_file)
-        current_app.logger.info("Received sample data from file '%s'"
-                                %  file_name)
+        current_app.logger.info("Received sample data from file '%s'" %
+                                file_name)
 
     return data
 
@@ -112,9 +112,10 @@ class _Services(object):
                 dateutil.parser.parse("T".join(live_dt))
             )
             exp_sec = (live_date - self.req_date).seconds
+            iso_date = live_date.isoformat()
         elif exp_date is not None:
-            live_date = None
             exp_sec = (exp_date - self.req_date).seconds
+            iso_date = exp_date.isoformat()
         else:
             # Record has no live or timetabled times? Skip over
             return
@@ -128,8 +129,7 @@ class _Services(object):
         sv_expected = {
             "live": is_live,
             "secs": exp_sec,
-            "exp_date": live_date.isoformat() if live_date is not None else
-                        exp_date.isoformat()
+            "exp_date": iso_date
         }
 
         for new_sv in self.list:

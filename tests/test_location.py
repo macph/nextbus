@@ -51,7 +51,7 @@ class BaseLocationTests(unittest.TestCase):
             try:
                 list_diff = []
                 seq_length = len(tuple_1)
-                for i in seq_length:
+                for i in range(seq_length):
                     diff = abs(tuple_1[i] - tuple_2[i])
                     if delta is not None:
                         if diff > delta:

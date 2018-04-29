@@ -39,6 +39,7 @@ def _group_places(list_places, attr=None, key=None):
     """
     if not bool(attr) ^ bool(key):
         raise AttributeError("Either an attribute or a key must be specified.")
+
     groups = {}
     if list_places and len(list_places) > MIN_GROUPED:
         groups = collections.defaultdict(list)
@@ -59,12 +60,21 @@ def add_search():
     g.form = forms.SearchPlaces()
     if g.form.submit_query.data and g.form.search_query.data:
         query = g.form.search_query.data
-        result = search.search_code(query)
-        if isinstance(result, models.StopPoint):
-            return redirect(url_for(".stop_atco", atco_code=result.atco_code))
-        elif isinstance(result, models.Postcode):
-            return redirect(url_for(".list_nr_postcode",
-                                    postcode=result.text.replace(" ", "+")))
+        try:
+            result = search.search_code(query)
+        except search.PostcodeException:
+            # Pass along to search results page to process
+            return redirect(url_for(".search_results",
+                                    query=query.replace(" ", "+")))
+
+        if result.is_stop():
+            return redirect(url_for(".stop_atco",
+                                    atco_code=result.stop.atco_code))
+        elif result.is_postcode():
+            return redirect(url_for(
+                ".list_near_postcode",
+                code=result.postcode.text.replace(" ", "+")
+            ))
         else:
             return redirect(url_for(".search_results",
                                     query=query.replace(" ", "+")))
@@ -94,8 +104,9 @@ def search_results(query):
             "search.html", query=s_query, error="Too few characters; try a "
             "longer phrase."
         )
+
     try:
-        results = search.search_full(s_query)
+        result = search.search_full(s_query)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (query, err), exc_info=True)
@@ -112,18 +123,20 @@ def search_results(query):
         )
 
     # Redirect to postcode or stop if one was found
-    if isinstance(results, models.StopPoint):
-        return redirect(url_for(".stop_atco", atco_code=results.atco_code))
-    elif isinstance(results, models.Postcode):
-        return redirect(url_for(".list_nr_postcode",
-                                postcode=results.text.replace(" ", "+")))
-    elif not results:
-        return render_template(
-            "search.html", query=s_query, error="No results were found."
-        )
-    else:
+    if result.is_stop():
+        return redirect(url_for(".stop_atco",
+                                atco_code=result.stop.atco_code))
+
+    elif result.is_postcode():
+        return redirect(url_for(
+            ".list_near_postcode",
+            code=result.postcode.text.replace(" ", "+")
+        ))
+
+    elif result.is_list():
         # A dict of matching results. Truncate results list if they get
         # too long
+        results = result.list
         stops_limit = len(results.get("stop", [])) > search.STOPS_LIMIT
         local_limit = len(results.get("locality", [])) > search.LOCAL_LIMIT
         if stops_limit:
@@ -136,12 +149,20 @@ def search_results(query):
             stops_limit=stops_limit, local_limit=local_limit
         )
 
+    else:
+        return render_template(
+            "search.html", query=s_query, error="No results were found."
+        )
+
 
 @page_search.route("/list/", methods=["GET", "POST"])
 def list_regions():
     """ Shows list of all regions. """
-    regions = (models.Region.query.filter(models.Region.code != "GB")
-               .order_by("name")).all()
+    regions = (
+        models.Region.query.filter(models.Region.code != "GB")
+        .order_by("name")
+        .all()
+    )
 
     return render_template("all_regions.html", regions=regions)
 
@@ -170,9 +191,11 @@ def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
     """
-    area = (models.AdminArea.query
-            .options(db.joinedload(models.AdminArea.region, innerjoin=True))
-            .get(area_code))
+    area = (
+        models.AdminArea.query
+        .options(db.joinedload(models.AdminArea.region, innerjoin=True))
+        .get(area_code)
+    )
 
     if area is None:
         raise EntityNotFound("Area with code '%s' does not exist." % area_code)
@@ -189,11 +212,12 @@ def list_in_area(area_code):
 @page_search.route("/list/district/<district_code>", methods=["GET", "POST"])
 def list_in_district(district_code):
     """ Shows list of localities in district. """
-    district = (models.District.query
-                .options(db.joinedload(models.District.admin_area,
-                                       innerjoin=True)
-                         .joinedload(models.AdminArea.region, innerjoin=True))
-                .get(district_code))
+    district = (
+        models.District.query
+        .options(db.joinedload(models.District.admin_area, innerjoin=True)
+                 .joinedload(models.AdminArea.region, innerjoin=True))
+        .get(district_code)
+    )
 
     if district is None:
         raise EntityNotFound("District with code '%s' does not exist."
@@ -208,52 +232,52 @@ def list_in_district(district_code):
 @page_search.route("/list/place/<locality_code>", methods=["GET", "POST"])
 def list_in_locality(locality_code):
     """ Shows stops in locality. """
-    locality = (models.Locality.query
-                .options(db.joinedload(models.Locality.district),
-                         db.joinedload(models.Locality.admin_area,
-                                       innerjoin=True)
-                         .joinedload(models.AdminArea.region, innerjoin=True))
-                .get(locality_code.upper()))
+    locality = (
+        models.Locality.query
+        .options(db.joinedload(models.Locality.district),
+                 db.joinedload(models.Locality.admin_area, innerjoin=True)
+                 .joinedload(models.AdminArea.region, innerjoin=True))
+        .get(locality_code.upper())
+    )
 
     if locality is None:
         raise EntityNotFound("Place with code '%s' does not exist."
                              % locality_code)
-    else:
-        if locality.code != locality_code:
-            return redirect(url_for(
-                ".list_in_locality", locality_code=locality.code
-            ), code=301)
+    if locality.code != locality_code:
+        return redirect(url_for(
+            ".list_in_locality", locality_code=locality.code
+        ), code=301)
 
     stops = _group_places(locality.list_stops(group_areas=True), attr="name")
 
     return render_template("place.html", locality=locality, stops=stops)
 
 
-@page_search.route("/near/postcode/<postcode>", methods=["GET", "POST"])
-def list_nr_postcode(postcode):
+@page_search.route("/near/postcode/<code>", methods=["GET", "POST"])
+def list_near_postcode(code):
     """ Show stops within range of postcode. """
-    str_psc = postcode.replace("+", " ")
-    index_psc = "".join(str_psc.split()).upper()
-    psc = models.Postcode.query.get(index_psc)
+    str_postcode = code.replace("+", " ")
+    index_postcode = "".join(str_postcode.split()).upper()
+    postcode = models.Postcode.query.get(index_postcode)
 
-    if psc is None:
+    if postcode is None:
         raise EntityNotFound("Postcode '%s' does not exist." % postcode)
     else:
-        if psc.text != str_psc:
+        if postcode.text != str_postcode:
             # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
             return redirect(url_for(
-                ".list_nr_postcode", postcode=psc.text.replace(" ", "+")
+                ".list_near_postcode", code=postcode.text.replace(" ", "+")
             ), code=301)
 
-    stops = models.StopPoint.in_range((psc.latitude, psc.longitude))
+    stops = postcode.stops_in_range()
     stop_data = [stop._asdict() for stop, _ in stops]
 
-    return render_template("postcode.html", postcode=psc, list_stops=stops,
-                           stop_data=stop_data)
+    return render_template("postcode.html", postcode=postcode,
+                           list_stops=stops, stop_data=stop_data)
 
 
 @page_search.route("/near/location/<lat_long>", methods=["GET", "POST"])
-def list_nr_location(lat_long):
+def list_near_location(lat_long):
     """ Show stops within range of a GPS coordinate. """
     sr_m = FIND_COORD.match(lat_long)
     if sr_m is None:
@@ -262,9 +286,8 @@ def list_nr_location(lat_long):
     coord = (float(sr_m.group(1)), float(sr_m.group(2)))
     # Quick check to ensure coordinates are within range of Great Britain
     if not (49 < coord[0] < 61 and -8 < coord[1] < 2):
-        raise EntityNotFound("Latitude and longitude values out of bounds; "
-                             "this application is meant to be used within "
-                             "Great Britain only.")
+        raise EntityNotFound("The latitude and longitude coordinates are "
+                             "nowhere near Great Britain!")
 
     stops = models.StopPoint.in_range(coord)
     stop_data = [stop._asdict() for stop, _ in stops]
@@ -277,44 +300,44 @@ def list_nr_location(lat_long):
 @page_search.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
-    area = (models.StopArea.query
-            .options(db.joinedload(models.StopArea.admin_area, innerjoin=True),
-                     db.joinedload(models.StopArea.locality, innerjoin=True)
-                     .joinedload(models.Locality.district))
-            .get(stop_area_code.upper()))
+    area = (
+        models.StopArea.query
+        .options(db.joinedload(models.StopArea.admin_area, innerjoin=True),
+                 db.joinedload(models.StopArea.locality, innerjoin=True)
+                 .joinedload(models.Locality.district))
+        .get(stop_area_code.upper())
+    )
 
     if area is None:
         raise EntityNotFound("Bus stop with NaPTAN code '%s' does not exist."
                              % stop_area_code)
-    else:
-        if area.code != stop_area_code:
-            return redirect(url_for(".stop_area", stop_area_code=area.code),
-                            code=301)
+    if area.code != stop_area_code:
+        return redirect(url_for(".stop_area", stop_area_code=area.code),
+                        code=301)
+    data = [r._asdict() for r in area.stop_points]
 
-    return render_template("stop_area.html", stop_area=area,
-                           list_stops=[r._asdict() for r in area.stop_points])
+    return render_template("stop_area.html", stop_area=area, list_stops=data)
 
 
 @page_search.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
-    stop = (models.StopPoint.query
-            .options(db.joinedload(models.StopPoint.admin_area,
-                                   innerjoin=True),
-                     db.joinedload(models.StopPoint.locality, innerjoin=True)
-                     .joinedload(models.Locality.district),
-                     db.joinedload(models.StopPoint.stop_area))
-            .filter(models.StopPoint.naptan_code == naptan_code.lower())
-           ).one_or_none()
+    stop = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
+                 db.joinedload(models.StopPoint.locality, innerjoin=True)
+                 .joinedload(models.Locality.district),
+                 db.joinedload(models.StopPoint.stop_area))
+        .filter(models.StopPoint.naptan_code == naptan_code.lower())
+        .one_or_none()
+    )
 
     if stop is None:
         raise EntityNotFound("Bus stop with SMS code '%s' does not exist."
                              % naptan_code)
-    else:
-        if stop.naptan_code != naptan_code:
-            return redirect(url_for(
-                ".stop_naptan", naptan_code=stop.naptan_code
-            ), code=301)
+    if stop.naptan_code != naptan_code:
+        return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
+                        code=301)
 
     return render_template("stop.html", stop=stop)
 
@@ -322,21 +345,21 @@ def stop_naptan(naptan_code):
 @page_search.route("/stop/atco/<atco_code>", methods=["GET", "POST"])
 def stop_atco(atco_code):
     """ Shows stop with ATCO code. """
-    stop = (models.StopPoint.query
-            .options(db.joinedload(models.StopPoint.admin_area,
-                                   innerjoin=True),
-                     db.joinedload(models.StopPoint.locality, innerjoin=True)
-                     .joinedload(models.Locality.district),
-                     db.joinedload(models.StopPoint.stop_area))
-            .get(atco_code.upper()))
+    stop = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
+                 db.joinedload(models.StopPoint.locality, innerjoin=True)
+                 .joinedload(models.Locality.district),
+                 db.joinedload(models.StopPoint.stop_area))
+        .get(atco_code.upper())
+    )
 
     if stop is None:
         raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                              % atco_code)
-    else:
-        if stop.atco_code != atco_code:
-            return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
-                            code=301)
+    if stop.atco_code != atco_code:
+        return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
+                        code=301)
 
     return render_template("stop.html", stop=stop)
 
@@ -351,8 +374,9 @@ def stop_get_times():
         current_app.logger.error("/stop/get was accessed with something other "
                                  "than POST")
         abort(405)
+
     try:
-        nxb = tapi.get_nextbus_times(data["code"])
+        times = tapi.get_nextbus_times(data["code"])
     except (KeyError, ValueError):
         # Malformed request; no ATCO code
         current_app.logger.error("Error occurred when retrieving live times "
@@ -363,7 +387,7 @@ def stop_get_times():
         current_app.logger.warning("Can't access API service.")
         abort(503)
 
-    return jsonify(nxb)
+    return jsonify(times)
 
 
 @page_no_search.app_errorhandler(404)

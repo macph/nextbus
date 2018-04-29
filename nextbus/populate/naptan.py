@@ -6,6 +6,7 @@ import functools
 import operator
 import os
 
+import dateutil.parser as dp
 import lxml.etree as et
 import pyparsing as pp
 
@@ -52,13 +53,12 @@ def _create_ind_parser():
         """
         if not words:
             raise TypeError("Arguments must include at least one word.")
-        expr = functools.reduce(
-            operator.or_, map(pp.CaselessKeyword, words)
-        )
+        combined = functools.reduce(operator.or_,
+                                    map(pp.CaselessKeyword, words))
         if replace is not None:
-            expr = expr.setParseAction(pp.replaceWith(replace))
+            combined = combined.setParseAction(pp.replaceWith(replace))
 
-        return expr
+        return combined
 
     def action_upper(tokens):
         """ Uppercase the matched substring. """
@@ -66,7 +66,7 @@ def _create_ind_parser():
 
     def action_abbrv(tokens):
         """ Abbreviates a number of words. """
-        return "".join(w[0].upper() for w in tokens)
+        return "".join(word[0].upper() for word in tokens)
 
     def action_arrow(tokens):
         """ Adds arrow to matched substring. """
@@ -159,16 +159,21 @@ class _NaPTANStops(object):
     def __init__(self, list_locality_codes=None):
         self.area_codes = set([])
         self.locality_codes = list_locality_codes
-        self.indicators = {}
         self.ind_parser = _create_ind_parser()
 
-    def parse_areas(self, list_objects, area):
+    def parse_areas(self, area):
         """ Parses stop areas. """
+        if area.get("modified") is not None:
+            area["modified"] = dp.parse(area["modified"])
+        # Add stop area code to list for checking later
         self.area_codes.add(area["code"])
-        list_objects.append(area)
 
-    def parse_points(self, list_objects, point):
+        return area
+
+    def parse_points(self, point):
         """ Parses stop points. """
+        if point.get("modified") is not None:
+            point["modified"] = dp.parse(point["modified"])
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
         if self.locality_codes:
@@ -179,13 +184,13 @@ class _NaPTANStops(object):
         if point["indicator"] is not None:
             point["short_ind"] = self.ind_parser(point["indicator"])
         else:
-            point["indicator"] = ""
-            point["short_ind"] = ""
+            point["indicator"] = point["short_ind"] = ""
 
+        # Remove stop area ref if it does not exist
         if point["stop_area_ref"] not in self.area_codes:
             point["stop_area_ref"] = None
 
-        list_objects.append(point)
+        return point
 
 
 def _remove_stop_areas():
@@ -194,13 +199,16 @@ def _remove_stop_areas():
         db.session.query(models.StopArea.code)
         .outerjoin(models.StopArea.stop_points)
         .filter(models.StopPoint.atco_code.is_(None))
-    ).subquery()
+        .subquery()
+    )
 
     with database_session():
         logger.info("Deleting orphaned stop areas")
-        models.StopArea.query.filter(
-            models.StopArea.code.in_(query_stop_area_del)
-        ).delete(synchronize_session="fetch")
+        query = (
+            models.StopArea.query
+            .filter(models.StopArea.code.in_(query_stop_area_del))
+        )
+        query.delete(synchronize_session="fetch")
 
 
 def _find_stop_area_mode(query_result, ref):
@@ -246,12 +254,11 @@ def _find_locality_min_distance(ambiguous_areas):
             models.StopArea.code.label("code"),
             models.Locality.code.label("locality"),
             distance.label("distance")
-        ).select_from(models.StopPoint)
+        )
+        .select_from(models.StopPoint)
         .distinct(models.StopArea.code, models.Locality.code)
-        .join(models.Locality,
-              models.Locality.code == models.StopPoint.locality_ref)
-        .join(models.StopArea,
-              models.StopArea.code == models.StopPoint.stop_area_ref)
+        .join(models.StopPoint.locality)
+        .join(models.StopPoint.stop_area)
         .filter(models.StopPoint.stop_area_ref.in_(ambiguous_areas))
     )
 
@@ -259,10 +266,12 @@ def _find_locality_min_distance(ambiguous_areas):
     stop_areas = collections.defaultdict(dict)
     for row in query_dist.all():
         stop_areas[row.code][row.locality] = row.distance
+
     # Check each area and find the minimum distance
     update_areas = []
     for sa, local in stop_areas.items():
         min_dist = min(local.values())
+        # Find all localities with minimum distance from stop area
         local_min = [k for k, v in local.items() if v == min_dist]
 
         # Check if associated localities are far away - may be wrong locality
@@ -290,13 +299,14 @@ def _set_stop_area_locality():
             models.StopArea.code.label("code"),
             models.StopPoint.locality_ref.label("ref"),
             db.func.count(models.StopPoint.locality_ref).label("count")
-        ).select_from(models.StopPoint)
-        .join(models.StopArea,
-              models.StopArea.code == models.StopPoint.stop_area_ref)
+        )
+        .select_from(models.StopPoint)
+        .join(models.StopPoint.stop_area)
         .group_by(models.StopArea.code, models.StopPoint.locality_ref)
     )
     # Find locality for each stop area that contain the most stops
     areas, ambiguous = _find_stop_area_mode(query.all(), "locality_ref")
+
     # if still ambiguous, measure distance between stop area and each locality
     # and add to above
     if ambiguous:
@@ -318,15 +328,17 @@ def _set_tram_admin_area():
     select_ref = (
         db.session.query(models.Locality.admin_area_ref)
         .filter(models.Locality.code == models.StopPoint.locality_ref)
-    ).as_scalar()
+        .as_scalar()
+    )
 
     with database_session():
         logger.info("Updating tram stops with admin area ref")
-        (db.session.query(models.StopPoint)
-         .filter(models.StopPoint.admin_area_ref == tram_area)
-         .update({models.StopPoint.admin_area_ref: select_ref},
-                 synchronize_session=False)
+        query = (
+            db.session.query(models.StopPoint)
+            .filter(models.StopPoint.admin_area_ref == tram_area)
         )
+        query.update({models.StopPoint.admin_area_ref: select_ref},
+                     synchronize_session=False)
 
     # Find stop areas with associated admin area codes
     query = (
@@ -334,9 +346,9 @@ def _set_tram_admin_area():
             models.StopArea.code.label("code"),
             models.StopPoint.admin_area_ref.label("ref"),
             db.func.count(models.StopPoint.admin_area_ref).label("count")
-        ).select_from(models.StopPoint)
-        .join(models.StopArea,
-              models.StopArea.code == models.StopPoint.stop_area_ref)
+        )
+        .select_from(models.StopPoint)
+        .join(models.StopPoint.stop_area)
         .filter(models.StopArea.admin_area_ref == tram_area)
         .group_by(models.StopArea.code, models.StopPoint.admin_area_ref)
     )
@@ -350,15 +362,13 @@ def _set_tram_admin_area():
         logger.warning("Area %s: ambiguous admin areas %s" % area)
 
 
-def _get_naptan_data(naptan_files, list_area_codes=None, out_file=None):
+def _get_naptan_data(naptan_files, list_area_codes=None):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
 
         :param naptan_files: Iterator for list of NaPTAN XML files
         :param list_area_codes: List of administrative area codes
-        :param out_file: File path to write transformed data to, relative to
-        the project directory. If None the data is returned as a XML
-        ElementTree object
+        :returns: Transformed data as a XML ElementTree object
     """
     naptan_data = merge_xml(naptan_files)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
@@ -378,10 +388,7 @@ def _get_naptan_data(naptan_files, list_area_codes=None, out_file=None):
     logger.info("Applying XSLT to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
 
-    if out_file:
-        new_data.write_output(os.path.join(ROOT_DIR, out_file))
-    else:
-        return new_data
+    return new_data
 
 
 def commit_naptan_data(archive=None, list_files=None):
@@ -417,9 +424,14 @@ def commit_naptan_data(archive=None, list_files=None):
     else:
         area_codes, local_codes = None, None
 
-    _get_naptan_data(iter_files, area_codes, out_file=NAPTAN_XML)
+    # Transform data and write to temporary file
+    new_path = os.path.join(ROOT_DIR, NAPTAN_XML)
+    new_data = _get_naptan_data(iter_files, area_codes)
+    new_data.write_output(new_path)
+
+    # Go through data and create objects for committing to database
     eval_stops = _NaPTANStops(local_codes)
-    naptan = DBEntries(NAPTAN_XML)
+    naptan = DBEntries(new_path)
     naptan.add("StopAreas/StopArea", models.StopArea, eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
                eval_stops.parse_points, indices=("naptan_code",))

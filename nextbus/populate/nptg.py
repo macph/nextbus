@@ -3,6 +3,7 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import os
 
+import dateutil.parser as dp
 import lxml.etree as et
 
 from definitions import ROOT_DIR
@@ -27,22 +28,35 @@ def download_nptg_data():
     return new
 
 
+def _add_modified_date(area):
+    """ Helper function to convert last modified date (as a string) to a
+        DateTime object.
+    """
+    if area.get("modified") is not None:
+        area["modified"] = dp.parse(area["modified"])
+
+    return area
+
+
 def _remove_districts():
     """ Removes districts without associated localities. """
     query_districts = (
         db.session.query(models.District.code)
         .outerjoin(models.District.localities)
         .filter(models.Locality.code.is_(None))
+        .subquery()
     )
-    orphaned_districts = [d.code for d in query_districts.all()]
+
     with database_session():
-        logger.info("Deleting %d orphaned districts" % len(orphaned_districts))
-        models.District.query.filter(
-            models.District.code.in_(orphaned_districts)
-        ).delete(synchronize_session="fetch")
+        logger.info("Deleting orphaned districts")
+        query = (
+            models.District.query
+            .filter(models.District.code.in_(query_districts))
+        )
+        query.delete(synchronize_session="fetch")
 
 
-def _get_nptg_data(nptg_files, atco_codes=None, out_file=None):
+def _get_nptg_data(nptg_files, atco_codes=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
         if atco_codes is None).
@@ -50,9 +64,7 @@ def _get_nptg_data(nptg_files, atco_codes=None, out_file=None):
         :param nptg_files: Iterator for list of NPTG XML files
         :param atco_codes: List of ATCO area codes to filter by, or all of them
         if set to None
-        :param out_file: Path of file to write processed data to, relative to
-        the project directory. If None the data as a XML ElementTree object is
-        returned instead
+        :returns: Transformed data as a XML ElementTree object
     """
     logger.info("Opening NPTG files")
     data = merge_xml(nptg_files)
@@ -72,11 +84,13 @@ def _get_nptg_data(nptg_files, atco_codes=None, out_file=None):
                 admin_areas.append(area[0])
             else:
                 invalid_codes.append(code)
+
         if invalid_codes:
             raise ValueError(
                 "The following ATCO codes cannot be found: %s."
                 % ", ".join(repr(i) for i in invalid_codes)
             )
+
         area_codes = [area.xpath("n:AdministrativeAreaCode/text()",
                                  namespaces=names)[0]
                       for area in admin_areas]
@@ -103,10 +117,8 @@ def _get_nptg_data(nptg_files, atco_codes=None, out_file=None):
 
     logger.info("Applying XSLT to NPTG data")
     new_data = data.xslt(transform, extensions=ext)
-    if out_file:
-        new_data.write_output(os.path.join(ROOT_DIR, NPTG_XML))
-    else:
-        return new_data
+
+    return new_data
 
 
 def commit_nptg_data(archive=None, list_files=None):
@@ -128,12 +140,17 @@ def commit_nptg_data(archive=None, list_files=None):
         downloaded = download_nptg_data()
         iter_files = file_ops.iter_archive(downloaded)
 
-    _get_nptg_data(iter_files, atco_codes, out_file=NPTG_XML)
-    nptg = DBEntries(NPTG_XML)
-    nptg.add("Regions/Region", models.Region)
-    nptg.add("AdminAreas/AdminArea", models.AdminArea)
-    nptg.add("Districts/District", models.District)
-    nptg.add("Localities/Locality", models.Locality)
+    # Transform data and write to temporary file
+    new_path = os.path.join(ROOT_DIR, NPTG_XML)
+    new_data = _get_nptg_data(iter_files, atco_codes)
+    new_data.write_output(new_path)
+
+    # Go through data and create objects for committing to database
+    nptg = DBEntries(new_path)
+    nptg.add("Regions/Region", models.Region, func=_add_modified_date)
+    nptg.add("AdminAreas/AdminArea", models.AdminArea, func=_add_modified_date)
+    nptg.add("Districts/District", models.District, func=_add_modified_date)
+    nptg.add("Localities/Locality", models.Locality, func=_add_modified_date)
     # Commit changes to database
     nptg.commit()
     # Remove all orphaned districts

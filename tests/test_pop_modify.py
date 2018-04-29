@@ -8,7 +8,8 @@ import lxml.etree as et
 
 from nextbus import db, models
 from nextbus.populate import database_session
-from nextbus.populate.modify import _create, _delete, _replace, modify_data
+from nextbus.populate.modify import (_create_row, _delete_row, _replace_row,
+                                     modify_data)
 import utils
 
 
@@ -46,7 +47,7 @@ def create_subelement(parent, tag, attrib=None, text=None):
 
 
 class CreateEntryTests(utils.BaseAppTests):
-    """ Testing the ``_create_rows()`` function for adding new rows after
+    """ Testing the ``_create_row()`` function for adding new rows after
         population.
     """
     def setUp(self):
@@ -67,8 +68,8 @@ class CreateEntryTests(utils.BaseAppTests):
         create_subelement(c_yorkshire, "modified", text="2006-01-25T07:54:31")
 
         with database_session():
-            _create(models.Region, c_london)
-            _create(models.Region, c_yorkshire)
+            _create_row(models.Region, c_london)
+            _create_row(models.Region, c_yorkshire)
 
         regions = models.Region.query.order_by("code").all()
         self.assertEqual(len(regions), 2)
@@ -78,7 +79,7 @@ class CreateEntryTests(utils.BaseAppTests):
 
 
 class DeleteEntryTests(utils.BaseAppTests):
-    """ Testing the ``_delete_rows()`` function for deleting rows after
+    """ Testing the ``_delete_row()`` function for deleting rows after
         population.
     """
     def setUp(self):
@@ -95,7 +96,7 @@ class DeleteEntryTests(utils.BaseAppTests):
     def test_row_deleted(self):
         d_yorkshire = et.Element("delete", attrib={"code": "Y"})
         with database_session():
-            _delete(models.Region, d_yorkshire)
+            _delete_row(models.Region, d_yorkshire)
 
         regions = models.Region.query.all()
         self.assertFalse(regions)
@@ -103,7 +104,7 @@ class DeleteEntryTests(utils.BaseAppTests):
     def test_row_deleted_no_match(self):
         d_london = et.Element("delete", attrib={"code": "L"})
         with database_session(), self.assertLogs("populate.modify") as log:
-            _delete(models.Region, d_london)
+            _delete_row(models.Region, d_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",
                       log.output[0])
@@ -128,7 +129,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
         r_yorkshire = et.Element("replace", attrib={"code": "Y"})
         create_subelement(r_yorkshire, "name", text="Greater Yorkshire")
         with database_session():
-            _replace(models.Region, r_yorkshire)
+            _replace_row(models.Region, r_yorkshire)
 
         regions = models.Region.query.all()
         self.assertEqual(len(regions), 1)
@@ -141,7 +142,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
                           text="Lesser Yorkshire")
 
         with database_session(), self.assertLogs("populate.modify") as log:
-            _replace(models.Region, r_yorkshire)
+            _replace_row(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Greater Yorkshire' for {'code': 'Y'} "
                       "does not match {'Yorkshire'}.", log.output[0])
@@ -153,7 +154,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
                           text="Yorkshire")
 
         with database_session(), self.assertLogs("populate.modify") as log:
-            _replace(models.Region, r_yorkshire)
+            _replace_row(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Yorkshire' for {'code': 'Y'} already "
                       "matches.", log.output[0])
@@ -164,14 +165,14 @@ class ReplaceEntryTests(utils.BaseAppTests):
                           text="Greater London")
 
         with database_session(), self.assertLogs("populate.modify") as log:
-            _replace(models.Region, r_london)
+            _replace_row(models.Region, r_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",
                       log.output[0])
 
 
 class ModifyDataTests(utils.BaseAppTests):
-    """ Testing ``_ModifyData.process()`` and ``modify_data()`` functions.
+    """ Testing ``modify_data()`` function.
     """
     def setUp(self):
         self.create_tables()

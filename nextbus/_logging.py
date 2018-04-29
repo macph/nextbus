@@ -4,8 +4,6 @@ Logging tools for the nextbus package.
 import logging
 import logging.config
 
-from flask.logging import _proxy_stream
-
 
 def _filter_sqlalchemy_log(level):
     """ Returns a function that filters SQLAlchemy records by setting a higher
@@ -22,7 +20,7 @@ def _filter_sqlalchemy_log(level):
     return filter_sqlalchemy_log
 
 
-BRIEF = ("[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
+BRIEF = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
 PRECISE = ("[%(asctime)s] [%(name)s] [%(levelname)s] [%(module)s:%(lineno)s] "
            "%(message)s")
 

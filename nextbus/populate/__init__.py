@@ -5,9 +5,6 @@ import collections
 import contextlib
 import functools
 import logging
-
-import click
-import dateutil.parser as dp
 from flask import current_app
 import lxml.etree as et
 import sqlalchemy.dialects.postgresql as pg_sql
@@ -45,7 +42,7 @@ def merge_xml(iter_files, parser=None):
 
         :param iter_files: Iterator for list of file-like objects or file paths
         (both are accepted by the XML parser).
-        :param kwargs: XML parser - if None the default parser is used
+        :param parser: XML parser - if None the default parser is used
         :returns: Merged XML data as ``et.ElementTree`` object
     """
     first_file = next(iter_files)
@@ -83,20 +80,20 @@ def xml_as_dict(element):
     return {i.tag: i.text for i in element}
 
 
-def ext_function_text(function):
+def ext_function_text(func):
     """ Converts XPath query result to a string by taking the text content from
         the only element in list before passing it to the extension function.
         If the XPath query returned nothing, the wrapped function will return
         None.
     """
-    @functools.wraps(function)
+    @functools.wraps(func)
     def _function_with_text(instance, context, result, *args, **kwargs):
         if len(result) == 1:
             try:
                 text = result[0].text
             except AttributeError:
                 text = str(result[0])
-            return function(instance, context, text, *args, **kwargs)
+            return func(instance, context, text, *args, **kwargs)
         elif len(result) > 1:
             raise ValueError("XPath query returned multiple elements.")
         else:
@@ -169,8 +166,7 @@ class DBEntries(object):
         self.entries = collections.OrderedDict()
         self.conflicts = {}
 
-    def add(self, xpath_query, model, func=None, constraint=None,
-            indices=None):
+    def add(self, xpath_query, model, func=None, indices=None):
         """ Iterates through a list of elements, creating a list of dicts.
 
             With a parsing function, each entry can be filtered out or
@@ -180,50 +176,44 @@ class DBEntries(object):
 
             :param xpath_query: XPath query to retrieve list of elements
             :param model: Database model
-            :param label: Label for the progress bar
-            :param func: Function to evaluate each new object, with two
-            arguments - list of existing objects and the current object being
-            evaluated. Not expected to return anything
-            :param constraint: Name of constraint to evaluate in case of a
-            ON CONFLICT DO UPDATE statement
-            :param indices: Sequence of string or Column objects to assess
-            in a ON CONFLICT DO UPDATE statement
+            :param func: Function to evaluate each new object, with the current
+            object being evaluated as the only argument.
+            :param indices: Sequence of string or Column objects, which should
+            be unique, to assess in a ON CONFLICT DO UPDATE statement
         """
         # Find all elements matching query
         list_elements = self.data.xpath(xpath_query)
         # Assuming keys in every entry are equal
         columns = xml_as_dict(list_elements[0]).keys()
 
-        if constraint is not None and indices is not None:
-            raise TypeError("The 'constraint' and 'indices' arguments are "
-                            "mutually exclusive.")
-        elif constraint is not None:
-            self.conflicts[model] = {"constraint": constraint,
-                                     "columns": columns}
-        elif indices is not None:
-            self.conflicts[model] = {"indices": indices, "columns":columns}
+        # Check indices and add them for INSERT ON CONFLICT statements
+        if indices is not None:
+            self.conflicts[model] = {"indices": indices, "columns": columns}
 
-        # Create list for model and iterate over all elements
         new_entries = self.entries.setdefault(model, [])
         logger.info("Parsing %d %s elements" %
                     (len(list_elements), model.__name__))
+
+        # Create list for model and iterate over all elements
         for element in list_elements:
             data = xml_as_dict(element)
-            if data.get("modified") is not None:
-                data["modified"] = dp.parse(data["modified"])
-            if not func:
-                new_entries.append(data)
-                continue
-            try:
-                func(new_entries, data)
-            except TypeError as err:
-                if "positional argument" in str(err):
-                    raise TypeError(
-                        "Filter function must receive two arguments: list "
-                        "of existing objects and the current object."
-                    ) from err
-                else:
-                    raise
+            if func is not None:
+                try:
+                    new_data = func(data)
+                    if new_data is None:
+                        continue
+                    else:
+                        data = new_data
+                except TypeError as err:
+                    if "positional argument" in str(err):
+                        raise TypeError(
+                            "Filter function must receive the current object "
+                            "as the only argument."
+                        ) from err
+                    else:
+                        raise
+
+            new_entries.append(data)
 
     def _create_insert_statement(self, model):
         """ Creates an insert statement, depending on whether constraints or
@@ -235,9 +225,12 @@ class DBEntries(object):
             function will add them
         """
         table = model.__table__
-        if self.conflicts.get(model):
-            # Constraint or indices have been specified; make a INSERT ON
-            # CONFLICT DO UPDATE statement
+        if not self.conflicts.get(model):
+            # A simple INSERT statement
+            statement = table.insert()
+        else:
+            # Indices have been specified; make a INSERT ON CONFLICT DO UPDATE
+            # statement
             insert = pg_sql.insert(table)
             # Create arguments, add index elements or constraints
             # 'excluded' is a specific property used in ON CONFLICT statements
@@ -245,16 +238,10 @@ class DBEntries(object):
             args = {
                 "set_": {c: getattr(insert.excluded, c) for c in
                          self.conflicts[model]["columns"]},
-                "where": table.c.modified < insert.excluded.modified
+                "where": table.c.modified < insert.excluded.modified,
+                "index_elements": self.conflicts[model]["indices"]
             }
-            if "constraint" in self.conflicts[model]:
-                args["constraint"] = self.conflicts[model]["constraint"]
-            else:
-                args["index_elements"] = self.conflicts[model]["indices"]
             statement = insert.on_conflict_do_update(**args)
-        else:
-            # Else, a simple INSERT statement
-            statement = table.insert()
 
         return statement
 

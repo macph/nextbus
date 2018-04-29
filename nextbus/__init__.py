@@ -1,8 +1,6 @@
 """
 The nextbus package for live bus times in the UK.
 """
-import os
-
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -14,7 +12,7 @@ from nextbus._logging import load_log_config
 
 db = SQLAlchemy()
 migrate = Migrate()
-ts_parser = parser.TSQueryParser()
+ts_parser = parser.create_tsquery_parser()
 
 
 def create_app(config_obj=None, config_file=None):

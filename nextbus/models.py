@@ -2,7 +2,7 @@
 Models for the nextbus database.
 """
 import sqlalchemy.dialects.postgresql as pg_sql
-import sqlalchemy.ext.hybrid as sa_hybrid
+from sqlalchemy.ext import hybrid
 
 from nextbus import db, location
 
@@ -16,19 +16,16 @@ def table_name(model):
     return db.literal_column("'%s'" % model.__tablename__)
 
 
-class BaseMixin:
+class BaseMixin(object):
     """ Adds functionality to the SQLAlchemy model class. """
+    __table__ = None
 
     def _asdict(self):
         """ Returns a dictionary of currently loaded columns in a model object.
             Any deferred columns or relationships will not be included.
         """
-        new_dict = {}
-        for attr, value in self.__dict__.items():
-            if self.__table__.columns.has_key(attr):
-                new_dict[attr] = value
-
-        return new_dict
+        return {attr: value for attr, value in self.__dict__.items()
+                if attr in self.__table__.columns}
 
 
 class Region(db.Model):
@@ -63,7 +60,7 @@ class Region(db.Model):
                 db.case([(District.code.is_(None), AdminArea.name)],
                         else_=District.name).label("name")
             ).select_from(AdminArea)
-            .outerjoin(District, AdminArea.code == District.admin_area_ref)
+            .outerjoin(AdminArea.districts)
             .filter(AdminArea.region_ref == self.code)
             .order_by("name")
         )
@@ -199,26 +196,33 @@ class Locality(db.Model):
                 StopPoint.short_ind.label("short_ind"),
                 StopPoint.admin_area_ref.label("admin_area_ref"),
                 StopPoint.stop_type.label("stop_type")
-            ).outerjoin(StopPoint.stop_area)
+            )
+            .outerjoin(StopPoint.stop_area)
             .filter(StopPoint.locality_ref == self.code)
         )
-        stops_not_areas = stops.filter(
-            db.or_(StopPoint.stop_area_ref.is_(None),
-                   StopArea.locality_ref != self.code)
-        )
-        stop_areas = (
-            db.session.query(
-                table_name(StopArea).label("table"),
-                StopArea.code.label("code"),
-                StopArea.name.label("name"),
-                StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
-                StopArea.admin_area_ref.label("admin_area_ref"),
-                StopArea.stop_area_type.label("stop_type")
-            ).join(StopArea.stop_points)
-            .group_by(StopArea.code)
-            .filter(StopArea.locality_ref == self.code)
-        )
-        query = stops_not_areas.union(stop_areas) if group_areas else stops
+
+        if group_areas:
+            stops_not_areas = stops.filter(
+                db.or_(StopPoint.stop_area_ref.is_(None),
+                       StopArea.locality_ref != self.code)
+            )
+            stop_areas = (
+                db.session.query(
+                    table_name(StopArea).label("table"),
+                    StopArea.code.label("code"),
+                    StopArea.name.label("name"),
+                    StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
+                    StopArea.admin_area_ref.label("admin_area_ref"),
+                    StopArea.stop_area_type.label("stop_type")
+                )
+                .join(StopArea.stop_points)
+                .group_by(StopArea.code)
+                .filter(StopArea.locality_ref == self.code)
+            )
+            query = stops_not_areas.union(stop_areas)
+
+        else:
+            query = stops
 
         return query.order_by("name", "short_ind").all()
 
@@ -253,7 +257,7 @@ class StopArea(BaseMixin, db.Model):
     def __repr__(self):
         return "<StopArea(%r)>" % self.code
 
-    @sa_hybrid.hybrid_property
+    @hybrid.hybrid_property
     def stop_count(self):
         """ Counts number of stops in area using the ORM. """
         return len(self.stop_points)
@@ -364,3 +368,7 @@ class Postcode(db.Model):
             repr_text = "<Postcode(text=%r)>" % self.text
 
         return repr_text
+
+    def stops_in_range(self):
+        """ Returns a list of all stop points within range. """
+        return StopPoint.in_range((self.latitude, self.longitude))

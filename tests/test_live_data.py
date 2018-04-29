@@ -84,7 +84,7 @@ class TAPITests(BaseRequestsTests):
         }
         with self.app.app_context(), self.mock_request as req:
             current_app.config["TRANSPORT_API_ACTIVE"] = True
-            new_data = tapi.get_live_data(self.atco_code)
+            tapi.get_live_data(self.atco_code)
             req.assert_called_once_with(tapi.URL_FCC % self.atco_code,
                                         params=parameters)
 

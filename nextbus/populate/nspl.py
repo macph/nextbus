@@ -42,17 +42,16 @@ def download_nspl_data(atco_codes=None):
         all postcodes in Great Britain (outwith IoM, Channel Islands and
         Northern Ireland) are retrieved.
     """
-    if current_app.config.get("CAMDEN_API_TOKEN") is not None:
-        headers = {"X-App-Token": current_app.config.get("CAMDEN_API_TOKEN")}
-    else:
-        headers = {}
+    token = current_app.config.get("CAMDEN_API_TOKEN")
+    headers = {"X-App-Token": token} if token is not None else {}
 
     if atco_codes:
-        la_file = os.path.join(ROOT_DIR, LA_JSON)
-        with open(la_file, "r") as laf:
-            list_la = [local_auth["la_code"] for local_auth in json.load(laf)
-                       if int(local_auth["atco_area_code"]) in atco_codes]
-        codes = ["local_authority_code='%s'" % la for la in list_la]
+        codes = []
+        cond = "local_authority_code='%s'"
+        with open(os.path.join(ROOT_DIR, LA_JSON), "r") as laf:
+            for local_auth in json.load(laf):
+                if int(local_auth["atco_area_code"]) in atco_codes:
+                    codes.append(cond % local_auth["la_code"])
     else:
         codes = ["country_code='%s'" % c for c in LIST_COUNTRIES]
 

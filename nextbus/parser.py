@@ -45,6 +45,30 @@ def _fix_parentheses(query, opening="(", closing=")"):
     return string
 
 
+class ParseResult(object):
+    """ Holds the parser results. """
+    def __init__(self, result):
+        self.result = result
+        self.data = result[0] if len(result) == 1 else result
+
+    def __repr__(self):
+        return "<ParseResult(%r)>" % self.result
+
+    def to_string(self, exclude_not=False):
+        """ Returns the parser result as a single string. """
+        _not = "!" if exclude_not else None
+        try:
+            string = self.data.stringify(exclude_op=_not)
+        except AttributeError:
+            # Already a string
+            string = self.data
+
+        return string
+
+    def dump(self):
+        return self.result.dump()
+
+
 class Operator(object):
     """ Base class for operators in a search query. """
     operator, rank = None, None
@@ -54,6 +78,9 @@ class Operator(object):
         if self.operator is None or self.rank is None:
             raise NotImplementedError("The operator and rank must be defined "
                                       "with a new subclass.")
+
+    def __repr__(self):
+        return "%s:%r" % (self.operator, self.operands)
 
     def combine_operands(self, exclude_op=None):
         """ Returns sequence of operands converted to strings with the
@@ -79,17 +106,16 @@ class Operator(object):
 
         return sequence
 
+    def stringify(self):
+        """ Stringify method required for joining operands with operators. """
+        raise NotImplementedError
+
 
 class UnaryOperator(Operator):
     """ Base class for unary operators in a search query. """
-    operator = None
-
     def __init__(self, tokens):
         super(UnaryOperator, self).__init__()
         self.operands = [tokens[0][1]]
-
-    def __repr__(self):
-        return "%s:%r" % (self.operator, self.operands)
 
     def stringify(self, exclude_op=None):
         """ Returns the parsed query in string form. """
@@ -98,14 +124,9 @@ class UnaryOperator(Operator):
 
 class BinaryOperator(Operator):
     """ Base class for unary operators in a search query. """
-    operator = None
-
     def __init__(self, tokens):
         super(BinaryOperator, self).__init__()
         self.operands = tokens[0][::2]
-
-    def __repr__(self):
-        return "%s:%r" % (self.operator, self.operands)
 
     def stringify(self, exclude_op=None):
         """ Returns the parsed query in string form. """
@@ -137,9 +158,9 @@ class Or(BinaryOperator):
     operator, rank = "|", 0
 
 
-class TSQueryParser(object):
-    """ Class to parse query strings to make them suitable for the PostgreSQL
-        ``to_tsquery()`` function.
+def create_tsquery_parser():
+    """ Creates a function to parse query strings to make them suitable for the
+        PostgreSQL ``to_tsquery()`` function.
 
         The PostgreSQL function accepts the following operators:
         - ``()`` to evaluate inner expressions separately
@@ -161,82 +182,57 @@ class TSQueryParser(object):
         Spaces between words or parentheses are parsed as implicit AND
         expressions.
 
-        PostgreSQL's ``ts_rank()`` ignores operators within a tsquery value.
-        It is uncertain whether this is intentional or not but it makes
+        PostgreSQL's ``ts_rank()`` sometimes ignores operators within a tsquery
+        value. It is uncertain whether this is intentional or not but it makes
         filtering by rank difficult when NOT operators are used. As a result
         a method is used to return a pair of strings - one to use for matching,
-        and the other with all NOT terms excluded for ranking. See:
-        https://www.postgresql.org/message-id/11187.1487381065%40sss.pgh.pa.us
+        and the other with all NOT terms excluded for ranking.
     """
-    def __init__(self):
-        self.parser = self._create_parser()
+    # Operators
+    and_, or_ = pp.CaselessKeyword("and"), pp.CaselessKeyword("or")
+    op_not = pp.CaselessKeyword("not") | pp.Literal("!")
+    op_and = pp.Optional(and_ | pp.Literal("&"), default="&")
+    op_or = or_ | pp.Literal("|")
 
-    def __call__(self, query):
-        """ Uses the parser to create a nested result suitable for tsquery
-            parsing.
+    # Ignore operators and parentheses
+    char_no_operators = SET_PRINT - set("()!&|+")
+    word = ~or_ + ~and_ + pp.Word("".join(char_no_operators))
 
-            :param query: String from query. All characters not in the
-            extended ASCII set are stripped.
-            :returns: A nested list of words and operators defined by ``Not``,
-            ``FollowedBy``, ``And`` and ``Or`` instances.
-        """
-        try:
-            output = self.parser.parseString(query)
-        except pp.ParseException:
-            current_app.logger.error("Parser ran into an error with the "
-                                     "search query %r" % query, exc_info=1)
-            raise ValueError("Query %r cannot be parsed.")
-        return output
+    # Declare empty parser and nested terms before before defining
+    expression = pp.Forward()
+    term_0 = (pp.quotedString.setParseAction(FollowedBy) |
+              pp.Suppress("(") + expression + pp.Suppress(")") | word)
 
-    def parse(self, query):
-        """ Formats parsed query to output two strings: one with including all
-            operators and the other excluding all NOT terms.
+    term_not = pp.Group(op_not + term_0).setParseAction(Not)
+    term_1 = term_not | term_0
+    term_and = (pp.Group(term_1 + pp.OneOrMore(op_and + term_1))
+                .setParseAction(And))
+    term_2 = term_and | term_1
+    term_or = (pp.Group(term_2 + pp.OneOrMore(op_or + term_2))
+               .setParseAction(Or))
+    term_3 = term_or | term_2
 
-            :param query: String from search query.
-            :returns: A tuple of two formatted strings suitable for ``tsquery``
-            use.
+    expression <<= term_3 | pp.Empty()
+
+    def parser(query, fix_parentheses=True):
+        """ Search query parser function for converting queries to strings
+            suitable for PostgreSQL's ``to_tsquery()``. Broken parentheses are
+            fixed beforehand by default.
         """
         text = RE_VALID_CHAR.sub(r"", query)
-        text = _fix_parentheses(text)
+        if fix_parentheses:
+            text = _fix_parentheses(text)
 
-        output = self(text)
+        try:
+            output = expression.parseString(text)
+        except pp.ParseException as err:
+            current_app.logger.error("Parser ran into an error with the "
+                                     "search query %r" % query, exc_info=1)
+            raise ValueError("Query %r cannot be parsed.") from err
+
         if not output:
             raise ValueError("Query %r contained no valid words.")
 
-        op = output[0] if len(output) == 1 else output
-        try:
-            tsquery = op.stringify(), op.stringify(exclude_op="!")
-        except AttributeError:
-            tsquery = (op, op)
-        current_app.logger.debug("Search query %r parsed as %r and formatted "
-                                 "as %s." % (query, output.dump(), tsquery))
+        return ParseResult(output)
 
-        return tsquery
-
-    @staticmethod
-    def _create_parser():
-        """ Creates parser using recursive expressions with operators. """
-        # Operators
-        and_, or_ = pp.CaselessKeyword("and"), pp.CaselessKeyword("or")
-        op_not = pp.CaselessKeyword("not") | pp.Literal("!")
-        op_and = pp.Optional(and_ | pp.Literal("&"), default="&")
-        op_or = or_ | pp.Literal("|")
-
-        # Ignore operators and parentheses
-        char_no_operators = SET_PRINT - set("()!&|+")
-        word = ~or_ + ~and_ + pp.Word("".join(char_no_operators))
-
-        # Declare empty parser and nested terms before before defining
-        expression = pp.Forward()
-        term = (pp.quotedString.setParseAction(FollowedBy) |
-                pp.Suppress("(") + expression + pp.Suppress(")") | word)
-
-        term_not = pp.Group(op_not + term).setParseAction(Not) | term
-        term_and = pp.Group(term_not + pp.OneOrMore(op_and + term_not)
-                           ).setParseAction(And) | term_not
-        term_or = pp.Group(term_and + pp.OneOrMore(op_or + term_and)
-                          ).setParseAction(Or) | term_and
-
-        expression <<= term_or | pp.Empty()
-
-        return expression
+    return parser

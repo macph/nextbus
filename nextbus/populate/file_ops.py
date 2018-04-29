@@ -111,6 +111,7 @@ def backup_database(dump_file=None):
     db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI')
     if db_uri is None:
         raise ValueError("The SQLALCHEMY_DATABASE_URI option is not defined.")
+
     file_path = DUMP_FILE_PATH if dump_file is None else dump_file
     full_path = _get_full_path(file_path)
 
@@ -126,12 +127,15 @@ def restore_database(dump_file=None, error=False):
         populate command fails. Cleans the database beforehand.
 
         :param dump_file: Name of file to restore from
+        :param error: Log a warning before starting backup
     """
     if error:
         logger.warn("Errors occured; restoring database to previous state")
+
     db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI')
     if db_uri is None:
         raise ValueError("The SQLALCHEMY_DATABASE_URI option is not defined.")
+
     file_path = DUMP_FILE_PATH if dump_file is None else dump_file
     full_path = _get_full_path(file_path)
 

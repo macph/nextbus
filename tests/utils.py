@@ -10,7 +10,7 @@ import unittest
 import lxml.etree as et
 
 from definitions import CONFIG_ENV
-from nextbus import db, create_app, models
+from nextbus import db, create_app
 
 
 REGION = {
@@ -104,16 +104,16 @@ class TestAppContext(type):
         The following methods are excluded: setUp, setUpClass, tearDown,
         tearDownClass. Static and class methods are also excluded.
     """
-    def __new__(meta, class_name, bases, attrs):
-        new_attrs = {}
+    def __new__(mcs, class_name, bases, attributes):
+        new_attributes = {}
         excluded = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
-        for name, attr in attrs.items():
+        for name, attr in attributes.items():
             if isinstance(attr, types.FunctionType) and name not in excluded:
-                new_attrs[name] = wrap_app_context(attr)
+                new_attributes[name] = wrap_app_context(attr)
             else:
-                new_attrs[name] = attr
+                new_attributes[name] = attr
 
-        return type.__new__(meta, class_name, bases, new_attrs)
+        return type.__new__(mcs, class_name, bases, new_attributes)
 
 
 class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
@@ -128,16 +128,18 @@ class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
             cls.app = create_app(config_file=config)
         else:
             cls.app = create_app(config_obj="default_config.DevelopmentConfig")
+
         # Find the test database address
         if not cls.app.config.get(cls.TEST):
             raise ValueError("No test database URI set in %s" % cls.TEST)
-        elif cls.app.config.get(cls.TEST) == cls.app.config.get(cls.MAIN):
+
+        if cls.app.config.get(cls.TEST) == cls.app.config.get(cls.MAIN):
             raise ValueError("The %s and %s parameters must not be the same; "
                              "the unittests will commit destructive edits."
                              % (cls.TEST, cls.MAIN))
-        else:
-            # Set SQLAlchemy database address to test database address
-            cls.app.config[cls.MAIN] = cls.app.config.get(cls.TEST)
+
+        # Set SQLAlchemy database address to test database address
+        cls.app.config[cls.MAIN] = cls.app.config.get(cls.TEST)
 
     @classmethod
     def tearDownClass(cls):

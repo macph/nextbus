@@ -9,7 +9,7 @@ from flask.cli import FlaskGroup
 from definitions import CONFIG_ENV
 
 
-def run_cli_app(_):
+def run_cli_app():
     """ Runs app from CLI. """
     from nextbus import create_app
 
@@ -55,7 +55,8 @@ def cli():
 @click.option("--backup-path", "-B", "backup_f", default=None,
               type=click.Path(), help="Back up database to a specified dump "
               "file before populating database.")
-def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
+@click.pass_context
+def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
              backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
@@ -124,4 +125,4 @@ def populate(nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
                 file_ops.restore_database(backup_f, error=True)
             raise
     else:
-        click.echo("No option selected.")
+        click.echo(ctx.get_help())

@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 click = "*"
 flask = "*"
 flask-migrate = "*"
@@ -19,13 +16,9 @@ python-dateutil = "*"
 pytz = "*"
 requests = "*"
 
-
 [dev-packages]
-
 pylint = "*"
 "e1839a8" = {path = ".", editable = true}
 
-
 [requires]
-
 python_version = "3.6"

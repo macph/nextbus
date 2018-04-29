@@ -34,8 +34,7 @@ PROD_LOG_CONFIG = {
     "handlers": {
         "console": {"class": "logging.StreamHandler",
                     "formatter": "brief",
-                    "level": "INFO",
-                    "stream": "ext://flask.logging._proxy_stream"},
+                    "level": "INFO"},
         "file":    {"class": "logging.handlers.RotatingFileHandler",
                     "backupCount": 4,
                     "filename": "nxb.log",
@@ -64,8 +63,7 @@ DEBUG_LOG_CONFIG = {
         "console": {"class": "logging.StreamHandler",
                     "filters": ["sqlalchemy_warn"],
                     "formatter": "brief",
-                    "level": "DEBUG",
-                    "stream": "ext://flask.logging._proxy_stream"},
+                    "level": "DEBUG"},
         "file":    {"class": "logging.FileHandler",
                     "filename": "nxb_debug.log",
                     "formatter": "precise",
@@ -81,9 +79,9 @@ DEBUG_LOG_CONFIG = {
 
 def load_log_config(app):
     """ Loads configuration for root and other loggers, depending on if the
-        'DEBUG' flag was set to True.
+        'ENV' flag was set to 'production' or 'development'.
     """
-    if not app.config.get("DEBUG"):
+    if app.config.get("ENV") != "development":
         logging.config.dictConfig(PROD_LOG_CONFIG)
     else:
         # Set up SQLAlchemy to log all queries

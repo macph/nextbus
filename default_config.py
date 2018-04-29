@@ -5,7 +5,6 @@ Configuration file for running current version of nextbus.
 
 class Config(object):
     """ Default config. """
-    DEBUG = False
     SQLALCHEMY_DATABASE_URI = None  # Location of PostgreSQL database
     TEST_DATABASE_URI = None        # Location of test PostgreSQL database. Must be distinct from
                                     # the above address
@@ -25,7 +24,6 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     """ Config for developing and testing. """
-    SQLALCHEMY_DATABASE_URI = "postgres://localhost/nextbus"
-    TEST_DATABASE_URI = "postgres://localhost/nextbus_test"
+    SQLALCHEMY_DATABASE_URI = "postgresql://localhost/nextbus"
+    TEST_DATABASE_URI = "postgresql://localhost/nextbus_test"
     SECRET_KEY = "sup3r sekr3t k3y"
-    DEBUG = True

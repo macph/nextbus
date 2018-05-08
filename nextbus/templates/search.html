@@ -16,11 +16,8 @@
 <div class="search-box box-upper-margin">
     <form class="search-form" method="post" name="search">
         {{ g.form.hidden_tag() }}
-        <div class="search-label">
-            <label>Search again:</label>
-        </div>
         <div class="search-field">
-            {{ g.form.search_query(placeholder="another place or stop", required=g.form.search_query.flags.required) }}
+            {{ g.form.search_query(placeholder="Another place or stop...", value=query, required=g.form.search_query.flags.required) }}
         </div>
         <div class="search-submit">
             <input class="form-submit" type="submit" name="submit_query" value=">">

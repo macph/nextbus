@@ -255,7 +255,7 @@ class EntryDBTests(utils.BaseAppTests):
     """ Tests on _DBEntries and committing changes to database """
     xml = io.BytesIO(
         b"<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
-        b"<modified/><tsv_name/></Region></Regions></Data>"
+        b"<modified/></Region></Regions></Data>"
     )
 
     def setUp(self):
@@ -275,7 +275,7 @@ class EntryDBTests(utils.BaseAppTests):
         statement = str(insert)
         self.assertRegex(
             statement,
-            r"INSERT INTO region \(code, name, modified, tsv_name\) VALUES"
+            r"INSERT INTO region \(code, name, modified\) VALUES"
         )
         self.assertNotRegex(statement, r"ON CONFLICT.+?DO UPDATE")
 
@@ -287,11 +287,11 @@ class EntryDBTests(utils.BaseAppTests):
         statement = str(insert)
         self.assertRegex(
             statement,
-            r"INSERT INTO region \(code, name, modified, tsv_name\) "
+            r"INSERT INTO region \(code, name, modified\) "
             r"VALUES \(.+?\) ON CONFLICT \(code\) "
             r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-            r"modified = excluded.modified, tsv_name = excluded.tsv_name "
-            r"WHERE region.modified < excluded.modified"
+            r"modified = excluded.modified WHERE region.modified < "
+            r"excluded.modified"
         )
 
     def test_commit_changes(self):

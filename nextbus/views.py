@@ -27,18 +27,22 @@ class EntityNotFound(Exception):
     pass
 
 
-def _group_places(list_places, attr=None, key=None):
+def _group_objects(list_places, attr=None, key=None, default=None):
     """ Groups places or stops by the first letter of their names, or under a
         single key "A-Z" if the total is less than MIN_GROUPED.
 
-        :param list_places: list of models.Locality objects.
+        :param list_places: list of objects.
         :param attr: First letter of attribute to group by.
         :param key: First letter of dict key to group by.
-        :returns: Dictionary of models.Locality objects.
+        :param default: Group name to give for all objects in case limit is not
+        reached; if None the generic 'A-Z' is used.
+        :returns: Dictionary of objects.
         :raises AttributeError: Either an attribute or a key must be specified.
     """
     if not bool(attr) ^ bool(key):
         raise AttributeError("Either an attribute or a key must be specified.")
+
+    name = "A-Z" if default is None else default
 
     groups = {}
     if list_places and len(list_places) > MIN_GROUPED:
@@ -47,7 +51,7 @@ def _group_places(list_places, attr=None, key=None):
             value = getattr(item, attr) if attr is not None else item[key]
             groups[value[0].upper()].append(item)
     elif list_places:
-        groups = {"A-Z": list_places}
+        groups = {name: list_places}
 
     return groups
 
@@ -139,7 +143,13 @@ def about():
 
 @page_search.route("/search/<query>", methods=["GET", "POST"])
 def search_results(query):
-    """ Shows a list of search results. """
+    """ Shows a list of search results.
+
+        Query string attributes:
+        type: Specify areas (admin areas and districts), places (localities) or
+        stops (stop points and areas). Can have multiple entries.
+        area: Admin area code, can have multiple entries.
+    """
     s_query = query.replace("+", " ")
     # Check if query has enough alphanumeric characters
     if not forms.check_alphanum(s_query):
@@ -148,8 +158,18 @@ def search_results(query):
             "longer phrase."
         )
 
+    # Check all 'type' attributes, if none matches set all categories to True
+    types = ["area", "place", "stop"]
+    categories = {t: t in request.args.getlist("type") for t in types}
+    if not any(v for v in categories.values()):
+        categories = {c: True for c in types}
+
+    # Filter by admin areas
+    if "area" in request.args:
+        categories["admin_areas"] = request.args.getlist("area")
+
     try:
-        result = search.search_full(s_query)
+        result = search.search_full(s_query, **categories)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (query, err), exc_info=True)
@@ -245,7 +265,8 @@ def list_in_area(area_code):
 
     # Show list of localities with stops if districts do not exist
     if not area.districts:
-        group_local = _group_places(area.list_localities(), attr="name")
+        group_local = _group_objects(area.list_localities(), attr="name",
+                                     default="Places")
     else:
         group_local = {}
 
@@ -266,7 +287,8 @@ def list_in_district(district_code):
         raise EntityNotFound("District with code '%s' does not exist."
                              % district_code)
 
-    group_local = _group_places(district.list_localities(), attr="name")
+    group_local = _group_objects(district.list_localities(), attr="name",
+                                 default="Places")
 
     return render_template("district.html", district=district,
                            localities=group_local)
@@ -274,7 +296,12 @@ def list_in_district(district_code):
 
 @page_search.route("/list/place/<locality_code>", methods=["GET", "POST"])
 def list_in_locality(locality_code):
-    """ Shows stops in locality. """
+    """ Shows stops in locality.
+
+        Query string attributes:
+        'group': If 'true', stops belonging to stop areas are grouped,
+        otherwise all stops in locality are shown.
+    """
     locality = (
         models.Locality.query
         .options(db.joinedload(models.Locality.district),
@@ -291,7 +318,12 @@ def list_in_locality(locality_code):
             ".list_in_locality", locality_code=locality.code
         ), code=301)
 
-    stops = _group_places(locality.list_stops(group_areas=True), attr="name")
+    if request.args.get("group") == "true":
+        stops = locality.list_stops(group_areas=True)
+    else:
+        stops = locality.list_stops(group_areas=False)
+
+    stops = _group_objects(stops, attr="name", default="Stops")
 
     return render_template("place.html", locality=locality, stops=stops)
 

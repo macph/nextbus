@@ -60,7 +60,10 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
              backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
-    from nextbus.populate import file_ops, modify, naptan, nptg, nspl, tsvector
+    from flask import current_app
+    from nextbus import materialized_views
+    from nextbus.populate import (database_session, file_ops, modify, naptan,
+                                  nptg, nspl)
 
     errors = False
     use_backup = False
@@ -114,11 +117,11 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
                 nspl.commit_nspl_data(file_=nspl_f)
             if options["m"]:
                 modify.modify_data()
-            # Update tsvector columns after population
-            if options["g"] or options["m"]:
-                tsvector.update_nptg_tsvector()
-            if options["n"] or options["m"]:
-                tsvector.update_naptan_tsvector()
+            # Update view after population
+            if options["g"] or options["n"] or options["m"]:
+                with database_session():
+                    current_app.logger.info("Refreshing FTS materialized view")
+                    materialized_views.FTS.refresh(concurrently=False)
         except:
             # Restore DB if errors occur and raise
             if use_backup:

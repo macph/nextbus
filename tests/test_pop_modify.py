@@ -20,13 +20,11 @@ MODIFY_XML = b"""\
       <code>L</code>
       <name>London</name>
       <modified>2006-01-25T07:54:31</modified>
-      <tsv_name/>
     </create>
     <create>
       <code>Y</code>
       <name>Yorkshire</name>
       <modified>2006-01-25T07:54:31</modified>
-      <tsv_name/>
     </create>
   </table>
   <table model="Region">

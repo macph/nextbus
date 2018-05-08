@@ -1,48 +1,25 @@
 """
 Models for the nextbus database.
 """
-import sqlalchemy.dialects.postgresql as pg_sql
+import functools
 from sqlalchemy.ext import hybrid
 
-from nextbus import db, location
-
+from nextbus import db, location, model_utils
 
 MIN_GROUPED = 72
 MAX_DIST = 500
 
 
-def table_name(model):
-    """ Returns column with literal name of model table. """
-    return db.literal_column("'%s'" % model.__tablename__)
-
-
-class BaseMixin(object):
-    """ Adds functionality to the SQLAlchemy model class. """
-    __table__ = None
-
-    def _asdict(self):
-        """ Returns a dictionary of currently loaded columns in a model object.
-            Any deferred columns or relationships will not be included.
-        """
-        return {attr: value for attr, value in self.__dict__.items()
-                if attr in self.__table__.columns}
-
-
-class Region(db.Model):
+class Region(model_utils.BaseModel):
     """ NPTG region. """
     __tablename__ = "region"
 
     code = db.Column(db.VARCHAR(2), primary_key=True)
     name = db.Column(db.Text, index=True, nullable=False)
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
                             order_by="AdminArea.name")
-
-    __table_args__ = (
-        db.Index("ix_region_tsvector_name", "tsv_name", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         return "<Region(%r)>" % self.code
@@ -53,8 +30,9 @@ class Region(db.Model):
         """
         query_areas = (
             db.session.query(
-                db.case([(District.code.is_(None), table_name(AdminArea))],
-                        else_=table_name(District)).label("table"),
+                db.case([(District.code.is_(None),
+                          model_utils.table_name(AdminArea))],
+                        else_=model_utils.table_name(District)).label("table"),
                 db.case([(District.code.is_(None), AdminArea.code)],
                         else_=District.code).label("code"),
                 db.case([(District.code.is_(None), AdminArea.name)],
@@ -68,7 +46,7 @@ class Region(db.Model):
         return query_areas.all()
 
 
-class AdminArea(db.Model):
+class AdminArea(model_utils.BaseModel):
     """ NPTG administrative area. """
     __tablename__ = "admin_area"
 
@@ -80,7 +58,6 @@ class AdminArea(db.Model):
                            index=True, nullable=False)
     is_live = db.deferred(db.Column(db.Boolean, default=True))
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
 
     districts = db.relationship("District", backref="admin_area", order_by="District.name")
     localities = db.relationship("Locality", backref="admin_area", innerjoin=True,
@@ -91,10 +68,6 @@ class AdminArea(db.Model):
                                   order_by="StopPoint.name, StopPoint.short_ind")
     stop_areas = db.relationship("StopArea", backref="admin_area", innerjoin=True,
                                  order_by="StopArea.name")
-
-    __table_args__ = (
-        db.Index("ix_admin_area_tsvector_name", "tsv_name", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         return "<AdminArea(%r)>" % self.code
@@ -112,7 +85,7 @@ class AdminArea(db.Model):
         return query_local.all()
 
 
-class District(db.Model):
+class District(model_utils.BaseModel):
     """ NPTG district. """
     __tablename__ = "district"
 
@@ -122,14 +95,9 @@ class District(db.Model):
                                db.ForeignKey("admin_area.code", ondelete="CASCADE"),
                                index=True, nullable=False)
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
 
     localities = db.relationship("Locality", backref="district", order_by="Locality.name")
     postcodes = db.relationship("Postcode", backref="district", order_by="Postcode.text")
-
-    __table_args__ = (
-        db.Index("ix_district_tsvector_name", "tsv_name", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         return "<District(%r)>" % self.code
@@ -147,7 +115,7 @@ class District(db.Model):
         return query_local.all()
 
 
-class Locality(db.Model):
+class Locality(model_utils.BaseModel):
     """ NPTG locality. """
     __tablename__ = "locality"
 
@@ -166,7 +134,6 @@ class Locality(db.Model):
     easting = db.deferred(db.Column(db.Integer, nullable=False))
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
 
     stop_points = db.relationship("StopPoint", backref="locality", innerjoin=True,
                                   order_by="StopPoint.name, StopPoint.short_ind")
@@ -174,10 +141,6 @@ class Locality(db.Model):
                                  order_by="StopArea.name")
     # children = db.relationship("Locality", backref=db.backref("parent", remote_side=[code]),
     #                            order_by="Locality.name")
-
-    __table_args__ = (
-        db.Index("ix_locality_tsvector_name", "tsv_name", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         return "<Locality(%r)>" % self.code
@@ -190,7 +153,7 @@ class Locality(db.Model):
         """
         stops = (
             db.session.query(
-                table_name(StopPoint).label("table"),
+                model_utils.table_name(StopPoint).label("table"),
                 StopPoint.atco_code.label("code"),
                 StopPoint.name.label("name"),
                 StopPoint.short_ind.label("short_ind"),
@@ -208,7 +171,7 @@ class Locality(db.Model):
             )
             stop_areas = (
                 db.session.query(
-                    table_name(StopArea).label("table"),
+                    model_utils.table_name(StopArea).label("table"),
                     StopArea.code.label("code"),
                     StopArea.name.label("name"),
                     StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
@@ -227,7 +190,7 @@ class Locality(db.Model):
         return query.order_by("name", "short_ind").all()
 
 
-class StopArea(BaseMixin, db.Model):
+class StopArea(model_utils.BaseModel):
     """ NaPTAN stop areas, eg bus interchanges. """
     __tablename__ = "stop_area"
 
@@ -245,14 +208,9 @@ class StopArea(BaseMixin, db.Model):
     easting = db.deferred(db.Column(db.Integer, nullable=False))
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
 
     stop_points = db.relationship("StopPoint", backref="stop_area",
                                   order_by="StopPoint.name, StopPoint.short_ind")
-
-    __table_args__ = (
-        db.Index("ix_stop_area_tsvector_name", "tsv_name", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         return "<StopArea(%r)>" % self.code
@@ -271,7 +229,7 @@ class StopArea(BaseMixin, db.Model):
         return db.cast(db.func.count(cls.code), db.Text)
 
 
-class StopPoint(BaseMixin, db.Model):
+class StopPoint(model_utils.BaseModel):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = "stop_point"
 
@@ -299,15 +257,6 @@ class StopPoint(BaseMixin, db.Model):
     easting = db.deferred(db.Column(db.Integer, nullable=False))
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
-    tsv_both = db.deferred(db.Column(pg_sql.TSVECTOR))
-    tsv_name = db.deferred(db.Column(pg_sql.TSVECTOR))
-    tsv_street = db.deferred(db.Column(pg_sql.TSVECTOR))
-
-    __table_args__ = (
-        db.Index("ix_stop_point_tsvector_both", "tsv_both", postgresql_using="gin"),
-        db.Index("ix_stop_point_tsvector_name", "tsv_name", postgresql_using="gin"),
-        db.Index("ix_stop_point_tsvector_street", "tsv_street", postgresql_using="gin"),
-    )
 
     def __repr__(self):
         if "atco_code" in self.__dict__:
@@ -343,7 +292,7 @@ class StopPoint(BaseMixin, db.Model):
         return sorted(stops, key=lambda s: s[1])
 
 
-class Postcode(db.Model):
+class Postcode(model_utils.BaseModel):
     """ Postcodes with coordinates, derived from the NSPL data. """
     __tablename__ = "postcode"
     postcode_regex = r"^([a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?\s*\d{1}[a-zA-Z]{2})$"

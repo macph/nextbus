@@ -52,6 +52,49 @@ def _group_places(list_places, attr=None, key=None):
     return groups
 
 
+def _stop_geojson(stop):
+    """ Converts a stop point to GeoJSON.
+
+        :param stop: Either a StopPoint instances or a tuple with matching
+        attributes.
+        :returns: JSON-serializable dict.
+    """
+    indicator = " (%s)" % stop.indicator if bool(stop.indicator) else ""
+    geojson = {
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [stop.longitude, stop.latitude]
+        },
+        "properties": {
+            "atco_code": stop.atco_code,
+            "naptan_code": stop.naptan_code,
+            "title": stop.name + indicator,
+            "name": stop.name,
+            "indicator": stop.short_ind,
+            "admin_area_ref": stop.admin_area_ref,
+            "bearing": stop.bearing
+        }
+    }
+
+    return geojson
+
+
+def _list_geojson(list_stops):
+    """ Creates a list of stop data in GeoJSON format.
+
+        :param list_stops: List of stops as either StopPoint instances or
+        tuples with matching attributes.
+        :returns: JSON-serializable dict.
+    """
+    geojson = {
+        "type": "FeatureCollection",
+        "features": [_stop_geojson(s) for s in list_stops]
+    }
+
+    return geojson
+
+
 @page_search.before_request
 def add_search():
     """ Search form enabled in every view within blueprint by adding the form
@@ -270,10 +313,10 @@ def list_near_postcode(code):
             ), code=301)
 
     stops = postcode.stops_in_range()
-    stop_data = [stop._asdict() for stop, _ in stops]
 
     return render_template("postcode.html", postcode=postcode,
-                           list_stops=stops, stop_data=stop_data)
+                           data=_list_geojson([s[0] for s in stops]),
+                           list_stops=stops)
 
 
 @page_search.route("/near/location/<lat_long>", methods=["GET", "POST"])
@@ -290,11 +333,11 @@ def list_near_location(lat_long):
                              "nowhere near Great Britain!")
 
     stops = models.StopPoint.in_range(coord)
-    stop_data = [stop._asdict() for stop, _ in stops]
     str_coord = location.format_dms(*coord)
 
     return render_template("location.html", coord=coord, str_coord=str_coord,
-                           list_stops=stops, stop_data=stop_data)
+                           data=_list_geojson([s[0] for s in stops]),
+                           list_stops=stops)
 
 
 @page_search.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
@@ -314,9 +357,9 @@ def stop_area(stop_area_code):
     if area.code != stop_area_code:
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
-    data = [r._asdict() for r in area.stop_points]
 
-    return render_template("stop_area.html", stop_area=area, list_stops=data)
+    return render_template("stop_area.html", stop_area=area,
+                           data=_list_geojson(area.stop_points))
 
 
 @page_search.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
@@ -339,7 +382,8 @@ def stop_naptan(naptan_code):
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop)
+    return render_template("stop.html", stop=stop,
+                           geojson=_stop_geojson(stop))
 
 
 @page_search.route("/stop/atco/<atco_code>", methods=["GET", "POST"])
@@ -361,7 +405,8 @@ def stop_atco(atco_code):
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop)
+    return render_template("stop.html", stop=stop,
+                           geojson=_stop_geojson(stop))
 
 
 @api.route("/stop/get", methods=["POST"])

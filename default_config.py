@@ -20,6 +20,7 @@ class Config(object):
     TRANSPORT_API_KEY = None        # Key for Transport API
     CAMDEN_APP_TOKEN = None         # App token to access Camden's NSPL API; only required to
                                     # bypass throtting limits
+    MAPBOX_APP_TOKEN = None         # App token to access Mapbox's map service
 
 
 class DevelopmentConfig(Config):

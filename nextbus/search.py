@@ -7,7 +7,7 @@ import reprlib
 
 from flask import current_app
 
-from nextbus import db, materialized_views, models, ts_parser
+from nextbus import db, models, ts_parser
 
 
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"

@@ -6,10 +6,9 @@ import functools
 import sqlalchemy.sql as sql
 
 from nextbus import db
-from nextbus.models import (Region, AdminArea, District, Locality, StopArea,
-                            StopPoint)
-from nextbus.model_utils import (create_materialized_view, MaterializedView,
-                                 table_name)
+from nextbus.models import utils
+from nextbus.models.tables import (Region, AdminArea, District, Locality,
+                                   StopArea, StopPoint)
 
 
 def _select_fts_vectors():
@@ -41,7 +40,7 @@ def _select_fts_vectors():
 
     region = (
         db.select([
-            table_name(Region).label("table_name"),
+            utils.table_name(Region).label("table_name"),
             Region.code.label("code"),
             Region.name.label("name"),
             null.label("short_ind"),
@@ -58,7 +57,7 @@ def _select_fts_vectors():
 
     admin_area = (
         db.select([
-            table_name(AdminArea).label("table_name"),
+            utils.table_name(AdminArea).label("table_name"),
             AdminArea.code.label("code"),
             AdminArea.name.label("name"),
             null.label("short_ind"),
@@ -75,7 +74,7 @@ def _select_fts_vectors():
 
     district = (
         db.select([
-            table_name(District).label("table_name"),
+            utils.table_name(District).label("table_name"),
             District.code.label("code"),
             District.name.label("name"),
             null.label("short_ind"),
@@ -105,7 +104,7 @@ def _select_fts_vectors():
 
     locality = (
         db.select([
-            table_name(Locality).label("table_name"),
+            utils.table_name(Locality).label("table_name"),
             Locality.code.label("code"),
             Locality.name.label("name"),
             null.label("short_ind"),
@@ -139,7 +138,7 @@ def _select_fts_vectors():
 
     stop_area = (
         db.select([
-            table_name(StopArea).label("table_name"),
+            utils.table_name(StopArea).label("table_name"),
             StopArea.code.label("code"),
             StopArea.name.label("name"),
             t_area.c.ind.label("short_ind"),
@@ -166,7 +165,7 @@ def _select_fts_vectors():
 
     stop_point = (
         db.select([
-            table_name(StopPoint).label("table_name"),
+            utils.table_name(StopPoint).label("table_name"),
             StopPoint.atco_code.label("code"),
             StopPoint.name.label("name"),
             StopPoint.short_ind.label("short_ind"),
@@ -196,7 +195,7 @@ def _select_fts_vectors():
     return db.union_all(*queries)
 
 
-class FTS(MaterializedView):
+class FTS(utils.MaterializedView):
     """ Materialized view for full text searching.
 
         Columns:
@@ -233,7 +232,7 @@ class FTS(MaterializedView):
     MINIMUM_STOP_RANK = 0.25
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
-    __table__ = create_materialized_view("fts", _select_fts_vectors())
+    __table__ = utils.create_materialized_view("fts", _select_fts_vectors())
     # Rank attribute left blank for search queries. See:
     # http://docs.sqlalchemy.org/en/latest/orm/mapped_sql_expr.html
     rank = db.query_expression()

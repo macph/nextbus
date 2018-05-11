@@ -1,16 +1,16 @@
 """
 Models for the nextbus database.
 """
-import functools
 from sqlalchemy.ext import hybrid
 
-from nextbus import db, location, model_utils
+from nextbus import db, location
+from nextbus.models import utils
 
 MIN_GROUPED = 72
 MAX_DIST = 500
 
 
-class Region(model_utils.BaseModel):
+class Region(utils.BaseModel):
     """ NPTG region. """
     __tablename__ = "region"
 
@@ -31,8 +31,8 @@ class Region(model_utils.BaseModel):
         query_areas = (
             db.session.query(
                 db.case([(District.code.is_(None),
-                          model_utils.table_name(AdminArea))],
-                        else_=model_utils.table_name(District)).label("table"),
+                          utils.table_name(AdminArea))],
+                        else_=utils.table_name(District)).label("table"),
                 db.case([(District.code.is_(None), AdminArea.code)],
                         else_=District.code).label("code"),
                 db.case([(District.code.is_(None), AdminArea.name)],
@@ -46,7 +46,7 @@ class Region(model_utils.BaseModel):
         return query_areas.all()
 
 
-class AdminArea(model_utils.BaseModel):
+class AdminArea(utils.BaseModel):
     """ NPTG administrative area. """
     __tablename__ = "admin_area"
 
@@ -85,7 +85,7 @@ class AdminArea(model_utils.BaseModel):
         return query_local.all()
 
 
-class District(model_utils.BaseModel):
+class District(utils.BaseModel):
     """ NPTG district. """
     __tablename__ = "district"
 
@@ -115,7 +115,7 @@ class District(model_utils.BaseModel):
         return query_local.all()
 
 
-class Locality(model_utils.BaseModel):
+class Locality(utils.BaseModel):
     """ NPTG locality. """
     __tablename__ = "locality"
 
@@ -153,7 +153,7 @@ class Locality(model_utils.BaseModel):
         """
         stops = (
             db.session.query(
-                model_utils.table_name(StopPoint).label("table"),
+                utils.table_name(StopPoint).label("table"),
                 StopPoint.atco_code.label("code"),
                 StopPoint.name.label("name"),
                 StopPoint.short_ind.label("short_ind"),
@@ -171,7 +171,7 @@ class Locality(model_utils.BaseModel):
             )
             stop_areas = (
                 db.session.query(
-                    model_utils.table_name(StopArea).label("table"),
+                    utils.table_name(StopArea).label("table"),
                     StopArea.code.label("code"),
                     StopArea.name.label("name"),
                     StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
@@ -190,7 +190,7 @@ class Locality(model_utils.BaseModel):
         return query.order_by("name", "short_ind").all()
 
 
-class StopArea(model_utils.BaseModel):
+class StopArea(utils.BaseModel):
     """ NaPTAN stop areas, eg bus interchanges. """
     __tablename__ = "stop_area"
 
@@ -229,7 +229,7 @@ class StopArea(model_utils.BaseModel):
         return db.cast(db.func.count(cls.code), db.Text)
 
 
-class StopPoint(model_utils.BaseModel):
+class StopPoint(utils.BaseModel):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = "stop_point"
 
@@ -292,7 +292,7 @@ class StopPoint(model_utils.BaseModel):
         return sorted(stops, key=lambda s: s[1])
 
 
-class Postcode(model_utils.BaseModel):
+class Postcode(utils.BaseModel):
     """ Postcodes with coordinates, derived from the NSPL data. """
     __tablename__ = "postcode"
     postcode_regex = r"^([a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?\s*\d{1}[a-zA-Z]{2})$"

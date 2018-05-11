@@ -61,7 +61,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
     """ Calls the populate functions for filling the static database with data.
     """
     from flask import current_app
-    from nextbus import materialized_views
+    from nextbus import models
     from nextbus.populate import (database_session, file_ops, modify, naptan,
                                   nptg, nspl)
 
@@ -121,7 +121,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
             if options["g"] or options["n"] or options["m"]:
                 with database_session():
                     current_app.logger.info("Refreshing FTS materialized view")
-                    materialized_views.FTS.refresh(concurrently=False)
+                    models.FTS.refresh(concurrently=False)
         except:
             # Restore DB if errors occur and raise
             if use_backup:

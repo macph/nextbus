@@ -9,10 +9,10 @@ import lxml.etree as et
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import database_session, logger, xml_as_dict
+from nextbus.populate import utils
 
 
-logger = logger.getChild("modify")
+logger = utils.logger.getChild("modify")
 POST_XML_PATH = os.path.join(ROOT_DIR, "nextbus/populate/modify.xml")
 
 
@@ -28,7 +28,7 @@ def _create_row(model, element):
         :returns: Number of rows created.
     """
     # Create each model in a similar way to DBEntries.add()
-    data = xml_as_dict(element)
+    data = utils.xml_as_dict(element)
     # Check if types match DateTime and use datetime parser
     for key in data:
         column = model.__table__.columns.get(key)
@@ -155,7 +155,7 @@ def modify_data(xml_file=None):
     create, delete, replace = 0, 0, 0
     for table in list_tables:
         model = getattr(models, table.get("model"))
-        with database_session():
+        with utils.database_session():
             for element in table.xpath("create"):
                 create += _create_row(model, element)
             for element in table.xpath("delete"):

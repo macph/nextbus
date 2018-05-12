@@ -12,7 +12,7 @@ import requests
 from flask import current_app
 
 from definitions import ROOT_DIR
-from nextbus.populate import logger
+from nextbus.populate import utils
 
 
 CHUNK_SIZE = 1024
@@ -53,7 +53,7 @@ def download(url, file_name=None, directory=None, **kwargs):
     name = _get_file_name(url, response) if file_name is None else file_name
     full_path = os.path.join(dir_path, name)
 
-    logger.info("Downloading %r from %r" % (name, url))
+    utils.logger.info("Downloading %r from %r" % (name, url))
     with open(full_path, 'wb') as out_file:
         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
             if chunk:
@@ -117,7 +117,7 @@ def backup_database(dump_file=None):
 
     with open(full_path, 'wb') as dump:
         process = subprocess.Popen(['pg_dump', '-Fc', db_uri], stdout=dump)
-        logger.info("Backing up database %r to %r" % (db_uri, file_path))
+        utils.logger.info("Backing up database %r to %r" % (db_uri, file_path))
         # Wait for process to finish
         process.communicate()
 
@@ -130,7 +130,8 @@ def restore_database(dump_file=None, error=False):
         :param error: Log a warning before starting backup
     """
     if error:
-        logger.warn("Errors occured; restoring database to previous state")
+        utils.logger.warn("Errors occured; restoring database to previous "
+                          "state")
 
     db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI')
     if db_uri is None:
@@ -141,6 +142,6 @@ def restore_database(dump_file=None, error=False):
 
     process = subprocess.Popen(['pg_restore', '-c', '-Fc', '-d', db_uri,
                                 full_path])
-    logger.info("Restoring database %r from %r" % (db_uri, file_path))
+    utils.logger.info("Restoring database %r from %r" % (db_uri, file_path))
     # Wait for process to finish
     process.communicate()

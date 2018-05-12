@@ -12,9 +12,7 @@ import pyparsing as pp
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import (DBEntries, database_session, file_ops,
-                              get_atco_codes, logger, merge_xml, NXB_EXT_URI,
-                              XSLTExtFunctions)
+from nextbus.populate import file_ops, utils
 
 
 NAPTAN_URL = r"http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx"
@@ -202,8 +200,8 @@ def _remove_stop_areas():
         .subquery()
     )
 
-    with database_session():
-        logger.info("Deleting orphaned stop areas")
+    with utils.database_session():
+        utils.logger.info("Deleting orphaned stop areas")
         query = (
             models.StopArea.query
             .filter(models.StopArea.code.in_(query_stop_area_del))
@@ -277,15 +275,17 @@ def _find_locality_min_distance(ambiguous_areas):
         # Check if associated localities are far away - may be wrong locality
         for k, dist in local.items():
             if dist > 2 * min_dist and dist > 1000:
-                logger.warning("Area %s: %.0f m away from %s" % (sa, dist, k))
+                utils.logger.warning("Area %s: %.0f m away from %s" %
+                                     (sa, dist, k))
 
         # Else, check if only one locality matches min distance and set it
         if len(local_min) == 1:
-            logger.debug("Area %s set to locality %s, dist %.0f m" %
-                         (sa, local_min[0], min_dist))
+            utils.logger.debug("Area %s set to locality %s, dist %.0f m" %
+                               (sa, local_min[0], min_dist))
             update_areas.append({"code": sa, "locality_ref": local_min[0]})
         else:
-            logger.warning("Area %s: ambiguous localities %s" % (sa, min_dist))
+            utils.logger.warning("Area %s: ambiguous localities %s" %
+                                 (sa, min_dist))
 
     return update_areas
 
@@ -313,8 +313,8 @@ def _set_stop_area_locality():
         add_areas = _find_locality_min_distance(ambiguous.keys())
         areas.extend(add_areas)
 
-    with database_session():
-        logger.info("Adding locality codes to stop areas")
+    with utils.database_session():
+        utils.logger.info("Adding locality codes to stop areas")
         db.session.bulk_update_mappings(models.StopArea, areas)
 
 
@@ -331,8 +331,8 @@ def _set_tram_admin_area():
         .as_scalar()
     )
 
-    with database_session():
-        logger.info("Updating tram stops with admin area ref")
+    with utils.database_session():
+        utils.logger.info("Updating tram stops with admin area ref")
         query = (
             db.session.query(models.StopPoint)
             .filter(models.StopPoint.admin_area_ref == tram_area)
@@ -354,12 +354,12 @@ def _set_tram_admin_area():
     )
     areas, ambiguous = _find_stop_area_mode(query.all(), "admin_area_ref")
 
-    with database_session():
-        logger.info("Adding locality codes to stop areas")
+    with utils.database_session():
+        utils.logger.info("Adding locality codes to stop areas")
         db.session.bulk_update_mappings(models.StopArea, areas)
 
     for area in ambiguous.items():
-        logger.warning("Area %s: ambiguous admin areas %s" % area)
+        utils.logger.warning("Area %s: ambiguous admin areas %s" % area)
 
 
 def _get_naptan_data(naptan_files, list_area_codes=None):
@@ -370,9 +370,9 @@ def _get_naptan_data(naptan_files, list_area_codes=None):
         :param list_area_codes: List of administrative area codes
         :returns: Transformed data as a XML ElementTree object
     """
-    naptan_data = merge_xml(naptan_files)
+    naptan_data = utils.merge_xml(naptan_files)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
-    ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
+    ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
 
     if list_area_codes:
         area_query = " or ".join(".='%s'" % a for a in list_area_codes)
@@ -385,7 +385,7 @@ def _get_naptan_data(naptan_files, list_area_codes=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += area_ref
 
-    logger.info("Applying XSLT to NaPTAN data")
+    utils.logger.info("Applying XSLT to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
 
     return new_data
@@ -399,7 +399,7 @@ def commit_naptan_data(archive=None, list_files=None):
         :param list_files: List of file paths for NaPTAN XML files.
     """
     downloaded = None
-    atco_codes = get_atco_codes()
+    atco_codes = utils.get_atco_codes()
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -431,7 +431,7 @@ def commit_naptan_data(archive=None, list_files=None):
 
     # Go through data and create objects for committing to database
     eval_stops = _NaPTANStops(local_codes)
-    naptan = DBEntries(new_path)
+    naptan = utils.DBEntries(new_path)
     naptan.add("StopAreas/StopArea", models.StopArea, eval_stops.parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
                eval_stops.parse_points, indices=("naptan_code",))
@@ -443,5 +443,6 @@ def commit_naptan_data(archive=None, list_files=None):
     _set_tram_admin_area()
 
     if downloaded is not None:
-        logger.info("New file %r downloaded; can be deleted" % downloaded)
-    logger.info("NaPTAN population done")
+        utils.logger.info("New file %r downloaded; can be deleted" %
+                          downloaded)
+    utils.logger.info("NaPTAN population done")

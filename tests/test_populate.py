@@ -9,8 +9,8 @@ import unittest
 import lxml.etree as et
 
 from nextbus import db, models
-from nextbus.populate import (DBEntries, ext_function_text, get_atco_codes,
-                              merge_xml, xml_as_dict, XSLTExtFunctions)
+from nextbus.populate.utils import (DBEntries, ext_function_text,
+    get_atco_codes, merge_xml, xml_as_dict, XSLTExtFunctions)
 import utils
 
 
@@ -174,7 +174,7 @@ class ExtensionTests(unittest.TestCase):
 class AtcoCodeTests(utils.BaseAppTests):
     """ Test the retrieval of ATCO codes from the config """
     def test_default_codes(self):
-        self.app.config["ATCO_CODES"] = "all"
+        self.app.config["ATCO_CODES"] = None
         self.assertEqual(get_atco_codes(), None)
 
     def test_yorkshire_codes(self):

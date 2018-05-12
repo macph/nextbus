@@ -7,7 +7,7 @@ import io
 import lxml.etree as et
 
 from nextbus import db, models
-from nextbus.populate import database_session
+from nextbus.populate.utils import database_session
 from nextbus.populate.modify import (_create_row, _delete_row, _replace_row,
                                      modify_data)
 import utils

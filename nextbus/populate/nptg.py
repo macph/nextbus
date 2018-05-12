@@ -8,10 +8,7 @@ import lxml.etree as et
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import (DBEntries, database_session, file_ops,
-                              get_atco_codes, logger, merge_xml, NXB_EXT_URI,
-                              XSLTExtFunctions)
-
+from nextbus.populate import file_ops, utils
 
 NPTG_URL = r"http://naptan.app.dft.gov.uk/datarequest/nptg.ashx"
 NPTG_XSLT = r"nextbus/populate/nptg.xslt"
@@ -47,8 +44,8 @@ def _remove_districts():
         .subquery()
     )
 
-    with database_session():
-        logger.info("Deleting orphaned districts")
+    with utils.database_session():
+        utils.logger.info("Deleting orphaned districts")
         query = (
             models.District.query
             .filter(models.District.code.in_(query_districts))
@@ -66,15 +63,15 @@ def _get_nptg_data(nptg_files, atco_codes=None):
         if set to None
         :returns: Transformed data as a XML ElementTree object
     """
-    logger.info("Opening NPTG files")
-    data = merge_xml(nptg_files)
+    utils.logger.info("Opening NPTG files")
+    data = utils.merge_xml(nptg_files)
     names = {"n": data.xpath("namespace-uri(.)")}
     transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
-    ext = et.Extension(XSLTExtFunctions(), None, ns=NXB_EXT_URI)
+    ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
-        logger.info("Checking ATCO areas")
+        utils.logger.info("Checking ATCO areas")
         admin_areas = []
         invalid_codes = []
         for code in atco_codes:
@@ -115,7 +112,7 @@ def _get_nptg_data(nptg_files, atco_codes=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += ref
 
-    logger.info("Applying XSLT to NPTG data")
+    utils.logger.info("Applying XSLT to NPTG data")
     new_data = data.xslt(transform, extensions=ext)
 
     return new_data
@@ -129,7 +126,7 @@ def commit_nptg_data(archive=None, list_files=None):
         :param list_files: List of file paths for NPTG XML files.
     """
     downloaded = None
-    atco_codes = get_atco_codes()
+    atco_codes = utils.get_atco_codes()
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -146,7 +143,7 @@ def commit_nptg_data(archive=None, list_files=None):
     new_data.write_output(new_path)
 
     # Go through data and create objects for committing to database
-    nptg = DBEntries(new_path)
+    nptg = utils.DBEntries(new_path)
     nptg.add("Regions/Region", models.Region, func=_add_modified_date)
     nptg.add("AdminAreas/AdminArea", models.AdminArea, func=_add_modified_date)
     nptg.add("Districts/District", models.District, func=_add_modified_date)
@@ -157,5 +154,5 @@ def commit_nptg_data(archive=None, list_files=None):
     _remove_districts()
 
     if downloaded is not None:
-        logger.info("New file %r downloaded; can be deleted" % downloaded)
-    logger.info("NPTG population done")
+        utils.logger.info("New file %r downloaded; can be deleted" % downloaded)
+    utils.logger.info("NPTG population done")

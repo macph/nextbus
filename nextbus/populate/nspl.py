@@ -7,7 +7,7 @@ from flask import current_app
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate import database_session, file_ops, logger
+from nextbus.populate import file_ops, utils
 
 
 NSPL_API = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
@@ -105,13 +105,13 @@ def commit_nspl_data(file_=None):
     else:
         nspl_path = file_
 
-    logger.info("Opening file %r" % nspl_path)
+    utils.logger.info("Opening file %r" % nspl_path)
     with open(nspl_path, "r") as json_file:
         data = json.load(json_file)
 
     list_postcodes = []
     local_auth = _get_dict_local_auth(atco_codes)
-    logger.info("Parsing %d postcodes" % len(data))
+    utils.logger.info("Parsing %d postcodes" % len(data))
     for row in data:
         local_authority = local_auth[row["local_authority_code"]]
         dict_postcode = {
@@ -126,13 +126,13 @@ def commit_nspl_data(file_=None):
         }
         list_postcodes.append(dict_postcode)
 
-    with database_session():
-        logger.info("Deleting previous rows")
+    with utils.database_session():
+        utils.logger.info("Deleting previous rows")
         db.session.execute(models.Postcode.__table__.delete())
-        logger.info("Adding %d %s objects to database" %
+        utils.logger.info("Adding %d %s objects to database" %
                     (len(list_postcodes), models.Postcode.__name__))
         db.session.execute(models.Postcode.__table__.insert(), list_postcodes)
 
     if downloaded_file is not None:
-        logger.info("New file %r downloaded; can be deleted" % downloaded_file)
-    logger.info("NSPL population done.")
+        utils.logger.info("New file %r downloaded; can be deleted" % downloaded_file)
+    utils.logger.info("NSPL population done.")

@@ -61,9 +61,8 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
     """ Calls the populate functions for filling the static database with data.
     """
     from flask import current_app
-    from nextbus import models
-    from nextbus.populate import (database_session, file_ops, modify, naptan,
-                                  nptg, nspl)
+    from nextbus import models, populate
+    from nextbus.populate import file_ops, utils
 
     errors = False
     use_backup = False
@@ -105,27 +104,21 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
         # Messages already printed; return to shell
         return
     elif any(options.values()):
-        # Carry out at least one option, back up beforehand if needed
         if use_backup:
+            # Carry out at least one option, back up beforehand if needed
             file_ops.backup_database(backup_f)
-        try:
-            if options["g"]:
-                nptg.commit_nptg_data(archive=nptg_file)
-            if options["n"]:
-                naptan.commit_naptan_data(archive=naptan_file)
-            if options["p"]:
-                nspl.commit_nspl_data(file_=nspl_f)
-            if options["m"]:
-                modify.modify_data()
-            # Update view after population
-            if options["g"] or options["n"] or options["m"]:
-                with database_session():
-                    current_app.logger.info("Refreshing FTS materialized view")
-                    models.FTS.refresh(concurrently=False)
-        except:
-            # Restore DB if errors occur and raise
-            if use_backup:
-                file_ops.restore_database(backup_f, error=True)
-            raise
+        if options["g"]:
+            populate.commit_nptg_data(archive=nptg_file)
+        if options["n"]:
+            populate.commit_naptan_data(archive=naptan_file)
+        if options["p"]:
+            populate.commit_nspl_data(file_=nspl_f)
+        if options["m"]:
+            populate.modify_data()
+        # Update view after population
+        if options["g"] or options["n"] or options["m"]:
+            with utils.database_session():
+                current_app.logger.info("Refreshing FTS materialized view")
+                models.FTS.refresh(concurrently=False)
     else:
         click.echo(ctx.get_help())

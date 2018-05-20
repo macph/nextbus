@@ -29,59 +29,40 @@
     <p>{{ error }}</p>
 </div>
 {% else %}
-<div class="select-area-list" id="dFilterAreas"></div>
-{% if results.get('area') %}
-<h2 id="hArea">Areas</h2>
-<div class="list list-places-search" id="dAreas">
-    {% for area in results['area'] %}
-    {% if area.table_name == 'admin_area' %}
-    <a class="item-place item-area-search" data-admin-area="{{ area.admin_area_name }}" href="{{ url_for('page.list_in_area', area_code=area.code) }}">{{ area.name }}</a>
-    {% elif area.table_name == 'district' %}
-    <a class="item-place item-area-search" data-admin-area="{{ area.admin_area_name }}" href="{{ url_for('page.list_in_district', district_code=area.code) }}">{{ area.name }}, {{ area.admin_area_name }}</a>
-    {% endif %}
-    {% endfor %}
-</div>
-{% endif %}
-{% if results.get('locality') %}
-<h2 id="hPlace">Places</h2>
-{% if local_limit %}
-<p>Extra results for '{{ query }}' truncated. Try narrowing your search - for example, you can add the name of the area to the query.</p>
-{% endif %}
-<div class="list list-places-search" id="dPlace">
-    {% for locality in results['locality'] %}
-    <a class="item-place item-place-search" data-admin-area="{{ locality.admin_area_name }}" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}, {{ locality.district_name if locality.district_name else locality.admin_area_name }}</a>
-    {% endfor %}
-</div>
-{% endif %}
-{% if results.get('stop') %}
-<h2 id="hStop">Stops</h2>
-{% if stops_limit %}
-<p>Extra results for '{{ query }}' truncated. Try narrowing your search - for example, you can add the name of the area to the query.</p>
-{% endif %}
-<div class="list list-stops-search" id="dStops">
-    {% for stop in results['stop'] %}
-    {% if stop.table_name == 'stop_point' %}
+<h2>Results</h2>
+<p>{{ types }}</p>
+<p>{{ areas }}</p>
+{% if results.items %}
+<div class="list list-places-search">
+    {% for r in results.items %}
+    {% if r.table_name == 'region' %}
+    <a class="item-place item-area-search" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+    {% elif r.table_name == 'admin_area' %}
+    <a class="item-place item-area-search" href="{{ url_for('page.list_in_area', area_code=r.code) }}">{{ r.name }}</a>
+    {% elif r.table_name == 'district' %}
+    <a class="item-place item-area-search" href="{{ url_for('page.list_in_district', district_code=r.code) }}">{{ r.name }}, {{ r.admin_area_name }}</a>
+    {% elif r.table_name == 'locality' %}
+    <a class="item-place item-place-search" href="{{ url_for('page.list_in_locality', locality_code=r.code) }}">{{ r.name }}, {{ r.district_name if r.district_name else r.admin_area_name }}</a>
+    {% elif r.table_name == 'stop_point' %}
     {% set sep = joiner() %}
-    <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_atco', atco_code=stop.code) }}">
-        {{ f.print_stop_indicator(stop) }}
-        <div class="stop-label">{{ stop.name }}</div>
-        <div class="stop-label stop-description">{% if stop.street %}{{ sep() }}{{ stop.street }}{% endif %}{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{{ stop.district_name if stop.district_name else stop.admin_area_name }}</div>
+    <a class="item-stop item-stop-search" href="{{ url_for('page.stop_atco', atco_code=r.code) }}">
+        {{ f.print_stop_indicator(r) }}
+        <div class="stop-label">{{ r.name }}</div>
+        <div class="stop-label stop-description">{% if r.street %}{{ sep() }}{{ r.street }}{% endif %}{% if r.locality_name %}{{ sep() }}{{ r.locality_name }}{% endif %}{{ sep() }}{{ r.district_name if r.district_name else r.admin_area_name }}</div>
     </a>
-    {% elif stop.table_name == 'stop_area' %}
+    {% elif r.table_name == 'stop_area' %}
     {% set sep = joiner() %}
-    <a class="item-stop item-stop-search" data-admin-area="{{ stop.admin_area_name }}" href="{{ url_for('page.stop_area', stop_area_code=stop.code) }}">
-        {{ f.print_stop_indicator(stop, area=true) }}
-        <div class="stop-label">{{ stop.name }}</div>
-        <div class="stop-label stop-description">{% if stop.locality_name %}{{ sep() }}{{ stop.locality_name }}{% endif %}{{ sep() }}{% if stop.district_name %}{{ stop.district_name }}{% else %}{{ stop.admin_area_name }}{% endif %}</div>
+    <a class="item-stop item-stop-search" href="{{ url_for('page.stop_area', stop_area_code=r.code) }}">
+        {{ f.print_stop_indicator(r, area=true) }}
+        <div class="stop-label">{{ r.name }}</div>
+        <div class="stop-label stop-description">{% if r.locality_name %}{{ sep() }}{{ r.locality_name }}{% endif %}{{ sep() }}{% if r.district_name %}{{ r.district_name }}{% else %}{{ r.admin_area_name }}{% endif %}</div>
     </a>
     {% endif %}
     {% endfor %}
 </div>
+{% else %}
+<p>No results matching your criteria can be found.</p>
 {% endif %}
-<script>
-    var fl = new SearchFilterList();
-    fl.init();
-</script>
 {{ f.resize_indicator("stop-ind") }}
 {{ f.resize_indicator("stop-area-ind", true) }}
 {% endif %}

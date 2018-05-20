@@ -258,6 +258,12 @@ a.item-place {
     line-height: 1em;
 }
 
+a.item-area-search,
+a.item-place-search {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
 a.item-stop {
     display: grid;
     grid-template-columns: 36px 1fr;

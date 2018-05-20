@@ -133,7 +133,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         showButton.textContent = "show";
         showButton.style.display = "none";
 
-        createMap(mapDiv, '{{ config.get("MAPBOX_APP_TOKEN") }}', {{ geojson|tojson }})
+        createMap(mapDiv, '{{ config.get("MAPBOX_APP_TOKEN") }}', {{ stop.to_geojson()|tojson }})
         resizeInd("indicator-marker");
     }
 

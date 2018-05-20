@@ -4,7 +4,7 @@ Tests for views.
 import copy
 
 from nextbus import models
-from nextbus.views import _stop_geojson, _list_geojson
+from nextbus.views import _list_geojson
 import utils
 
 
@@ -29,7 +29,7 @@ class GeoJsonTests(utils.BaseAppTests):
 
     def test_single_stop(self):
         stop = models.StopPoint(**utils.STOP_POINT)
-        self.assertEqual(_stop_geojson(stop), self.EXPECTED)
+        self.assertEqual(stop.to_geojson(), self.EXPECTED)
 
     def test_two_stops(self):
         second = utils.STOP_POINT.copy()

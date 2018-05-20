@@ -3,6 +3,7 @@ Views for the nextbus website.
 """
 import collections
 import re
+import string
 
 from requests import HTTPError
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
@@ -12,14 +13,14 @@ from nextbus import db, forms, location, models, search, tapi
 
 
 MIN_GROUPED = 72
-MAX_DISTANCE = 500
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
                         r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
 
 
 api = Blueprint("api", __name__, template_folder="templates")
-page_search = Blueprint("page", __name__, template_folder="templates")
-page_no_search = Blueprint("page_ns", __name__, template_folder="templates")
+page = Blueprint("page", __name__, template_folder="templates")
+# Separate blueprint for pages with no search function
+page_ns = Blueprint("page_ns", __name__, template_folder="templates")
 
 
 class EntityNotFound(Exception):
@@ -27,15 +28,16 @@ class EntityNotFound(Exception):
     pass
 
 
-def _group_objects(list_places, attr=None, key=None, default=None):
+def _group_objects(list_, attr=None, key=None, default=None, minimum=None):
     """ Groups places or stops by the first letter of their names, or under a
         single key "A-Z" if the total is less than MIN_GROUPED.
 
-        :param list_places: list of objects.
+        :param list_: list of objects.
         :param attr: First letter of attribute to group by.
         :param key: First letter of dict key to group by.
         :param default: Group name to give for all objects in case limit is not
         reached; if None the generic 'A-Z' is used.
+        :param minimum: Minimum number of items in list before they are grouped
         :returns: Dictionary of objects.
         :raises AttributeError: Either an attribute or a key must be specified.
     """
@@ -44,62 +46,38 @@ def _group_objects(list_places, attr=None, key=None, default=None):
 
     name = "A-Z" if default is None else default
 
-    groups = {}
-    if list_places and len(list_places) > MIN_GROUPED:
+    if list_ and (minimum is None or len(list_) > minimum):
         groups = collections.defaultdict(list)
-        for item in list_places:
+        for item in list_:
             value = getattr(item, attr) if attr is not None else item[key]
-            groups[value[0].upper()].append(item)
-    elif list_places:
-        groups = {name: list_places}
+            letter = value[0].upper()
+            if letter not in string.ascii_uppercase:
+                groups["0-9"].append(item)
+            else:
+                groups[letter].append(item)
+    elif list_:
+        groups = {name: list_}
+    else:
+        groups = {}
 
     return groups
-
-
-def _stop_geojson(stop):
-    """ Converts a stop point to GeoJSON.
-
-        :param stop: Either a StopPoint instances or a tuple with matching
-        attributes.
-        :returns: JSON-serializable dict.
-    """
-    indicator = " (%s)" % stop.indicator if bool(stop.indicator) else ""
-    geojson = {
-        "type": "Feature",
-        "geometry": {
-            "type": "Point",
-            "coordinates": [stop.longitude, stop.latitude]
-        },
-        "properties": {
-            "atco_code": stop.atco_code,
-            "naptan_code": stop.naptan_code,
-            "title": stop.name + indicator,
-            "name": stop.name,
-            "indicator": stop.short_ind,
-            "admin_area_ref": stop.admin_area_ref,
-            "bearing": stop.bearing
-        }
-    }
-
-    return geojson
 
 
 def _list_geojson(list_stops):
     """ Creates a list of stop data in GeoJSON format.
 
-        :param list_stops: List of stops as either StopPoint instances or
-        tuples with matching attributes.
+        :param list_stops: List of StopPoint objects.
         :returns: JSON-serializable dict.
     """
     geojson = {
         "type": "FeatureCollection",
-        "features": [_stop_geojson(s) for s in list_stops]
+        "features": [s.to_geojson() for s in list_stops]
     }
 
     return geojson
 
 
-@page_search.before_request
+@page.before_request
 def add_search():
     """ Search form enabled in every view within blueprint by adding the form
         object to Flask's ``g``.
@@ -111,17 +89,15 @@ def add_search():
             result = search.search_code(query)
         except search.PostcodeException:
             # Pass along to search results page to process
-            return redirect(url_for(".search_results",
-                                    query=query.replace(" ", "+")))
+            query_url = query.replace(" ", "+")
+            return redirect(url_for(".search_results", query=query_url))
 
         if result.is_stop():
-            return redirect(url_for(".stop_atco",
-                                    atco_code=result.stop.atco_code))
+            stop_code = result.stop.atco_code
+            return redirect(url_for(".stop_atco", atco_code=stop_code))
         elif result.is_postcode():
-            return redirect(url_for(
-                ".list_near_postcode",
-                code=result.postcode.text.replace(" ", "+")
-            ))
+            postcode_url = result.postcode.text.replace(" ", "+")
+            return redirect(url_for(".list_near_postcode", code=postcode_url))
         else:
             return redirect(url_for(".search_results",
                                     query=query.replace(" ", "+")))
@@ -129,19 +105,19 @@ def add_search():
         return
 
 
-@page_search.route("/", methods=["GET", "POST"])
+@page.route("/", methods=["GET", "POST"])
 def index():
     """ The home page. """
     return render_template("index.html")
 
 
-@page_no_search.route("/about")
+@page_ns.route("/about")
 def about():
     """ The about page. """
     return render_template("about.html")
 
 
-@page_search.route("/search/<query>", methods=["GET", "POST"])
+@page.route("/search/<query>", methods=["GET", "POST"])
 def search_results(query):
     """ Shows a list of search results.
 
@@ -158,71 +134,54 @@ def search_results(query):
             "longer phrase."
         )
 
-    # Check all 'type' attributes, if none matches set all categories to True
-    types = ["area", "place", "stop"]
-    categories = {t: t in request.args.getlist("type") for t in types}
-    if not any(v for v in categories.values()):
-        categories = {c: True for c in types}
+    categories = {}
+
+    types = {"area", "place", "stop"}
+    types_valid = types & set(request.args.getlist("type"))
+    categories["types"] = types_valid if types_valid else None
 
     # Filter by admin areas
     if "area" in request.args:
         categories["admin_areas"] = request.args.getlist("area")
 
     try:
-        result = search.search_full(s_query, **categories)
+        page_number = int(request.args.get("page", 1))
+        categories["page"] = 1 if page_number < 1 else page_number
+    except TypeError:
+        categories["page"] = 1
+
+    try:
+        result = search.search_all(s_query, **categories)
     except ValueError as err:
         current_app.logger.error("Query %r resulted in an parsing error: %s"
                                  % (query, err), exc_info=True)
-        return render_template(
-            "search.html", query=s_query, error="There was a problem reading "
-            "your search query."
-        )
+        return render_template("search.html", query=s_query, error="error")
     except search.PostcodeException as err:
         current_app.logger.debug(str(err))
-        return render_template(
-            "search.html", query=s_query, error="Postcode '%s' was not found; "
-            "it may not exist or lies outside the area this website covers."
-            % err.postcode
-        )
+        return render_template("search.html", query=s_query, error="postcode",
+                               postcode=err.postcode)
 
     # Redirect to postcode or stop if one was found
     if result.is_stop():
-        return redirect(url_for(".stop_atco",
-                                atco_code=result.stop.atco_code))
-
+        return redirect(url_for(".stop_atco", atco_code=result.stop.atco_code))
     elif result.is_postcode():
-        return redirect(url_for(
-            ".list_near_postcode",
-            code=result.postcode.text.replace(" ", "+")
-        ))
-
+        postcode_url = result.postcode.text.replace(" ", "+")
+        return redirect(url_for(".list_near_postcode", code=postcode_url))
     elif result.is_list():
-        # A dict of matching results. Truncate results list if they get
-        # too long
-        results = result.list
-        stops_limit = len(results.get("stop", [])) > search.STOPS_LIMIT
-        local_limit = len(results.get("locality", [])) > search.LOCAL_LIMIT
-        if stops_limit:
-            results["stop"] = results["stop"][:search.STOPS_LIMIT]
-        if local_limit:
-            results["locality"] = results["locality"][:search.LOCAL_LIMIT]
-
-        return render_template(
-            "search.html", query=s_query, results=results,
-            stops_limit=stops_limit, local_limit=local_limit
-        )
-
+        # Recalculate to get the result types and areas to filter with
+        types, areas = search.filter_args(query)
+        return render_template("search.html", query=s_query,
+                               results=result.list, types=types, areas=areas)
     else:
-        return render_template(
-            "search.html", query=s_query, error="No results were found."
-        )
+        return render_template("search.html", query=s_query, error="not_found")
 
 
-@page_search.route("/list/", methods=["GET", "POST"])
+@page.route("/list/", methods=["GET", "POST"])
 def list_regions():
     """ Shows list of all regions. """
     regions = (
-        models.Region.query.filter(models.Region.code != "GB")
+        models.Region.query
+        .filter(models.Region.code != "GB")
         .order_by("name")
         .all()
     )
@@ -230,7 +189,7 @@ def list_regions():
     return render_template("all_regions.html", regions=regions)
 
 
-@page_search.route("/list/region/<region_code>", methods=["GET", "POST"])
+@page.route("/list/region/<region_code>", methods=["GET", "POST"])
 def list_in_region(region_code):
     """ Shows list of administrative areas and districts in a region.
         Administrative areas with districts are excluded in favour of listing
@@ -249,7 +208,7 @@ def list_in_region(region_code):
                            areas=region.list_areas())
 
 
-@page_search.route("/list/area/<area_code>", methods=["GET", "POST"])
+@page.route("/list/area/<area_code>", methods=["GET", "POST"])
 def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
@@ -266,14 +225,14 @@ def list_in_area(area_code):
     # Show list of localities with stops if districts do not exist
     if not area.districts:
         group_local = _group_objects(area.list_localities(), attr="name",
-                                     default="Places")
+                                     default="Places", minimum=MIN_GROUPED)
     else:
         group_local = {}
 
     return render_template("area.html", area=area, localities=group_local)
 
 
-@page_search.route("/list/district/<district_code>", methods=["GET", "POST"])
+@page.route("/list/district/<district_code>", methods=["GET", "POST"])
 def list_in_district(district_code):
     """ Shows list of localities in district. """
     district = (
@@ -288,13 +247,13 @@ def list_in_district(district_code):
                              % district_code)
 
     group_local = _group_objects(district.list_localities(), attr="name",
-                                 default="Places")
+                                 default="Places", minimum=MIN_GROUPED)
 
     return render_template("district.html", district=district,
                            localities=group_local)
 
 
-@page_search.route("/list/place/<locality_code>", methods=["GET", "POST"])
+@page.route("/list/place/<locality_code>", methods=["GET", "POST"])
 def list_in_locality(locality_code):
     """ Shows stops in locality.
 
@@ -314,21 +273,20 @@ def list_in_locality(locality_code):
         raise EntityNotFound("Place with code '%s' does not exist."
                              % locality_code)
     if locality.code != locality_code:
-        return redirect(url_for(
-            ".list_in_locality", locality_code=locality.code
-        ), code=301)
+        code = locality.code
+        return redirect(url_for(".list_in_locality", locality_code=code),
+                        code=301)
 
-    if request.args.get("group") == "true":
-        stops = locality.list_stops(group_areas=True)
-    else:
-        stops = locality.list_stops(group_areas=False)
+    group = request.args.get("group") == "true"
+    stops = locality.list_stops(group_areas=group)
 
-    stops = _group_objects(stops, attr="name", default="Stops")
+    stops = _group_objects(stops, attr="name", default="Stops",
+                           minimum=MIN_GROUPED)
 
     return render_template("place.html", locality=locality, stops=stops)
 
 
-@page_search.route("/near/postcode/<code>", methods=["GET", "POST"])
+@page.route("/near/postcode/<code>", methods=["GET", "POST"])
 def list_near_postcode(code):
     """ Show stops within range of postcode. """
     str_postcode = code.replace("+", " ")
@@ -337,21 +295,20 @@ def list_near_postcode(code):
 
     if postcode is None:
         raise EntityNotFound("Postcode '%s' does not exist." % postcode)
-    else:
-        if postcode.text != str_postcode:
-            # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
-            return redirect(url_for(
-                ".list_near_postcode", code=postcode.text.replace(" ", "+")
-            ), code=301)
+    if postcode.text != str_postcode:
+        # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
+        postcode_url = postcode.text.replace(" ", "+")
+        return redirect(url_for(".list_near_postcode", code=postcode_url),
+                        code=301)
 
     stops = postcode.stops_in_range()
+    geojson = _list_geojson([s[0] for s in stops])
 
-    return render_template("postcode.html", postcode=postcode,
-                           data=_list_geojson([s[0] for s in stops]),
+    return render_template("postcode.html", postcode=postcode, data=geojson,
                            list_stops=stops)
 
 
-@page_search.route("/near/location/<lat_long>", methods=["GET", "POST"])
+@page.route("/near/location/<lat_long>", methods=["GET", "POST"])
 def list_near_location(lat_long):
     """ Show stops within range of a GPS coordinate. """
     sr_m = FIND_COORD.match(lat_long)
@@ -366,13 +323,13 @@ def list_near_location(lat_long):
 
     stops = models.StopPoint.in_range(coord)
     str_coord = location.format_dms(*coord)
+    geojson = _list_geojson([s[0] for s in stops])
 
     return render_template("location.html", coord=coord, str_coord=str_coord,
-                           data=_list_geojson([s[0] for s in stops]),
-                           list_stops=stops)
+                           data=geojson, list_stops=stops)
 
 
-@page_search.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
+@page.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
     area = (
@@ -394,7 +351,7 @@ def stop_area(stop_area_code):
                            data=_list_geojson(area.stop_points))
 
 
-@page_search.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
+@page.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
     stop = (
@@ -414,11 +371,13 @@ def stop_naptan(naptan_code):
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop,
-                           geojson=_stop_geojson(stop))
+    static = request.args.get("static") == "true"
+    data = tapi.get_live_data(stop.atco_code) if static else None
+
+    return render_template("stop.html", stop=stop, live_data=data)
 
 
-@page_search.route("/stop/atco/<atco_code>", methods=["GET", "POST"])
+@page.route("/stop/atco/<atco_code>", methods=["GET", "POST"])
 def stop_atco(atco_code):
     """ Shows stop with ATCO code. """
     stop = (
@@ -437,8 +396,10 @@ def stop_atco(atco_code):
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop,
-                           geojson=_stop_geojson(stop))
+    static = request.args.get("static") == "true"
+    data = tapi.get_live_data(stop.atco_code) if static else None
+
+    return render_template("stop.html", stop=stop, live_data=data)
 
 
 @api.route("/stop/get", methods=["POST"])
@@ -467,8 +428,9 @@ def stop_get_times():
     return jsonify(times)
 
 
-@page_no_search.app_errorhandler(404)
-@page_no_search.app_errorhandler(EntityNotFound)
+
+@page_ns.app_errorhandler(404)
+@page_ns.app_errorhandler(EntityNotFound)
 def not_found_msg(error):
     """ Returned in case of an invalid URL, with message. Can be called with
         EntityNotFound, eg if the correct URL is used but the wrong value is
@@ -482,7 +444,7 @@ def not_found_msg(error):
     return render_template("not_found.html", message=message), 404
 
 
-@page_no_search.app_errorhandler(500)
+@page_ns.app_errorhandler(500)
 def error_msg(error):
     """ Returned in case an internal server error (500) occurs, with message.
         Note that this page does not appear in debug mode.

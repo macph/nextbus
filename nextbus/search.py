@@ -12,8 +12,8 @@ from nextbus import db, models, ts_parser
 
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
-LOCAL_LIMIT = 32
-STOPS_LIMIT = 256
+NAMES_ONLY = False
+PAGE_LENGTH = 50
 
 
 class SearchResult(object):
@@ -73,6 +73,11 @@ class PostcodeException(Exception):
 def search_code(query):
     """ Queries stop points and postcodes to find an exact match, returning
         the model object, or None if no match is found.
+
+        :param query: Query text returned from search form.
+        :returns: SearchResult object with stop or postcode.
+        :raises PostcodeException: if a query was identified as a postcode but
+        it does not exist.
     """
     postcode = REGEX_POSTCODE.match(query)
     if postcode:
@@ -103,48 +108,44 @@ def search_code(query):
     return found
 
 
-def search_full(query, area=True, place=True, stop=True, admin_areas=None):
+def search_all(query, types=None, admin_areas=None, page=1):
     """ Searches for stops, postcodes and places, returning full data including
         area information.
 
         :param query: Query text returned from search form.
-        :returns: SearchResult object with stop, postcode or list of results
-        :raises ValueError: if a query without any words was submitted.
-        :raises PostcodeException: if a query was identified as a postcode but
-        it does not exist.
+        :param types: Iterable with values 'area', 'place' or 'stop'.
+        :param admin_areas: Filters by administrative area.
+        :param page: Page number for results.
+        :returns: SearchResult object with stop, postcode or paginated list of
+        results.
     """
-    if not "".join(query.split()):
-        raise ValueError("No suitable query was entered.")
-
-    # Search stop points and postcodes for an exact match
     matching = search_code(query)
     if matching:
         result = matching
     else:
         # Else: do a full text search - format query string first
         parsed = ts_parser(query)
-        list_results = models.FTS.search(parsed, area, place, stop,
-                                         admin_areas, names_only=False).all()
+        res = models.FTS.search(parsed, types, admin_areas, NAMES_ONLY)
+        page = res.paginate(page, per_page=PAGE_LENGTH, error_out=False)
 
-        dict_results = collections.defaultdict(list)
-        for row in list_results:
-            if row.table_name in ["admin_area", "district"]:
-                dict_results["area"].append(row)
-            elif row.table_name in ["stop_area", "stop_point"]:
-                dict_results["stop"].append(row)
-            elif row.table_name == "locality":
-                dict_results["locality"].append(row)
-
-        count = {k: len(v) for k, v in dict_results.items()}
+        count = page.total
         current_app.logger.info(
-            "Search query %r parsed as %r and returned results %s" %
-            (query, parsed.to_string(), count)
+            "Search query %r parsed as %r and returned %s result%s" %
+            (query, parsed.to_string(), count, "" if count == 1 else "s")
         )
-
-        # Results were already ordered in SQL query; no need to sort lists
-        if dict_results:
-            result = SearchResult(list_=dict_results)
-        else:
-            result = SearchResult()
+        result = SearchResult(list_=page if page.items else None)
 
     return result
+
+
+def filter_args(query):
+    """ Find all matching result types and admin areas to be filtered.
+
+    :param query: Query text returned from search form.
+    :returns: Tuple of two lists: the result types and administrative areas,
+    with the latter a list of tuples.
+    """
+    parsed = ts_parser(query)
+    types, args = models.FTS.matching_types(parsed, NAMES_ONLY)
+
+    return types, args

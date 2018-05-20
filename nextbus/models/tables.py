@@ -291,6 +291,31 @@ class StopPoint(utils.BaseModel):
 
         return sorted(stops, key=lambda s: s[1])
 
+    def to_geojson(self):
+        """ Outputs stop point data in GeoJSON format.
+
+            :returns: JSON-serializable dict.
+        """
+        title_ind = " (%s)" % self.indicator if self.indicator else ""
+        geojson = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [self.longitude, self.latitude]
+            },
+            "properties": {
+                "atco_code": self.atco_code,
+                "naptan_code": self.naptan_code,
+                "title": self.name + title_ind,
+                "name": self.name,
+                "indicator": self.short_ind,
+                "admin_area_ref": self.admin_area_ref,
+                "bearing": self.bearing
+            }
+        }
+
+        return geojson
+
 
 class Postcode(utils.BaseModel):
     """ Postcodes with coordinates, derived from the NSPL data. """

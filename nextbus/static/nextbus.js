@@ -7,27 +7,170 @@ const REFRESH = true;
 const TIME_LIMIT = 60;
 
 /**
- * Retrieves location.
- * @param {string} elementId - element ID to output to
+ * Sets up element to activate geolocation and direct to correct page
+ * @param {string} LocationURL URL to direct location requests to
+ * @param {HTMLElement} activateElement Element to activate
+ * @param {HTMLElement} errorElement Optional element to display message in case it does not work
  */
-function getLocation(elementId) {
-    var output = document.getElementById(elementId);
+function addGeolocation(LocationURL, activateElement, errorElement) {
     if (!navigator.geolocation) {
-        console.log("Browser does not support geolocation.");
-        output.textContent = "Geolocation not supported; try searching by postcode.";
+        console.log('Browser does not support geolocation.');
         return;
     }
-    var success = function(position) {
-        var lat = position.coords.latitude.toFixed(6);
-        var long = position.coords.longitude.toFixed(6);
-        output.textContent = `Your position is ${lat}, ${long}. I know where you live now.`;
+
+    let success = function(position) {
+        let latitude = position.coords.latitude.toFixed(6);
+        let longitude = position.coords.longitude.toFixed(6);
+        console.log('Current coordinates (' + latitude + ', ' + longitude + ')');
+        // Direct to list of stops
+        window.location.href = LocationURL + latitude + ',' + longitude;
     }
-    var error = function(err) {
-        console.log("Geolocation error: " + err);
-        output.textContent = "Unable to retrieve your location.";
+    let error = function(err) {
+        console.log('Geolocation error: ' + err);
+        if (typeof errorElement !== 'undefined') {
+            output.textContent = 'Unable to retrieve your location. ' +
+                'Try searching with a postcode.';
+        }
     }
-    navigator.geolocation.getCurrentPosition(success, error);
+
+    activateElement.addEventListener('click', function(event) {
+        navigator.geolocation.getCurrentPosition(success, error);
+    });
 }
+
+
+/**
+ * Checks transition ending events to see which one is applicable, from Modernizr
+ * @param {HTMLElement} element
+ * @returns {string}
+ */
+function getTransitionEnd(element) {
+    let transitions = {
+        'transition': 'transitionend',
+        'OTransition': 'oTransitionEnd',
+        'MozTransition': 'transitionend',
+        'WebkitTransition': 'webkitTransitionEnd'
+    };
+    for (let t in transitions) {
+        if (transitions.hasOwnProperty(t) && element.style[t] !== undefined) {
+        return transitions[t];
+        }
+    }
+}
+
+/**
+ * Adds events for showing search bar for most pages
+ */
+function addSearchBarEvents() {
+    let barHidden = true;
+    let searchButton = document.getElementById('header-search-button');
+    let searchButtonText = searchButton.querySelector('span');
+    let searchBar = document.getElementById('header-search-bar');
+    let searchBarInput = document.getElementById('search-form');
+    let searchBarTransitionEnd = getTransitionEnd(searchBar)
+    
+    let transitionCallback = function() {
+        searchBar.removeEventListener(searchBarTransitionEnd, transitionCallback);
+        searchBarInput.focus();
+    }
+  
+    let openSearchBar = function() {
+        searchBar.classList.add('search-bar--open');
+        searchButtonText.textContent = 'Close';
+        searchButton.blur();
+        barHidden = false;
+        searchBar.addEventListener(searchBarTransitionEnd, transitionCallback);
+    }
+  
+    let closeSearchBar = function() {
+        searchBar.classList.remove('search-bar--open');
+        searchButtonText.textContent = 'Search';
+        searchBarInput.blur();
+        barHidden = true;
+    }
+  
+    searchButton.addEventListener('click', function() {
+        if (barHidden) {
+            openSearchBar();
+        } else {
+            closeSearchBar();
+        }
+    });
+  
+    document.addEventListener('click', function(event) {
+        let bar = searchBar.contains(event.target);
+        let button = searchButton.contains(event.target);
+        if (!searchBar.contains(event.target) &&
+            !searchButton.contains(event.target) &&
+            !barHidden) {
+            closeSearchBar();
+        }
+    });
+}
+
+
+/**
+ * Resizes text within boxes
+ * @param {...*} var_args Class names as args to modify text in
+ */
+function resizeIndicator() {
+    for (let i = 0; i < arguments.length; i++) {
+        let elements = document.getElementsByClassName(arguments[i]);
+        for (let j = 0; j < elements.length; j++) {
+            let elt = elements[j];
+            let span = elt.querySelector('span');
+            if (span !== null) {
+                let ind = span.textContent;
+                let len = ind.replace(/(&#?\w+;)/, ' ').length;
+                switch (len) {
+                case 1:
+                    span.className = 'indicator__len1';
+                    break;
+                case 2:
+                    // Text 'WW' is as wide as most 3-character strings
+                    span.className = (ind === 'WW') ? 'indicator__len3' : 'indicator__len2';
+                    break;
+                case 3:
+                    span.className = 'indicator__len3';
+                    break;
+                case 4:
+                    span.className = 'indicator__len4';
+                    break;
+                default:
+                    span.className = '';
+                }
+            } else {
+                let img = elt.querySelector('img');
+                if (typeof img === 'undefined') {
+                    throw 'No span or image elements within stop indicator for element' + elt;
+                }
+                let style = window.getComputedStyle(elt);
+                let fontSize = parseFloat(style.fontSize);
+                img.width = Math.round(2.8 * fontSize);
+            }
+        }
+    }
+}
+
+
+/**
+ * Reverts colours of indicators
+ * @param {...*} var_args Class names as arguments to revert colours
+ */
+function revertColours() {
+    for (let i = 0; i < arguments.length; i++) {
+        let elements = document.getElementsByClassName(arguments[i]);
+        for (let j = 0; j < elements.length; j++) {
+            let elt = elements[j];
+            let style = window.getComputedStyle(elt);
+            let foreground = style.getPropertyValue('color');
+            let background = style.getPropertyValue('background-color');
+            elt.style.backgroundColor = foreground;
+            elt.style.color = background;
+        }
+    }
+}
+
 
 /**
  * Retrieves live data and displays it in a table
@@ -40,7 +183,7 @@ function getLocation(elementId) {
  * @param {Element} countdownElement Element in document showing time before next refresh
  */
 function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, countdownElement) {
-    var self = this;
+    let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
     this.postURL = postURL;
@@ -54,19 +197,20 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
 
     /**
      * Gets data from server, refreshing table
-     * @param {function} callback - Callback to be used upon successful request
+     * @param {function} callback Callback to be used upon successful request
      */
     this.getData = function(callback) {
-        console.log(`Sending POST request to ${self.postURL} with code='${self.atcoCode}'`);
-        self.headingTime.textContent = "Updating..."
-        var request = new XMLHttpRequest();
+        console.log('Sending POST request to ' + self.postURL + ' with code="' +
+                    self.atcoCode + '"');
+        self.headingTime.textContent = 'Updating...'
+        let request = new XMLHttpRequest();
         request.open('POST', self.postURL, true);
         request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE) {
                 if (request.status === 200) {
-                    console.log(`Request for stop '${self.atcoCode}' successful`);
+                    console.log('Request for stop ' + self.atcoCode + ' successful');
                     self.data = JSON.parse(request.responseText);
                     self.isLive = true;
                     self.printData();
@@ -75,7 +219,7 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
                     self.printData();
                 } else {
                     self.isLive = false;
-                    self.headingTime.textContent = "No data available";
+                    self.headingTime.textContent = 'No data available';
                 }
                 if (typeof callback !== 'undefined') {
                     callback();
@@ -90,91 +234,117 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
      * Draws table from data
      */
     this.printData = function() {
-        var clLive;
+        let clLive;
         if (self.isLive) {
-            clLive = 'text-green';
+            clLive = 'service--live';
         } else {
             self.updateOutdatedData();
-            clLive = 'text-red';
+            clLive = 'service--dated';
         }
 
-        function strDue(sec) {
+        /**
+         * Prints remaining seconds as 'due' or 'x min'
+         * @param {number} sec Remaining seconds
+         */
+        let strDue = function(sec) {
             let due = Math.round(sec / 60);
             let str = (due < 2) ? 'due' : due + ' min';
             return str;
         }
 
         if (self.data.services.length > 0) {
-            console.log(`Found ${self.data.services.length} services for stop '${self.atcoCode}'.`);
-            self.headingTime.textContent = ((self.isLive) ? 'Live times at ' : 'Estimated times from ') + self.data.local_time;
+            console.log('Found ' + self.data.services.length +
+                        ' services for stop "' + self.atcoCode + '".');
+            if (self.isLive) {
+                self.headingTime.textContent = 'Live times at ' + self.data.local_time;
+            } else {
+                self.headingTime.textContent = 'Estimated times from ' + self.data.local_time;
+            }
 
-            var table = document.createElement('div');
-            table.className = 'list list-services';
-            for (s of self.data.services) {
-                let row = document.createElement('a');
-                row.className = 'row-service';
+            let table = document.createElement('div');
+            table.className = 'list-services';
+            for (let s = 0; s < self.data.services.length; s++) {
+                let service = self.data.services[s];
+                let row = s + 1;
 
+                // Cell showing bus line number
                 let cNum = document.createElement('div');
+                cNum.className = 'service service__line';
+                cNum.style.msGridRow = row;
+
+                // Inner div to center line number and size properly
                 let cNumInner = document.createElement('div');
-                cNum.className = 'row-service-line';
-                cNumInner.className = 'row-service-line-inner' + ' ' + `area-color-${self.adminAreaCode}`;
-                if (s.name.length > 6) {
-                    cNumInner.className += ' row-service-line-small';
+                cNumInner.className = 'service service__line__inner area-' + self.adminAreaCode;
+                if (service.name.length > 6) {
+                    cNumInner.classList.add('service__line--small');
                 }
-                cNumInner.appendChild(document.createTextNode(s.name));
+                let cNumInnerSpan = document.createElement('span');
+                cNumInnerSpan.appendChild(document.createTextNode(service.name));
+                cNumInner.appendChild(cNumInnerSpan);
                 cNum.appendChild(cNumInner);
 
+                // Destination
                 let cDest = document.createElement('div');
-                cDest.className = 'row-service-dest';
-                cDest.appendChild(document.createTextNode(s.dest));
+                cDest.className = 'service service__destination';
+                cDest.style.msGridRow = row;
+                let cDestSpan = document.createElement('span');
+                cDestSpan.appendChild(document.createTextNode(service.dest));
+                cDest.appendChild(cDestSpan);
 
-                let cExp = document.createElement('div');
-                cExp.className = 'row-service-exp';
-
-                let cExpNext = document.createElement('span');
-                if (s.expected[0].live) {
-                    cExpNext.className = clLive;
+                // Next bus due
+                let cNext = document.createElement('div');
+                cNext.className = 'service service__next';
+                cNext.style.msGridRow = row;
+                let cNextSpan = document.createElement('span');
+                if (service.expected[0].live) {
+                    cNextSpan.className = clLive;
                 }
-                cExpNext.appendChild(
-                    document.createTextNode(strDue(s.expected[0].secs))
-                );
-                cExp.appendChild(cExpNext);
+                let exp = strDue(service.expected[0].secs)
+                cNextSpan.appendChild(document.createTextNode(exp));
+                cNext.appendChild(cNextSpan);
 
+                // Buses after
                 let cAfter = document.createElement('div');
-                cAfter.className = 'row-service-after';
+                cAfter.className = 'service service__after';
+                cAfter.style.msGridRow = row;
+                let cAfterSpan = document.createElement('span');
 
-                if (s.expected.length == 2) {
+                // If number of expected services is 2, only need to show the 2nd service here
+                if (service.expected.length == 2) {
                     let firstMin = document.createElement('span');
-                    if (s.expected[1].live) {
+                    if (service.expected[1].live) {
                         firstMin.className = clLive;
                     }
                     firstMin.appendChild(
-                        document.createTextNode(strDue(s.expected[1].secs))
+                        document.createTextNode(strDue(service.expected[1].secs))
                     );
                     cAfter.appendChild(firstMin);
-                } else if (s.expected.length > 2) {
+
+                // Otherwise, show the 2nd and 3rd services
+                } else if (service.expected.length > 2) {
                     let firstMin = document.createElement('span');
-                    if (s.expected[1].live) {
+                    if (service.expected[1].live) {
                         firstMin.className = clLive;
                     }
                     let secondMin = document.createElement('span');
-                    if (s.expected[2].live) {
+                    if (service.expected[2].live) {
                         secondMin.className = clLive;
                     }
-                    firstMin.appendChild(
-                        document.createTextNode(strDue(s.expected[1].secs).replace('min', 'and'))
-                    );
-                    secondMin.appendChild(
-                        document.createTextNode(strDue(s.expected[2].secs))
-                    );
-                    cAfter.appendChild(firstMin);
-                    cAfter.appendChild(document.createTextNode(' '));
-                    cAfter.appendChild(secondMin);
-                }
+                    let exp1 = strDue(service.expected[1].secs).replace('min', 'and');
+                    firstMin.appendChild(document.createTextNode(exp1));
+                    let exp2 = strDue(service.expected[2].secs)
+                    secondMin.appendChild(document.createTextNode(exp2));
 
+                    cAfterSpan.appendChild(firstMin);
+                    cAfterSpan.appendChild(document.createTextNode(' '));
+                    cAfterSpan.appendChild(secondMin);
+                }
+                cAfter.appendChild(cAfterSpan);
+
+                // Add the four cells to new table
                 table.appendChild(cNum);
                 table.appendChild(cDest);
-                table.appendChild(cExp);
+                table.appendChild(cNext);
                 table.appendChild(cAfter);
             }
             // Remove all existing elements
@@ -185,11 +355,12 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
             }
             // Add table
             self.table.appendChild(table);
-            console.log(`Created table with ${self.data.services.length} services for stop '${self.atcoCode}'.`);
+            console.log('Created table with ' + self.data.services.length +
+                        ' services for stop "' + self.atcoCode + '".');
 
         } else {
-            self.headingTime.textContent = `No services expected at ${self.data.local_time}`;
-            console.log(`No services found for stop ${self.atcoCode}.`);
+            self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
+            console.log('No services found for stop ' + self.atcoCode + '.');
         }
     };
 
@@ -197,9 +368,11 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
      * Updates seconds remaining with current date/time if no data received
      */
     this.updateOutdatedData = function() {
-        var dtNow = new Date();
-        for (s of self.data.services) {
-            for (e of s.expected) {
+        let dtNow = new Date();
+        for (let i = 0; i < self.data.services.length; i++) {
+            let s = self.data.services[i];
+            for (let j = 0; j < s.expected.length; j++) {
+                let e = s.expected[j];
                 let expDate = new Date(e.exp_date);
                 e.sec = Math.round((expDate - dtNow) / 1000);
                 if (e.sec < 0) {
@@ -213,22 +386,24 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
             }
         }
         // Sort by time remaining on first service coming
-        self.data.services.sort((a, b) => a.expected[0].sec - b.expected[0].sec);
-        var dtReq = new Date(self.data.iso_date);
-        var overDue = Math.round((dtNow - dtReq) / 1000);
-        console.log(`Simulated time remaining as live date overdue ${overDue} seconds.`);
+        self.data.services.sort(function(a, b) {
+            return a.expected[0].sec - b.expected[0].sec;
+        });
+        let dtReq = new Date(self.data.iso_date);
+        let overDue = Math.round((dtNow - dtReq) / 1000);
+        console.log('Simulated time remaining as live date overdue ' + overDue + ' seconds.');
     };
 
     /**
      * Starts up the class with interval for refreshing
-     * @param {function} callbackInter - Function to be used when data comes in each interval.
+     * @param {function} callbackInter Function to be used when data comes in each interval.
      *     The getData() function already checks if this function is defined before calling
-     * @param {function} callbackStart - Function to be used when data comes in for the first time.
+     * @param {function} callbackStart Function to be used when data comes in for the first time.
      *     If this argument is undefined, the callbackInter function is used instead
      */
     this.startLoop = function(callbackInter, callbackStart) {
-        var onInterval = callbackInter;
-        var onStart = (typeof callbackStart !== 'undefined') ? callbackStart : callbackInter;
+        let onInterval = callbackInter;
+        let onStart = (typeof callbackStart !== 'undefined') ? callbackStart : callbackInter;
         if (self.loopActive) {
             if (self.loopEnding) {
                 self.loopEnding = false;
@@ -242,14 +417,10 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
         }
         if (REFRESH) {
             self.loopActive = true;
-            var time = INTERVAL;
+            let time = INTERVAL;
             self.interval = setInterval(function () {
                 time--;
-                if (time > 0) {
-                    self.headingCountdown.textContent = `${time}s`
-                } else {
-                    self.headingCountdown.textContent = 'now';
-                }
+                self.headingCountdown.textContent = (time > 0) ? time + 's' : 'now';
                 if (time <= 0) {
                     if (self.loopEnding) {
                         self.loopActive = false;
@@ -280,346 +451,96 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
     };
 }
 
-var BUS = "bus-white.svg";
-var TRAM = "tram-white.svg";
 
 /**
- * Resizes text within boxes
- * @param {string} className - name of class to modify data in
- * @param {boolean} revert - Reverts colours of indicator
+ * Creates a map element using Leaflet.js and returns it.
+ * @param {HTMLElement} mapElement Empty div element to be used for map
+ * @param {string} token Map token for access to Mapbox's maps
+ * @param {JSON} stops Either a single stop or a list of stops in GeoJSON format
+ * @param {string} busSVG Link to SVG source for bus icon
+ * @param {string} tramSVG Link to SVG source for tram icon
+ * @param {function} callback Optional callback function when clicking on a marker
  */
-function resizeInd(className, revert) {
-    var elements = document.getElementsByClassName(className);
-    for (let i = 0; i < elements.length; i++) {
-        let elt = elements[i];
-        let style = window.getComputedStyle(elt);
-        let span = elt.getElementsByTagName('span');
-        if (span.length !== 0) {let text = span[0];
-            if (typeof revert !== 'undefined' && revert) {
-                let foreground = style.getPropertyValue('color');
-                let background = style.getPropertyValue('background-color');
-                elt.style.backgroundColor = foreground;
-                elt.style.color = background;
+function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
+    let layer = L.tileLayer(
+        'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
+        {
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.emerald',
+            accessToken: token
+        }
+    )
+
+    let stopsGeo = new L.GeoJSON(stops, {
+        pointToLayer: function(point, latLng) {
+            let ind;
+            if (point.properties.indicator !== '') {
+                ind = '<span>' + point.properties.indicator + '</span>'
+            } else {
+                let src = (point.properties.stopType === 'PLT') ? tramSVG : busSVG;
+                ind = '<img src="' + src + '" width=28px>'
             }
-            let ind = text.textContent;
-            let len = ind.replace(/(&#?\w+;)/, ' ').length;
-            switch(len) {
-                case 1:
-                    text.className = "ind-len1";
-                    break;
-                case 2:
-                    text.className = "ind-len2";
-                    break;
-                case 3:
-                    text.className = "ind-len3";
-                    break;
-                case 4:
-                    text.className = "ind-len4";
-                    break;
-                default:
-                    text.className = "";
+
+            let area = 'area-' + point.properties.adminAreaRef;
+
+            let bearing;
+            if (point.properties.bearing !== null) {
+                let arrow = 'indicator-marker__arrow--' + point.properties.bearing;
+                bearing = '<div class="indicator-marker__arrow ' + arrow + '"></div>'
+            } else {
+                bearing = '';
             }
-        } else {
-            let img = elt.getElementsByTagName('img')[0];
-            if (typeof img === 'undefined') {
-                throw 'No span or image elements within stop indicator';
-            }
-            let fontSize = parseFloat(style.fontSize);
-            img.width = Math.round(2.8 * fontSize);
-        }
-    }
-}
 
-/**
- * Each section in search results has heading and list;
- * this constructor can hide them or show them.
- * @constructor
- * @param {String} headingId 
- * @param {String} listId 
- */
-function Section(headingId, listId) {
-    var self = this;
-    this.heading = document.getElementById(headingId);
-    this.list = document.getElementById(listId);
+            let innerHTML = '<div class="indicator indicator-marker ' + area + '">' +
+                bearing + ind + '</div>';
 
-    /**
-     * Hides the heading and list by adding classes
-     */
-    this.hide = function() {
-        if (self.heading.className.indexOf('heading-hidden') === -1) {
-            self.heading.className = self.heading.className + " heading-hidden";
-        }
-        if (self.list.className.indexOf('list-hidden') === -1) {
-            self.list.className = self.list.className + " list-hidden";
-        }
-    };
-
-    /**
-     * Shows the heading and list by removing the hidden classes
-     */
-    this.show = function() {
-        if (self.heading.className.indexOf('heading-hidden') > -1) {
-            self.heading.className = self.heading.className.replace('heading-hidden', '');
-        }
-        if (self.list.className.indexOf('list-hidden') > -1) {
-            self.list.className = self.list.className.replace('list-hidden', '');
-        }
-    };
-}
-
-/**
- * Handles list of stops with live data for areas and locations.
- * @constructor
- * @param {string} url - URL to get live data
- * @param {array} listStops - List of stops
- */
-function ListLiveStops(url, listStops) {
-    var self = this;
-    this.liveStops = {}
-    this.activeStop = null;
-
-    /**
-     * Initialises constructor
-     */
-    this.init = function() {
-        for (s of listStops) {
-            let index = "stop" + s.atco_code;
-            let row = document.getElementById(index);
-            let head = row.getElementsByClassName("item-stop-services-head")[0];
-            let content = row.getElementsByClassName("item-stop-services-content")[0];
-            self.liveStops[index] = {
-                code: s.atco_code,
-                row: row,
-                head: head,
-                content: content,
-                data: new LiveData(
-                    s.atco_code,
-                    s.admin_area_ref,
-                    url,
-                    row.getElementsByClassName("stop-live-services")[0],
-                    row.getElementsByClassName("stop-live-time")[0],
-                    row.getElementsByClassName("stop-live-countdown")[0]
-                )
-            };
-            self.addSelectStop(self.liveStops[index]);
-        }
-    };
-
-    /**
-     * Resizes images (eg SVG bus symbol) when indicator is resized
-     * @param {HTMLElement} headElement - Heading element containing the indicator
-     */
-    this.resizeImg = function(headElement) {
-        let imgElements = headElement.getElementsByTagName('img');
-        if (imgElements.length > 0) {
-            let img = imgElements[0];
-            let style = window.getComputedStyle(headElement);
-            img.width = Math.round(2.8 * parseFloat(style.fontSize));
-        }
-    };
-
-    /**
-     * Collapses a section by removing its set height (assuming the CSS style has zero height)
-     * @param {HTMLElement} element - Element to be collapsed 
-     */
-    this.collapseContent = function(element) {
-        element.style.height = '';
-    }
-
-    /**
-     * Expands (or shrinks) a section to its height with transition.
-     * @param {HTMLElement} element - Element to be expanded 
-     */
-    this.resizeContent = function(element) {
-        let height = element.scrollHeight;
-        element.style.height = height + 20 + 'px';
-    }
-
-    /**
-     * Called when a stop is selected - gets live data and close other rows
-     * @param {HTMLElement} rowElement - Row element to be selected
-     */
-    this.selectStop = function(rowElement) {
-        let r = rowElement;
-        if (r.row.className === "item-stop-services") {
-            r.data.startLoop(function() {
-                self.resizeContent(r.content)
+            let icon = L.divIcon({
+                className: 'marker',
+                iconSize: null,
+                html: innerHTML
             });
-            r.row.className = "item-stop-services-show";
-            self.resizeImg(r.head);
-            // Checks if another element is active; stop loop and collapse
-            if (!!self.active) {
-                let t = self.liveStops[self.active]
-                t.data.stopLoop(function() {
-                    self.collapseContent(t.content)
-                });
-                t.row.className = "item-stop-services";
-                self.resizeImg(t.head);
-            }
-            self.active = 'stop' + r.code;
-        } else if (r.row.className === "item-stop-services-show") {
-            r.data.stopLoop(function() {
-                self.collapseContent(r.content)
-            });
-            r.row.className = "item-stop-services";
-            self.active = null;
-            self.resizeImg(r.head);
-        }
-    };
-
-    /**
-     * Adds on click event to a row
-     * @param {object} stop - Stop object in list 
-     */
-    this.addSelectStop = function(stop) {
-        stop.head.addEventListener("click", function() {
-            self.selectStop(stop);
-        });
-    };
-
-    /**
-     * Called when a marker is clicked - opens stop row and scrolls to it
-     * @param {string} atcoCode 
-     */
-    this.markerSelectStop = function(atcoCode) {
-        let stopElement = self.liveStops['stop' + atcoCode];
-        if (stopElement.row.className === "item-stop-services") {
-            self.selectStop(stopElement);
-        }
-        stopElement.head.scrollIntoView(true);
-    }
-}
-
-/**
- * List of search results and a set of filtering buttons to select the right areas.
- * @constructor
- */
-function SearchFilterList() {
-    var self = this;
-    this.divFilterAreas = document.getElementById('dFilterAreas');
-    this.listElements = Array.prototype.slice.call(
-        document.querySelectorAll(
-            ".item-area-search, .item-place-search, .item-stop-search"
-        )
-    );
-    this.areaNames = new Set(self.listElements.map(i => i.dataset.adminArea));
-    this.selectArea = null;
-    this.selectedArea = 'all';
-    this.listAreas = [];
-    this.groups = {};
-
-    this.headers = {
-        area: new Section('hArea', 'dAreas'),
-        place: new Section('hPlace', 'dPlace'),
-        stop: new Section('hStop', 'dStops')
-    };
-
-    /**
-     * Initialises the filter list, adding buttons if the number of areas exceed 1.
-     */
-    this.init = function() {
-        if (self.areaNames.size > 1) {
-            let text = document.createElement('p');
-            text.textContent = "Filter by area:";
-            self.divFilterAreas.appendChild(text);
-            self.selectArea = document.createElement('select');
-            self.divFilterAreas.appendChild(self.selectArea);
-
-            // Add first option to show everything (default)
-            let optionAll = document.createElement('option');
-            optionAll.textContent = 'all';
-            optionAll.value = 'all';
-            self.selectArea.appendChild(optionAll);
-            self.addSelectEvent(self.selectArea)
-
-            for (a of Array.from(self.areaNames).sort()) {
-                self.groups[a] = self.listElements.filter(s => s.dataset.adminArea === a);
-                let option = document.createElement('option');
-                option.textContent = a;
-                option.value = a;
-                self.selectArea.appendChild(option);
-                self.listAreas.push(option)
-            }
-        }
-    }
-
-    /**
-     * Helper function to add on 'change' event to select list
-     * @param {document.Element} element 
-     */
-    this.addSelectEvent = function(element) {
-        element.addEventListener('change', function() {
-            if (self.selectedArea !== element.value) {
-                if (element.value === 'all') {
-                    self.showItems(self.listElements);
-                } else {
-                    for (g in self.groups) {
-                        // Show stops and place matching specified area
-                        if (self.groups.hasOwnProperty(g) && element.value === g) {
-                            self.showItems(self.groups[g]);
-                        // Else hide all other groups
-                        } else if (self.groups.hasOwnProperty(g)) {
-                            self.hideItems(self.groups[g]);
-                        }
-                    }
+            let marker = L.marker(
+                latLng,
+                {
+                    icon: icon,
+                    title: point.properties.title,
+                    alt: point.properties.indicator
                 }
-                self.selectedArea = element.value;
+            );
+            // Move marker to front when mousing over
+            marker = marker.on('mouseover', function(event) {
+                this.setZIndexOffset(1000);
+            });
+            // Move marker to original z offset when mousing out
+            marker = marker.on('mouseout', function(event) {
+                this.setZIndexOffset(0);
+            });
+            // Add callback function to each marker with GeoJSON pointer object as argument
+            if (typeof callback !== 'undefined') {
+                marker = marker.on('click', function(event) {
+                    callback(point)
+                });
             }
-        });
-    };
 
-    /**
-     * Show all item elements in list; will hide sections if all items within are excluded
-     * @param {Array} list 
-     */
-    this.showItems = function(list) {
-        let showAreas = false, showLocal = false, showStops = false;
-        for (s of list) {
-            if (s.className.indexOf('item-hidden') > -1) {
-                s.className = s.className.replace('item-hidden', '');
-            }
-            if (!showAreas && s.className.indexOf('item-area-search') > -1) {
-                showAreas = true;
-            }
-            if (!showLocal && s.className.indexOf('item-place-search') > -1) {
-                showLocal = true;
-            }
-            if (!showStops && s.className.indexOf('item-stop-search') > -1) {
-                showStops = true;
-            }
+            return marker;
         }
-        if (self.headers.area.heading !== null) {
-            if (showAreas) {
-                self.headers.area.show();
-            } else {
-                self.headers.area.hide();
-            }
-        }
-        if (self.headers.place.heading !== null) {
-            if (showLocal) {
-                self.headers.place.show();
-            } else {
-                self.headers.place.hide();
-            }
-        }
-        if (self.headers.stop.heading !== null) {
-            if (showStops) {
-                self.headers.stop.show();
-            } else {
-                self.headers.stop.hide();
-            }
-        }
-    }
+    });
+    let bounds = stopsGeo.getBounds();
 
-    /**
-     * Hide all item elements in list
-     * @param {Array} list 
-     */
-    this.hideItems = function(list) {
-        for (s of list) {
-            if (s.className.indexOf('item-hidden') === -1) {
-                s.className = s.className + " item-hidden";
-            }
-        }
-    }
+    let map = L.map(mapElement.id, {
+        center: bounds.getCenter(),
+        zoom: 18,
+        minZoom: 9,
+        maxBounds: L.latLngBounds(
+            L.latLng(49.5, -9.0),
+            L.latLng(61.0, 2.5)
+        )
+    });
+
+    layer.addTo(map);
+    stopsGeo.addTo(map);
+    map.fitBounds(bounds, {padding: [24, 24]});
+
+    return map;
 }

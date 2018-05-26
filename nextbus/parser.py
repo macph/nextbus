@@ -10,7 +10,8 @@ from flask import current_app
 SET_ALPHANUM = set(pp.alphanums + pp.alphas8bit)
 SET_PRINT = set(pp.printables + pp.alphas8bit + pp.punc8bit)
 SET_PUNCT = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
-RE_VALID_CHAR = re.compile(r"[^\x00-\x7f\xa1-\xff]")
+# Captures all characters not within printable ASCII + extension, excluding <>
+RE_INVALID_CHAR = re.compile(r"[^\x00-\x3b\x3d\x3f-\x7f\xa1-\xff]")
 
 
 def _fix_parentheses(query, opening="(", closing=")"):
@@ -194,9 +195,9 @@ def create_tsquery_parser():
     op_and = pp.Optional(and_ | pp.Literal("&"), default="&")
     op_or = or_ | pp.Literal("|")
 
-    # Ignore operators and parentheses
-    char_no_operators = SET_PRINT - set("()!&|+")
-    word = ~or_ + ~and_ + pp.Word("".join(char_no_operators))
+    # Exclude operators and parentheses from words
+    word_ = pp.Word("".join(SET_PRINT - set("()!&|")))
+    word = ~and_ + ~or_ + word_
 
     # Declare empty parser and nested terms before before defining
     expression = pp.Forward()
@@ -219,7 +220,7 @@ def create_tsquery_parser():
             suitable for PostgreSQL's ``to_tsquery()``. Broken parentheses are
             fixed beforehand by default.
         """
-        text = RE_VALID_CHAR.sub(r"", query)
+        text = RE_INVALID_CHAR.sub(r"", query)
         if fix_parentheses:
             text = _fix_parentheses(text)
 

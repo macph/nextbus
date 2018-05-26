@@ -5,9 +5,9 @@ import collections
 import re
 import string
 
-from requests import HTTPError
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
                    redirect, request, url_for)
+from requests import HTTPError
 
 from nextbus import db, forms, location, models, search, tapi
 
@@ -15,7 +15,6 @@ from nextbus import db, forms, location, models, search, tapi
 MIN_GROUPED = 72
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
                         r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
-
 
 api = Blueprint("api", __name__, template_folder="templates")
 page = Blueprint("page", __name__, template_folder="templates")
@@ -78,7 +77,7 @@ def _list_geojson(list_stops):
 
 
 @page.before_request
-def add_search():
+def add_search_form():
     """ Search form enabled in every view within blueprint by adding the form
         object to Flask's ``g``.
     """
@@ -87,7 +86,7 @@ def add_search():
         query = g.form.search_query.data
         try:
             result = search.search_code(query)
-        except search.PostcodeException:
+        except search.NoPostcode:
             # Pass along to search results page to process
             query_url = query.replace(" ", "+")
             return redirect(url_for(".search_results", query=query_url))
@@ -111,7 +110,7 @@ def index():
     return render_template("index.html")
 
 
-@page_ns.route("/about")
+@page.route("/about", methods=["GET", "POST"])
 def about():
     """ The about page. """
     return render_template("about.html")
@@ -127,39 +126,22 @@ def search_results(query):
         area: Admin area code, can have multiple entries.
     """
     s_query = query.replace("+", " ")
-    # Check if query has enough alphanumeric characters
-    if not forms.check_alphanum(s_query):
-        return render_template(
-            "search.html", query=s_query, error="Too few characters; try a "
-            "longer phrase."
-        )
+    # Check if query has enough alphanumeric characters, else raise
+    search.validate_characters(s_query)
+    # Retrieve request arguments, raise if they are not valid
+    params = search.validate_params(query)
 
-    categories = {}
-
-    types = {"area", "place", "stop"}
-    types_valid = types & set(request.args.getlist("type"))
-    categories["types"] = types_valid if types_valid else None
-
-    # Filter by admin areas
-    if "area" in request.args:
-        categories["admin_areas"] = request.args.getlist("area")
-
+    # Do the search; raise errors if necessary
     try:
-        page_number = int(request.args.get("page", 1))
-        categories["page"] = 1 if page_number < 1 else page_number
-    except TypeError:
-        categories["page"] = 1
-
-    try:
-        result = search.search_all(s_query, **categories)
-    except ValueError as err:
-        current_app.logger.error("Query %r resulted in an parsing error: %s"
-                                 % (query, err), exc_info=True)
-        return render_template("search.html", query=s_query, error="error")
-    except search.PostcodeException as err:
-        current_app.logger.debug(str(err))
-        return render_template("search.html", query=s_query, error="postcode",
-                               postcode=err.postcode)
+        result = search.search_all(s_query, **params)
+    except ValueError:
+        current_app.logger.error("Query %r resulted in an parsing error" %
+                                 query, exc_info=True)
+        abort(500)
+    if not result:
+        current_app.logger.error("No valid result was returned for result %r" %
+                                 query)
+        abort(500)
 
     # Redirect to postcode or stop if one was found
     if result.is_stop():
@@ -167,13 +149,33 @@ def search_results(query):
     elif result.is_postcode():
         postcode_url = result.postcode.text.replace(" ", "+")
         return redirect(url_for(".list_near_postcode", code=postcode_url))
-    elif result.is_list():
-        # Recalculate to get the result types and areas to filter with
-        types, areas = search.filter_args(query)
-        return render_template("search.html", query=s_query,
-                               results=result.list, types=types, areas=areas)
     else:
-        return render_template("search.html", query=s_query, error="not_found")
+        # List of results
+        # Recalculate to get the result types and areas to filter with
+        types, areas = search.filter_args(s_query)
+        # Check if query parameters match filter types
+        search.validate_after_search(query, types, areas)
+
+        return render_template("search.html", query=s_query,
+                               results=result.list, filter_types=types,
+                               filter_areas=areas)
+
+
+@page.errorhandler(search.InvalidParameters)
+def search_invalid_parameters(error):
+    """ Invalid parameters were passed with the search query, raise 400 """
+    current_app.logger.info(str(error))
+    return render_template("search.html", query=error.query, error=error), 400
+
+
+@page.errorhandler(search.QueryTooShort)
+@page.errorhandler(search.NoPostcode)
+def search_no_postcode(error):
+    """ Query was too short or non-existent postcode was passed. Not an error
+        so no 4xx code required.
+    """
+    current_app.logger.debug(str(error))
+    return render_template("search.html", query=error.query, error=error)
 
 
 @page.route("/list/", methods=["GET", "POST"])
@@ -277,13 +279,14 @@ def list_in_locality(locality_code):
         return redirect(url_for(".list_in_locality", locality_code=code),
                         code=301)
 
-    group = request.args.get("group") == "true"
-    stops = locality.list_stops(group_areas=group)
+    group_areas = request.args.get("group") == "true"
+    stops = locality.list_stops(group_areas=group_areas)
 
     stops = _group_objects(stops, attr="name", default="Stops",
                            minimum=MIN_GROUPED)
 
-    return render_template("place.html", locality=locality, stops=stops)
+    return render_template("place.html", locality=locality, stops=stops,
+                           grouped=group_areas)
 
 
 @page.route("/near/postcode/<code>", methods=["GET", "POST"])
@@ -302,7 +305,7 @@ def list_near_postcode(code):
                         code=301)
 
     stops = postcode.stops_in_range()
-    geojson = _list_geojson([s[0] for s in stops])
+    geojson = _list_geojson(stops)
 
     return render_template("postcode.html", postcode=postcode, data=geojson,
                            list_stops=stops)
@@ -315,18 +318,18 @@ def list_near_location(lat_long):
     if sr_m is None:
         raise EntityNotFound("Invalid latitude/longitude values.")
 
-    coord = (float(sr_m.group(1)), float(sr_m.group(2)))
+    latitude, longitude = float(sr_m.group(1)), float(sr_m.group(2))
     # Quick check to ensure coordinates are within range of Great Britain
-    if not (49 < coord[0] < 61 and -8 < coord[1] < 2):
+    if not (49 < latitude < 61 and -8 < longitude < 2):
         raise EntityNotFound("The latitude and longitude coordinates are "
                              "nowhere near Great Britain!")
 
-    stops = models.StopPoint.in_range(coord)
-    str_coord = location.format_dms(*coord)
-    geojson = _list_geojson([s[0] for s in stops])
+    stops = models.StopPoint.in_range(latitude, longitude)
+    str_coord = location.format_dms(latitude, longitude)
+    geojson = _list_geojson(stops)
 
-    return render_template("location.html", coord=coord, str_coord=str_coord,
-                           data=geojson, list_stops=stops)
+    return render_template("location.html", coord=(latitude, longitude),
+                           str_coord=str_coord, data=geojson, list_stops=stops)
 
 
 @page.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
@@ -347,8 +350,9 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
 
-    return render_template("stop_area.html", stop_area=area,
-                           data=_list_geojson(area.stop_points))
+    geojson = _list_geojson(area.stop_points)
+
+    return render_template("stop_area.html", stop_area=area, data=geojson)
 
 
 @page.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
@@ -405,13 +409,18 @@ def stop_atco(atco_code):
 @api.route("/stop/get", methods=["POST"])
 def stop_get_times():
     """ Requests and retrieve bus times. """
-    if request.method == "POST":
-        data = request.get_json()
-    else:
+    if request.method != "POST":
         # Trying to access with something other than POST
         current_app.logger.error("/stop/get was accessed with something other "
                                  "than POST")
         abort(405)
+
+    data = request.get_json()
+
+    if not models.StopPoint.query.get(data["code"]):
+        current_app.logger.error("API accessed with invalid ATCO code %s" %
+                                 data["code"])
+        abort(404)
 
     try:
         times = tapi.get_nextbus_times(data["code"])
@@ -450,3 +459,7 @@ def error_msg(error):
         Note that this page does not appear in debug mode.
     """
     return render_template("error.html", message=error), 500
+
+@page_ns.route("/error")
+def error_out():
+    raise TypeError

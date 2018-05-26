@@ -1,46 +1,99 @@
 {% import 'functions.html' as f %}
 {% extends 'base.html' %}
-{% block title %}{{ locality.name }}{% endblock %}
 
-{% block nav %}
-<ul class="breadcrumbs">
-    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
-    {% if locality.district is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
+{% macro places_heading(grouped) %}
+<div class="heading-inline heading-inline--right">
+    <h2>Places</h2>
+    {% if grouped %}
+    <p><a href="?group=false">Ungroup stops</a></p>
+    {% else %}
+    <p><a href="?group=true">Group stops</a></p>
     {% endif %}
-    <li>{{ locality.name }}</li>
-</ul>
+</div>
+{% endmacro %}
+
+{% set place_name = locality.name + ', ' + (locality.district.name if locality.district is not none else locality.admin_area.name) %}
+{% block title %}{{ place_name }}{% endblock %}
+
+{% block outer_header %}
+{{ f.add_search_bar() }}
 {% endblock %}
 
 {% block heading %}
-<h1>{{ locality.name }}, {{ locality.district.name if locality.district is not none else locality.admin_area.name }}</h1>
+<nav>
+    <ul class="breadcrumbs">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
+        {% if locality.district is not none %}
+        <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
+        {% endif %}
+        <li>{{ locality.name }}</li>
+    </ul>
+</nav>
+<h1>{{ place_name }}</h1>
 {% endblock %}
 
 {% block content %}
-{% for letter, group in stops|dictsort %}
-<h2 id="{{ letter }}">{{ letter }}</h2>
-{% if group|length > 0 %}
-<div class="list list-stops">
-    {% for stop in group %}
-    {% if stop.table == 'stop_point' %}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.code) }}" class="item-stop">
-        {{ f.print_stop_indicator(stop) }}
-        <div class="stop-label">{{ stop.name }}</div>
+{% if stops|length > 1 %}
+<div class="columns">
+    <div class="column-1">
+        <section class="box-item box-item--aside">
+            {{ places_heading(grouped) }}
+            {{ f.print_index(stops) }}
+        </section>
+    </div>
+    <div class="column-3">
+        <section class="box-item">
+            {% call(name, group) f.print_groups(stops|dictsort) %}
+            <h3 id="{{ name }}">{{ name }}</h3>
+            {% call(s) f.print_list(group, 'list--stops') %}
+            {% if s.table_name == 'stop_point' %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s) }}
+                <div class="item__label">{{ s.name }}</div>
+            </a>
+            {% elif s.table_name == 'stop_area' %}
+            <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s, reverse=true) }}
+                <div class="item__label">{{ s.name }}</div>
+            </a>
+            {% endif %}
+            {% endcall %}
+            {% endcall %}
+        </section>
+    </div>
+</div>
+{% elif stops %}
+<section class="box-item">
+    {{ places_heading(grouped) }}
+    {% for _, group in stops.items() %}
+    {% call(s) f.print_list(group, 'list--stops') %}
+    {% if s.table_name == 'stop_point' %}
+    <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
+        {{ f.print_stop_indicator(s) }}
+        <div class="item__label">{{ s.name }}</div>
     </a>
-    {% elif stop.table == 'stop_area' %}
-    <a href="{{ url_for('page.stop_area', stop_area_code=stop.code) }}" class="item-stop">
-        {{ f.print_stop_indicator(stop, area=true) }}
-        <div class="stop-label">{{ stop.name }}</div>
+    {% elif s.table_name == 'stop_area' %}
+    <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
+        {{ f.print_stop_indicator(s, reverse=true) }}
+        <div class="item__label">{{ s.name }}</div>
     </a>
     {% endif %}
+    {% endcall %}
     {% endfor %}
-</div>
+</section>
 {% else %}
-<p>No stops found.</p>
+<section class="box-item">
+    <h2>Stops</h2>
+    <p>No bus stops found.</p>
+</section>
 {% endif %}
-{% endfor %}
-{{ f.resize_indicator("stop-ind") }}
-{{ f.resize_indicator("stop-area-ind", true) }}
+{% endblock %}
+
+{% block script %}
+<script>
+    resizeIndicator('indicator');
+    revertColours('indicator--reversed');
+</script>
 {% endblock %}

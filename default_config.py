@@ -14,6 +14,7 @@ class Config(object):
     SECRET_KEY = None               # A different secret key must be set in production
     ATCO_CODES = None               # Filters ATCO areas when populating, either None for all areas
                                     # or a list of integer codes
+    GEOLOCATION_ENABLED = False     # Enables geolocation on webpages, which requires HTTPS
     TRANSPORT_API_ACTIVE = False    # Requests data from API if True, else use local sample for
                                     # testing
     TRANSPORT_API_ID = None         # ID for Transport API

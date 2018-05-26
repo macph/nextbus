@@ -5,49 +5,84 @@
 {{ super() }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
 integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin=""/>
-     <!-- Make sure you put this AFTER Leaflet's CSS -->
 <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
 {% endblock %}
 
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
 
-{% block nav %}
-{% if stop.locality is not none %}
-<ul class="breadcrumbs trailing">
-    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
-    {% if stop.locality.district is not none %}
-    <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
-    {% endif %}
-    <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{stop.locality.name }}</a></li>
-</ul>
-{% endif %}
+{% block outer_header %}
+{{ f.add_search_bar() }}
 {% endblock %}
 
 {% block heading %}
+<nav>
+    <ul class="breadcrumbs breadcrumbs--trailing">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        <li>&sdot;&sdot;&sdot;</li>
+        {% if stop.locality.district is not none %}
+        <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
+        {% else %}
+        <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{ stop.locality.name }}</a></li>
+    </ul>
+</nav>
 <div class="heading-stop">
-    <div class="heading-stop-indicator">
-        {{ f.print_stop_indicator(stop) }}
-        {{ f.resize_indicator("stop-ind") }}
-    </div>
+    {{ f.print_stop_indicator(stop) }}
     <h1>{{ stop.name }}</h1>
 </div>
-<p>
-    {% set pipe = joiner() %}
-    {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
- -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
-</p>
+{% if stop.street or stop.bearing %}
+{% set pipe = joiner() %}
+<p>{% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+-->{% if stop.bearing is not none %}{{ pipe() }}{{ stop.bearing }}-bound{% endif %}</p>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="heading-inline">
-        <h2 id="liveTime">Retrieving live data...</h2>
-        <span id="liveCountdown"></span>
+<div class="columns">
+    <div class="column-2">
+        <section class="box-item">
+            <div class="heading-inline heading-inline--right">
+                <h2 id="liveTime">Retrieving live data...</h2>
+                <p id="liveCountdown"></p>
+            </div>
+            <div id="services"></div>
+        </section>
+        <section class="box-item">
+            <div class="heading-inline heading-inline--right">
+                <h2>Map</h2>
+                <button id="show-map-button">Show</button>
+            </div>
+            <div id="stop-map" class="stop-map"></div>
+        </section>
+    </div>
+    <div class="column-1">
+        <section class="box-item box-item--aside">
+            <h2>Stop information</h2>
+            <p>
+                {% set pipe = joiner() %}
+                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+             -->{% if stop.crossing is not none and stop.crossing != stop.street %}{{ pipe() }}{{ stop.crossing }}{% endif %}<!--
+             -->{% if stop.landmark is not none and stop.landmark != stop.crossing %}{{ pipe() }}{{ stop.landmark }}{% endif %}
+            </p>
+            <p>SMS code <strong>{{ stop.naptan_code}}</strong></p>
+        </section>
+        {% if stop.stop_area_ref is not none %}
+        <section class="box-item box-item--aside">
+            <h2>Other stops</h2>
+            <p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">View all stops around {{ stop.stop_area.name }}</a></p>
+        </section>
+        {% endif %}
+    </div>
 </div>
-<div id="services"></div>
-<p><span class="text-green">Live times are in green,</span> otherwise they are retrieved from timetables.</p>
+{% endblock %}
+
+{% block script %}
 <script>
-    var ld = new LiveData(
+    resizeIndicator('indicator');
+</script>
+<script>
+    let ld = new LiveData(
         "{{ stop.atco_code }}",
         "{{ stop.admin_area_ref }}",
         "{{ url_for('api.stop_get_times') }}",
@@ -57,94 +92,22 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     )
     ld.startLoop();
 </script>
-<div class="heading-inline">
-    <h2>Location</h2>
-    <button id="buttonShowMap" type="button" class="small-button" onclick="" value="show">show</button>
-</div>
-<div class="google-maps-embed" id="divMap">
-</div>
 <script>
-    let whichTransitionEvent = function(element) {
-        var transitions = {
-            'transition': 'transitionend',
-            'OTransition': 'oTransitionEnd',
-            'MozTransition': 'transitionend',
-            'WebkitTransition': 'webkitTransitionEnd'
-        };
-        for (var t in transitions) {
-            if (transitions.hasOwnProperty(t) && element.style[t] !== undefined) {
-                return transitions[t];
-            }
-        }
-    };
+    let mapButton = document.getElementById('show-map-button');
+    let map = document.getElementById('stop-map');
 
-    let createMap = function(mapElement, token, stop) {
-        let layer = L.tileLayer(
-            'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-            {
-                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.light',
-                accessToken: token
-            }
-        )
-
-        let stopGeo = new L.GeoJSON(stop, {
-            pointToLayer: function(point, latLng) {
-                let ind = point.properties.indicator;
-                let area = 'area-color-' + point.properties.admin_area_ref;
-                let bearing = ' indicator-marker__arrow--' + point.properties.bearing;
-                let i = L.divIcon({
-                    className: 'empty',
-                    iconSize: null,
-                    html: '<div class="indicator indicator-marker ' + area + '"><div class="indicator-marker__arrow' + bearing + '"></div><span>' + ind + '</span></div>'
-                });
-                return L.marker(
-                    latLng,
-                    {
-                        icon: i,
-                        title: point.properties.title,
-                        alt: point.properties.indicator
-                    }
-                );
-            }
-        });
-
-        let map = L.map(mapElement.id, {
-            center: L.GeoJSON.coordsToLatLng(stop.geometry.coordinates),
-            zoom: 18,
-            minZoom: 9,
-            maxBounds: L.latLngBounds(
-                L.latLng(49.5, -9.0),
-                L.latLng(61.0, 2.5)
-            )
-        });
-
-        layer.addTo(map);
-        stopGeo.addTo(map);
-    }
-
-    let showButton = document.getElementById("buttonShowMap");
-    let mapDiv = document.getElementById("divMap");
-
-    let mapTransitionEnd = whichTransitionEvent(mapDiv);
+    let mapTransitionEnd = getTransitionEnd(map);
     let mapTransitionCallback = function() {
-        mapDiv.removeEventListener(mapTransitionEnd, mapTransitionCallback);
-        showButton.textContent = "show";
-        showButton.style.display = "none";
-
-        createMap(mapDiv, '{{ config.get("MAPBOX_APP_TOKEN") }}', {{ stop.to_geojson()|tojson }})
-        resizeInd("indicator-marker");
+        map.removeEventListener(mapTransitionEnd, mapTransitionCallback);
+        mapButton.style.display = 'none';
+        addMap(map, '{{ config.get("MAPBOX_APP_TOKEN") }}', {{ stop.to_geojson()|tojson }}, "{{ url_for('static', filename='img/bus-white.svg') }}", "{{ url_for('static', filename='img/tram-white.svg') }}");
+        resizeIndicator('indicator-marker');
     }
 
-    showButton.onclick = function() {
-        showButton.textContent = "loading";
-        mapDiv.style.paddingBottom = "56.25%";
-        this.onclick = null;
-        mapDiv.addEventListener(mapTransitionEnd, mapTransitionCallback);
-    };
+    mapButton.addEventListener('click', function() {
+        map.classList.add('stop-map--open--small');
+        mapButton.textContent = 'Loading';
+        map.addEventListener(mapTransitionEnd, mapTransitionCallback);
+    });
 </script>
-{% if stop.stop_area is not none %}
-<p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">View all stops around {{ stop.stop_area.name }}</a></p>
-{% endif %}
 {% endblock %}

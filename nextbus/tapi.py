@@ -48,7 +48,7 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             parameters["app_key"] = app_key
             url = URL_API
         else:
-            # Use the FCC (Future Capault Cities) API instead, intended for 
+            # Use the FCC (Future Capault Cities) API instead, intended for
             # experimentation
             url = URL_FCC
 

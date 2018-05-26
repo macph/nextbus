@@ -91,12 +91,10 @@ def commit_nspl_data(file_=None):
         :param file_: Path for JSON file. If None, initiates download from
         the Camden Open Data API.
     """
-    get_atco_codes = current_app.config.get("ATCO_CODES")
-    if get_atco_codes != "all" and not isinstance(get_atco_codes, list):
-        raise ValueError("ATCO codes must be set to either 'all' or a list of "
+    atco_codes = current_app.config.get("ATCO_CODES")
+    if atco_codes is not None and not isinstance(atco_codes, list):
+        raise ValueError("ATCO codes must be set to either None or a list of "
                          "codes to filter.")
-    else:
-        atco_codes = None if get_atco_codes == "all" else get_atco_codes
 
     downloaded_file = None
     if file_ is None:

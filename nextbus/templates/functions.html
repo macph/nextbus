@@ -1,16 +1,62 @@
-{% macro stop_full_name(stop) -%}
-{{ stop.name }}{{ ' (%s)'|format(stop.indicator) if stop.indicator }}
-{%- endmacro %}
+{# Functions for templates #}
 
-{% macro resize_indicator(class_name, reverse=false) -%}
-{% set param = 'true' if reverse else 'false' %}
+{# Replaces header with search functionality #}
+{% macro add_search_bar() %}
+<header class="header">
+    <a class="header__home" href="{{ url_for('page.index') }}">
+        <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px">-->
+        <span>nextbus</span>
+    </a>
+    <a id="header-search-button" class="header__right">
+        <span>Search</span>
+    </a>
+</header>
+<div id="header-search-bar" class="search-bar">
+    <form class="search-form search-bar__form" method="post" name="search">
+        <label class="label-hidden" for="search-bar">Find a bus stop</label>
+        {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required) }}
+        {{ g.form.submit_query(id='submit-form') }}
+    </form>
+</div>
 <script>
-    resizeInd("{{ class_name }}", {{ param }});
+    addSearchBarEvents();
 </script>
-{%- endmacro %}
+{% endmacro %}
 
-{% macro print_stop_indicator(stop, area=false) %}
-<div class="indicator {{ 'stop-area-ind' if area else 'stop-ind' }} area-color-{{ stop.admin_area_ref }}">
+{# Prints a list of groups, using <hr> to separate them #}
+{% macro print_groups(list_groups) %}
+{% set ctx = {'first': true} %}
+{% for name, group in list_groups %}
+{% if ctx.first %}
+{% if ctx.update({'first': false}) %}{% endif %} {# Updates dictionary without printing anything #}
+{% else %}
+<hr/>
+{% endif %}
+{{ caller(name, group ) }}
+{% endfor %}
+{% endmacro %}
+
+{# Prints a list using callers #}
+{% macro print_list(items, class='') %}
+<ul class="list {{ class }}">
+    {% for i in items %}
+    <li>{{ caller(i) }}</li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{# Prints a list of indices from dictionary #}
+{% macro print_index(items) %}
+<ul class="list-index">
+    {% for name, _ in items|dictsort %}
+    <li><a href="#{{ name }}"><span>{{ name }}</span></a></li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{# Prints the stop indicator #}
+{% macro print_stop_indicator(stop, reverse=false) %}
+<div class="indicator{{ ' indicator--reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}">
     {% if stop.short_ind != '' %}
     <span>{{ stop.short_ind }}</span>
     {% elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] %}
@@ -21,17 +67,11 @@
 </div>
 {%- endmacro %}
 
-{% macro print_localities(list, warning=true) -%}
-{% if list|length > 0 %}
-<div class="list list-places">
-    {% for locality in list %}
-    <a class="item-place" href="{{ url_for('page.list_in_locality', locality_code=locality.code) }}">{{ locality.name }}</a>
-    {% endfor %}
-</div>
-{% elif warning %}
-<p>No localitites found.</p>
-{% endif %}
+
+{% macro stop_full_name(stop) -%}
+{{ stop.name }}{{ ' (%s)'|format(stop.indicator) if stop.indicator }}
 {%- endmacro %}
+
 
 {% macro print_list_stops_dist(list_stops, warning=true) -%}
 {% if list_stops|length > 0 %}

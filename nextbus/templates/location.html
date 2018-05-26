@@ -1,15 +1,18 @@
 {% import 'functions.html' as f %}
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
 integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin=""/>
-     <!-- Make sure you put this AFTER Leaflet's CSS -->
 <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
 {% endblock %}
 
-{% block title %}Stops by location{% endblock %}
+{% block title %}Stops near location{% endblock %}
+
+{% block outer_header %}
+{{ f.add_search_bar() }}
+{% endblock %}
 
 {% block heading %}
 <h1>Stops near location</h1>
@@ -17,118 +20,65 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 {% endblock %}
 
 {% block content %}
-<div class="heading-inline">
-    <h2>Map</h2>
-    <button id="buttonShowMap" class="small-button" type="button" onclick="" value="show">show</button>
+<div class="columns">
+    <div class="column-1">
+        <section class="box-item">
+            <h2>Stops</h2>
+            {% if list_stops|length > 0 %}
+            {% call(s) f.print_list(list_stops, 'list--stops-wide') %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s) }}
+                <div class="item__label">{{ s.name }}</div>
+                <div class="item__dist">{{ '%.0f m'|format(s.distance) }}</div>
+            </a>
+            {% endcall %}
+            {% else %}
+            <p>No stops found within 500 metres.</p>
+            {% endif %}
+        </section>
+    </div>
+    <div class="column-1">
+        <section class="box-item">
+            <div class="heading-inline heading-inline--right">
+                <h2>Map</h2>
+                <button id="show-map-button">Show</button>
+            </div>
+            <div id="stop-map" class="stop-map"></div>
+        </section>
+    </div>
 </div>
-<div class="google-maps-js" id="divMap"></div>
-<h2>Stops</h2>
-{{ f.print_list_stops_dist(list_stops) }}
+{% endblock %}
 
-{{ f.resize_indicator("stop-ind") }}
+{% block script %}
 <script>
-    let whichTransitionEvent = function(element) {
-        var transitions = {
-            'transition': 'transitionend',
-            'OTransition': 'oTransitionEnd',
-            'MozTransition': 'transitionend',
-            'WebkitTransition': 'webkitTransitionEnd'
-        };
-        for (var t in transitions) {
-            if (transitions.hasOwnProperty(t) && element.style[t] !== undefined) {
-                return transitions[t];
-            }
-        }
-    };
+    resizeIndicator('indicator');
+</script>
+<script>
+    let mapButton = document.getElementById('show-map-button');
+    let map = document.getElementById('stop-map');
 
-    let createMap = function(mapElement, token, stops, callback) {
-        let layer = L.tileLayer(
-            'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-            {
-                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.emerald',
-                accessToken: token
-            }
-        )
-
-        let stopsGeo = new L.GeoJSON(stops, {
-            pointToLayer: function(point, latLng) {
-                let ind = point.properties.indicator;
-                let area = 'area-color-' + point.properties.admin_area_ref;
-                let bearing = ' indicator-marker__arrow--' + point.properties.bearing;
-                let i = L.divIcon({
-                    className: 'marker',
-                    iconSize: null,
-                    html: '<div class="indicator indicator-marker ' + area + '"><div class="indicator-marker__arrow' + bearing + '"></div><span>' + ind + '</span></div>'
-                });
-                return L.marker(
-                    latLng,
-                    {
-                        icon: i,
-                        title: point.properties.title,
-                        alt: point.properties.indicator
-                    }
-                ).on('click', function(e) {
-                    callback(point.properties.atco_code);
-                });
-            }
-        });
-        let bounds = stopsGeo.getBounds();
-
-        let map = L.map(mapElement.id, {
-            center: bounds.getCenter(),
-            zoom: 18,
-            minZoom: 9,
-            maxBounds: L.latLngBounds(
-                L.latLng(49.5, -9.0),
-                L.latLng(61.0, 2.5)
-            )
-        });
-
-        layer.addTo(map);
-        stopsGeo.addTo(map);
-        map.fitBounds(bounds, {padding: [50, 50]});
+    let mapTransitionEnd = getTransitionEnd(map);
+    let markerGoToStop = function(point) {
+        window.location.href = "{{ url_for('page.stop_atco', atco_code='') }}" +
+            point.properties.atcoCode;
     }
-
-    let lat = {{ coord[0] }}, long = {{ coord[1] }};
-    let yourLocation = {
-        type: 'Feature',
-        geometry: {
-            type: 'Point',
-            coordinates: [long, lat]
-        },
-        properties: {
-            title: 'Your location'
-        }
-    };
-
-    let geojson = {{ data|tojson }};
-    let listStops = geojson.features.map(f=>f.properties);
-
-    let live = new ListLiveStops(
-        "{{ url_for('api.stop_get_times') }}", listStops
-    );
-    live.init();
-
-    let showButton = document.getElementById("buttonShowMap");
-    let mapDiv = document.getElementById("divMap");
-
-    let mapTransitionEnd = whichTransitionEvent(mapDiv);
     let mapTransitionCallback = function() {
-        mapDiv.removeEventListener(mapTransitionEnd, mapTransitionCallback);
-        showButton.textContent = "show";
-        showButton.style.display = "none";
-
-        createMap(mapDiv, '{{ config.get("MAPBOX_APP_TOKEN") }}', geojson, live.markerSelectStop);
-        resizeInd("indicator-marker");
+        map.removeEventListener(mapTransitionEnd, mapTransitionCallback);
+        mapButton.style.display = 'none';
+        addMap(map,
+            "{{ config.get('MAPBOX_APP_TOKEN') }}",
+            {{ data|tojson }},
+            "{{ url_for('static', filename='img/bus-white.svg') }}",
+            "{{ url_for('static', filename='img/tram-white.svg') }}",
+            markerGoToStop
+        );
+        resizeIndicator('indicator-marker');
     }
 
-    showButton.onclick = function() {
-        showButton.textContent = "loading";
-        mapDiv.style.paddingBottom = "56.25%";
-        this.onclick = null;
-        mapDiv.addEventListener(mapTransitionEnd, mapTransitionCallback);
-    };
+    mapButton.addEventListener('click', function() {
+        map.classList.add('stop-map--open');
+        mapButton.textContent = 'Loading';
+        map.addEventListener(mapTransitionEnd, mapTransitionCallback);
+    });
 </script>
 {% endblock %}

@@ -5,15 +5,48 @@ import collections
 import re
 import reprlib
 
-from flask import current_app
+from flask import current_app, request
 
 from nextbus import db, models, ts_parser
+from nextbus.parser import SET_ALPHANUM
 
-
+TYPES = {"area", "place", "stop"}
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
 NAMES_ONLY = False
-PAGE_LENGTH = 50
+PAGE_LENGTH = 25
+
+
+class NoPostcode(Exception):
+    """ Raised if a postcode was identified but it doesn't exist. """
+    def __init__(self, query, postcode, msg=None):
+        if msg is None:
+            msg = "Postcode '%s' does not exist." % postcode
+        super().__init__(msg)
+        self.query = query
+        self.postcode = postcode
+
+
+class QueryTooShort(Exception):
+    """ Raised if query is too short. """
+    def __init__(self, query, msg=None):
+        if msg is None:
+            msg = "Query %r is too short or has invalid characters" % query
+        super().__init__(msg)
+        self.query = query
+        self.short = True
+
+
+class InvalidParameters(Exception):
+    """ Raised if invalid parameters are given by a search query request. """
+    def __init__(self, query, param, values, msg=None):
+        if msg is None:
+            msg = ("Parameter %r for query %r contained invalid values %r"
+                   % (param, query, values))
+        super().__init__(msg)
+        self.query = query
+        self.param = param
+        self.values = values
 
 
 class SearchResult(object):
@@ -58,26 +91,14 @@ class SearchResult(object):
         return self.list is not None
 
 
-class PostcodeException(Exception):
-    """ Raised if a postcode was identified but it doesn't exist. """
-    def __init__(self, query, postcode):
-        super(PostcodeException, self).__init__()
-        self.query = query
-        self.postcode = postcode
-
-    def __str__(self):
-        return ("Postcode '%s' from query %r does not exist."
-                % (self.postcode, self.query))
-
-
 def search_code(query):
     """ Queries stop points and postcodes to find an exact match, returning
         the model object, or None if no match is found.
 
         :param query: Query text returned from search form.
         :returns: SearchResult object with stop or postcode.
-        :raises PostcodeException: if a query was identified as a postcode but
-        it does not exist.
+        :raises NoPostcode: if a query was identified as a postcode but it does
+        not exist.
     """
     postcode = REGEX_POSTCODE.match(query)
     if postcode:
@@ -90,7 +111,7 @@ def search_code(query):
         )
         found = SearchResult(postcode=q_psc)
         if not found:
-            raise PostcodeException(query, (outward + " " + inward).upper())
+            raise NoPostcode(query, (outward + " " + inward).upper())
     else:
         # Search NaPTAN code & ATCO code
         q_stop = (
@@ -133,7 +154,7 @@ def search_all(query, types=None, admin_areas=None, page=1):
             "Search query %r parsed as %r and returned %s result%s" %
             (query, parsed.to_string(), count, "" if count == 1 else "s")
         )
-        result = SearchResult(list_=page if page.items else None)
+        result = SearchResult(list_=page)
 
     return result
 
@@ -148,4 +169,62 @@ def filter_args(query):
     parsed = ts_parser(query)
     types, args = models.FTS.matching_types(parsed, NAMES_ONLY)
 
+    current_app.logger.info("Search query %r have possible filters %r and %r" %
+                            (query, types, args))
+
     return types, args
+
+
+def validate_characters(query):
+    """ Strips out all punctuation and whitespace by using character sets and
+        check if the remaining set has enough characters.
+    """
+    if not set(query) & SET_ALPHANUM:
+        raise QueryTooShort(query)
+
+
+def validate_params(query):
+    """ Checks parameters given with search query and throw exception if they
+        are invalid.
+
+        :param query: Search query to be passed to exception.
+        :returns: Arguments for searching created from query string as dict
+        :raises InvalidParameters: Query string parameter contained invalid
+        values
+    """
+    params = {}
+
+    if request.args.get("type"):
+        set_types = set(request.args.getlist("type"))
+        invalid_types = set_types - TYPES
+        if invalid_types:
+            raise InvalidParameters(query, "type", invalid_types)
+        params["types"] = list(set_types & TYPES)
+
+    if request.args.get("area"):
+        params["admin_areas"] = request.args.getlist("area")
+
+    if request.args.get("page"):
+        try:
+            page_number = int(request.args.get("page"))
+            if page_number < 1:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise InvalidParameters(query, "page", request.args.get("page"))
+        else:
+            params["page"] = page_number
+
+    return params
+
+
+def validate_after_search(query, types, areas):
+    """ Validates parameters after querying results and list of matching areas
+        and types.
+    """
+    invalid_types = set(request.args.getlist("type")) - types.keys()
+    if invalid_types:
+        raise InvalidParameters(query, "type", invalid_types)
+
+    invalid_areas = set(request.args.getlist("areas")) - areas.keys()
+    if invalid_areas:
+        raise InvalidParameters(query, "area", invalid_areas)

@@ -2,46 +2,47 @@
 <html lang="en">
     <head>
         {% block head %}
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#191970">
+        <meta charset="UTF-8">
+        <meta name="theme-color" name="theme-color" content="#002171">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.css">
         <link rel="stylesheet" type=text/css href="https://use.typekit.net/mwf5bfg.css">
-        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}"/>
+        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}">
         <script type="text/javascript" src="{{ url_for('static', filename='nextbus.js') }}"></script>
-        <title>{% block title %}{% endblock %} - NextBus</title>
+        <title>{% block title %}{% endblock %} - nextbus</title>
         {% endblock %}
     </head>
     <body>
-        <div id="divHeaderOuter">
-        </div>
-        <div id="divHeader">
-            <header>
-                {% block header %}
-                <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px"> <a href="{{ url_for('page.index') }}">nextbus</a>
-                {% endblock %}
+        <div class="outer-header">
+            {% block outer_header %}
+            <header class="header">
+                <a class="header__home" href="{{ url_for('page.index') }}">
+                    <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px">-->
+                    <span>nextbus</span>
+                </a>
             </header>
+            {% endblock %}
         </div>
-        <div id="divHeadingOuter">
+        <div class="outer-content">
+            {% block main %}
+            <main class="content">
+                <div class="heading">
+                    {% block nav %}{% endblock %}
+                    {% block heading %}{% endblock %}
+                </div>
+                {% block content %}{% endblock %}
+            </main>
+            {% endblock %}
         </div>
-        <div id="divHeading">
-            <nav>
-                {% block nav %}{% endblock %}
-            </nav>
-            {% block heading %}{% endblock %}
-        </div>
-        <div id="divContentOuter">
-        </div>
-        <div id="divContent">
-            {% block content %}{% endblock %}
-        </div>
-        <div id="divFooterOuter">
-        </div>
-        <div id=divFooter>
-            <footer>
+        <div class="outer-footer">
+            <footer class="footer">
                 {% block footer %}
-                &copy; Ewan Macpherson, 2018. <a href="{{ url_for('page_ns.about') }}">About this website</a>
+                <span class="footer__text">
+                    &copy; Ewan Macpherson and data sources, 2017&ndash;18. <a href="{{ url_for('page.about') }}">About this website</a>
+                </span>
                 {% endblock %}
             </footer>
         </div>
+    {% block script %}{% endblock %}
     </body>
 </html>

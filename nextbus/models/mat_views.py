@@ -226,11 +226,17 @@ class FTS(utils.MaterializedView):
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
-    TYPES = {
-        "area": [m.__tablename__ for m in [Region, AdminArea, District]],
-        "place": [m.__tablename__ for m in [Locality]],
-        "stop": [m.__tablename__ for m in [StopArea, StopPoint]]
+    TYPE_NAMES = {
+        "area": "Areas",
+        "place": "Places",
+        "stop": "Stops"
     }
+    TYPES = {
+        "area": {m.__tablename__ for m in [Region, AdminArea, District]},
+        "place": {m.__tablename__ for m in [Locality]},
+        "stop": {m.__tablename__ for m in [StopArea, StopPoint]}
+    }
+
     MINIMUM_AREA_RANK = 0.5
     MINIMUM_STOP_RANK = 0.25
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
@@ -295,18 +301,20 @@ class FTS(utils.MaterializedView):
 
         # Filter by table name if requested
         if types is not None:
-            if any(t not in cls.TYPES for t in types):
-                raise ValueError("Set of types must only contain the values "
-                                 "%s" % set(cls.TYPES.keys()))
-            # Match types with table names
-            tables = [t for type_, tables in cls.TYPES.items() for t in tables
-                      if type_ in types]
+            tables = []
+            for type_ in types:
+                if type_ not in cls.TYPES:
+                    raise ValueError("Type %s is invalid. Set of types must "
+                                     "only contain the values %s." %
+                                     (type_, list(cls.TYPES.keys())))
+                tables.extend(cls.TYPES[type_])
             if tables:
                 match = match.filter(cls.table_name.in_(tables))
 
         # Filter by admin area code if requested
         if admin_areas is not None:
-            match = match.filter(cls.admin_area_ref.in_(admin_areas))
+            match = match.filter(cls.admin_area_ref.in_(admin_areas),
+                                 cls.admin_area_ref.isnot(None))
 
         # Finally, match the query
         match = match.filter(cls._match(string))
@@ -326,28 +334,27 @@ class FTS(utils.MaterializedView):
             :returns: Query expression to be executed.
         """
 
-        expression = cls._match_query(query, types, admin_areas)
-        match = expression.cte("match")
+        match = cls._match_query(query, types, admin_areas).cte("match")
         match_b = match.alias("match_b")
 
-        result = (
+        expression = (
             db.session.query(match)
             .outerjoin(match_b, match.c.stop_area_ref == match_b.c.code)
             .filter(match_b.c.code.is_(None))
         )
 
         if names_only:
-            result = result.filter(db.or_(
+            expression = expression.filter(db.or_(
                 match.c.rank > cls.MINIMUM_AREA_RANK,
                 db.and_(match.c.table_name == StopPoint.__tablename__,
                         match.c.rank > cls.MINIMUM_STOP_RANK)
             ))
 
         # Order by rank, name and indicator
-        result = result.order_by(db.desc(match.c.rank), match.c.name,
-                                 match.c.short_ind)
+        expression = expression.order_by(db.desc(match.c.rank), match.c.name,
+                                         match.c.short_ind)
 
-        return result
+        return expression
 
     @classmethod
     def matching_types(cls, query, names_only=True):
@@ -360,7 +367,7 @@ class FTS(utils.MaterializedView):
             :param query: A ParseResult object or a string.
             :param names_only: Sets thresholds for search rankings such that
             only results that match the higher weighted lexemes are retained.
-            :returns: A tuple with a list of types and a list of tuples with
+            :returns: A tuple with a dict of types and a dict  of tuples with
             administrative area references and names
         """
         try:
@@ -368,30 +375,30 @@ class FTS(utils.MaterializedView):
         except AttributeError:
             string = query
 
-        match = (
-            db.session.query(cls.table_name, cls.admin_area_ref,
-                             cls.admin_area_name)
-            .distinct(cls.table_name, cls.admin_area_ref)
-            .filter(cls._match(string))
+        # Search all types and admin areas
+        match = cls._match_query(query).cte("match")
+
+        expression = (
+            db.session.query(match.c.table_name, match.c.admin_area_ref,
+                             match.c.admin_area_name)
+            .distinct(match.c.table_name, match.c.admin_area_ref)
         )
 
         if names_only:
-            match = match.filter(db.or_(
+            expression = expression.filter(db.or_(
                 match.c.rank > cls.MINIMUM_AREA_RANK,
                 db.and_(match.c.table_name == StopPoint.__tablename__,
                         match.c.rank > cls.MINIMUM_STOP_RANK)
-                ))
+            ))
 
-        result = match.all()
-        # Sort results into separate sets
+        result = expression.all()
+        # Sort results into separate sets and group tables into types
         tables = {row.table_name for row in result}
-        s_areas = {(row.admin_area_ref, row.admin_area_name) for row in result}
-        areas = sorted(list(s_areas), key=lambda r: r[1])
+        s_areas = {(row.admin_area_ref, row.admin_area_name) for row in result
+                   if row.admin_area_ref.isnot(None)}
 
-        # Group table names into types
-        types = []
-        for type_, t in cls.TYPES.items():
-            if tables & set(t):
-                types.append(type_)
+        types = {t: cls.TYPE_NAMES[t] for t, set_ in cls.TYPES.items()
+                 if tables & set_}
+        areas = dict(s_areas)
 
         return types, areas

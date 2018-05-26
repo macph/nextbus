@@ -32,7 +32,7 @@ class Region(utils.BaseModel):
             db.session.query(
                 db.case([(District.code.is_(None),
                           utils.table_name(AdminArea))],
-                        else_=utils.table_name(District)).label("table"),
+                        else_=utils.table_name(District)).label("table_name"),
                 db.case([(District.code.is_(None), AdminArea.code)],
                         else_=District.code).label("code"),
                 db.case([(District.code.is_(None), AdminArea.name)],
@@ -153,7 +153,7 @@ class Locality(utils.BaseModel):
         """
         stops = (
             db.session.query(
-                utils.table_name(StopPoint).label("table"),
+                utils.table_name(StopPoint).label("table_name"),
                 StopPoint.atco_code.label("code"),
                 StopPoint.name.label("name"),
                 StopPoint.short_ind.label("short_ind"),
@@ -171,7 +171,7 @@ class Locality(utils.BaseModel):
             )
             stop_areas = (
                 db.session.query(
-                    utils.table_name(StopArea).label("table"),
+                    utils.table_name(StopArea).label("table_name"),
                     StopArea.code.label("code"),
                     StopArea.name.label("name"),
                     StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
@@ -258,6 +258,11 @@ class StopPoint(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Declared in case it needs to be defined for stops near a point
+        distance = None
+
     def __repr__(self):
         if "atco_code" in self.__dict__:
             repr_text = "<StopPoint(atco_code=%r)>" % self.atco_code
@@ -267,29 +272,48 @@ class StopPoint(utils.BaseModel):
         return repr_text
 
     @classmethod
-    def in_range(cls, coord):
+    def within_box(cls, box):
+        """ Finds all stop points within a box with latitude and longitude
+            coordinates for each side.
+
+            :param box: BoundingBox object with north, east, south and west
+            attributes
+            :returns: Unordered list of StopPoint objects
+        """
+        try:
+            nearby_stops = cls.query.filter(
+                db.between(StopPoint.latitude, box.south, box.north),
+                db.between(StopPoint.longitude, box.west, box.east)
+            ).all()
+        except AttributeError:
+            raise TypeError("Box %r is not a valid BoundingBox object." % box)
+
+        return nearby_stops
+
+    @classmethod
+    def in_range(cls, latitude, longitude):
         """ Finds stop points in range of lat/long coordinates.
 
             Returns an ordered list of stop points and their distances from
             said coordinates.
 
-            :param coord: Latitude and longitude as tuple of two floats.
-            :returns: List of tuples (stop, distance from coord), sorted by the
-            latter value.
+            :param latitude: Latitude of centre point
+            :param longitude: Longitude of centre point
+            :returns: List of StopPoint objects with distance attribute added
+            and sorted.
         """
-        lat_0, long_0, lat_1, long_1 = location.bounding_box(coord, MAX_DIST)
-        nearby_stops = cls.query.filter(
-            db.between(StopPoint.latitude, lat_0, lat_1),
-            db.between(StopPoint.longitude, long_0, long_1)
-        ).all()
+        box = location.bounding_box(latitude, longitude, MAX_DIST)
+        nearby_stops = cls.within_box(box)
 
         stops = []
         for stop in nearby_stops:
-            dist = location.get_dist(coord, (stop.latitude, stop.longitude))
+            dist = location.get_distance((latitude, longitude),
+                                         (stop.latitude, stop.longitude))
             if dist < MAX_DIST:
-                stops.append((stop, dist))
+                stop.distance = dist
+                stops.append(stop)
 
-        return sorted(stops, key=lambda s: s[1])
+        return sorted(stops, key=lambda s: s.distance)
 
     def to_geojson(self):
         """ Outputs stop point data in GeoJSON format.
@@ -304,13 +328,14 @@ class StopPoint(utils.BaseModel):
                 "coordinates": [self.longitude, self.latitude]
             },
             "properties": {
-                "atco_code": self.atco_code,
-                "naptan_code": self.naptan_code,
+                "atcoCode": self.atco_code,
+                "naptanCode": self.naptan_code,
                 "title": self.name + title_ind,
                 "name": self.name,
                 "indicator": self.short_ind,
-                "admin_area_ref": self.admin_area_ref,
-                "bearing": self.bearing
+                "bearing": self.bearing,
+                "stopType": self.stop_type,
+                "adminAreaRef": self.admin_area_ref,
             }
         }
 
@@ -345,4 +370,4 @@ class Postcode(utils.BaseModel):
 
     def stops_in_range(self):
         """ Returns a list of all stop points within range. """
-        return StopPoint.in_range((self.latitude, self.longitude))
+        return StopPoint.in_range(self.latitude, self.longitude)

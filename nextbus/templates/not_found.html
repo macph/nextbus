@@ -1,14 +1,16 @@
-{% extends "base.html" %}
-{% block title %}Page not found{% endblock %}
-{% block head %}
-    {{ super() }}
-{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Welp, a 404.{% endblock %}
 
 {% block heading %}
-<h1>Welp.</h1>
+<h1>Welp, a 404.</h1>
 {% endblock %}
 
 {% block content %}
-<p>{{ message|safe }}</p>
-<p><a href="{{ url_for('page.index') }}">Go back to the home page</a></p>
+<section class="box-item">
+    <h2>Page not found</h2>
+    <p>{{ message }}</p>
+    <p>If you typed in the address by hand, or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
+    <p>You can try searching or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
+</section>
 {% endblock %}

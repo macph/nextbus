@@ -2,22 +2,55 @@
 {% extends "base.html" %}
 {% block title %}{{ district.name }} district{% endblock %}
 
-{% block nav %}
-<ul class="breadcrumbs">
-    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=district.admin_area.region.code) }}">{{ district.admin_area.region.name }}</a></li>
-    <li><a href="{{ url_for('page.list_in_area', area_code=district.admin_area.code) }}">{{ district.admin_area.name }}</a></li>
-    <li>{{ district.name }}</li>
-</ul>
+{% block outer_header %}
+{{ f.add_search_bar() }}
 {% endblock %}
 
 {% block heading %}
+<nav>
+    <ul class="breadcrumbs">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        <li><a href="{{ url_for('page.list_in_region', region_code=district.admin_area.region.code) }}">{{ district.admin_area.region.name }}</a></li>
+        <li><a href="{{ url_for('page.list_in_area', area_code=district.admin_area.code) }}">{{ district.admin_area.name }}</a></li>
+        <li>{{ district.name }}</li>
+    </ul>
+</nav>
 <h1>{{ district.name }}</h1>
 {% endblock %}
 
 {% block content %}
-{% for group in localities|dictsort %}
-<h2 id="{{ group[0] }}">{{ group[0] }}</h2>
-{{ f.print_localities(group[1]) }}
-{% endfor %}
+{% if localities|length > 1 %}
+<div class="columns">
+    <div class="column-1">
+        <section class="box-item box-item--aside">
+            <h2>Places</h2>
+            {{ f.print_index(localities) }}
+        </section>
+    </div>
+    <div class="column-3">
+        <section class="box-item">
+            {% call(name, group) f.print_groups(localities|dictsort) %}
+            <h3 id="{{ name }}">{{ name }}</h3>
+            {% call(l) f.print_list(group, 'list--places') %}
+            <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
+            {% endcall %}
+            {% endcall %}
+        </section>
+    </div>
+</div>
+{% elif localities %}
+<section class="box-item">
+    <h2>Places</h2>
+    {% for _, group in localities.items() %}
+    {% call(l) f.print_list(group, 'list--places') %}
+    <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
+    {% endcall %}
+    {% endfor %}
+</section>
+{% else %}
+<section class="box-item">
+    <h2>Places</h2>
+    <p>No places found.</p>
+</section>
+{% endif %}
 {% endblock %}

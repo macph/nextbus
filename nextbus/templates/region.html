@@ -1,29 +1,33 @@
+{% import 'functions.html' as f %}
 {% extends "base.html" %}
 {% block title %}{{ region.name }} region{% endblock %}
 
-{% block nav %}
-<ul class="breadcrumbs">
-    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-</ul>
+{% block outer_header %}
+{{ f.add_search_bar() }}
 {% endblock %}
 
 {% block heading %}
+<nav>
+    <ul class="breadcrumbs">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    </ul>
+</nav>
 <h1>{{ region.name }}</h1>
 {% endblock %}
 
 {% block content %}
-{% if areas|length > 0 %}
-<h2>Areas</h2>
-<div class="list list-places">
-    {% for ad in areas %}
-    {% if ad.table == 'admin_area' %}
-    <a class="item-place" href="{{ url_for('page.list_in_area', area_code=ad.code) }}">{{ ad.name }}</a>
-    {% elif ad.table == 'district' %}
-    <a class="item-place" href="{{ url_for('page.list_in_district', district_code=ad.code) }}">{{ ad.name }}</a>
+<section class="box-item">
+    <h2>Areas</h2>
+    {% if areas %}
+    {% call(a) f.print_list(areas, 'list--places') %}
+    {% if a.table_name == 'admin_area' %}
+    <a class="item item--place" href="{{ url_for('page.list_in_area', area_code=a.code) }}">{{ a.name }}</a></li>
+    {% elif a.table_name == 'district' %}
+    <a class="item item--place" href="{{ url_for('page.list_in_district', district_code=a.code) }}">{{ a.name }}</a>
     {% endif %}
-    {% endfor %}
-</div>
-{% else %}
-<p>No areas or districts found.</p>
-{% endif %}
+    {% endcall %}
+    {% else %}
+    <p>No areas or districts found.</p>
+    {% endif %}
+</section>
 {% endblock %}

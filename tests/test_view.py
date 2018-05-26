@@ -17,13 +17,14 @@ class GeoJsonTests(utils.BaseAppTests):
             "coordinates": [-1.49382723113, 53.36567543456]
         },
         "properties": {
-            "atco_code": "370020602",
-            "naptan_code": "37020602",
+            "atcoCode": "370020602",
+            "naptanCode": "37020602",
             "name": "Cherry Tree Road",
             "indicator": "adj",
             "title": "Cherry Tree Road (adj)",
-            "admin_area_ref": "099",
-            "bearing": "SW"
+            "adminAreaRef": "099",
+            "bearing": "SW",
+            "stopType": "BCT"
         }
     }
 

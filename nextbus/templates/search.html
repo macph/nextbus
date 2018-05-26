@@ -1,69 +1,174 @@
 {% import 'functions.html' as f %}
 {% extends 'base.html' %}
-{% block title %}Search results{% endblock %}
+{% block title %}Search results for "{{ query }}"{% endblock %}
 
-{% block nav %}
-<ul class="breadcrumbs">
-    <li><a href="{{ url_for('page.index') }}">Back to home page</a></li>
-</ul>
-{% endblock %}
+{% set f_types = filter_types|default(false) and filter_types|length > 1 %}
+{% set f_areas = filter_areas|default(false) and filter_areas|length > 1 %}
+
+{# Set checkbox as checked if matching value is in query string #}
+{% macro checked(name, value) %}
+{% if value in request.args.getlist(name) %}checked{% endif %}
+{% endmacro %}
+
+{# Sets up a list of checkboxes for each filter list #}
+{% macro filter_list(name, list) %}
+<fieldset class="filter-list">
+    <legend>by {{ name }}</legend>
+    <ul>
+        {% for value, label in list|dictsort(by='value') %}
+        <li>
+            <label class="filter-item" for"{{ name }}-{{ value }}">
+                <input type="checkbox" id="{{ name }}-{{ value }}" name="{{ name }}" value="{{ value }}" {{ checked(name, value) }}>
+                {{ label }}
+            </label>
+        </li>
+        {% endfor %}
+    </ul>
+</fieldset>
+{% endmacro %}
 
 {% block heading %}
-<h1>Results for "{{ query }}"</h1>
+<h1>Search results</h1>
 {% endblock %}
 
 {% block content %}
-<div class="search-box box-upper-margin">
-    <form class="search-form" method="post" name="search">
-        {{ g.form.hidden_tag() }}
-        <div class="search-field">
-            {{ g.form.search_query(placeholder="Another place or stop...", value=query, required=g.form.search_query.flags.required) }}
-        </div>
-        <div class="search-submit">
-            <input class="form-submit" type="submit" name="submit_query" value=">">
-        </div>
-    </form>
+<div class="columns">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="box-item">
+            <form class="search-form" action="" method="post" name="search">
+                {{ g.form.hidden_tag() }}
+                <label class="label-hidden" for="search-form">Find a bus stop</label>
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required) }}
+                {{ g.form.submit_query(id='submit-form') }}
+            </form>
+        </section>
+    </div>
 </div>
-{% if error %}
-<div class="nothing-found">
-    <p>{{ error }}</p>
-</div>
-{% else %}
-<h2>Results</h2>
-<p>{{ types }}</p>
-<p>{{ areas }}</p>
-{% if results.items %}
-<div class="list list-places-search">
-    {% for r in results.items %}
-    {% if r.table_name == 'region' %}
-    <a class="item-place item-area-search" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
-    {% elif r.table_name == 'admin_area' %}
-    <a class="item-place item-area-search" href="{{ url_for('page.list_in_area', area_code=r.code) }}">{{ r.name }}</a>
-    {% elif r.table_name == 'district' %}
-    <a class="item-place item-area-search" href="{{ url_for('page.list_in_district', district_code=r.code) }}">{{ r.name }}, {{ r.admin_area_name }}</a>
-    {% elif r.table_name == 'locality' %}
-    <a class="item-place item-place-search" href="{{ url_for('page.list_in_locality', locality_code=r.code) }}">{{ r.name }}, {{ r.district_name if r.district_name else r.admin_area_name }}</a>
-    {% elif r.table_name == 'stop_point' %}
-    {% set sep = joiner() %}
-    <a class="item-stop item-stop-search" href="{{ url_for('page.stop_atco', atco_code=r.code) }}">
-        {{ f.print_stop_indicator(r) }}
-        <div class="stop-label">{{ r.name }}</div>
-        <div class="stop-label stop-description">{% if r.street %}{{ sep() }}{{ r.street }}{% endif %}{% if r.locality_name %}{{ sep() }}{{ r.locality_name }}{% endif %}{{ sep() }}{{ r.district_name if r.district_name else r.admin_area_name }}</div>
-    </a>
-    {% elif r.table_name == 'stop_area' %}
-    {% set sep = joiner() %}
-    <a class="item-stop item-stop-search" href="{{ url_for('page.stop_area', stop_area_code=r.code) }}">
-        {{ f.print_stop_indicator(r, area=true) }}
-        <div class="stop-label">{{ r.name }}</div>
-        <div class="stop-label stop-description">{% if r.locality_name %}{{ sep() }}{{ r.locality_name }}{% endif %}{{ sep() }}{% if r.district_name %}{{ r.district_name }}{% else %}{{ r.admin_area_name }}{% endif %}</div>
-    </a>
+<div class="columns">
+    {% if f_types or f_areas %}
+    <div class="column-1">
+        <section class="box-item box-item--aside">
+            <div class="heading-inline heading-inline--right">
+                <h2>Filter</h2>
+                <button id="filter-show-button" class="filter-button">Show</button>
+            </div>
+            <div id="filter-list" class="filter-form-wrapper">
+                <form class="filter-form" method="get">
+                    <div class="filter-form__scrolling">
+                        {% if f_types %}
+                        {{ filter_list('type', filter_types) }}
+                        {% endif %}
+                        {% if f_areas %}
+                        {{ filter_list('area', filter_areas) }}
+                        {% endif %}
+                    </div>
+                    <button class="filter-submit">Refresh</button>
+                </form>
+            </div>
+        </section>
+    </div>
+    {% else %}
+    <div class="column-1 column--empty"></div>
     {% endif %}
-    {% endfor %}
+    <div class="column-3">
+        <section class="box-item">
+            {% if results is defined and results.total > 0 %}
+            <h2>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h2>
+            {% if results.items|length > 0 %}
+            {% call(item) f.print_list(results.items) %}
+            {% if item.table_name == 'region' %}
+            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_region', region_code=item.code) }}">{{ item.name }}</a>
+            {% elif item.table_name == 'admin_area' %}
+            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_area', area_code=item.code) }}">{{ item.name }}</a>
+            {% elif item.table_name == 'district' %}
+            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_district', district_code=item.code) }}">{{ item.name }}, {{ item.admin_area_name }}</a>
+            {% elif item.table_name == 'locality' %}
+            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}">{{ item.name }}, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
+            {% elif item.table_name == 'stop_area' %}
+            <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(item, reverse=true) }}
+                <div class="item__label">{{ item.name }}</div>
+            </a>
+            {% elif item.table_name == 'stop_point' %}
+            <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(item) }}
+                <div class="item__label">{{ item.name }}</div>
+            </a>
+            {% endif %}
+            {% endcall %}
+            {% if results.has_next or results.has_prev %}
+            <div class="page-select">
+                <p>
+                    {% if results.has_prev %}
+                    <a href="?page={{ results.prev_num }}"><span>Previous page</span> <span>({{ results.prev_num }} of {{ results.pages }})</span></a>
+                    {% endif %}
+                </p>
+                <p>
+                    {% if results.has_next %}
+                    <a href="?page={{ results.next_num }}"><span>Next page</span> <span>({{ results.next_num }} of {{ results.pages}})</span></a>
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+            {% else %}
+            <p>Page {{ request.args.get("page") }} is out of range for this search query.</p>
+            <p><a href="?">Go back to page 1</a></p>
+            {% endif %}
+            {% elif results is defined and (f_types or f_areas) %}
+            <h2>No results found</h2>
+            <p>The filter choices you selected for query <strong>{{ query }}</strong> resulted in no matches.</p>
+            <p><a href="?">Reset filters</a></p>
+            {% elif results is defined %}
+            <h2>No results found</h2>
+            <p>The query <strong>{{ query }}</strong> returned no matches. You could try:</p>
+            <ul class="dashed-list">
+                <li>Checking your query for typos;</li>
+                <li>Using more general keywords;</li>
+                <li>Using less keywords to make your query more broad.</li>
+            </ul>
+            {% else %}
+            <h2>No results found</h2>
+            {% if error.postcode is defined %}
+            <p>The postcode <strong>{{ error.postcode }}</strong> cannot be found; it may not exist or lies outside the area this website covers.</p>
+            {% elif error.param is defined %}
+            <p>Your address is not valid.</p>
+            <p>If you typed the address by hand or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
+            <p>You can try <a href="?">searching with the filters reset</a>, or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
+            {% elif error.short is defined %}
+            <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
+            {% else %}
+            <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvience.</p>
+            {% endif %}
+            {% endif %}
+        </section>
+    </div>
 </div>
-{% else %}
-<p>No results matching your criteria can be found.</p>
-{% endif %}
-{{ f.resize_indicator("stop-ind") }}
-{{ f.resize_indicator("stop-area-ind", true) }}
+{% endblock %}
+
+{% block script %}
+<script>
+    resizeIndicator('indicator');
+    revertColours('indicator--reversed');
+</script>
+{% if f_types or f_areas %}
+<script>
+    let showFilter = false;
+    let filterButton = document.getElementById("filter-show-button");
+    let filterList = document.getElementById("filter-list");
+    filterButton.addEventListener('click', function() {
+        showFilter = !showFilter;
+        filterList.style.height = (showFilter) ? filterList.scrollHeight + 'px' : '';
+        filterList.style.marginTop = filterList.style.marginBottom = (showFilter) ? '10px': '';
+        filterButton.textContent = (showFilter) ? 'Hide' : 'Show';
+    });
+    window.addEventListener('resize', function() {
+        if (showFilter) {
+            // Reset height, otherwise scrollHeight's value will just increase
+            filterList.style.height = 'auto';
+            filterList.style.height = filterList.scrollHeight + 'px';
+        }
+    })
+</script>
 {% endif %}
 {% endblock %}

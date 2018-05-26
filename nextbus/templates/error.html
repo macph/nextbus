@@ -1,14 +1,14 @@
-{% extends "base.html" %}
-{% block title %}Server error{% endblock %}
-{% block head %}
-    {{ super() }}
-{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Cripes, a 500.{% endblock %}
 
 {% block heading %}
-<h1>Cripes.</h1>
+<h1>Cripes, a server error.</h1>
 {% endblock %}
 
 {% block content %}
-<p>Something went wrong with the server! Don't worry about it, the administrator has already been notified.</p>
-<p><a href="{{ url_for('page.index') }}">Go back to the home page</a></p>
+<section class="box-item">
+    <p>Something went wrong with the server! Don't worry about it, the administrator has already been notified.</p>
+    <p>You can <a href="{{ url_for('page.index') }}">go back to the home page</a> and try again.</p>
+</section>
 {% endblock %}

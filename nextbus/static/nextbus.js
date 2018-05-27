@@ -205,7 +205,7 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
         self.headingTime.textContent = 'Updating...'
         let request = new XMLHttpRequest();
         request.open('POST', self.postURL, true);
-        request.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
 
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE) {
@@ -227,7 +227,7 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
             }
         }
 
-        request.send(JSON.stringify({code: self.atcoCode}));
+        request.send("code=" + self.atcoCode);
     };
 
     /**

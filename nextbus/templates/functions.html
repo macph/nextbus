@@ -12,7 +12,7 @@
     </a>
 </header>
 <div id="header-search-bar" class="search-bar">
-    <form class="search-form search-bar__form" method="post" name="search">
+    <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
         <label class="label-hidden" for="search-bar">Find a bus stop</label>
         {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required) }}
         {{ g.form.submit_query(id='submit-form') }}

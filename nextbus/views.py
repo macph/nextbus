@@ -82,6 +82,13 @@ def add_search_form():
         object to Flask's ``g``.
     """
     g.form = forms.SearchPlaces()
+    g.action = url_for("page.search_query")
+
+
+@page.route("/query", methods=["POST"])
+def search_query():
+    """ Receives search query in POST request and redirects to another page.
+    """
     if g.form.submit_query.data and g.form.search_query.data:
         query = g.form.search_query.data
         try:
@@ -100,23 +107,21 @@ def add_search_form():
         else:
             return redirect(url_for(".search_results",
                                     query=query.replace(" ", "+")))
-    else:
-        return
 
 
-@page.route("/", methods=["GET", "POST"])
+@page.route("/")
 def index():
     """ The home page. """
     return render_template("index.html")
 
 
-@page.route("/about", methods=["GET", "POST"])
+@page.route("/about")
 def about():
     """ The about page. """
     return render_template("about.html")
 
 
-@page.route("/search/<query>", methods=["GET", "POST"])
+@page.route("/search/<query>")
 def search_results(query):
     """ Shows a list of search results.
 
@@ -178,7 +183,7 @@ def search_no_postcode(error):
     return render_template("search.html", query=error.query, error=error)
 
 
-@page.route("/list/", methods=["GET", "POST"])
+@page.route("/list/")
 def list_regions():
     """ Shows list of all regions. """
     regions = (
@@ -191,7 +196,7 @@ def list_regions():
     return render_template("all_regions.html", regions=regions)
 
 
-@page.route("/list/region/<region_code>", methods=["GET", "POST"])
+@page.route("/list/region/<region_code>")
 def list_in_region(region_code):
     """ Shows list of administrative areas and districts in a region.
         Administrative areas with districts are excluded in favour of listing
@@ -210,7 +215,7 @@ def list_in_region(region_code):
                            areas=region.list_areas())
 
 
-@page.route("/list/area/<area_code>", methods=["GET", "POST"])
+@page.route("/list/area/<area_code>")
 def list_in_area(area_code):
     """ Shows list of districts or localities in administrative area - not all
         administrative areas have districts.
@@ -234,7 +239,7 @@ def list_in_area(area_code):
     return render_template("area.html", area=area, localities=group_local)
 
 
-@page.route("/list/district/<district_code>", methods=["GET", "POST"])
+@page.route("/list/district/<district_code>")
 def list_in_district(district_code):
     """ Shows list of localities in district. """
     district = (
@@ -255,7 +260,7 @@ def list_in_district(district_code):
                            localities=group_local)
 
 
-@page.route("/list/place/<locality_code>", methods=["GET", "POST"])
+@page.route("/list/place/<locality_code>")
 def list_in_locality(locality_code):
     """ Shows stops in locality.
 
@@ -289,7 +294,7 @@ def list_in_locality(locality_code):
                            grouped=group_areas)
 
 
-@page.route("/near/postcode/<code>", methods=["GET", "POST"])
+@page.route("/near/postcode/<code>")
 def list_near_postcode(code):
     """ Show stops within range of postcode. """
     str_postcode = code.replace("+", " ")
@@ -311,7 +316,7 @@ def list_near_postcode(code):
                            list_stops=stops)
 
 
-@page.route("/near/location/<lat_long>", methods=["GET", "POST"])
+@page.route("/near/location/<lat_long>")
 def list_near_location(lat_long):
     """ Show stops within range of a GPS coordinate. """
     sr_m = FIND_COORD.match(lat_long)
@@ -332,7 +337,7 @@ def list_near_location(lat_long):
                            str_coord=str_coord, data=geojson, list_stops=stops)
 
 
-@page.route("/stop/area/<stop_area_code>", methods=["GET", "POST"])
+@page.route("/stop/area/<stop_area_code>")
 def stop_area(stop_area_code):
     """ Show stops in stop area, eg pair of tram platforms. """
     area = (
@@ -355,7 +360,7 @@ def stop_area(stop_area_code):
     return render_template("stop_area.html", stop_area=area, data=geojson)
 
 
-@page.route("/stop/sms/<naptan_code>", methods=["GET", "POST"])
+@page.route("/stop/sms/<naptan_code>")
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN code. """
     stop = (
@@ -381,7 +386,7 @@ def stop_naptan(naptan_code):
     return render_template("stop.html", stop=stop, live_data=data)
 
 
-@page.route("/stop/atco/<atco_code>", methods=["GET", "POST"])
+@page.route("/stop/atco/<atco_code>")
 def stop_atco(atco_code):
     """ Shows stop with ATCO code. """
     stop = (
@@ -406,36 +411,39 @@ def stop_atco(atco_code):
     return render_template("stop.html", stop=stop, live_data=data)
 
 
+def bad_request(status, message):
+    """ Sends a response explaining the bad request. """
+    response = jsonify({"message": message})
+    response.status_code = status
+
+    return response
+
+
 @api.route("/stop/get", methods=["POST"])
 def stop_get_times():
     """ Requests and retrieve bus times. """
-    if request.method != "POST":
-        # Trying to access with something other than POST
-        current_app.logger.error("/stop/get was accessed with something other "
-                                 "than POST")
-        abort(405)
-
-    data = request.get_json()
-
-    if not models.StopPoint.query.get(data["code"]):
-        current_app.logger.error("API accessed with invalid ATCO code %s" %
-                                 data["code"])
-        abort(404)
+    atco_code = request.form.get("code")
+    if atco_code:
+        matching_stop = (db.session.query(models.StopPoint.atco_code)
+                         .filter_by(atco_code=atco_code).one_or_none())
+        if not matching_stop:
+            current_app.logger.error("API accessed with invalid ATCO code %s" %
+                                     atco_code)
+            return bad_request(404, "ATCO code does not exist")
+    else:
+        current_app.logger.error("Data sent was not valid")
+        return bad_request(400, "Data is not valid; must have a 'code' "
+                           "parameter")
 
     try:
-        times = tapi.get_nextbus_times(data["code"])
-    except (KeyError, ValueError):
-        # Malformed request; no ATCO code
+        times = tapi.get_nextbus_times(atco_code)
+    except (HTTPError, ValueError):
+        # Error came up when accessing the external API or it can't be accessed
         current_app.logger.error("Error occurred when retrieving live times "
-                                 "with data %r" % data, exc_info=True)
-        abort(400)
-    except HTTPError:
-        # Problems with the API service
-        current_app.logger.warning("Can't access API service.")
-        abort(503)
+                                 "with data %r" % atco_code, exc_info=True)
+        return bad_request(503, "There was a problem with the external API")
 
     return jsonify(times)
-
 
 
 @page_ns.app_errorhandler(404)
@@ -459,7 +467,3 @@ def error_msg(error):
         Note that this page does not appear in debug mode.
     """
     return render_template("error.html", message=error), 500
-
-@page_ns.route("/error")
-def error_out():
-    raise TypeError

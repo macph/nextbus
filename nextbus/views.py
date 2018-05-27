@@ -16,6 +16,9 @@ from nextbus import db, forms, location, models, parser, search, tapi
 MIN_GROUPED = 72
 FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
                         r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
+FIND_COORD_ZOOM = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
+                             r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
+                             r"(\d+)$")
 
 api = Blueprint("api", __name__, template_folder="templates")
 page = Blueprint("page", __name__, template_folder="templates")
@@ -446,6 +449,31 @@ def stop_atco(atco_code):
     return render_template("stop.html", stop=stop, live_data=data)
 
 
+@page.route("/map/")
+@page.route("/map/<lat_long_zoom>")
+def show_map(lat_long_zoom=None):
+    """ Shows map. """
+    try:
+        if lat_long_zoom is None:
+            raise ValueError
+        sr_m = FIND_COORD_ZOOM.match(lat_long_zoom)
+        if sr_m is None:
+            raise ValueError
+        latitude, longitude = float(sr_m.group(1)), float(sr_m.group(2))
+        zoom = int(sr_m.group(3))
+        # Quick check to ensure coordinates are within range of Great Britain
+        if not (49 < latitude < 61 and -8 < longitude < 2):
+            raise ValueError
+
+    except ValueError:
+        # Centre of GB, min zoom
+        latitude, longitude = 54.00366, -2.547855
+        zoom = 9
+
+    return render_template("map.html", latitude=latitude, longitude=longitude,
+                           zoom=zoom)
+
+
 def bad_request(status, message):
     """ Sends a response explaining the bad request. """
     response = jsonify({"message": message})
@@ -479,6 +507,26 @@ def stop_get_times():
         return bad_request(503, "There was a problem with the external API")
 
     return jsonify(times)
+
+
+@api.route("/box", methods=["GET"])
+def get_stops_within():
+    """ Gets list of stops within area as GeoJSON object. """
+    directions = ["north", "east", "south", "west"]
+
+    try:
+        sides = {d: request.args.get(d) for d in directions}
+        if any(v is None for v in sides.items()):
+            raise ValueError
+    except (TypeError, ValueError):
+        current_app.logger.error("API accessed with invalid params:" % sides)
+        abort(400)
+
+    box = location.Box(**sides)
+    stops = models.StopPoint.within_box(box)
+    geojson = _list_geojson(stops)
+
+    return jsonify(geojson)
 
 
 @page.app_errorhandler(EntityNotFound)

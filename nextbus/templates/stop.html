@@ -41,14 +41,14 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 {% block content %}
 <div class="columns">
     <div class="column-2">
-        <section class="box-item">
+        <section class="card card--min-height">
             <div class="heading-inline heading-inline--right">
                 <h2 id="liveTime">Retrieving live data...</h2>
                 <p id="liveCountdown"></p>
             </div>
             <div id="services"></div>
         </section>
-        <section class="box-item">
+        <section class="card">
             <div class="heading-inline heading-inline--right">
                 <h2>Map</h2>
                 <button id="show-map-button">Show</button>
@@ -57,7 +57,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         </section>
     </div>
     <div class="column-1">
-        <section class="box-item box-item--aside">
+        <section class="card card--aside">
             <h2>Stop information</h2>
             <p>
                 {% set pipe = joiner() %}
@@ -68,7 +68,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
             <p>SMS code <strong>{{ stop.naptan_code}}</strong></p>
         </section>
         {% if stop.stop_area_ref is not none %}
-        <section class="box-item box-item--aside">
+        <section class="card card--aside">
             <h2>Other stops</h2>
             <p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">View all stops around {{ stop.stop_area.name }}</a></p>
         </section>

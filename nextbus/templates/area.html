@@ -17,44 +17,38 @@
 {% endblock %}
 
 {% block content %}
-{% if localities|length > 1 %}
 <div class="columns">
     <div class="column-1">
-        <section class="box-item box-item--aside">
-            <h2>Places</h2>
+        <section class="card card--minor">
+            {% if localities|length > 1 %}
             {{ f.print_index(localities) }}
+            {% endif %}
         </section>
     </div>
     <div class="column-3">
-        <section class="box-item">
+        <section class="card">
+            <h2>{{ 'Places' if localities else 'Districts' }}</h2>
+            {% if localities|length > 1 %}
             {% call(name, group) f.print_groups(localities|dictsort) %}
             <h3 id="{{ name }}">{{ name }}</h3>
             {% call(l) f.print_list(group, 'list--places') %}
             <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
             {% endcall %}
             {% endcall %}
+            {% elif localities %}
+            {% for _, group in localities.items() %}
+            {% call(l) f.print_list(group, 'list--places') %}
+            <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
+            {% endcall %}
+            {% endfor %}
+            {% elif area.districts %}
+            {% call(d) f.print_list(area.districts, 'list--places') %}
+            <a class="item item--place" href="{{ url_for('page.list_in_district', district_code=d.code) }}">{{ d.name }}</a>
+            {% endcall %}
+            {% else %}
+            <p>No districts or places found.</p>
+            {% endif %}
         </section>
     </div>
 </div>
-{% elif localities %}
-<section class="box-item">
-    <h2>Places</h2>
-    {% for _, group in localities.items() %}
-    {% call(l) f.print_list(group, 'list--places') %}
-    <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
-    {% endcall %}
-    {% endfor %}
-</section>
-{% elif area.districts %}
-<section class="box-item">
-    <h2>Districts</h2>
-    {% call(d) f.print_list(area.districts, 'list--places') %}
-    <a class="item item--place" href="{{ url_for('page.list_in_district', district_code=d.code) }}">{{ d.name }}</a>
-    {% endcall %}
-</section>
-{% else %}
-<section class="box-item">
-    <p>No districts or places found.</p>
-</section>
-{% endif %}
 {% endblock %}

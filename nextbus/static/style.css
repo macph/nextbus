@@ -22,7 +22,7 @@ body {
   width: 100%;
   min-height: 100vh;
   box-sizing: border-box;
-  background-color: rgb(250, 250, 250);
+  background-color: rgb(240, 240, 240);
 }
 
 h1 {
@@ -56,6 +56,10 @@ p {
   margin: 10px 0;
   line-height: 1.4;
   font-size: 1.6rem;
+}
+
+.no-wrap {
+  white-space: nowrap;
 }
 
 
@@ -136,6 +140,10 @@ input[type="text"]:focus {
   border-color: rgb(255, 167, 38) !important;
 }
 
+input:invalid {
+    box-shadow: none;
+}
+
 input[type="submit"],
 button {
   height: 28px;
@@ -167,11 +175,6 @@ input[type="submit"]:focus,
 button:focus {
   background: rgb(255, 167, 38);
   color: white;
-}
-
-/* Labels are required for accessiblity but can be hidden */
-.label-hidden {
-  display: none;
 }
 
 /*
@@ -211,25 +214,28 @@ button:focus {
   *  SECTIONS
   */
 
-.box-item {
+.card {
   box-sizing: bounding-box;
   margin: 20px 0;
   padding: 5px 15px;
   background-color: white;
   border: none;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); */
 }
 
-/* Transparent and no shadow in multiple column layouts */
-.box-item--aside {
+/* Transparent & no shadow with multiple columns; no difference in mobile */
+.card--aside {
 }
 
 /* Always transparent with reduced margins in mobile */
-.box-item--minor {
+.card--minor {
   margin-top: 5px;
   margin-bottom: 5px;
   background-color: transparent;
-  box-shadow: none;
+}
+
+.card--min-height {
+  min-height: 160px;
 }
 
 /*
@@ -278,15 +284,14 @@ button:focus {
   z-index: 3;
   flex: none;
   background-color: rgb(0, 33, 113);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.outer-header--under {
-  box-shadow: none;
 }
 
 .outer-content {
   z-index: 2;
+}
+
+.content {
+  padding-bottom: 20px;
 }
 
 .outer-footer {
@@ -335,12 +340,6 @@ button:focus {
 
 .footer__text {
   font-size: 1.4rem;
-  color: rgb(117, 117, 117);
-}
-
-.footer__text > a,
-.footer__text > a:visited {
-  color: inherit;
 }
 
 .footer__text--right {
@@ -361,11 +360,11 @@ button:focus {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  margin: 10px 0;
+  margin: 10px -10px;
 }
 
 .heading-inline > * {
-  margin: 0;
+  margin: 0 10px;
 }
 
 .heading-inline--right {
@@ -427,6 +426,7 @@ button:focus {
   top: 48px; /* Height of header */
   width: 100%;
   height: 0;
+  z-index: 4;
   overflow: hidden;
   box-sizing: border-box;
   background: rgb(0, 33, 113);
@@ -436,7 +436,7 @@ button:focus {
 /* Height 10px margin + input height + 15px margin */
 .search-bar--open {
   height: 61px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); */
 }
 
 .search-bar__form {
@@ -459,7 +459,6 @@ button:focus {
 
 /* Centers the content in middle of page */
 .content--center {
-  padding: 0;
   align-items: center;
   justify-content: stretch;
 }
@@ -534,7 +533,7 @@ button:focus {
   */
 
 .filter-form-wrapper {
-  margin: 0 -10px;
+  margin: 0 -15px;
   height: 0;
   overflow: hidden;
   transition: height 0.4s ease-out;
@@ -549,12 +548,12 @@ button:focus {
 .filter-form__scrolling {
   max-height: 320px;
   overflow-x: visible;
-  overflow-y: scroll;
+  overflow-y: auto;
   margin: 10px 0;
 }
 
 .filter-list {
-  margin: 0 10px;
+  margin: 0 15px;
   padding: 0;
   border: none;
 }
@@ -573,10 +572,17 @@ button:focus {
 .filter-item {
   display: inline-block;
   box-sizing: border-box;
-  width: calc(100% + 20px);
-  margin: 0 -10px;
-  padding: 6px 10px;
+  width: calc(100% + 30px);
+  margin: 0 -15px;
+  padding: 6px 15px;
+
   font-size: 1.6rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
 }
 
 .filter-item:hover {
@@ -584,7 +590,7 @@ button:focus {
 }
 
 .filter-submit {
-  margin: 0 10px;
+  margin: 0 15px;
   align-self: flex-end;
 }
 
@@ -662,11 +668,12 @@ button:focus {
 
 /* List wider than 100% to fill negative margins */
 .list {
-  column-gap: 10px;
+  column-width: auto;
   column-span: none;
-  margin: 10px -10px;
+  column-gap: 0;
+  margin: 10px -15px;
   padding: 0;
-  width: calc(100% + 20px);
+  width: calc(100% + 30px);
   list-style: none;
 }
 
@@ -678,18 +685,13 @@ button:focus {
   column-width: 280px;
 }
 
-.list--stops-wide,
-.list--search {
-  column-width: auto;
-}
-
 /*
   *  LIST ITEMS
   */
 
 .item {
   box-sizing: border-box;
-  padding: 5px 10px;
+  padding: 5px 15px;
   color: inherit;
   -webkit-column-break-inside: avoid; /* Chrome, Safari */
   page-break-inside: avoid;           /* Theoretically FF 20+ */
@@ -714,15 +716,24 @@ button:focus {
   line-height: 1em;
 }
 
-.item--place--search {
+.item--place--tall {
   min-height: 42px;
-  padding-left: calc(10px + 36px + 12px);
 }
 
-.item--stop,
-.item--stop-area {
+.item--stop {
   display: flex;
   align-items: center;
+}
+
+.item--stop--multiline {
+  display: flex;
+  flex-direction: column;
+}
+
+.item--stop--multiline > p {
+  margin: -5px 0 0;
+  padding-left: calc(36px + 12px);
+  font-size: 1.4rem;
 }
 
 .item__label {
@@ -736,6 +747,7 @@ button:focus {
   flex: 0 0 48px;
   font-size: 1.5rem;
   line-height: 1em;
+  text-align: right;
 }
 
 /*
@@ -754,12 +766,12 @@ button:focus {
 
   display: -ms-grid;
   -ms-grid-columns:
-          minmax(48px, max-content)
+    minmax(48px, max-content)
     10px 1fr
     10px minmax(54px, 0.30fr)
     10px minmax(54px, 0.35fr);
 
-  margin: 10px 0;
+  margin: 15px 0;
 }
 
 .service {
@@ -1003,9 +1015,6 @@ button:focus {
   
 /* Remove box shadows and borders from printable pages */
 @media print {
-  .box-item {
-    box-shadow: none;
-  }
   
   .indicator {
     border: none;
@@ -1014,7 +1023,7 @@ button:focus {
 
 /* Add margins on left and right, with border */
 @media (min-width: 480px) {
-  .box-item {
+  .card {
     margin-left: 10px;
     margin-right: 10px;
   }
@@ -1081,12 +1090,11 @@ button:focus {
     flex: 8;
   }
   
-  .box-item--aside {
+  .card--aside {
     background-color: transparent;
-    box-shadow: none;
   }
   
-  .box-item--minor {
+  .card--minor {
     margin-top: 20px;
     margin-bottom: 20px;
   }

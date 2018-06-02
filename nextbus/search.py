@@ -1,16 +1,14 @@
 """
 Search functions for the nextbus package.
 """
-import collections
 import re
 import reprlib
 
-from flask import current_app, request
+from flask import current_app
 
 from nextbus import db, models, ts_parser
 from nextbus.parser import SET_ALPHANUM
 
-TYPES = {"area", "place", "stop"}
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
 NAMES_ONLY = False
@@ -183,48 +181,89 @@ def validate_characters(query):
         raise QueryTooShort(query)
 
 
-def validate_params(query):
+def validate_params(query, params):
     """ Checks parameters given with search query and throw exception if they
         are invalid.
 
         :param query: Search query to be passed to exception.
+        :param params: MultiDict object for parameters returned by request.
         :returns: Arguments for searching created from query string as dict
         :raises InvalidParameters: Query string parameter contained invalid
         values
     """
-    params = {}
+    search_args = {}
+    valid_types = models.FTS.TYPES.keys()
 
-    if request.args.get("type"):
-        set_types = set(request.args.getlist("type"))
-        invalid_types = set_types - TYPES
+    if params.get("type"):
+        set_types = set(params.getlist("type"))
+        invalid_types = set_types - valid_types
         if invalid_types:
             raise InvalidParameters(query, "type", invalid_types)
-        params["types"] = list(set_types & TYPES)
+        search_args["types"] = set_types & valid_types
 
-    if request.args.get("area"):
-        params["admin_areas"] = request.args.getlist("area")
+    if params.get("area"):
+        search_args["admin_areas"] = set(params.getlist("area"))
 
-    if request.args.get("page"):
+    if params.get("page"):
         try:
-            page_number = int(request.args.get("page"))
+            page_number = int(params.get("page"))
             if page_number < 1:
                 raise ValueError
         except (TypeError, ValueError):
-            raise InvalidParameters(query, "page", request.args.get("page"))
+            raise InvalidParameters(query, "page", params.get("page"))
         else:
-            params["page"] = page_number
+            search_args["page"] = page_number
 
-    return params
+    return search_args
 
 
-def validate_after_search(query, types, areas):
+def validate_after_search(query, params, types, areas):
     """ Validates parameters after querying results and list of matching areas
         and types.
+
+        :param params: MultiDict object for parameters returned by request.
+        :param types: Dictionary of matching types returned by filter_args().
+        :param areas: Dictionary of matching areas returned by filter_args().
     """
-    invalid_types = set(request.args.getlist("type")) - types.keys()
+    invalid_types = set(params.getlist("type")) - types.keys()
     if invalid_types:
         raise InvalidParameters(query, "type", invalid_types)
 
-    invalid_areas = set(request.args.getlist("areas")) - areas.keys()
+    invalid_areas = set(params.getlist("area")) - areas.keys()
     if invalid_areas:
         raise InvalidParameters(query, "area", invalid_areas)
+
+
+def filter_text(params, types, areas):
+    """ Creates a string to be printed in search results describing what is
+        being filtered.
+
+        :param params: MultiDict object for parameters returned by request.
+        :param types: Dictionary of matching types returned by filter_args().
+        :param areas: Dictionary of matching areas returned by filter_args().
+        :returns: Readable string with all types and areas joined, or None
+        if no parameters are specified.
+    """
+
+    def print_list(list_):
+        """ Converts a list [x, y, z] to a string 'x, y and z'. """
+        if not list_:
+            return ""
+        elif len(list_) == 1:
+            return list_[0]
+        else:
+            return ", ".join(list_[:-1]) + " and " + list_[-1]
+
+    str_types = print_list(sorted(v for k, v in types.items() if
+                                  k in params.getlist("type")))
+    str_areas = print_list(sorted(v for k, v in areas.items() if
+                                  k in params.getlist("area")))
+
+    if str_types and str_areas:
+        return str_types.capitalize() + " within " + str_areas
+    elif str_types:
+        return str_types.capitalize()
+    elif str_areas:
+        return "All results within " + str_areas
+    else:
+        return None

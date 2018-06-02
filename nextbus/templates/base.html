@@ -3,7 +3,7 @@
     <head>
         {% block head %}
         <meta charset="UTF-8">
-        <meta name="theme-color" name="theme-color" content="#002171">
+        <meta name="theme-color" content="#002171">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.css">
         <link rel="stylesheet" type=text/css href="https://use.typekit.net/mwf5bfg.css">
@@ -17,7 +17,7 @@
             {% block outer_header %}
             <header class="header">
                 <a class="header__home" href="{{ url_for('page.index') }}">
-                    <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px">-->
+                    <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
                     <span>nextbus</span>
                 </a>
             </header>

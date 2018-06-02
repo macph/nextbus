@@ -8,6 +8,7 @@ import string
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
                    redirect, request, url_for)
 from requests import HTTPError
+from werkzeug.urls import url_encode
 
 from nextbus import db, forms, location, models, search, tapi
 
@@ -76,7 +77,7 @@ def _list_geojson(list_stops):
     return geojson
 
 
-@page.before_request
+@page.before_app_request
 def add_search_form():
     """ Search form enabled in every view within blueprint by adding the form
         object to Flask's ``g``.
@@ -85,7 +86,34 @@ def add_search_form():
     g.action = url_for("page.search_query")
 
 
-@page.route("/query", methods=["POST"])
+@page.app_template_global()
+def modify_query(**values):
+    """ Jinja function to modify a query URL by replacing query string
+        parameters with keyword arguments.
+
+        https://stackoverflow.com/a/31121430
+    """
+    args = request.args.copy()
+
+    for attr, new_value in values.items():
+        args[attr] = new_value
+
+    return request.path + "?" + url_encode(args)
+
+
+@page.route("/")
+def index():
+    """ The home page. """
+    return render_template("index.html")
+
+
+@page.route("/about")
+def about():
+    """ The about page. """
+    return render_template("about.html")
+
+
+@page.route("/search", methods=["POST"])
 def search_query():
     """ Receives search query in POST request and redirects to another page.
     """
@@ -109,44 +137,32 @@ def search_query():
                                     query=query.replace(" ", "+")))
 
 
-@page.route("/")
-def index():
-    """ The home page. """
-    return render_template("index.html")
-
-
-@page.route("/about")
-def about():
-    """ The about page. """
-    return render_template("about.html")
-
-
-@page.route("/search/<query>")
+@page.route("/search/<path:query>")
 def search_results(query):
     """ Shows a list of search results.
 
         Query string attributes:
-        type: Specify areas (admin areas and districts), places (localities) or
-        stops (stop points and areas). Can have multiple entries.
-        area: Admin area code, can have multiple entries.
+        - type: Specify areas (admin areas and districts), places (localities)
+        or stops (stop points and areas). Can have multiple entries.
+        - area: Admin area code, can have multiple entries.
+        - page: Page number for results.
     """
     s_query = query.replace("+", " ")
     # Check if query has enough alphanumeric characters, else raise
     search.validate_characters(s_query)
     # Retrieve request arguments, raise if they are not valid
-    params = search.validate_params(query)
+    args = search.validate_params(query, request.args)
 
     # Do the search; raise errors if necessary
     try:
-        result = search.search_all(s_query, **params)
+        result = search.search_all(s_query, **args)
+        if not result:
+            raise ValueError
     except ValueError:
         current_app.logger.error("Query %r resulted in an parsing error" %
                                  query, exc_info=True)
         abort(500)
-    if not result:
-        current_app.logger.error("No valid result was returned for result %r" %
-                                 query)
-        abort(500)
+        return
 
     # Redirect to postcode or stop if one was found
     if result.is_stop():
@@ -159,11 +175,13 @@ def search_results(query):
         # Recalculate to get the result types and areas to filter with
         types, areas = search.filter_args(s_query)
         # Check if query parameters match filter types
-        search.validate_after_search(query, types, areas)
+        search.validate_after_search(query, request.args, types, areas)
+        # Create a string describing what is being filtered
+        text = search.filter_text(request.args, types, areas)
 
         return render_template("search.html", query=s_query,
                                results=result.list, filter_types=types,
-                               filter_areas=areas)
+                               filter_areas=areas, filter_text=text)
 
 
 @page.errorhandler(search.InvalidParameters)
@@ -175,7 +193,7 @@ def search_invalid_parameters(error):
 
 @page.errorhandler(search.QueryTooShort)
 @page.errorhandler(search.NoPostcode)
-def search_no_postcode(error):
+def search_bad_query(error):
     """ Query was too short or non-existent postcode was passed. Not an error
         so no 4xx code required.
     """
@@ -286,6 +304,12 @@ def list_in_locality(locality_code):
 
     group_areas = request.args.get("group") == "true"
     stops = locality.list_stops(group_areas=group_areas)
+    # Check if listed stops do have associated stop areas - enable option to
+    # group by stop areas or not
+    if group_areas and not any(s.table_name == "stop_area" for s in stops):
+        group_areas = None
+    if not group_areas and all(s.stop_area_ref is None for s in stops):
+        group_areas = None
 
     stops = _group_objects(stops, attr="name", default="Stops",
                            minimum=MIN_GROUPED)
@@ -446,8 +470,8 @@ def stop_get_times():
     return jsonify(times)
 
 
-@page_ns.app_errorhandler(404)
-@page_ns.app_errorhandler(EntityNotFound)
+@page.app_errorhandler(EntityNotFound)
+@page.app_errorhandler(404)
 def not_found_msg(error):
     """ Returned in case of an invalid URL, with message. Can be called with
         EntityNotFound, eg if the correct URL is used but the wrong value is

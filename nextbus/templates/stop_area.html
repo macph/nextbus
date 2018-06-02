@@ -32,11 +32,12 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 
 {% block content %}
 <div class="columns">
-    <div class="column-1">
-        <section class="box-item">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="card">
             <h2>Stops</h2>
             {% if stop_area.stop_points|length > 0 %}
-            {% call(s) f.print_list(stop_area.stop_points, 'list--stops-wide') %}
+            {% call(s) f.print_list(stop_area.stop_points, class='list--stops') %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
                 {{ f.print_stop_indicator(s) }}
                 <div class="item__label">{{ s.name }}</div>
@@ -46,9 +47,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
             <p>No stops found.</p>
             {% endif %}
         </section>
-    </div>
-    <div class="column-1">
-        <section class="box-item">
+        <section class="card">
             <div class="heading-inline heading-inline--right">
                 <h2>Map</h2>
                 <button id="show-map-button">Show</button>
@@ -87,7 +86,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     }
 
     mapButton.addEventListener('click', function() {
-        map.classList.add('stop-map--open');
+        map.classList.add('stop-map--open--small');
         mapButton.textContent = 'Loading';
         map.addEventListener(mapTransitionEnd, mapTransitionCallback);
     });

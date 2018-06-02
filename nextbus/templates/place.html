@@ -1,17 +1,6 @@
 {% import 'functions.html' as f %}
 {% extends 'base.html' %}
 
-{% macro places_heading(grouped) %}
-<div class="heading-inline heading-inline--right">
-    <h2>Places</h2>
-    {% if grouped %}
-    <p><a href="?group=false">Ungroup stops</a></p>
-    {% else %}
-    <p><a href="?group=true">Group stops</a></p>
-    {% endif %}
-</div>
-{% endmacro %}
-
 {% set place_name = locality.name + ', ' + (locality.district.name if locality.district is not none else locality.admin_area.name) %}
 {% block title %}{{ place_name }}{% endblock %}
 
@@ -24,9 +13,10 @@
     <ul class="breadcrumbs">
         <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
         <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
-        <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
         {% if locality.district is not none %}
         <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
+        {% else %}
+        <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
         {% endif %}
         <li>{{ locality.name }}</li>
     </ul>
@@ -35,16 +25,27 @@
 {% endblock %}
 
 {% block content %}
-{% if stops|length > 1 %}
 <div class="columns">
+    {% if grouped is not none or stops|length > 1 %}
     <div class="column-1">
-        <section class="box-item box-item--aside">
-            {{ places_heading(grouped) }}
+        <section class="card card--minor">
+            {% if grouped %}
+            <p><a href="?group=false">Ungroup stops</a></p>
+            {% elif grouped is not none %}
+            <p><a href="?group=true">Group stops</a></p>
+            {% endif %}
+            {% if stops|length > 1 %}
             {{ f.print_index(stops) }}
+            {% endif %}
         </section>
     </div>
+    {% else %}
+    <div class="column-1 column--empty"></div>
+    {% endif %}
     <div class="column-3">
-        <section class="box-item">
+        <section class="card">
+            <h2>Stops</h2>
+            {% if stops|length > 1 %}
             {% call(name, group) f.print_groups(stops|dictsort) %}
             <h3 id="{{ name }}">{{ name }}</h3>
             {% call(s) f.print_list(group, 'list--stops') %}
@@ -61,34 +62,28 @@
             {% endif %}
             {% endcall %}
             {% endcall %}
+            {% elif stops %}
+            {% for _, group in stops.items() %}
+            {% call(s) f.print_list(group, 'list--stops') %}
+            {% if s.table_name == 'stop_point' %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s) }}
+                <div class="item__label">{{ s.name }}</div>
+            </a>
+            {% elif s.table_name == 'stop_area' %}
+            <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s, reverse=true) }}
+                <div class="item__label">{{ s.name }}</div>
+            </a>
+            {% endif %}
+            {% endcall %}
+            {% endfor %}
+            {% else %}
+            <p>No bus stops found.</p>
+            {% endif %}
         </section>
     </div>
 </div>
-{% elif stops %}
-<section class="box-item">
-    {{ places_heading(grouped) }}
-    {% for _, group in stops.items() %}
-    {% call(s) f.print_list(group, 'list--stops') %}
-    {% if s.table_name == 'stop_point' %}
-    <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
-        {{ f.print_stop_indicator(s) }}
-        <div class="item__label">{{ s.name }}</div>
-    </a>
-    {% elif s.table_name == 'stop_area' %}
-    <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
-        {{ f.print_stop_indicator(s, reverse=true) }}
-        <div class="item__label">{{ s.name }}</div>
-    </a>
-    {% endif %}
-    {% endcall %}
-    {% endfor %}
-</section>
-{% else %}
-<section class="box-item">
-    <h2>Stops</h2>
-    <p>No bus stops found.</p>
-</section>
-{% endif %}
 {% endblock %}
 
 {% block script %}

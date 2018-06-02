@@ -74,11 +74,11 @@ class AdminArea(utils.BaseModel):
 
     def list_localities(self):
         """ Queries all localities that do contain stops or stop areas. """
+        locality_refs = db.session.query(StopPoint.locality_ref).subquery()
         query_local = (
             Locality.query
-            .distinct(Locality.code, Locality.name)
-            .join(Locality.stop_points)
-            .filter(Locality.admin_area_ref == self.code)
+            .filter(Locality.admin_area_ref == self.code,
+                    Locality.code.in_(locality_refs))
             .order_by(Locality.name)
         )
 
@@ -104,11 +104,11 @@ class District(utils.BaseModel):
 
     def list_localities(self):
         """ Queries all localities that do contain stops or stop areas. """
+        locality_refs = db.session.query(StopPoint.locality_ref).subquery()
         query_local = (
             Locality.query
-            .distinct(Locality.code, Locality.name)
-            .join(Locality.stop_points)
-            .filter(Locality.district_ref == self.code)
+            .filter(Locality.district_ref == self.code,
+                    Locality.code.in_(locality_refs))
             .order_by(Locality.name)
         )
 
@@ -158,16 +158,18 @@ class Locality(utils.BaseModel):
                 StopPoint.name.label("name"),
                 StopPoint.short_ind.label("short_ind"),
                 StopPoint.admin_area_ref.label("admin_area_ref"),
-                StopPoint.stop_type.label("stop_type")
+                StopPoint.stop_type.label("stop_type"),
+                StopPoint.stop_area_ref.label("stop_area_ref")
             )
-            .outerjoin(StopPoint.stop_area)
             .filter(StopPoint.locality_ref == self.code)
         )
 
         if group_areas:
-            stops_not_areas = stops.filter(
-                db.or_(StopPoint.stop_area_ref.is_(None),
-                       StopArea.locality_ref != self.code)
+            stops_not_areas = (
+                stops
+                .outerjoin(StopPoint.stop_area)
+                .filter(db.or_(StopPoint.stop_area_ref.is_(None),
+                               StopArea.locality_ref != self.code))
             )
             stop_areas = (
                 db.session.query(
@@ -176,7 +178,8 @@ class Locality(utils.BaseModel):
                     StopArea.name.label("name"),
                     StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
                     StopArea.admin_area_ref.label("admin_area_ref"),
-                    StopArea.stop_area_type.label("stop_type")
+                    StopArea.stop_area_type.label("stop_type"),
+                    db.literal_column("NULL").label("stop_area_ref")
                 )
                 .join(StopArea.stop_points)
                 .group_by(StopArea.code)

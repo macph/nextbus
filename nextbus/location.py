@@ -20,17 +20,17 @@ def bounding_box(latitude, longitude, distance):
         Uses the mean radius for the WGS84 ellipsoid to find the minimum and
         maximum latitude and longitude.
 
-        :param coord: tuple of lat/long coordinates, in decimal degrees
+        :param latitude: Box centre latitude.
+        :param longitude: Box centre longitude.
         :param distance: Distance from centre to sides of box, in metres
         :returns: tuple for 4 sides of the box: north, east, south and west
     """
     r_parallel = R_MEAN * math.cos(math.radians(latitude))
-    conv = 180 / math.pi
 
-    south = latitude - conv * distance / R_MEAN
-    north = latitude + conv * distance / R_MEAN
-    west = longitude - conv * distance / r_parallel
-    east = longitude + conv * distance / r_parallel
+    north = latitude + math.degrees(distance / R_MEAN)
+    east = longitude + math.degrees(distance / r_parallel)
+    south = latitude - math.degrees(distance / R_MEAN)
+    west = longitude - math.degrees(distance / r_parallel)
 
     return Box(north, east, south, west)
 

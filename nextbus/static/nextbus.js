@@ -465,7 +465,9 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
     let layer = L.tileLayer(
         'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
         {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
+                'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA' +
+                '</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
             maxZoom: 18,
             id: 'mapbox.emerald',
             accessToken: token
@@ -479,7 +481,8 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
                 ind = '<span>' + point.properties.indicator + '</span>'
             } else {
                 let src = (point.properties.stopType === 'PLT') ? tramSVG : busSVG;
-                ind = '<img src="' + src + '" width=28px>'
+                let alt = (point.properties.stopType === 'PLT') ? 'Tram stop' : 'Bus stop';
+                ind = '<img src="' + src + '" width=28px alt="' + alt + '">'
             }
 
             let area = 'area-' + point.properties.adminAreaRef;

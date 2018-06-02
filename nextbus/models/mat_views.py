@@ -84,7 +84,7 @@ def _select_fts_vectors():
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
             tsvector_column((District.name, "A"),
-                             (AdminArea.name, "B")).label("vector")
+                            (AdminArea.name, "B")).label("vector")
         ])
         .select_from(
             District.__table__
@@ -114,8 +114,8 @@ def _select_fts_vectors():
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
             tsvector_column((Locality.name, "A"),
-                             (db.func.coalesce(District.name, ""), "B"),
-                             (AdminArea.name, "B")).label("vector")
+                            (db.func.coalesce(District.name, ""), "B"),
+                            (AdminArea.name, "B")).label("vector")
         ])
         .select_from(
             Locality.__table__
@@ -149,8 +149,8 @@ def _select_fts_vectors():
             AdminArea.name.label("admin_area_name"),
             tsvector_column((StopArea.name, "A"),
                             (db.func.coalesce(Locality.name, ""), "C"),
-                             (db.func.coalesce(District.name, ""), "D"),
-                             (AdminArea.name, "D")).label("vector")
+                            (db.func.coalesce(District.name, ""), "D"),
+                            (AdminArea.name, "D")).label("vector")
         ])
         .select_from(
             StopArea.__table__
@@ -175,10 +175,10 @@ def _select_fts_vectors():
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
             tsvector_column((StopPoint.name, "A"),
-                             (StopPoint.street, "B"),
-                             (Locality.name, "C"),
-                             (db.func.coalesce(District.name, ""), "D"),
-                             (AdminArea.name, "D")).label("vector")
+                            (StopPoint.street, "B"),
+                            (Locality.name, "C"),
+                            (db.func.coalesce(District.name, ""), "D"),
+                            (AdminArea.name, "D")).label("vector")
         ])
         .select_from(
             StopPoint.__table__
@@ -226,17 +226,11 @@ class FTS(utils.MaterializedView):
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
-    TYPE_NAMES = {
-        "area": "Areas",
-        "place": "Places",
-        "stop": "Stops"
-    }
     TYPES = {
-        "area": {m.__tablename__ for m in [Region, AdminArea, District]},
-        "place": {m.__tablename__ for m in [Locality]},
-        "stop": {m.__tablename__ for m in [StopArea, StopPoint]}
+        "area": ("Areas", [Region, AdminArea, District]),
+        "place": ("Places", [Locality]),
+        "stop": ("Stops", [StopArea, StopPoint])
     }
-
     MINIMUM_AREA_RANK = 0.5
     MINIMUM_STOP_RANK = 0.25
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
@@ -294,22 +288,22 @@ class FTS(utils.MaterializedView):
         except AttributeError:
             string = string_not = query
 
+        match = cls.query
         # Add rank value and exclude vector column
         rank = cls._ts_rank(string_not).label("rank")
-        match = cls.query.options(db.with_expression(cls.rank, rank),
-                                  db.defer(cls.vector))
+        match = match.options(db.with_expression(cls.rank, rank),
+                              db.defer(cls.vector))
 
         # Filter by table name if requested
-        if types is not None:
+        if types is not None and set(types) - cls.TYPES.keys():
+            list_types = list(cls.TYPES.keys())
+            raise ValueError("Type(s) %s is invalid. Set of types must only "
+                             "contain the values %s." % (types, list_types))
+        elif types is not None:
             tables = []
             for type_ in types:
-                if type_ not in cls.TYPES:
-                    raise ValueError("Type %s is invalid. Set of types must "
-                                     "only contain the values %s." %
-                                     (type_, list(cls.TYPES.keys())))
-                tables.extend(cls.TYPES[type_])
-            if tables:
-                match = match.filter(cls.table_name.in_(tables))
+                tables.extend(t.__tablename__ for t in cls.TYPES[type_][1])
+            match = match.filter(cls.table_name.in_(tables))
 
         # Filter by admin area code if requested
         if admin_areas is not None:
@@ -376,7 +370,7 @@ class FTS(utils.MaterializedView):
             string = query
 
         # Search all types and admin areas
-        match = cls._match_query(query).cte("match")
+        match = cls._match_query(string).cte("match")
 
         expression = (
             db.session.query(match.c.table_name, match.c.admin_area_ref,
@@ -394,11 +388,12 @@ class FTS(utils.MaterializedView):
         result = expression.all()
         # Sort results into separate sets and group tables into types
         tables = {row.table_name for row in result}
-        s_areas = {(row.admin_area_ref, row.admin_area_name) for row in result
-                   if row.admin_area_ref.isnot(None)}
+        types = {}
+        for type_, (name, models) in cls.TYPES.items():
+            if tables & set(t.__tablename__ for t in models):
+                types[type_] = name
 
-        types = {t: cls.TYPE_NAMES[t] for t, set_ in cls.TYPES.items()
-                 if tables & set_}
-        areas = dict(s_areas)
+        areas = {row.admin_area_ref: row.admin_area_name for row in result
+                 if row.admin_area_ref is not None}
 
         return types, areas

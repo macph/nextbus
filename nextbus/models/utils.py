@@ -43,9 +43,9 @@ class _DropMatView(DDLElement):
 
 
 @compiler.compiles(_CreateMatView)
-def _compile_create_mat_view(element, complier_):
+def _compile_create_mat_view(element, compiler_):
     statement = "CREATE MATERIALIZED VIEW %s AS %s WITH NO DATA"
-    selectable = complier_.sql_compiler.process(element.selectable,
+    selectable = compiler_.sql_compiler.process(element.selectable,
                                                 literal_binds=True)
 
     return statement % (element.name, selectable)

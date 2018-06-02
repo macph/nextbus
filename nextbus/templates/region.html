@@ -16,18 +16,23 @@
 {% endblock %}
 
 {% block content %}
-<section class="box-item">
-    <h2>Areas</h2>
-    {% if areas %}
-    {% call(a) f.print_list(areas, 'list--places') %}
-    {% if a.table_name == 'admin_area' %}
-    <a class="item item--place" href="{{ url_for('page.list_in_area', area_code=a.code) }}">{{ a.name }}</a></li>
-    {% elif a.table_name == 'district' %}
-    <a class="item item--place" href="{{ url_for('page.list_in_district', district_code=a.code) }}">{{ a.name }}</a>
-    {% endif %}
-    {% endcall %}
-    {% else %}
-    <p>No areas or districts found.</p>
-    {% endif %}
-</section>
+<div class="columns">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="card">
+            <h2>Areas</h2>
+            {% if areas %}
+            {% call(a) f.print_list(areas, 'list--places') %}
+            {% if a.table_name == 'admin_area' %}
+            <a class="item item--place" href="{{ url_for('page.list_in_area', area_code=a.code) }}">{{ a.name }}</a></li>
+            {% elif a.table_name == 'district' %}
+            <a class="item item--place" href="{{ url_for('page.list_in_district', district_code=a.code) }}">{{ a.name }}</a>
+            {% endif %}
+            {% endcall %}
+            {% else %}
+            <p>No areas or districts found.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
 {% endblock %}

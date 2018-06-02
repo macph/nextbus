@@ -20,29 +20,33 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 
 {% block content %}
 <div class="columns">
-    <div class="column-1">
-        <section class="box-item">
-            <h2>Stops</h2>
-            {% if list_stops|length > 0 %}
-            {% call(s) f.print_list(list_stops, 'list--stops-wide') %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s) }}
-                <div class="item__label">{{ s.name }}</div>
-                <div class="item__dist">{{ '%.0f m'|format(s.distance) }}</div>
-            </a>
-            {% endcall %}
-            {% else %}
-            <p>No stops found within 500 metres.</p>
-            {% endif %}
-        </section>
-    </div>
-    <div class="column-1">
-        <section class="box-item">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="card">
             <div class="heading-inline heading-inline--right">
                 <h2>Map</h2>
                 <button id="show-map-button">Show</button>
             </div>
             <div id="stop-map" class="stop-map"></div>
+        </section>
+        <section class="card">
+            <h2>Stops nearby</h2>
+            {% if list_stops|length > 0 %}
+            {% call(s) f.print_list(list_stops, 'list--stops-wide') %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
+                    <div class="item--stop">
+                        {{ f.print_stop_indicator(s) }}
+                        <div class="item__label">{{ s.name }}</div>
+                        <div class="item__dist">{{ '%.0f m'|format(s.distance) }}</div>
+                    </div>
+                    {% if s.street %}
+                    <p>{{ s.street }}</p>
+                    {% endif %}
+                </a>
+            {% endcall %}
+            {% else %}
+            <p>No stops found within 500 metres.</p>
+            {% endif %}
         </section>
     </div>
 </div>
@@ -75,7 +79,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     }
 
     mapButton.addEventListener('click', function() {
-        map.classList.add('stop-map--open');
+        map.classList.add('stop-map--open--small');
         mapButton.textContent = 'Loading';
         map.addEventListener(mapTransitionEnd, mapTransitionCallback);
     });

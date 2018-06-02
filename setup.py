@@ -19,7 +19,9 @@ setup(
         'python-dateutil',
         'pytz',
         'sqlalchemy',
-        'requests'
+        'requests',
+        'werkzeug',
+        'wtforms'
     ],
     entry_points={
         'console_scripts': ['nxb=nextbus.commands:cli']

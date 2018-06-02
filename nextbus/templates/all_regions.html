@@ -11,14 +11,19 @@
 {% endblock %}
 
 {% block content %}
-<section class="box-item">
-    <h2>Regions</h2>
-    {% if regions %}
-    {% call(r) f.print_list(regions, 'list--places') %}
-    <a class="item item--place" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
-    {% endcall %}
-    {% else %}
-    <p>No regions found.</p>
-    {% endif %}
-</section>
+<div class="columns">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="card">
+            <h2>Regions</h2>
+            {% if regions %}
+            {% call(r) f.print_list(regions, 'list--places') %}
+            <a class="item item--place" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+            {% endcall %}
+            {% else %}
+            <p>No regions found.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
 {% endblock %}

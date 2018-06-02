@@ -182,8 +182,9 @@ def get_nextbus_times(atco_code, **kwargs):
             try:
                 services.add(line, sv)
             except:
-                current_app.logger.error("Error with request for stop %s. "
-                                         "Data from request:\n%r" % data)
+                current_app.logger.error("Error with request for stop. "
+                                         "Data from request:\n%r" % data,
+                                         exc_info=1)
                 raise
 
     new_data = {

@@ -4,7 +4,7 @@
 {% macro add_search_bar() %}
 <header class="header">
     <a class="header__home" href="{{ url_for('page.index') }}">
-        <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px">-->
+        <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
         <span>nextbus</span>
     </a>
     <a id="header-search-button" class="header__right">
@@ -13,8 +13,9 @@
 </header>
 <div id="header-search-bar" class="search-bar">
     <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
-        <label class="label-hidden" for="search-bar">Find a bus stop</label>
-        {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required) }}
+        {% set aria = {'aria-label': 'Find a bus stop'} %}
+        {{ g.form.hidden_tag() }}
+        {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
         {{ g.form.submit_query(id='submit-form') }}
     </form>
 </div>
@@ -60,9 +61,9 @@
     {% if stop.short_ind != '' %}
     <span>{{ stop.short_ind }}</span>
     {% elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] %}
-    <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="28px">
+    <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="28px" alt="Bus stop">
     {% elif stop.stop_type in ['PLT', 'GTMU'] %}
-    <img src="{{ url_for('static', filename='img/tram-white.svg') }}" width="28px">
+    <img src="{{ url_for('static', filename='img/tram-white.svg') }}" width="28px" alt="Tram stop">
     {% endif %}
 </div>
 {%- endmacro %}

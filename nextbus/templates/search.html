@@ -35,26 +35,26 @@
 <div class="columns">
     <div class="column-1 column--empty"></div>
     <div class="column-3">
-        <section class="box-item">
+        <section class="card">
             <form class="search-form" action="{{ g.action }}" method="post" name="search">
+                {% set aria = {'aria-label': 'Find a bus stop'} %}
                 {{ g.form.hidden_tag() }}
-                <label class="label-hidden" for="search-form">Find a bus stop</label>
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required) }}
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required, **aria) }}
                 {{ g.form.submit_query(id='submit-form') }}
             </form>
         </section>
     </div>
 </div>
 <div class="columns">
-    {% if f_types or f_areas %}
     <div class="column-1">
-        <section class="box-item box-item--aside">
+        <section id="filter-box" class="card card--aside">
+            {% if f_types or f_areas %}
             <div class="heading-inline heading-inline--right">
                 <h2>Filter</h2>
                 <button id="filter-show-button" class="filter-button">Show</button>
             </div>
-            <div id="filter-list" class="filter-form-wrapper">
-                <form class="filter-form" method="get">
+            <div id="filter-wrapper" class="filter-form-wrapper">
+                <form id="filter-form" class="filter-form" method="get">
                     <div class="filter-form__scrolling">
                         {% if f_types %}
                         {{ filter_list('type', filter_types) }}
@@ -63,37 +63,52 @@
                         {{ filter_list('area', filter_areas) }}
                         {% endif %}
                     </div>
-                    <button class="filter-submit">Refresh</button>
+                    <button id="filter-refresh-button" class="filter-submit">Refresh</button>
                 </form>
             </div>
+            {% else %}
+            <h2>Filter</h2>
+            {% endif %}
         </section>
     </div>
-    {% else %}
-    <div class="column-1 column--empty"></div>
-    {% endif %}
     <div class="column-3">
-        <section class="box-item">
+        <section class="card">
             {% if results is defined and results.total > 0 %}
             <h2>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h2>
+            {% if filter_text is not none %}
+            <p><strong>Filter:</strong> {{ filter_text }}</p>
+            {% endif %}
             {% if results.items|length > 0 %}
             {% call(item) f.print_list(results.items) %}
             {% if item.table_name == 'region' %}
-            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_region', region_code=item.code) }}">{{ item.name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><strong>{{ item.name }}</strong></a>
             {% elif item.table_name == 'admin_area' %}
-            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_area', area_code=item.code) }}">{{ item.name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><strong>{{ item.name }}</strong></a>
             {% elif item.table_name == 'district' %}
-            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_district', district_code=item.code) }}">{{ item.name }}, {{ item.admin_area_name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</a>
             {% elif item.table_name == 'locality' %}
-            <a class="item item--place item--place--search" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}">{{ item.name }}, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
             {% elif item.table_name == 'stop_area' %}
-            <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(item, reverse=true) }}
-                <div class="item__label">{{ item.name }}</div>
+            <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop--multiline">
+                <div class="item--stop">
+                    {{ f.print_stop_indicator(item, reverse=true) }}
+                    <div class="item__label">{{ item.name }}</div>
+                </div>
+                {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
+                <p>{{ place|join(', ') }}</p>
             </a>
             {% elif item.table_name == 'stop_point' %}
-            <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(item) }}
-                <div class="item__label">{{ item.name }}</div>
+            <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item--stop--multiline">
+                <div class="item--stop">
+                    {{ f.print_stop_indicator(item) }}
+                    <div class="item__label">{{ item.name }}</div>
+                </div>
+                {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
+                {% if item.street %}
+                <p>{{ ([item.street] + place)|join(', ') }}</p>
+                {% else %}
+                <p>{{ place|join(', ') }}</p>
+                {% endif %}
             </a>
             {% endif %}
             {% endcall %}
@@ -101,12 +116,12 @@
             <div class="page-select">
                 <p>
                     {% if results.has_prev %}
-                    <a href="?page={{ results.prev_num }}"><span>Previous page</span> <span>({{ results.prev_num }} of {{ results.pages }})</span></a>
+                    <a href="{{ modify_query(page=results.prev_num) }}"><span>Previous page</span> <span>({{ results.prev_num }} of {{ results.pages }})</span></a>
                     {% endif %}
                 </p>
                 <p>
                     {% if results.has_next %}
-                    <a href="?page={{ results.next_num }}"><span>Next page</span> <span>({{ results.next_num }} of {{ results.pages}})</span></a>
+                    <a href="{{ modify_query(page=results.next_num) }}"><span>Next page</span> <span>({{ results.next_num }} of {{ results.pages}})</span></a>
                     {% endif %}
                 </p>
             </div>
@@ -117,6 +132,9 @@
             {% endif %}
             {% elif results is defined and (f_types or f_areas) %}
             <h2>No results found</h2>
+            {% if filter_text is not none %}
+            <p><strong>Filter:</strong> {{ filter_text }}</p>
+            {% endif %}
             <p>The filter choices you selected for query <strong>{{ query }}</strong> resulted in no matches.</p>
             <p><a href="?">Reset filters</a></p>
             {% elif results is defined %}
@@ -154,13 +172,18 @@
 {% if f_types or f_areas %}
 <script>
     let showFilter = false;
-    let filterButton = document.getElementById("filter-show-button");
-    let filterList = document.getElementById("filter-list");
-    filterButton.addEventListener('click', function() {
+    let filterBox = document.getElementById('filter-box');
+    let filterShow = document.getElementById('filter-show-button');
+    let filterList = document.getElementById('filter-wrapper');
+
+    filterShow.addEventListener('click', function() {
         showFilter = !showFilter;
         filterList.style.height = (showFilter) ? filterList.scrollHeight + 'px' : '';
         filterList.style.marginTop = filterList.style.marginBottom = (showFilter) ? '10px': '';
-        filterButton.textContent = (showFilter) ? 'Hide' : 'Show';
+        filterShow.textContent = (showFilter) ? 'Hide' : 'Show';
+        if (showFilter) {
+            filterBox.scrollIntoView({behavior: 'smooth'});
+        }
     });
     window.addEventListener('resize', function() {
         if (showFilter) {
@@ -168,7 +191,33 @@
             filterList.style.height = 'auto';
             filterList.style.height = filterList.scrollHeight + 'px';
         }
-    })
+    });
+
+    let filterForm = document.getElementById('filter-form');
+    let filterRefresh = document.getElementById('filter-refresh-button');
+    let checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
+
+    let queryString = function() {
+        let array = [];
+        for (let i = 0; i < checkboxes.length; i++) {
+            let c = checkboxes[i];
+            if (c.checked) {
+                array.push(c.name + '=' + c.value);
+            }
+        }
+
+        return array.join('&');
+    }
+
+    for (let i = 0; i < checkboxes.length; i++) {
+        let c = checkboxes[i];
+        c.addEventListener('change', function() {
+            window.location.href = '?' + queryString();
+        });
+    }
+    // Not required anymore; can hide for now
+    filterRefresh.style.display = 'none';
+
 </script>
 {% endif %}
 {% endblock %}

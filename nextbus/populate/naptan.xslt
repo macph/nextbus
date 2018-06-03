@@ -2,10 +2,9 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:n="http://www.naptan.org.uk/"
-               xmlns:func="http://nextbus.org/functions" 
-               xmlns:exsl="http://exslt.org/common"
+               xmlns:func="http://nextbus.org/functions"
                xmlns:re="http://exslt.org/regular-expressions"
-               exclude-result-prefixes="func exsl re">
+               exclude-result-prefixes="func re">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode)] 
     [@Status='active'][n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]
@@ -13,6 +12,8 @@
   <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
     [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
     [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
+  <xsl:variable name="refs" select="$stops/n:StopAreas/n:StopAreaRef"/>
+  <xsl:variable name="codes" select="$areas/n:StopAreaCode"/>
 
   <xsl:template match="n:NaPTAN">
     <Data>
@@ -54,7 +55,12 @@
       <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
       <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
       <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
-      <stop_area_ref><xsl:value-of select="n:StopAreas/n:StopAreaRef"/></stop_area_ref>
+      <stop_area_ref>
+        <!-- Checks if stop area exists; if not, leave this reference blank -->
+        <xsl:if test="boolean(n:StopAreas/n:StopAreaRef[. = $codes])">
+          <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
+        </xsl:if>
+      </stop_area_ref>
       <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <modified><xsl:value-of select="@ModificationDateTime"/></modified>
     </StopPoint>

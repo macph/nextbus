@@ -624,7 +624,7 @@
       <latitude>53.38005454947</latitude>
       <stop_type>BCT</stop_type>
       <bearing>W</bearing>
-      <stop_area_ref>370G100959</stop_area_ref>
+      <stop_area_ref/>
       <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>
@@ -2467,7 +2467,7 @@
       <latitude>53.38012150192</latitude>
       <stop_type>BCT</stop_type>
       <bearing>E</bearing>
-      <stop_area_ref>370G100959</stop_area_ref>
+      <stop_area_ref/>
       <admin_area_ref>099</admin_area_ref>
       <modified>2011-04-06T09:44:28</modified>
     </StopPoint>

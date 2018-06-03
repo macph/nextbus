@@ -150,45 +150,38 @@ def _create_ind_parser():
     return parse_indicator
 
 
-class _NaPTANStops(object):
-    """ Filters NaPTAN stop points and areas by ensuring only stop areas
-        belonging to stop points within specified ATCO areas are filtered.
-    """
-    def __init__(self, list_locality_codes=None):
-        self.area_codes = set([])
-        self.locality_codes = list_locality_codes
-        self.ind_parser = _create_ind_parser()
+def _parse_areas(area):
+    """ Parses stop areas with their last-modified dates """
+    if area.get("modified") is not None:
+        area["modified"] = dp.parse(area["modified"])
 
-    def parse_areas(self, area):
-        """ Parses stop areas. """
-        if area.get("modified") is not None:
-            area["modified"] = dp.parse(area["modified"])
-        # Add stop area code to list for checking later
-        self.area_codes.add(area["code"])
+    return area
 
-        return area
 
-    def parse_points(self, point):
+def _create_stop_parser(list_locality_codes=None):
+    """ Filters NaPTAN stop points and cleans up data. """
+    locality_codes = list_locality_codes
+    ind_parser = _create_ind_parser()
+
+    def parse_points(point):
         """ Parses stop points. """
         if point.get("modified") is not None:
             point["modified"] = dp.parse(point["modified"])
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
-        if self.locality_codes:
-            if point["locality_ref"] not in self.locality_codes:
+        if locality_codes:
+            if point["locality_ref"] not in locality_codes:
                 return
 
         # Create short indicator for display
         if point["indicator"] is not None:
-            point["short_ind"] = self.ind_parser(point["indicator"])
+            point["short_ind"] = ind_parser(point["indicator"])
         else:
             point["indicator"] = point["short_ind"] = ""
 
-        # Remove stop area ref if it does not exist
-        if point["stop_area_ref"] not in self.area_codes:
-            point["stop_area_ref"] = None
-
         return point
+
+    return parse_points
 
 
 def _remove_stop_areas():
@@ -430,11 +423,10 @@ def commit_naptan_data(archive=None, list_files=None):
     new_data.write_output(new_path)
 
     # Go through data and create objects for committing to database
-    eval_stops = _NaPTANStops(local_codes)
     naptan = utils.DBEntries(new_path)
-    naptan.add("StopAreas/StopArea", models.StopArea, eval_stops.parse_areas)
+    naptan.add("StopAreas/StopArea", models.StopArea, _parse_areas)
     naptan.add("StopPoints/StopPoint", models.StopPoint,
-               eval_stops.parse_points, indices=("naptan_code",))
+               _create_stop_parser(local_codes), indices=("naptan_code",))
     # Commit changes to database
     naptan.commit()
     # Remove all orphaned stop areas and add localities to other stop areas

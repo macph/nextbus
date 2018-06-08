@@ -39,7 +39,6 @@ class ParserTests(unittest.TestCase):
     """ Tests for the parser which parses search queries into TSQuery strings
         for searching the PSQL databases.
     """
-
     @classmethod
     def setUpClass(cls):
         cls.parser = staticmethod(parser.create_tsquery_parser())
@@ -72,11 +71,17 @@ class ParserTests(unittest.TestCase):
         parsed = self.parser(query)
         self.assertEqual(parsed.to_string(), expected)
 
+    def test_words_multiple_not(self):
+        query = "Parliament not !Square"
+        expected = "Parliament&!!Square"
+        parsed = self.parser(query)
+        self.assertEqual(parsed.to_string(), expected)
+
     def test_words_exclude_not(self):
         query = "Parliament and not (Square or Road) or Trafalgar"
         expected = "Parliament|Trafalgar"
         parsed = self.parser(query)
-        self.assertEqual(parsed.to_string(exclude_not=True), expected)
+        self.assertEqual(parsed.to_string(defined=True), expected)
 
     def test_words_phrase(self):
         query = "'Parliament Square' not Road"
@@ -89,6 +94,37 @@ class ParserTests(unittest.TestCase):
         expected = "\"Parliament&Square'|Road"
         parsed = self.parser(query)
         self.assertEqual(parsed.to_string(), expected)
+
+    def test_words_is_defined_and(self):
+        query = "Parliament and not Trafalgar"
+        parsed = self.parser(query)
+        parsed.to_string(defined=True)
+
+    def test_words_is_defined_phrase(self):
+        query = "'Parliament Square'"
+        parsed = self.parser(query)
+        parsed.to_string(defined=True)
+
+    def test_words_not_defined(self):
+        query = "not Trafalgar"
+        parsed = self.parser(query)
+        with self.assertRaisesRegex(parser.SearchNotDefined,
+                                    "not defined enough"):
+            parsed.to_string(defined=True)
+
+    def test_words_not_defined_multiple(self):
+        query = "not not Trafalgar"
+        parsed = self.parser(query)
+        with self.assertRaisesRegex(parser.SearchNotDefined,
+                                    "not defined enough"):
+            parsed.to_string(defined=True)
+
+    def test_words_not_defined_or(self):
+        query = "Parliament or not Trafalgar"
+        parsed = self.parser(query)
+        with self.assertRaisesRegex(parser.SearchNotDefined,
+                                    "not defined enough"):
+            parsed.to_string(defined=True)
 
 
 class SearchCharacterValidationTests(unittest.TestCase):

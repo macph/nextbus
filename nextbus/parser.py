@@ -14,6 +14,17 @@ SET_PUNCT = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
 RE_INVALID_CHAR = re.compile(r"[^\x00-\x3b\x3d\x3f-\x7f\xa1-\xff]")
 
 
+class SearchNotDefined(Exception):
+    """ Raised if parsed search query is not defined enough, ie it does not
+        have terms that restricts the scope of the query. """
+    def __init__(self, query, msg=None):
+        if msg is None:
+            msg = "Query %r is not defined enough." % query
+        super().__init__(msg)
+        self.query = query
+        self.not_defined = True
+
+
 def _fix_parentheses(query, opening="(", closing=")"):
     """ Fixes open parentheses in queries by removing closing brackets or
         adding extra closing brackets.
@@ -48,25 +59,47 @@ def _fix_parentheses(query, opening="(", closing=")"):
 
 class ParseResult(object):
     """ Holds the parser results. """
-    def __init__(self, result):
+    def __init__(self, query, result):
+        self.query = query
         self.result = result
         self.data = result[0] if len(result) == 1 else result
 
     def __repr__(self):
         return "<ParseResult(%r)>" % self.result
 
-    def to_string(self, exclude_not=False):
-        """ Returns the parser result as a single string. """
-        _not = "!" if exclude_not else None
-        try:
-            string = self.data.stringify(exclude_op=_not)
-        except AttributeError:
-            # Already a string
-            string = self.data
+    def to_string(self, defined=False):
+        """ Returns the full parser result as a single string.
 
-        return string
+            If defined is True, only the portion that is defined (ie have
+            terms that restricts the scope of a search query) is included. For
+            example, a search query 'Downing Street not Road' will be returned
+            as 'Downing Street'.
+
+            :param defined: If True, return only defined terms.
+            :returns: A string to be used in search query.
+        """
+        if defined and not self.check_tree():
+            raise SearchNotDefined(self.query)
+        try:
+            return self.data.stringify(defined)
+        except AttributeError:
+            return self.data
+
+    def check_tree(self):
+        """ Examines the tree to see if all children have defined terms.
+
+            A search query 'not Road' is too broad because it will search for
+            everything not with term 'road'. A search query 'Downing not Road'
+            is defined however because only items with term 'Downing' will
+            match.
+        """
+        try:
+            return self.data.defined()
+        except AttributeError:
+            return True
 
     def dump(self):
+        """ Returns the parse result's dump, for debugging. """
         return self.result.dump()
 
 
@@ -83,20 +116,22 @@ class Operator(object):
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
 
-    def combine_operands(self, exclude_op=None):
+    def combine_operands(self, defined=False, recursive=False):
         """ Returns sequence of operands converted to strings with the
             stringify method.
 
-            :param exclude_op: List of operators, as strings, to exclude.
+            :param defined: If True, check terms to ensure they are defined.
+            :param recursive: If True, terms behind a NOT operator are
+            evaluated to keep terms with double negatives.
             :returns: List of strings converted from operands.
         """
         sequence = []
         for op in self.operands:
             try:
-                if exclude_op is not None and op.operator in exclude_op:
-                    # Exclude this term
+                if defined and not op.defined(recursive):
+                    # Term undefined; skip
                     continue
-                string = op.stringify(exclude_op)
+                string = op.stringify(defined, recursive)
                 if self.rank > op.rank:
                     # Lower ranked operands need to be wrapped in parentheses
                     string = "(" + string + ")"
@@ -107,36 +142,56 @@ class Operator(object):
 
         return sequence
 
-    def stringify(self):
+    def stringify(self, defined=False, recursive=False):
         """ Stringify method required for joining operands with operators. """
+        raise NotImplementedError
+
+    def defined(self, recursive=False):
+        """ Checks if all children constitutes a definitive query. """
         raise NotImplementedError
 
 
 class UnaryOperator(Operator):
     """ Base class for unary operators in a search query. """
     def __init__(self, tokens):
-        super(UnaryOperator, self).__init__()
+        super().__init__()
         self.operands = [tokens[0][1]]
 
-    def stringify(self, exclude_op=None):
+    def stringify(self, defined=False, recursive=False):
         """ Returns the parsed query in string form. """
-        return self.operator + self.combine_operands(exclude_op)[0]
+        return self.operator + self.combine_operands(defined, recursive)[0]
+
+    def defined(self, recursive=False):
+        raise NotImplementedError
 
 
 class BinaryOperator(Operator):
     """ Base class for unary operators in a search query. """
     def __init__(self, tokens):
-        super(BinaryOperator, self).__init__()
+        super().__init__()
         self.operands = tokens[0][::2]
 
-    def stringify(self, exclude_op=None):
+    def stringify(self, defined=False, recursive=False):
         """ Returns the parsed query in string form. """
-        return self.operator.join(self.combine_operands(exclude_op))
+        return self.operator.join(self.combine_operands(defined, recursive))
+
+    def defined(self, recursive=False):
+        raise NotImplementedError
 
 
 class Not(UnaryOperator):
     """ Unary NOT operator. """
     operator, rank = "!", 3
+
+    def defined(self, recursive=False):
+        """ All terms behind a NOT operator are undefined. If recursive is
+            True, terms behind the NOT operator are evaluated to find terms
+            with double negatives.
+        """
+        if recursive and hasattr(self.operands[0], "defined"):
+            return not self.operands[0].defined(recursive)
+        else:
+            return False
 
 
 class FollowedBy(BinaryOperator):
@@ -144,19 +199,33 @@ class FollowedBy(BinaryOperator):
     operator, rank = "<->", 2
 
     def __init__(self, tokens):
-        super(FollowedBy, self).__init__(tokens)
+        super().__init__(tokens)
         # Override the operands
-        self.operands = tokens[0].strip("'" + '"').split()
+        self.operands = tokens[0].strip("\"'").split()
+
+    def defined(self, recursive=False):
+        """ A phrase is always defined. """
+        return True
 
 
 class And(BinaryOperator):
     """ Binary AND operator. """
     operator, rank = "&", 1
 
+    def defined(self, recursive=False):
+        """ Only undefined if all terms are undefined. """
+        return any(not hasattr(op, "defined") or op.defined(recursive)
+                   for op in self.operands)
+
 
 class Or(BinaryOperator):
     """ Binary OR operator. """
     operator, rank = "|", 0
+
+    def defined(self, recursive=False):
+        """ All terms must be defined. """
+        return all(not hasattr(op, "defined") or op.defined(recursive)
+                   for op in self.operands)
 
 
 def create_tsquery_parser():
@@ -198,13 +267,17 @@ def create_tsquery_parser():
     # Exclude operators and parentheses from words
     word_ = pp.Word("".join(SET_PRINT - set("()!&|")))
     word = ~and_ + ~or_ + word_
+    # Exclude binary operators at start of strings
+    exclude_op = pp.Optional(pp.Word("|&")).suppress()
 
     # Declare empty parser and nested terms before before defining
     expression = pp.Forward()
     term_0 = (pp.quotedString.setParseAction(FollowedBy) |
               pp.Suppress("(") + expression + pp.Suppress(")") | word)
 
-    term_not = pp.Group(op_not + term_0).setParseAction(Not)
+    # NOT operators can be used recursively
+    term_not = pp.Forward()
+    term_not <<= pp.Group(op_not + (term_not | term_0)).setParseAction(Not)
     term_1 = term_not | term_0
     term_and = (pp.Group(term_1 + pp.OneOrMore(op_and + term_1))
                 .setParseAction(And))
@@ -213,7 +286,7 @@ def create_tsquery_parser():
                .setParseAction(Or))
     term_3 = term_or | term_2
 
-    expression <<= term_3 | pp.Empty()
+    expression <<= exclude_op + term_3 | pp.Empty()
 
     def parser(query, fix_parentheses=True):
         """ Search query parser function for converting queries to strings
@@ -234,6 +307,6 @@ def create_tsquery_parser():
         if not output:
             raise ValueError("Query %r contained no valid words.")
 
-        return ParseResult(output)
+        return ParseResult(query, output)
 
     return parser

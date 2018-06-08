@@ -321,7 +321,7 @@ class FTS(utils.MaterializedView):
         """
         try:
             string = query.to_string()
-            string_not = query.to_string(exclude_not=True)
+            string_not = query.to_string(defined=True)
         except AttributeError:
             string = string_not = query
 
@@ -363,7 +363,7 @@ class FTS(utils.MaterializedView):
         """
         try:
             string = query.to_string()
-            string_not = query.to_string(exclude_not=True)
+            string_not = query.to_string(defined=True)
         except AttributeError:
             string = string_not = query
 

@@ -143,7 +143,7 @@
             <ul class="dashed-list">
                 <li>Checking your query for typos;</li>
                 <li>Using more general keywords;</li>
-                <li>Using less keywords to make your query more broad.</li>
+                <li>Remove some keywords to make your query more broad.</li>
             </ul>
             {% else %}
             <h2>No results found</h2>
@@ -153,10 +153,12 @@
             <p>Your address is not valid.</p>
             <p>If you typed the address by hand or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
             <p>You can try <a href="?">searching with the filters reset</a>, or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
-            {% elif error.short is defined %}
+            {% elif error.too_short is defined %}
             <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
+            {% elif error.not_defined is defined %}
+            <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down the query.</p>
             {% else %}
-            <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvience.</p>
+            <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvenience.</p>
             {% endif %}
             {% endif %}
         </section>

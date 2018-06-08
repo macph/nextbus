@@ -32,7 +32,7 @@ class QueryTooShort(Exception):
             msg = "Query %r is too short or has invalid characters" % query
         super().__init__(msg)
         self.query = query
-        self.short = True
+        self.too_short = True
 
 
 class InvalidParameters(Exception):
@@ -221,6 +221,7 @@ def validate_after_search(query, params, types, areas):
     """ Validates parameters after querying results and list of matching areas
         and types.
 
+        :param query: Search query to be passed to exceptions.
         :param params: MultiDict object for parameters returned by request.
         :param types: Dictionary of matching types returned by filter_args().
         :param areas: Dictionary of matching areas returned by filter_args().

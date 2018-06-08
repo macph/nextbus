@@ -10,7 +10,7 @@ from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
 from requests import HTTPError
 from werkzeug.urls import url_encode
 
-from nextbus import db, forms, location, models, search, tapi
+from nextbus import db, forms, location, models, parser, search, tapi
 
 
 MIN_GROUPED = 72
@@ -190,6 +190,7 @@ def search_invalid_parameters(error):
 
 @page.errorhandler(search.QueryTooShort)
 @page.errorhandler(search.NoPostcode)
+@page.errorhandler(parser.SearchNotDefined)
 def search_bad_query(error):
     """ Query was too short or non-existent postcode was passed. Not an error
         so no 4xx code required.

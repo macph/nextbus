@@ -226,15 +226,6 @@ class FTS(utils.MaterializedView):
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
-    TYPES = {
-        "area": ("Areas", [Region, AdminArea, District]),
-        "place": ("Places", [Locality]),
-        "stop": ("Stops", [StopArea, StopPoint])
-    }
-    MINIMUM_AREA_RANK = 0.5
-    MINIMUM_STOP_RANK = 0.25
-    WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
-
     __table__ = utils.create_materialized_view("fts", _select_fts_vectors())
     # Rank attribute left blank for search queries. See:
     # http://docs.sqlalchemy.org/en/latest/orm/mapped_sql_expr.html
@@ -248,6 +239,15 @@ class FTS(utils.MaterializedView):
         db.Index("ix_fts_area", "admin_area_ref"),
         db.Index("ix_fts_gin", "tsvector", postgresql_using="gin")
     )
+
+    TYPES = {
+        "area": ("Areas", [Region, AdminArea, District]),
+        "place": ("Places", [Locality]),
+        "stop": ("Stops", [StopArea, StopPoint])
+    }
+    MINIMUM_AREA_RANK = 0.5
+    MINIMUM_STOP_RANK = 0.25
+    WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
     def __repr__(self):
         return "<FTS(%s, %s)>" % (self.table_name, self.code)
@@ -273,45 +273,37 @@ class FTS(utils.MaterializedView):
         return db.func.ts_rank(cls.WEIGHTS, cls.vector, tsquery)
 
     @classmethod
-    def _match_query(cls, query, types=None, admin_areas=None):
-        """ Creates an expression where tsvector values are matched with
-            tsquery values created by the tsquery parser.
+    def _apply_filters(cls, match, types=None, areas=None, rank=None):
+        """ Apply filters to a search expression if they are specified.
 
-            :param query: A ParseResult object or a string.
-            :param types: Iterable with values 'area', 'place' or 'stop'.
-            :param admin_areas: List of administrative area codes to filter by.
-            :returns: Query expression to be executed.
+            :param match: The original query expression
+            :param types: Types, ie 'stop', 'place' and 'area' to filter by
+            :param areas: Administrative area codes to filter by
+            :param rank: Rank function used to filter results above a threshold
+            set by ``MINIMUM_AREA_RANK`` and ``MINIMUM_STOP_RANK``.
+            :returns: Query expression with added filters, if any
         """
-        try:
-            string = query.to_string()
-            string_not = query.to_string(exclude_not=True)
-        except AttributeError:
-            string = string_not = query
-
-        match = cls.query
-        # Add rank value and exclude vector column
-        rank = cls._ts_rank(string_not).label("rank")
-        match = match.options(db.with_expression(cls.rank, rank),
-                              db.defer(cls.vector))
-
-        # Filter by table name if requested
         if types is not None and set(types) - cls.TYPES.keys():
             list_types = list(cls.TYPES.keys())
             raise ValueError("Type(s) %s is invalid. Set of types must only "
                              "contain the values %s." % (types, list_types))
-        elif types is not None:
+
+        if types is not None:
             tables = []
             for type_ in types:
                 tables.extend(t.__tablename__ for t in cls.TYPES[type_][1])
             match = match.filter(cls.table_name.in_(tables))
 
-        # Filter by admin area code if requested
-        if admin_areas is not None:
-            match = match.filter(cls.admin_area_ref.in_(admin_areas),
+        if areas is not None:
+            match = match.filter(cls.admin_area_ref.in_(areas),
                                  cls.admin_area_ref.isnot(None))
 
-        # Finally, match the query
-        match = match.filter(cls._match(string))
+        if rank is not None:
+            match = match.filter(db.or_(
+                rank > cls.MINIMUM_AREA_RANK,
+                db.and_(cls.table_name == StopPoint.__tablename__,
+                        rank > cls.MINIMUM_STOP_RANK)
+            ))
 
         return match
 
@@ -327,28 +319,33 @@ class FTS(utils.MaterializedView):
             only results that match the higher weighted lexemes are retained.
             :returns: Query expression to be executed.
         """
+        try:
+            string = query.to_string()
+            string_not = query.to_string(exclude_not=True)
+        except AttributeError:
+            string = string_not = query
 
-        match = cls._match_query(query, types, admin_areas).cte("match")
-        match_b = match.alias("match_b")
-
-        expression = (
-            db.session.query(match)
-            .outerjoin(match_b, match.c.stop_area_ref == match_b.c.code)
-            .filter(match_b.c.code.is_(None))
+        # Add rank value
+        rank = cls._ts_rank(string_not).label("rank")
+        # Join with stop area codes to exclude stop points
+        stop_areas = (
+            db.session.query(cls.code)
+            .filter(cls._match(string))
+            .subquery()
         )
+        # Defer vector column and order by rank, name and indicator
+        match = (
+            cls.query
+            .options(db.with_expression(cls.rank, rank), db.defer(cls.vector))
+            .outerjoin(stop_areas, stop_areas.c.code == cls.stop_area_ref)
+            .filter(cls._match(string), stop_areas.c.code.is_(None))
+            .order_by(db.desc(rank), cls.name, cls.short_ind)
+        )
+        # Add filters for rank, types or admin area
+        match = cls._apply_filters(match, types, admin_areas,
+                                   rank if names_only else None)
 
-        if names_only:
-            expression = expression.filter(db.or_(
-                match.c.rank > cls.MINIMUM_AREA_RANK,
-                db.and_(match.c.table_name == StopPoint.__tablename__,
-                        match.c.rank > cls.MINIMUM_STOP_RANK)
-            ))
-
-        # Order by rank, name and indicator
-        expression = expression.order_by(db.desc(match.c.rank), match.c.name,
-                                         match.c.short_ind)
-
-        return expression
+        return match
 
     @classmethod
     def matching_types(cls, query, names_only=True):
@@ -361,31 +358,25 @@ class FTS(utils.MaterializedView):
             :param query: A ParseResult object or a string.
             :param names_only: Sets thresholds for search rankings such that
             only results that match the higher weighted lexemes are retained.
-            :returns: A tuple with a dict of types and a dict  of tuples with
+            :returns: A tuple with a dict of types and a dict of tuples with
             administrative area references and names
         """
         try:
             string = query.to_string()
+            string_not = query.to_string(exclude_not=True)
         except AttributeError:
-            string = query
+            string = string_not = query
 
-        # Search all types and admin areas
-        match = cls._match_query(string).cte("match")
-
-        expression = (
-            db.session.query(match.c.table_name, match.c.admin_area_ref,
-                             match.c.admin_area_name)
-            .distinct(match.c.table_name, match.c.admin_area_ref)
+        expr = (
+            db.session.query(cls.table_name, cls.admin_area_ref,
+                             cls.admin_area_name)
+            .distinct(cls.table_name, cls.admin_area_ref)
+            .filter(cls._match(string))
         )
-
         if names_only:
-            expression = expression.filter(db.or_(
-                match.c.rank > cls.MINIMUM_AREA_RANK,
-                db.and_(match.c.table_name == StopPoint.__tablename__,
-                        match.c.rank > cls.MINIMUM_STOP_RANK)
-            ))
+            expr = cls._apply_filters(expr, cls._ts_rank(string_not))
 
-        result = expression.all()
+        result = expr.all()
         # Sort results into separate sets and group tables into types
         tables = {row.table_name for row in result}
         types = {}

@@ -348,7 +348,6 @@ class StopPoint(utils.BaseModel):
 class Postcode(utils.BaseModel):
     """ Postcodes with coordinates, derived from the NSPL data. """
     __tablename__ = "postcode"
-    postcode_regex = r"^([a-zA-Z]{1,2}\d{1,2}[a-zA-Z]?\s*\d{1}[a-zA-Z]{2})$"
 
     index = db.Column(db.VARCHAR(7), primary_key=True)
     text = db.Column(db.VARCHAR(8), index=True, unique=True, nullable=False)

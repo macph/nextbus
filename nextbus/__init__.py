@@ -58,9 +58,8 @@ def create_app(config_obj=None, config_file=None):
         lambda: {"app": app, "db": db, "models": models}
     )
 
-    from nextbus.views import api, page, page_ns
+    from nextbus.views import api, page
     app.register_blueprint(api)
     app.register_blueprint(page)
-    app.register_blueprint(page_ns)
 
     return app

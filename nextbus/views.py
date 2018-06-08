@@ -19,8 +19,6 @@ FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
 
 api = Blueprint("api", __name__, template_folder="templates")
 page = Blueprint("page", __name__, template_folder="templates")
-# Separate blueprint for pages with no search function
-page_ns = Blueprint("page_ns", __name__, template_folder="templates")
 
 
 class EntityNotFound(Exception):
@@ -119,11 +117,11 @@ def search_query():
     """
     if g.form.submit_query.data and g.form.search_query.data:
         query = g.form.search_query.data
+        query_url = query.replace(" ", "+")
         try:
             result = search.search_code(query)
         except search.NoPostcode:
             # Pass along to search results page to process
-            query_url = query.replace(" ", "+")
             return redirect(url_for(".search_results", query=query_url))
 
         if result.is_stop():
@@ -133,8 +131,7 @@ def search_query():
             postcode_url = result.postcode.text.replace(" ", "+")
             return redirect(url_for(".list_near_postcode", code=postcode_url))
         else:
-            return redirect(url_for(".search_results",
-                                    query=query.replace(" ", "+")))
+            return redirect(url_for(".search_results", query=query_url))
 
 
 @page.route("/search/<path:query>")
@@ -485,7 +482,7 @@ def not_found_msg(error):
     return render_template("not_found.html", message=message), 404
 
 
-@page_ns.app_errorhandler(500)
+@page.app_errorhandler(500)
 def error_msg(error):
     """ Returned in case an internal server error (500) occurs, with message.
         Note that this page does not appear in debug mode.

@@ -2,22 +2,24 @@
 
 {# Replaces header with search functionality #}
 {% macro add_search_bar() %}
-<header class="header">
-    <a class="header__home" href="{{ url_for('page.index') }}">
-        <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
-        <span>nextbus</span>
-    </a>
-    <a id="header-search-button" class="header__right">
-        <span>Search</span>
-    </a>
-</header>
-<div id="header-search-bar" class="search-bar">
-    <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
-        {% set aria = {'aria-label': 'Find a bus stop'} %}
-        {{ g.form.hidden_tag() }}
-        {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
-        {{ g.form.submit_query(id='submit-form') }}
-    </form>
+<div class="outer-header">
+    <header class="header">
+        <a class="header__home" href="{{ url_for('page.index') }}">
+            <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
+            <span>nextbus</span>
+        </a>
+        <a id="header-search-button" class="header__right">
+            <span>Search</span>
+        </a>
+    </header>
+    <div id="header-search-bar" class="search-bar">
+        <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
+            {% set aria = {'aria-label': 'Find a bus stop'} %}
+            {{ g.form.hidden_tag() }}
+            {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
+            {{ g.form.submit_query(id='submit-form') }}
+        </form>
+    </div>
 </div>
 <script>
     addSearchBarEvents();

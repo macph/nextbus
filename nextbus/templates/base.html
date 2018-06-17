@@ -13,16 +13,16 @@
         {% endblock %}
     </head>
     <body>
+        {% block outer_header %}
         <div class="outer-header">
-            {% block outer_header %}
             <header class="header">
                 <a class="header__home" href="{{ url_for('page.index') }}">
                     <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
                     <span>nextbus</span>
                 </a>
             </header>
-            {% endblock %}
         </div>
+        {% endblock %}
         <div class="outer-content">
             {% block main %}
             <main class="content">
@@ -34,6 +34,7 @@
             </main>
             {% endblock %}
         </div>
+        {% block outer_footer %}
         <div class="outer-footer">
             <footer class="footer">
                 {% block footer %}
@@ -43,6 +44,7 @@
                 {% endblock %}
             </footer>
         </div>
+        {% endblock %}
     {% block script %}{% endblock %}
     </body>
 </html>

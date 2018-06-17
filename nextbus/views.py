@@ -450,9 +450,23 @@ def stop_atco(atco_code):
 
 
 @page.route("/map/")
+@page.route("/map/<atco_code>/")
 @page.route("/map/<lat_long_zoom>")
-def show_map(lat_long_zoom=None):
+@page.route("/map/<atco_code>/<lat_long_zoom>")
+def show_map(atco_code=None, lat_long_zoom=None):
     """ Shows map. """
+    if atco_code is not None:
+        stop = models.StopPoint.query.get(atco_code.upper())
+    else:
+        stop = None
+
+    if stop is not None and stop.atco_code != atco_code:
+        return redirect(url_for(".show_map", atco_code=stop.atco_code,
+                                lat_long_zoom=lat_long_zoom), code=301)
+    elif stop is None:
+        raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
+                             % atco_code)
+
     try:
         if lat_long_zoom is None:
             raise ValueError
@@ -464,14 +478,17 @@ def show_map(lat_long_zoom=None):
         # Quick check to ensure coordinates are within range of Great Britain
         if not (49 < latitude < 61 and -8 < longitude < 2):
             raise ValueError
-
     except ValueError:
-        # Centre of GB, min zoom
-        latitude, longitude = 54.00366, -2.547855
-        zoom = 9
+        if stop is not None:
+            latitude, longitude = stop.latitude, stop.longitude
+            zoom = 16
+        else:
+            # Centre of GB, min zoom
+            latitude, longitude = 54.00366, -2.547855
+            zoom = 9
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom)
+                           zoom=zoom, stop=stop)
 
 
 def bad_request(status, message):

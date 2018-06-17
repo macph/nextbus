@@ -14,32 +14,157 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 {% endblock %}
 
 {% block main %}
-<main class="content" style="width: 100%; max-width: none;">
-    <div id="map" class="map" style="height: 100%;"></div>
+<main class="content content--map">
+    <div class="map-panel">
+        <div id="panel-content" class="map-panel__content">
+            <div id="panel-heading-outer" class="heading">
+                <h1 id="panel-heading">Loading map...</h1>
+            </div>
+        </div>
+        <div class="map-panel__footer">
+            <footer class="footer">
+                <span class="footer__text">
+                    &copy; Ewan Macpherson and data sources, 2017&ndash;18. <a href="{{ url_for('page.about') }}">About this website</a>
+                </span>
+            </footer>
+        </div>
+    </div>
+    <div id="map" class="full-map"></div>
 </main>
+{% endblock %}
+
+{% block outer_footer %}
 {% endblock %}
 
 {% block script %}
 <script>
+    const BUS = "{{ url_for('static', filename='img/bus-white.svg') }}";
+    const TRAM = "{{ url_for('static', filename='img/tram-white.svg') }}";
     let mapElement = document.getElementById('map');
+    let panel = document.getElementById('panel-content');
+    let headingOuter = document.getElementById('panel-heading-outer');
 
-    function StopLayer(map, callback) {
+    function setMessage(panel, stops) {
+        let heading = document.getElementById('panel-heading');
+        if (heading === null) {
+            headingOuter = document.createElement('div');
+            headingOuter.className = 'heading';
+            headingOuter.id = 'panel-heading-outer';
+            heading = document.createElement('h1');
+            headingOuter.appendChild(heading);
+            while (panel.firstChild) {
+                panel.removeChild(panel.firstChild);
+            }
+            panel.appendChild(headingOuter);
+        }
+
+        if (stops === null) {
+            heading.textContent = 'Zoom in to see stops';
+        } else {
+            let plural = (stops === 1) ? '' : 's';
+            heading.textContent = stops + ' stop' + plural + ' on map';
+        }
+    }
+
+    let activeStop = null;
+
+    function createPanel(point) {
+        if (activeStop !== null && typeof activeStop.stopLoop !== 'undefined') {
+            activeStop.stopLoop();
+        }
+
+        let heading = document.createElement('div');
+        heading.className = 'heading-stop';
+
+        let stopInd = document.createElement('div');
+        stopInd.className = 'indicator area-' + point.properties.adminAreaRef;
+        let ind = null;
+        if (point.properties.indicator !== '') {
+           ind = document.createElement('span');
+           ind.textContent = point.properties.indicator;
+        } else if (point.properties.stopType === 'BCS' ||
+                   point.properties.stopType === 'BCT') {
+           ind = document.createElement('img');
+           ind.src = BUS;
+           ind.width = '28';
+           ind.alt = 'Bus stop';
+        } else if (point.properties.stopType === 'PLT') {
+           ind = document.createElement('img');
+           ind.src = TRAM;
+           ind.width = '28';
+           ind.alt = 'Tram stop';
+        }
+        stopInd.appendChild(ind);
+        let stopHeading = document.createElement('h1');
+        stopHeading.textContent = point.properties.name;
+        heading.appendChild(stopInd);
+        heading.appendChild(stopHeading);
+
+        let headingOuter = document.createElement('div');
+        headingOuter.className = 'heading';
+        headingOuter.id = 'panel-heading-outer';
+        headingOuter.appendChild(heading);
+        if (point.properties.bearing !== null) {
+            let headingText = document.createElement('p');
+            headingText.textContent = point.properties.bearing + '-bound';
+            headingOuter.appendChild(headingText);
+        }
+
+        let liveTimes = document.createElement('section');
+        liveTimes.className = 'card';
+        let liveHeading = document.createElement('div');
+        liveHeading.className = 'heading-inline heading-inline--right';
+        let liveHeadingTime = document.createElement('h2');
+        liveHeadingTime.id = 'live-time';
+        liveHeadingTime.textContent = 'Retrieving live data...';
+        let liveHeadingCountdown = document.createElement('p');
+        liveHeadingCountdown.id = 'live-countdown';
+        liveHeading.appendChild(liveHeadingTime);
+        liveHeading.appendChild(liveHeadingCountdown);
+        let liveServices = document.createElement('div');
+        liveServices.id = 'services';
+        liveTimes.appendChild(liveHeading);
+        liveTimes.appendChild(liveServices);
+
+        while (panel.firstChild) {
+            panel.removeChild(panel.firstChild);
+        }
+        panel.appendChild(headingOuter);
+        resizeIndicator('indicator');
+        panel.appendChild(liveTimes);
+
+        activeStop = new LiveData(
+            point.properties.atcoCode,
+            point.properties.adminAreaRef,
+            "{{ url_for('api.stop_get_times') }}",
+            document.getElementById('services'),
+            document.getElementById('live-time'),
+            document.getElementById('live-countdown')
+        );
+        activeStop.startLoop();
+    }
+
+    function StopLayer(map, panel, callback) {
         let self = this;
         this.map = map;
+        this.panel = panel;
         this.currentLayer = null;
         this.callback = callback;
-        this.BUS = "{{ url_for('static', filename='img/bus-white.svg') }}";
-        this.TRAM = "{{ url_for('static', filename='img/tram-white.svg') }}";
         this.GET_URL = "{{ url_for('api.get_stops_within') }}";
 
         this.createLayer = function(stops) {
             let stopsGeo = new L.GeoJSON(stops, {
                 pointToLayer: function(point, latLng) {
+                    let ind;
                     if (point.properties.indicator !== '') {
                         ind = '<span>' + point.properties.indicator + '</span>'
+                    } else if (point.properties.stopType === 'BCS' ||
+                               point.properties.stopType === 'BCT') {
+                        ind = '<img src="' + BUS + '" width=28px>'
+                    } else if (point.properties.stopType === 'PLT') {
+                        ind = '<img src="' + TRAM + '" width=28px>'
                     } else {
-                        let src = (point.properties.stopType === 'PLT') ? self.TRAM : self.BUS;
-                        ind = '<img src="' + src + '" width=28px>'
+                        ind = '';
                     }
                     let area = 'area-' + point.properties.adminAreaRef;
                     let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
@@ -84,6 +209,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         this.refreshLayer = function() {
             if (self.map.getZoom() < 16) {
                 self.removeLayer();
+                setMessage(self.panel, null);
                 return;
             }
 
@@ -102,10 +228,11 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
             let request = new XMLHttpRequest();
             request.open('GET', self.GET_URL + queryString, true);
             request.addEventListener('load', function(event) {
-                console.log('Recevied data');
                 let data = JSON.parse(this.responseText);
+                console.log('Received data', data);
                 self.removeLayer();
                 self.currentLayer = self.createLayer(data);
+                setMessage(self.panel, data.features.length);
                 console.log('Adding data and resizing indicators');
                 self.currentLayer.addTo(self.map);
                 resizeIndicator('indicator-marker');
@@ -125,7 +252,9 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     let layer = L.tileLayer(
         'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
         {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © ' +
+                '<a href="http://mapbox.com">Mapbox</a>',
             maxZoom: 18,
             id: 'mapbox.emerald',
             accessToken: '{{ config.get("MAPBOX_APP_TOKEN") }}'
@@ -143,29 +272,25 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     });
     layer.addTo(map);
 
-    function TimeOut(timer) {
+    function Delay(time) {
         let self = this;
-        this.timer = timer;
+        this.time = time;
         this.timeout = null;
 
-        this.startTimer = function(callback) {
-            self.timeout = setTimeout(callback, self.timer);
+        this.start = function(callback) {
+            self.timeout = setTimeout(callback, self.time);
         }
 
-        this.stopTimer = function() {
+        this.halt = function() {
             if (self.timeout !== null) {
                 clearTimeout(self.timeout);
             }
         }
 
-        this.restartTimer = function(callback) {
-            self.stopTimer();
-            self.startTimer(callback);
+        this.restart = function(callback) {
+            self.halt();
+            self.start(callback);
         }
-    }
-
-    let markerGoToStop = function(point) {
-        window.location.href = "{{ url_for('page.stop_atco', atco_code='') }}" + point.properties.atcoCode;
     }
 
     let getNewURL = function(map) {
@@ -176,8 +301,8 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         return newURL;
     }
 
-    let t = new TimeOut();
-    let sl = new StopLayer(map, markerGoToStop);
+    let t = new Delay(250);
+    let sl = new StopLayer(map, panel, createPanel);
 
     map.on('zoomstart', function(event) {
         sl.removeLayer();
@@ -185,16 +310,18 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 
     map.on('zoomend', function(event) {
         history.replaceState(null, null, getNewURL(this));
-        t.restartTimer(sl.refreshLayer);
+        t.restart(sl.refreshLayer);
     });
 
     map.on('moveend', function(event) {
         history.replaceState(null, null, getNewURL(this));
-        t.restartTimer(sl.refreshLayer);
+        t.restart(sl.refreshLayer);
     });
 
     if (map.getZoom() >= 16) {
         sl.refreshLayer();
+    } else {
+        setMessage(panel, null);
     }
 </script>
 {% endblock %}

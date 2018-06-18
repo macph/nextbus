@@ -58,7 +58,7 @@
     let geoLink = document.createElement('li');
     let geoAnchor = document.createElement('a');
     geoAnchor.textContent = 'Find nearby stops';
-    addGeolocation('{{ url_for("page.list_near_location", lat_long="") }}', geoAnchor);
+    addGeolocation('{{ url_for("page.list_near_location", coords="") }}', geoAnchor);
     geoLink.appendChild(geoAnchor);
     firstLink.insertAdjacentElement('afterend', geoLink);
 </script>

@@ -113,7 +113,12 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         headingOuter.appendChild(heading);
         if (point.properties.bearing !== null) {
             let headingText = document.createElement('p');
-            headingText.textContent = point.properties.bearing + '-bound';
+            if (point.properties.street !== null) {
+                headingText.innerHTML = '<strong>' + point.properties.street + '</strong>, ' +
+                    point.properties.bearing + '-bound';
+            } else {
+                headingText.textContent = point.properties.bearing + '-bound';
+            }
             headingOuter.appendChild(headingText);
         }
 

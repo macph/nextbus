@@ -2,7 +2,6 @@
 Views for the nextbus website.
 """
 import collections
-import re
 import string
 
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
@@ -14,11 +13,7 @@ from nextbus import db, forms, location, models, parser, search, tapi
 
 
 MIN_GROUPED = 72
-FIND_COORD = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                        r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
-FIND_COORD_ZOOM = re.compile(r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                             r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                             r"(\d+)$")
+
 
 api = Blueprint("api", __name__, template_folder="templates")
 page = Blueprint("page", __name__, template_folder="templates")
@@ -354,14 +349,10 @@ def list_near_postcode(code):
                            list_stops=stops)
 
 
-@page.route("/near/location/<lat_long>")
-def list_near_location(lat_long):
+@page.route("/near/location/<lat_long:coords>")
+def list_near_location(coords):
     """ Show stops within range of a GPS coordinate. """
-    sr_m = FIND_COORD.match(lat_long)
-    if sr_m is None:
-        raise EntityNotFound("Invalid latitude/longitude values.")
-
-    latitude, longitude = float(sr_m.group(1)), float(sr_m.group(2))
+    latitude, longitude = coords
     # Quick check to ensure coordinates are within range of Great Britain
     if not (49 < latitude < 61 and -8 < longitude < 2):
         raise EntityNotFound("The latitude and longitude coordinates are "
@@ -371,7 +362,7 @@ def list_near_location(lat_long):
     str_coord = location.format_dms(latitude, longitude)
     geojson = _list_geojson(stops)
 
-    return render_template("location.html", coord=(latitude, longitude),
+    return render_template("location.html", coord=coords,
                            str_coord=str_coord, data=geojson, list_stops=stops)
 
 
@@ -450,42 +441,43 @@ def stop_atco(atco_code):
 
 
 @page.route("/map/")
-@page.route("/map/<atco_code>/")
-@page.route("/map/<lat_long_zoom>")
-@page.route("/map/<atco_code>/<lat_long_zoom>")
-def show_map(atco_code=None, lat_long_zoom=None):
+@page.route("/map/<lat_long_zoom:coords>")
+def show_map(coords=None):
     """ Shows map. """
-    if atco_code is not None:
-        stop = models.StopPoint.query.get(atco_code.upper())
-    else:
-        stop = None
+    try:
+        latitude, longitude, zoom = coords
+        # Quick check to ensure coordinates are within range of Great Britain
+        if not (49 < latitude < 61 and -8 < longitude < 2):
+            raise ValueError
+    except (TypeError, ValueError):
+        # Centre of GB, min zoom
+        latitude, longitude = 54.00366, -2.547855
+        zoom = 9
 
-    if stop is not None and stop.atco_code != atco_code:
+    return render_template("map.html", latitude=latitude, longitude=longitude,
+                           zoom=zoom, stop=None)
+
+
+@page.route("/map/<atco_code>/")
+@page.route("/map/<atco_code>/<lat_long_zoom:coords>")
+def show_map_with_stop(atco_code, coords=None):
+    """ Shows map with a stop already selected. """
+    stop = models.StopPoint.query.get(atco_code.upper())
+    if stop.atco_code != atco_code:
         return redirect(url_for(".show_map", atco_code=stop.atco_code,
-                                lat_long_zoom=lat_long_zoom), code=301)
+                                coords=coords), code=301)
     elif stop is None:
         raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                              % atco_code)
 
     try:
-        if lat_long_zoom is None:
-            raise ValueError
-        sr_m = FIND_COORD_ZOOM.match(lat_long_zoom)
-        if sr_m is None:
-            raise ValueError
-        latitude, longitude = float(sr_m.group(1)), float(sr_m.group(2))
-        zoom = int(sr_m.group(3))
+        latitude, longitude, zoom = coords
         # Quick check to ensure coordinates are within range of Great Britain
         if not (49 < latitude < 61 and -8 < longitude < 2):
             raise ValueError
-    except ValueError:
-        if stop is not None:
-            latitude, longitude = stop.latitude, stop.longitude
-            zoom = 16
-        else:
-            # Centre of GB, min zoom
-            latitude, longitude = 54.00366, -2.547855
-            zoom = 9
+    except (TypeError, ValueError):
+        latitude, longitude = stop.latitude, stop.longitude
+        zoom = 16
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
                            zoom=zoom, stop=stop)
@@ -536,8 +528,7 @@ def get_stops_within():
         if any(v is None for v in sides.items()):
             raise ValueError
     except (TypeError, ValueError):
-        current_app.logger.error("API accessed with invalid params:" % sides)
-        abort(400)
+        return bad_request(400, "API accessed with invalid params:" % sides)
 
     box = location.Box(**sides)
     stops = models.StopPoint.within_box(box)

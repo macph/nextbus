@@ -344,6 +344,7 @@ class StopPoint(utils.BaseModel):
                 "title": self.name + title_ind,
                 "name": self.name,
                 "indicator": self.short_ind,
+                "street": self.street,
                 "bearing": self.bearing,
                 "stopType": self.stop_type,
                 "adminAreaRef": self.admin_area_ref,

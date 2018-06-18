@@ -15,21 +15,21 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 
 {% block main %}
 <main class="content content--map">
+    <div id="map" class="full-map"></div>
     <div class="map-panel">
         <div id="panel-content" class="map-panel__content">
-            <div id="panel-heading-outer" class="heading">
+            <div id="panel-heading-outer" class="heading heading--panel">
                 <h1 id="panel-heading">Loading map...</h1>
             </div>
         </div>
         <div class="map-panel__footer">
-            <footer class="footer">
+            <footer class="footer footer--panel">
                 <span class="footer__text">
                     &copy; Ewan Macpherson and data sources, 2017&ndash;18. <a href="{{ url_for('page.about') }}">About this website</a>
                 </span>
             </footer>
         </div>
     </div>
-    <div id="map" class="full-map"></div>
 </main>
 {% endblock %}
 
@@ -48,7 +48,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         let heading = document.getElementById('panel-heading');
         if (heading === null) {
             headingOuter = document.createElement('div');
-            headingOuter.className = 'heading';
+            headingOuter.className = 'heading heading--panel';
             headingOuter.id = 'panel-heading-outer';
             heading = document.createElement('h1');
             headingOuter.appendChild(heading);
@@ -64,6 +64,13 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
             let plural = (stops === 1) ? '' : 's';
             heading.textContent = stops + ' stop' + plural + ' on map';
         }
+    }
+
+    function detectIE() {
+        // Detect IE use so can disable arrows - CSS transformations do not work properly
+        // Credit: https://stackoverflow.com/a/21712356
+        let ua = window.navigator.userAgent;
+        return (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1);
     }
 
     let activeStop = null;
@@ -101,7 +108,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         heading.appendChild(stopHeading);
 
         let headingOuter = document.createElement('div');
-        headingOuter.className = 'heading';
+        headingOuter.className = 'heading heading--panel';
         headingOuter.id = 'panel-heading-outer';
         headingOuter.appendChild(heading);
         if (point.properties.bearing !== null) {
@@ -111,7 +118,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         }
 
         let liveTimes = document.createElement('section');
-        liveTimes.className = 'card';
+        liveTimes.className = 'card card--panel';
         let liveHeading = document.createElement('div');
         liveHeading.className = 'heading-inline heading-inline--right';
         let liveHeadingTime = document.createElement('h2');
@@ -126,12 +133,22 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         liveTimes.appendChild(liveHeading);
         liveTimes.appendChild(liveServices);
 
+        let stopInfo = document.createElement('section');
+        stopInfo.className = 'card card--panel';
+        let infoHeading = document.createElement('h2');
+        infoHeading.textContent = 'Stop information';
+        let smsCode = document.createElement('p');
+        smsCode.innerHTML = 'SMS code <strong>' + point.properties.naptanCode+ '</strong>';
+        stopInfo.appendChild(infoHeading);
+        stopInfo.appendChild(smsCode);
+
         while (panel.firstChild) {
             panel.removeChild(panel.firstChild);
         }
         panel.appendChild(headingOuter);
         resizeIndicator('indicator');
         panel.appendChild(liveTimes);
+        panel.appendChild(stopInfo);
 
         activeStop = new LiveData(
             point.properties.atcoCode,
@@ -150,6 +167,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         this.panel = panel;
         this.currentLayer = null;
         this.callback = callback;
+        this.isIE = detectIE();
         this.GET_URL = "{{ url_for('api.get_stops_within') }}";
 
         this.createLayer = function(stops) {
@@ -166,10 +184,18 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
                     } else {
                         ind = '';
                     }
+
+                    let arrow;
+                    if (!self.isIE) {
+                        let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
+                        arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
+                    } else {
+                        arrow = '';
+                    }
+
                     let area = 'area-' + point.properties.adminAreaRef;
-                    let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
-                    let innerHTML = '<div class="indicator indicator-marker ' + area +
-                        '"><div class="indicator-marker__arrow ' + bearing + '"></div>' + ind + '</div>';
+                    let innerHTML = '<div class="indicator indicator-marker ' + area + '">' +
+                        arrow + ind + '</div>';
 
                     let icon = L.divIcon({
                         className: 'marker',
@@ -268,7 +294,8 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         maxBounds: L.latLngBounds(
             L.latLng(49.5, -9.0),
             L.latLng(61.0, 2.5)
-        )
+        ),
+        attributionControl: false
     });
     layer.addTo(map);
 

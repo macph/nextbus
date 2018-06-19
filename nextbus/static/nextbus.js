@@ -171,6 +171,18 @@ function revertColours() {
     }
 }
 
+/**
+ * Removes all subelements from an element
+ * @param {HTMLElement} element Element to remove all children from
+ */
+function removeSubElements(element) {
+    let last = element.lastChild;
+    while (last) {
+        element.removeChild(last);
+        last = element.lastChild;
+    }
+}
+
 
 /**
  * Retrieves live data and displays it in a table
@@ -191,6 +203,8 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
     this.headingTime = timeElement;
     this.headingCountdown = countdownElement;
     this.data = null;
+
+    this.interval = null;
     this.isLive = true;
     this.loopActive = false;
     this.loopEnding = false;
@@ -239,7 +253,7 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
             clLive = 'service--live';
         } else {
             self.updateOutdatedData();
-            clLive = 'service--dated';
+            clLive = 'service--estimated';
         }
 
         /**
@@ -348,18 +362,20 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
                 table.appendChild(cAfter);
             }
             // Remove all existing elements
-            let last = self.table.lastChild;
-            while (last) {
-                self.table.removeChild(last);
-                last = self.table.lastChild;
-            }
+            removeSubElements(self.table);
             // Add table
             self.table.appendChild(table);
             console.log('Created table with ' + self.data.services.length +
                         ' services for stop "' + self.atcoCode + '".');
 
         } else {
-            self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
+            // Remove all existing elements if they exist
+            removeSubElements(self.table);
+            if (self.isLive) {
+                self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
+            } else {
+                self.headingTime.textContent = 'No services found';
+            }
             console.log('No services found for stop ' + self.atcoCode + '.');
         }
     };
@@ -369,15 +385,18 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
      */
     this.updateOutdatedData = function() {
         let dtNow = new Date();
-        for (let i = 0; i < self.data.services.length; i++) {
+        // Loop backwards while removing services to avoid skipping other services
+        let i = self.data.services.length;
+        while (i--) {
             let s = self.data.services[i];
-            for (let j = 0; j < s.expected.length; j++) {
+            let j = s.expected.length;
+            while (j--) {
                 let e = s.expected[j];
-                let expDate = new Date(e.exp_date);
-                e.sec = Math.round((expDate - dtNow) / 1000);
-                if (e.sec < 0) {
-                    let index = s.expected.indexOf(e);
-                    s.expected.splice(index, 1);
+                let dtExp = new Date(e.exp_date);
+                e.secs = Math.round((dtExp - dtNow) / 1000);
+                if (e.secs < 0) {
+                    // Remove services past their expected datetime
+                    s.expected.splice(j, 1);
                 }
             }
             if (s.expected.length === 0) {
@@ -387,11 +406,11 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
         }
         // Sort by time remaining on first service coming
         self.data.services.sort(function(a, b) {
-            return a.expected[0].sec - b.expected[0].sec;
+            return a.expected[0].secs - b.expected[0].secs;
         });
         let dtReq = new Date(self.data.iso_date);
-        let overDue = Math.round((dtNow - dtReq) / 1000);
-        console.log('Simulated time remaining as live date overdue ' + overDue + ' seconds.');
+        let overDue = Math.round((dtNow - dtReq) / 60000);
+        console.log('Live data overdue ' + overDue + ' minutes.');
     };
 
     /**

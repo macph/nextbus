@@ -834,7 +834,11 @@ button:focus {
 }
 
 .service--live {
-  color: green;
+  color: rgb(56, 142, 60);
+}
+
+.service--estimated {
+  color: rgb(211, 47, 47);
 }
 
 /*

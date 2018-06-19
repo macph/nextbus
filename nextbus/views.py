@@ -354,7 +354,7 @@ def list_near_location(coords):
     """ Show stops within range of a GPS coordinate. """
     latitude, longitude = coords
     # Quick check to ensure coordinates are within range of Great Britain
-    if not (49 < latitude < 61 and -8 < longitude < 2):
+    if not location.check_bounds(latitude, longitude):
         raise EntityNotFound("The latitude and longitude coordinates are "
                              "nowhere near Great Britain!")
 
@@ -444,14 +444,12 @@ def stop_atco(atco_code):
 @page.route("/map/<lat_long_zoom:coords>")
 def show_map(coords=None):
     """ Shows map. """
-    try:
+    if coords:
         latitude, longitude, zoom = coords
-        # Quick check to ensure coordinates are within range of Great Britain
-        if not (49 < latitude < 61 and -8 < longitude < 2):
-            raise ValueError
-    except (TypeError, ValueError):
+    # Quick check to ensure coordinates are within range of Great Britain
+    if not coords or not location.check_bounds(latitude, longitude):
         # Centre of GB, min zoom
-        latitude, longitude = 54.00366, -2.547855
+        latitude, longitude = location.GB_CENTRE
         zoom = 9
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
@@ -470,14 +468,12 @@ def show_map_with_stop(atco_code, coords=None):
         raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                              % atco_code)
 
-    try:
+    if coords:
         latitude, longitude, zoom = coords
-        # Quick check to ensure coordinates are within range of Great Britain
-        if not (49 < latitude < 61 and -8 < longitude < 2):
-            raise ValueError
-    except (TypeError, ValueError):
+    if not coords or not location.check_bounds(latitude, longitude):
+        # Set to stop coordinates and zoom 17
         latitude, longitude = stop.latitude, stop.longitude
-        zoom = 16
+        zoom = 17
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
                            zoom=zoom, stop=stop)

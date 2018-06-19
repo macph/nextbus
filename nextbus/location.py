@@ -9,6 +9,12 @@ WGS84_A = 6378137.0
 WGS84_B = 6356752.314245
 R_MEAN = (2 * WGS84_A + WGS84_B) / 3
 
+# Limits and centre for Great Britain coordinates
+GB_NORTH = 61
+GB_EAST = -8
+GB_SOUTH = 49
+GB_WEST = 2
+GB_CENTRE = 54.00366, -2.547855
 
 Box = collections.namedtuple("BoundingBox", ["north", "east", "south", "west"])
 
@@ -80,3 +86,8 @@ def format_dms(latitude, longitude):
     string = "%s %s, %s %s" % (fmt % lat_dms, n_s, fmt % long_dms, e_w)
 
     return string
+
+
+def check_bounds(latitude, longitude):
+    """ Checks if a pair of coordinates is within the GB boundaries. """
+    return GB_SOUTH < latitude < GB_NORTH and GB_EAST < longitude < GB_WEST

@@ -150,38 +150,46 @@ def _create_ind_parser():
     return parse_indicator
 
 
-def _parse_areas(area):
-    """ Parses stop areas with their last-modified dates """
-    if area.get("modified") is not None:
-        area["modified"] = dp.parse(area["modified"])
+class _NaPTANStops(object):
+    """ Filters NaPTAN stop points and areas by ensuring only stop areas
+        belonging to stop points within specified ATCO areas are filtered.
+    """
+    def __init__(self, list_locality_codes=None):
+        self.area_codes = set()
+        self.naptan_codes = set()
+        self.locality_codes = list_locality_codes
+        self.ind_parser = _create_ind_parser()
 
-    return area
+    def parse_areas(self, area):
+        """ Parses stop areas. """
+        if area.get("modified") is not None:
+            area["modified"] = dp.parse(area["modified"])
+        # Add stop area code to list for checking later
+        self.area_codes.add(area["code"])
 
+        return area
 
-def _create_stop_parser(list_locality_codes=None):
-    """ Filters NaPTAN stop points and cleans up data. """
-    locality_codes = list_locality_codes
-    ind_parser = _create_ind_parser()
-
-    def parse_points(point):
+    def parse_points(self, point):
         """ Parses stop points. """
         if point.get("modified") is not None:
             point["modified"] = dp.parse(point["modified"])
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
-        if locality_codes:
-            if point["locality_ref"] not in locality_codes:
+        if self.locality_codes:
+            if point["locality_ref"] not in self.locality_codes:
                 return
 
         # Create short indicator for display
         if point["indicator"] is not None:
-            point["short_ind"] = ind_parser(point["indicator"])
+            point["short_ind"] = self.ind_parser(point["indicator"])
         else:
             point["indicator"] = point["short_ind"] = ""
 
-        return point
+        # Remove stop area ref if it does not exist
+        if point["stop_area_ref"] not in self.area_codes:
+            point["stop_area_ref"] = None
 
-    return parse_points
+        return point
 
 
 def _remove_stop_areas():
@@ -355,30 +363,17 @@ def _set_tram_admin_area():
         utils.logger.warning("Area %s: ambiguous admin areas %s" % area)
 
 
-def _get_naptan_data(naptan_files, list_area_codes=None):
+def _get_naptan_data(naptan_file):
     """ Parses NaPTAN XML data and returns lists of stop points and stop areas
         within the specified admin areas.
 
-        :param naptan_files: Iterator for list of NaPTAN XML files
+        :param naptan_file: File-like object or path for a source XML file
         :param list_area_codes: List of administrative area codes
         :returns: Transformed data as a XML ElementTree object
     """
-    naptan_data = utils.merge_xml(naptan_files)
+    naptan_data = et.parse(naptan_file)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
     ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
-
-    if list_area_codes:
-        area_query = " or ".join(".='%s'" % a for a in list_area_codes)
-        area_ref = "[n:AdministrativeAreaRef[%s]]" % area_query
-
-        # Modify the XPath queries to filter by admin area
-        xsl_names = {"xsl": transform.xpath("namespace-uri(.)")}
-        for ref in ["stops", "areas"]:
-            param = transform.xpath("//xsl:param[@name='%s']" % ref,
-                                    namespaces=xsl_names)[0]
-            param.attrib["select"] += area_ref
-
-    utils.logger.info("Applying XSLT to NaPTAN data")
     new_data = naptan_data.xslt(transform, extensions=ext)
 
     return new_data
@@ -391,8 +386,20 @@ def commit_naptan_data(archive=None, list_files=None):
         :param archive: Path to zipped archive file for NaPTAN XML files.
         :param list_files: List of file paths for NaPTAN XML files.
     """
-    downloaded = None
+    # Get complete list of ATCO admin areas and localities from NPTG data
+    query_atco_codes = db.session.query(models.AdminArea.atco_code).all()
+    query_local = db.session.query(models.Locality.code).all()
+    if not query_atco_codes or not query_local:
+        raise ValueError("NPTG tables are not populated; stop point data "
+                         "cannot be added without the required locality data."
+                         "Populate the database with NPTG data first.")
+
     atco_codes = utils.get_atco_codes()
+    # Use full list of ATCO codes for downloading NaPTAN data
+    local_codes = set(l.code for l in query_local) if atco_codes else None
+    all_atco_codes = set(a.atco_code for a in query_atco_codes)
+
+    downloaded = None
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -400,33 +407,19 @@ def commit_naptan_data(archive=None, list_files=None):
     elif list_files is not None:
         iter_files = iter(list_files)
     else:
-        downloaded = download_naptan_data(atco_codes)
+        downloaded = download_naptan_data(all_atco_codes)
         iter_files = file_ops.iter_archive(downloaded)
 
-    # Get list of admin areas and localities from NPTG data
-    query_areas = db.session.query(models.AdminArea.code).all()
-    query_local = db.session.query(models.Locality.code).all()
-    if not query_areas or not query_local:
-        raise ValueError("NPTG tables are not populated; stop point data "
-                         "cannot be added without the required locality data."
-                         "Populate the database with NPTG data first.")
-
-    if atco_codes:
-        area_codes = set(a.code for a in query_areas)
-        local_codes = set(l.code for l in query_local)
-    else:
-        area_codes, local_codes = None, None
-
-    # Transform data and write to temporary file
-    new_path = os.path.join(ROOT_DIR, NAPTAN_XML)
-    new_data = _get_naptan_data(iter_files, area_codes)
-    new_data.write_output(new_path)
-
     # Go through data and create objects for committing to database
-    naptan = utils.DBEntries(new_path)
-    naptan.add("StopAreas/StopArea", models.StopArea, _parse_areas)
-    naptan.add("StopPoints/StopPoint", models.StopPoint,
-               _create_stop_parser(local_codes), indices=("naptan_code",))
+    eval_stops = _NaPTANStops(local_codes)
+    naptan = utils.DBEntries()
+    for file_ in iter_files:
+        new_data = _get_naptan_data(file_)
+        naptan.set_data(new_data)
+        naptan.add("StopAreas/StopArea", models.StopArea,
+                   eval_stops.parse_areas)
+        naptan.add("StopPoints/StopPoint", models.StopPoint,
+                   eval_stops.parse_points, indices=("naptan_code",))
     # Commit changes to database
     naptan.commit()
     # Remove all orphaned stop areas and add localities to other stop areas

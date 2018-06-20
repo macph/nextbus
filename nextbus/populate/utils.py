@@ -4,6 +4,7 @@ Utilities for the populate subpackage.
 import collections
 import contextlib
 import functools
+import itertools
 import logging
 
 from flask import current_app
@@ -14,6 +15,7 @@ from nextbus import db, logger
 
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
+ROW_LIMIT = 10000
 
 logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
@@ -32,46 +34,26 @@ def database_session():
         db.session.commit()
     except:
         db.session.rollback()
+        logger.error("An error occured during the transcation", exc_info=1)
         raise
     finally:
         db.session.remove()
 
 
-def merge_xml(iter_files, parser=None):
-    """ Merges multiple XML files with the same structure.
+def batch_insert(statement, list_rows, limit=None):
+    """ Executes multi-valued inserts in batches.
 
-        All XML files are assumed to have the same root element and namespace,
-        the same shared subelements, and these subelements contain lists of
-        subelements with the same names and structures.
-
-        :param iter_files: Iterator for list of file-like objects or file paths
-        (both are accepted by the XML parser).
-        :param parser: XML parser - if None the default parser is used
-        :returns: Merged XML data as ``et.ElementTree`` object
+        :param statement: Statement to be executed.
+        :param list_rows: Iterable of dictionaries to be added.
+        :param limit: Limit on rows in each batch - if None ROW_LIMIT is used.
     """
-    first_file = next(iter_files)
-    data = et.parse(first_file, parser=parser)
-    root = data.getroot()
-    ns_ = {"x": data.xpath("namespace-uri(.)")}
-
-    # Iterate over the rest
-    for file_ in iter_files:
-        new_data = et.parse(file_, parser=parser)
-        new_root = new_data.getroot()
-        new_uri = new_data.xpath("namespace-uri(.)")
-        if new_root.tag != root.tag or new_uri != ns_["x"]:
-            raise ValueError("XML files %r and %r do not have the same root "
-                             "or namespace." % (first_file, file_))
-        for sub_element in new_root:
-            # Strip namespace from tag if one exists
-            tag = sub_element.tag.split("}")[-1]
-            existing = root.xpath("x:" + tag, namespaces=ns_)
-            if existing:
-                existing[0].extend(sub_element)
-            else:
-                root.append(sub_element)
-
-    return data
+    _limit = ROW_LIMIT if limit is None else limit
+    iter_rows = iter(list_rows)
+    while True:
+        chunk = list(itertools.islice(iter_rows, _limit))
+        if not chunk:
+            break
+        db.session.execute(statement.values(chunk))
 
 
 def xml_as_dict(element):
@@ -165,10 +147,19 @@ def get_atco_codes():
 
 class DBEntries(object):
     """ Collects a list of database entries from XML data and commits them. """
-    def __init__(self, xml_data):
-        self.data = et.parse(xml_data)
+    def __init__(self, xml_data=None):
+        self.data = None
+        if xml_data is not None:
+            self.set_data(xml_data)
         self.entries = collections.OrderedDict()
         self.conflicts = {}
+
+    def set_data(self, xml_data):
+        """ Sets the source XML data to a new ElementTree object. """
+        try:
+            self.data = et.parse(xml_data)
+        except TypeError:
+            self.data = xml_data
 
     def add(self, xpath_query, model, func=None, indices=None):
         """ Iterates through a list of elements, creating a list of dicts.
@@ -185,19 +176,24 @@ class DBEntries(object):
             :param indices: Sequence of string or Column objects, which should
             be unique, to assess in a ON CONFLICT DO UPDATE statement
         """
+        if self.data is None:
+            raise ValueError("No source XML data has been set.")
         # Find all elements matching query
         list_elements = self.data.xpath(xpath_query)
-        # Assuming keys in every entry are equal
-        columns = xml_as_dict(list_elements[0]).keys()
 
         # Check indices and add them for INSERT ON CONFLICT statements
         if indices is not None:
-            self.conflicts[model] = {"indices": indices, "columns": columns}
+            self.conflicts[model] = indices
 
-        new_entries = self.entries.setdefault(model, [])
+        if self.entries.get(model) is None:
+            self.entries[model] = []
+        new_entries = self.entries[model]
+
+        if not list_elements:
+            return
+
         logger.info("Parsing %d %s elements" %
                     (len(list_elements), model.__name__))
-
         # Create list for model and iterate over all elements
         for element in list_elements:
             data = xml_as_dict(element)
@@ -219,47 +215,43 @@ class DBEntries(object):
 
             new_entries.append(data)
 
-    def _create_insert_statement(self, model):
-        """ Creates an insert statement, depending on whether constraints or
-            indices were added.
+    def _check_duplicates(self):
+        """ Does a Python-side check of duplicates before executing INSERT
+            statements.
 
-            :param model: Database model
-            :returns: Insert statement to be used by the session.execute()
-            function. Values are not included as the execute
-            function will add them
+            INSERT ON CONFLICT DO UPDATE statements work better with single
+            tuples of values, but we are using multi-valued inserts here.
         """
-        table = model.__table__
-        if not self.conflicts.get(model):
-            # A simple INSERT statement
-            statement = table.insert()
-        else:
-            # Indices have been specified; make a INSERT ON CONFLICT DO UPDATE
-            # statement
-            insert = pg_sql.insert(table)
-            # Create arguments, add index elements or constraints
-            # 'excluded' is a specific property used in ON CONFLICT statements
-            # referring to the inserted row conflicting with an existing row
-            statement = insert.on_conflict_do_update(
-                set_={c: getattr(insert.excluded, c) for c in
-                      self.conflicts[model]["columns"]},
-                where=table.c.modified < insert.excluded.modified,
-                index_elements=self.conflicts[model]["indices"]
-            )
-
-        return statement
+        for model in self.conflicts:
+            removed = 0
+            indices = self.conflicts[model]
+            found = {}
+            for entry in self.entries[model]:
+                try:
+                    i = tuple(entry[i] for i in indices)
+                except KeyError as err:
+                    raise KeyError("Field names %r does not exist for model %s"
+                                   % (indices, model.__name__)) from err
+                if i not in found or entry["modified"] > found[i]["modified"]:
+                    found[i] = entry
+                else:
+                    removed += 1
+            if removed > 0:
+                logger.info("%d duplicate %s objects removed" %
+                            (removed, model.__name__))
+            self.entries[model] = list(found.values())
 
     def commit(self):
         """ Commits all entries to database. """
         if not self.entries:
             raise ValueError("No data have been added yet.")
+        self._check_duplicates()
         with database_session():
             for model, data in self.entries.items():
                 # Delete existing rows
                 logger.info("Deleting old %s objects" % model.__name__)
                 db.session.execute(model.__table__.delete())
                 # Add new rows
-                logger.info(
-                    "Inserting %d %s object%s into database" %
-                    (len(data), model.__name__, "" if len(data) == 1 else "s")
-                )
-                db.session.execute(self._create_insert_statement(model), data)
+                logger.info("Inserting %d %s objects into database" %
+                            (len(data), model.__name__))
+                batch_insert(model.__table__.insert(), data)

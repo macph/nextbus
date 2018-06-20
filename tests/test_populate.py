@@ -2,93 +2,18 @@
 Testing the extension functions for XSLT transformations and the element ->
 dict function.
 """
-import datetime
 import io
 import unittest
+import datetime
 
+import dateutil.parser as dp
 import lxml.etree as et
 
 from nextbus import db, models
 from nextbus.populate.utils import (DBEntries, ext_function_text,
-    get_atco_codes, merge_xml, xml_as_dict, XSLTExtFunctions)
+                                    get_atco_codes, xml_as_dict,
+                                    XSLTExtFunctions)
 import utils
-
-
-XML_FIRST = io.BytesIO(b"""\
-<root xmlns="some/namespace">
-  <first>
-    <sub><a>1</a><b>2</b><c>3</c></sub>
-    <sub><a>4</a><b>5</b><c>6</c></sub>
-  </first>
-</root>
-""")
-
-XML_SECOND = io.BytesIO(b"""\
-<root xmlns="some/namespace">
-  <first>
-    <sub><a>7</a><b>8</b><c>9</c></sub>
-  </first>
-  <second>
-    <child><d>10</d><e>11</e><f>12</f></child>
-  </second>
-</root>
-""")
-
-XML_THIRD = io.BytesIO(b"""\
-<root xmlns="some/namespace">
-  <second>
-    <child><d>13</d><e>14</e><f>15</f></child>
-  </second>
-</root>
-""")
-
-XML_EXPECTED = io.BytesIO(b"""\
-<root xmlns="some/namespace">
-  <first>
-    <sub><a>1</a><b>2</b><c>3</c></sub>
-    <sub><a>4</a><b>5</b><c>6</c></sub>
-    <sub><a>7</a><b>8</b><c>9</c></sub>
-  </first>
-  <second>
-    <child><d>10</d><e>11</e><f>12</f></child>
-    <child><d>13</d><e>14</e><f>15</f></child>
-  </second>
-</root>
-""")
-
-XML_WRONG_ROOT = io.BytesIO(b"""\
-<data xmlns="some/namespace">
-  <first>
-    <sub><a>7</a><b>8</b><c>9</c></sub>
-  </first>
-</data>
-""")
-
-XML_WRONG_NAMESPACE = io.BytesIO(b"""\
-<root xmlns="other/namespace">
-  <first>
-    <sub><a>7</a><b>8</b><c>9</c></sub>
-  </first>
-</root>
-""")
-
-
-class MergeXMLTests(utils.BaseXMLTests):
-    """ Testing the ``merge_xml`` function. """
-    def test_correct_merge(self):
-        merged = merge_xml(iter([XML_FIRST, XML_SECOND, XML_THIRD]),
-                           parser=self.parser)
-        expected = et.parse(XML_EXPECTED, parser=self.parser)
-        self.assertXMLElementsEqual(merged.getroot(), expected.getroot())
-
-    def test_wrong_root(self):
-        with self.assertRaisesRegex(ValueError, "same root or namespace"):
-            merge_xml(iter([XML_FIRST, XML_WRONG_ROOT]))
-
-    def test_wrong_namespace(self):
-        with self.assertRaisesRegex(ValueError, "same root or namespace"):
-            merge_xml(iter([XML_FIRST, XML_WRONG_NAMESPACE]))
-
 
 class ElementDictTests(unittest.TestCase):
     """ Testing the ``xml_as_dict`` function. """
@@ -194,61 +119,87 @@ class AtcoCodeTests(utils.BaseAppTests):
 
 class EntryTests(unittest.TestCase):
     """ Tests on _DBEntries without database commits """
-    xml = io.BytesIO(
-        b"<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
-        b"<modified>2006-01-25T07:54:31</modified></Region></Regions>"
-        b"</Data>"
+    XML = (
+        "<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
+        "<modified>2006-01-25T07:54:31</modified></Region></Regions>"
+        "</Data>"
     )
-    expected = {
+    XML_TWO = (
+        "<Data><Regions><Region><code>NW</code><name>North West</name>"
+        "<modified>2006-01-25T07:54:31</modified></Region><Region>"
+        "<code>Y</code><name>Yorkshire</name>"
+        "<modified>2006-01-25T07:54:31</modified></Region></Regions>"
+        "</Data>"
+    )
+    EXPECTED = {
         "code": "Y",
         "name": "Yorkshire",
         "modified": "2006-01-25T07:54:31"
     }
+    EXPECTED_DT = {
+        "code": "Y",
+        "name": "Yorkshire",
+        "modified": datetime.datetime(2006, 1, 25, 7, 54, 31)
+    }
+    EXPECTED_NW = {
+        "code": "NW",
+        "name": "North West",
+        "modified": datetime.datetime(2006, 1, 25, 7, 54, 31)
+    }
+
+    @staticmethod
+    def _add_modified_date(row):
+        row["modified"] = dp.parse(row["modified"])
+        return row
 
     def setUp(self):
-        self.db_entries = DBEntries(self.xml)
-    
+        self.db_entries = DBEntries(io.StringIO(self.XML))
+
     def tearDown(self):
         del self.db_entries
 
     def test_add_items(self):
         self.db_entries.add("Regions/Region", models.Region)
         self.assertEqual(self.db_entries.entries[models.Region][0],
-                         self.expected)
+                         self.EXPECTED)
 
     def test_add_multiple(self):
         self.db_entries.add("Regions/Region", models.Region)
         self.db_entries.add("Regions/Region", models.Region)
         self.assertEqual(self.db_entries.entries[models.Region],
-                         [self.expected] * 2)
+                         [self.EXPECTED] * 2)
 
     def test_add_items_func(self):
-        def func(item):
-            item["name"] = item["name"].upper()
-            return item
-
-        self.db_entries.add("Regions/Region", models.Region, func=func)
-        region = {
-            "code": "Y",
-            "name": "YORKSHIRE",
-            "modified": "2006-01-25T07:54:31"
-        }
-        self.assertEqual(self.db_entries.entries[models.Region][0], region)
-
-    def test_add_conflict(self):
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        conflict_entry = {
-            "indices": ("code",),
-            "columns": {"code", "name", "modified"}
-        }
-        self.assertEqual(self.db_entries.conflicts[models.Region],
-                         conflict_entry)
+        self.db_entries.add("Regions/Region", models.Region,
+                            func=self._add_modified_date)
+        self.assertEqual(self.db_entries.entries[models.Region][0],
+                         self.EXPECTED_DT)
 
     def test_add_item_wrong_function(self):
         def func(item, _):
             return item
         with self.assertRaisesRegex(TypeError, "the only argument"):
             self.db_entries.add("Regions/Region", models.Region, func=func)
+
+    def test_no_duplicate(self):
+        self.db_entries.set_data(io.StringIO(self.XML_TWO))
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
+                            func=self._add_modified_date)
+        print(self.db_entries.entries)
+        self.db_entries._check_duplicates()
+        self.assertEqual(self.db_entries.entries[models.Region],
+                         [self.EXPECTED_NW, self.EXPECTED_DT])
+
+    def test_remove_duplicate(self):
+        self.db_entries.set_data(io.StringIO(self.XML))
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
+                            func=self._add_modified_date)
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
+                            func=self._add_modified_date)
+        self.db_entries._check_duplicates()
+        self.assertEqual(len(self.db_entries.entries[models.Region]), 1)
+        self.assertEqual(self.db_entries.entries[models.Region][0],
+                         self.EXPECTED_DT)
 
 
 class EntryDBTests(utils.BaseAppTests):
@@ -266,33 +217,6 @@ class EntryDBTests(utils.BaseAppTests):
     def tearDown(self):
         self.drop_tables()
         del self.db_entries
-
-    def test_insert_statement_no_conflict(self):
-        self.db_entries.add("Regions/Region", models.Region)
-        insert = self.db_entries._create_insert_statement(models.Region)
-        # Add binding to engine
-        insert.bind = db.engine
-        statement = str(insert)
-        self.assertRegex(
-            statement,
-            r"INSERT INTO region \(code, name, modified\) VALUES"
-        )
-        self.assertNotRegex(statement, r"ON CONFLICT.+?DO UPDATE")
-
-    def test_insert_statement_column(self):
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        insert = self.db_entries._create_insert_statement(models.Region)
-        # Bind statement to database engine
-        insert.bind = db.engine
-        statement = str(insert)
-        self.assertRegex(
-            statement,
-            r"INSERT INTO region \(code, name, modified\) "
-            r"VALUES \(.+?\) ON CONFLICT \(code\) "
-            r"DO UPDATE SET code = excluded.code, name = excluded.name, "
-            r"modified = excluded.modified WHERE region.modified < "
-            r"excluded.modified"
-        )
 
     def test_commit_changes(self):
         self.db_entries.add("Regions/Region", models.Region)

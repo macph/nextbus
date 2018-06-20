@@ -9,10 +9,6 @@
     <replace code="078">
       <name old="Durham">County Durham</name>
     </replace>
-    <delete code="110"/>
-    <delete code="143"/>
-    <delete code="145"/>
-    <delete code="146"/>
   </table>
   <table model="District">
     <replace code="308">

@@ -6,7 +6,8 @@
                exclude-result-prefixes="f">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="regions" select="n:NationalPublicTransportGazetteer/n:Regions/n:Region"/>
-  <xsl:param name="areas" select="n:NationalPublicTransportGazetteer/n:Regions//n:AdministrativeArea"/>
+  <xsl:param name="areas" select="n:NationalPublicTransportGazetteer/n:Regions//n:AdministrativeArea
+    [not(n:AtcoAreaCode[.='900' or .='910' or .='920' or .='930'])]"/>
   <xsl:param name="districts" select="n:NationalPublicTransportGazetteer/n:Regions//n:NptgDistrict"/>
   <xsl:param name="localities" select="n:NationalPublicTransportGazetteer/n:NptgLocalities/n:NptgLocality"/>
 

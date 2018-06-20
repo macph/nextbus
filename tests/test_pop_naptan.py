@@ -30,13 +30,13 @@ class NptgXsltTests(utils.BaseXMLTests):
     """ Testing `_get_nptg_data` function which transforms NPTG data. """
 
     def test_nptg_transform_all_areas(self):
-        data = _get_nptg_data(iter([NPTG_RAW]))
+        data = _get_nptg_data(NPTG_RAW)
 
         expected = et.parse(NPTG_ALL, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
     def test_nptg_transform_tram_only(self):
-        data = _get_nptg_data(iter([NPTG_RAW]), atco_codes=[940])
+        data = _get_nptg_data(NPTG_RAW, atco_codes=[940])
 
         expected = et.parse(NPTG_TRAM, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
@@ -44,23 +44,10 @@ class NptgXsltTests(utils.BaseXMLTests):
 
 class NaptanXsltTests(utils.BaseXMLTests):
     """ Testing `_get_naptan_data` function which transforms NPTG data. """
-
     def test_naptan_transform_all_areas(self):
-        data = _get_naptan_data(iter([NAPTAN_RAW]))
+        data = _get_naptan_data(NAPTAN_RAW)
 
         expected = et.parse(NAPTAN_ALL, self.parser)
-        self.assertXMLElementsEqual(data.getroot(), expected.getroot())
-
-    def test_naptan_transform_split_files(self):
-        iter_paths = iter([NAPTAN_RAW_370, NAPTAN_RAW_940])
-        data = _get_naptan_data(iter_paths)
-        expected = et.parse(NAPTAN_ALL, self.parser)
-        self.assertXMLElementsEqual(data.getroot(), expected.getroot())
-
-    def test_naptan_trasform_tram_only(self):
-        data = _get_naptan_data(iter([NAPTAN_RAW]), list_area_codes=["147"])
-
-        expected = et.parse(NAPTAN_TRAM, self.parser)
         self.assertXMLElementsEqual(data.getroot(), expected.getroot())
 
 
@@ -266,7 +253,6 @@ class PopulateTests(utils.BaseAppTests):
 
     def test_commit_nptg_data(self):
         commit_nptg_data(list_files=[NPTG_RAW])
-
         # Make queries to the DB to ensure data is populated correctly
         with self.subTest("region"):
             region_codes = (db.session.query(models.Region.code)
@@ -276,9 +262,7 @@ class PopulateTests(utils.BaseAppTests):
         with self.subTest("admin areas"):
             area_codes = (db.session.query(models.AdminArea.code)
                           .order_by("code").all())
-            self.assertEqual(area_codes,
-                [("099",), ("110",), ("143",), ("145",), ("146",), ("147",)]
-            )
+            self.assertEqual(area_codes, [("099",), ("147",)])
 
         with self.subTest("districts"):
             district_codes = (db.session.query(models.District.code)

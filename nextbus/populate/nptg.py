@@ -53,18 +53,18 @@ def _remove_districts():
         query.delete(synchronize_session="fetch")
 
 
-def _get_nptg_data(nptg_files, atco_codes=None):
+def _get_nptg_data(nptg_file, atco_codes=None):
     """ Parses NPTG XML data, getting lists of regions, administrative areas,
         districts and localities that fit specified ATCO code (or all of them
         if atco_codes is None).
 
-        :param nptg_files: Iterator for list of NPTG XML files
+        :param nptg_file: File-like object or path for a XML file
         :param atco_codes: List of ATCO area codes to filter by, or all of them
         if set to None
         :returns: Transformed data as a XML ElementTree object
     """
     utils.logger.info("Opening NPTG files")
-    data = utils.merge_xml(nptg_files)
+    data = et.parse(nptg_file)
     names = {"n": data.xpath("namespace-uri(.)")}
     transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
     ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
@@ -112,7 +112,6 @@ def _get_nptg_data(nptg_files, atco_codes=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += ref
 
-    utils.logger.info("Applying XSLT to NPTG data")
     new_data = data.xslt(transform, extensions=ext)
 
     return new_data
@@ -137,17 +136,19 @@ def commit_nptg_data(archive=None, list_files=None):
         downloaded = download_nptg_data()
         iter_files = file_ops.iter_archive(downloaded)
 
-    # Transform data and write to temporary file
-    new_path = os.path.join(ROOT_DIR, NPTG_XML)
-    new_data = _get_nptg_data(iter_files, atco_codes)
-    new_data.write_output(new_path)
-
     # Go through data and create objects for committing to database
-    nptg = utils.DBEntries(new_path)
-    nptg.add("Regions/Region", models.Region, func=_add_modified_date)
-    nptg.add("AdminAreas/AdminArea", models.AdminArea, func=_add_modified_date)
-    nptg.add("Districts/District", models.District, func=_add_modified_date)
-    nptg.add("Localities/Locality", models.Locality, func=_add_modified_date)
+    nptg = utils.DBEntries()
+    for file_ in iter_files:
+        new_data = _get_nptg_data(file_, atco_codes)
+        nptg.set_data(new_data)
+        nptg.add("Regions/Region", models.Region, func=_add_modified_date)
+        nptg.add("AdminAreas/AdminArea", models.AdminArea,
+                 func=_add_modified_date)
+        nptg.add("Districts/District", models.District,
+                 func=_add_modified_date)
+        nptg.add("Localities/Locality", models.Locality,
+                 func=_add_modified_date)
+
     # Commit changes to database
     nptg.commit()
     # Remove all orphaned districts

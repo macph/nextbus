@@ -14,34 +14,6 @@
   </Regions>
   <AdminAreas>
     <AdminArea>
-      <code>110</code>
-      <region_ref>GB</region_ref>
-      <atco_code>910</atco_code>
-      <name>National - National Rail</name>
-      <modified>2008-12-08T19:05:00</modified>
-    </AdminArea>
-    <AdminArea>
-      <code>143</code>
-      <region_ref>GB</region_ref>
-      <atco_code>900</atco_code>
-      <name>National - National Coach</name>
-      <modified>2008-12-08T19:05:00</modified>
-    </AdminArea>
-    <AdminArea>
-      <code>145</code>
-      <region_ref>GB</region_ref>
-      <atco_code>920</atco_code>
-      <name>National - National Air</name>
-      <modified>2008-02-08T14:24:40</modified>
-    </AdminArea>
-    <AdminArea>
-      <code>146</code>
-      <region_ref>GB</region_ref>
-      <atco_code>930</atco_code>
-      <name>National - National Ferry</name>
-      <modified>2008-02-08T14:37:30</modified>
-    </AdminArea>
-    <AdminArea>
       <code>147</code>
       <region_ref>GB</region_ref>
       <atco_code>940</atco_code>

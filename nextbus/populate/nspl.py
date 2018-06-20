@@ -1,8 +1,9 @@
 """
 Populate postcode data from NSPL.
 """
-import os
 import json
+import os
+
 from flask import current_app
 
 from definitions import ROOT_DIR
@@ -90,6 +91,8 @@ def commit_nspl_data(file_=None):
 
         :param file_: Path for JSON file. If None, initiates download from
         the Camden Open Data API.
+        :param batch: Use multiple INSERT statements within the transcation,
+        each with max of ROW_LIMIT tuples.
     """
     atco_codes = current_app.config.get("ATCO_CODES")
     if atco_codes is not None and not isinstance(atco_codes, list):
@@ -107,12 +110,12 @@ def commit_nspl_data(file_=None):
     with open(nspl_path, "r") as json_file:
         data = json.load(json_file)
 
-    list_postcodes = []
+    postcodes = []
     local_auth = _get_dict_local_auth(atco_codes)
     utils.logger.info("Parsing %d postcodes" % len(data))
     for row in data:
         local_authority = local_auth[row["local_authority_code"]]
-        dict_postcode = {
+        postcodes.append({
             "index":                "".join(row["postcode_3"].split()),
             "text":                 row["postcode_3"],
             "admin_area_ref":       local_authority["admin_area_code"],
@@ -121,16 +124,16 @@ def commit_nspl_data(file_=None):
             "northing":             row["northing"],
             "longitude":            row["longitude"],
             "latitude":             row["latitude"]
-        }
-        list_postcodes.append(dict_postcode)
+        })
 
     with utils.database_session():
         utils.logger.info("Deleting previous rows")
         db.session.execute(models.Postcode.__table__.delete())
         utils.logger.info("Adding %d %s objects to database" %
-                    (len(list_postcodes), models.Postcode.__name__))
-        db.session.execute(models.Postcode.__table__.insert(), list_postcodes)
+                          (len(postcodes), models.Postcode.__name__))
+        utils.batch_insert(models.Postcode.__table__.insert(), postcodes)
 
     if downloaded_file is not None:
-        utils.logger.info("New file %r downloaded; can be deleted" % downloaded_file)
+        utils.logger.info("New file %r downloaded; can be deleted" %
+                          downloaded_file)
     utils.logger.info("NSPL population done.")

@@ -19,58 +19,7 @@ PLACES = {
 }
 
 
-class BaseLocationTests(unittest.TestCase):
-    """ Base class for testing locations. """
-
-    def assertTupleAlmostEqual(self, tuple_1, tuple_2, delta=None, places=None,
-                               msg=None):
-        """ Compares tuples, checking if each pair of values are equal to some
-            degree of accuracy.
-        """
-        if delta is None and places is None:
-            places = 7
-        elif delta is not None and places is not None:
-            raise TypeError("Use either delta or places, not both.")
-
-        message = None
-        if not isinstance(tuple_1, tuple):
-            message = "Tuple 1 %r is not of type tuple." % tuple_1
-        elif not isinstance(tuple_2, tuple):
-            message = "Tuple 2 %r is not of type tuple." % tuple_2
-
-        if message is None:
-            try:
-                if len(tuple_1) != len(tuple_2):
-                    message = ("Tuple 1 %r has length %d, while tuple 2 %r "
-                               "has length %d.") % (tuple_1, len(tuple_1),
-                                                    tuple_2, len(tuple_2))
-            except TypeError:
-                message = "One of the tuples is not a sequence."
-
-        if message is None:
-            try:
-                list_diff = []
-                seq_length = len(tuple_1)
-                for i in range(seq_length):
-                    diff = abs(tuple_1[i] - tuple_2[i])
-                    if delta is not None:
-                        if diff > delta:
-                            list_diff.append((i, tuple_1, tuple_2))
-                    else:
-                        if round(diff, places) > 0:
-                            list_diff.append((i, tuple_1, tuple_2))
-                message = "Tuples differ in the following indices:\n"
-                message += '\n'.join("%d\t%f\t%f" % d for d in list_diff)
-            except TypeError:
-                message = ("At least one of the tuple values is not a valid "
-                           "number.")
-
-        if message is not None:
-            msg = self._formatMessage(msg, message)
-            raise self.failureException(msg)
-
-
-class LondonDistanceTests(BaseLocationTests):
+class LondonDistanceTests(unittest.TestCase):
     """ Test location functions. Distances taken from Google Maps.
         Min delta 10m.
     """
@@ -121,7 +70,7 @@ class LondonDistanceTests(BaseLocationTests):
         self.assertAlmostEqual(dist, 72700, delta=100)
 
 
-class LondonBoxTests(BaseLocationTests):
+class LondonBoxTests(unittest.TestCase):
     """ Test whether coordinates exist within or outwith boxes centred around
         coordinates
     """

@@ -196,30 +196,16 @@
     });
 
     let filterForm = document.getElementById('filter-form');
-    let filterRefresh = document.getElementById('filter-refresh-button');
     let checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-
-    let queryString = function() {
-        let array = [];
-        for (let i = 0; i < checkboxes.length; i++) {
-            let c = checkboxes[i];
-            if (c.checked) {
-                array.push(c.name + '=' + c.value);
-            }
-        }
-
-        return array.join('&');
-    }
-
     for (let i = 0; i < checkboxes.length; i++) {
         let c = checkboxes[i];
         c.addEventListener('change', function() {
-            window.location.href = '?' + queryString();
+            filterForm.submit();
         });
     }
     // Not required anymore; can hide for now
+    let filterRefresh = document.getElementById('filter-refresh-button');
     filterRefresh.style.display = 'none';
-
 </script>
 {% endif %}
 {% endblock %}

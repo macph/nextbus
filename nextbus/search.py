@@ -144,8 +144,21 @@ def search_all(query, types=None, admin_areas=None, page=1):
     else:
         # Else: do a full text search - format query string first
         parsed = ts_parser(query)
-        res = models.FTS.search(parsed, types, admin_areas, NAMES_ONLY)
-        page = res.paginate(page, per_page=PAGE_LENGTH, error_out=False)
+
+        try:
+            page_num = int(page)
+        except TypeError:
+            raise InvalidParameters(query, "page", page)
+
+        try:
+            res = models.FTS.search(parsed, types, admin_areas, NAMES_ONLY)
+        except ValueError as err:
+            if "Invalid values for type" in str(err):
+                raise InvalidParameters(query, "type", types)
+            else:
+                raise
+
+        page = res.paginate(page_num, per_page=PAGE_LENGTH, error_out=False)
 
         count = page.total
         current_app.logger.info(
@@ -179,61 +192,6 @@ def validate_characters(query):
     """
     if not set(query) & SET_ALPHANUM:
         raise QueryTooShort(query)
-
-
-def validate_params(query, params):
-    """ Checks parameters given with search query and throw exception if they
-        are invalid.
-
-        :param query: Search query to be passed to exception.
-        :param params: MultiDict object for parameters returned by request.
-        :returns: Arguments for searching created from query string as dict
-        :raises InvalidParameters: Query string parameter contained invalid
-        values
-    """
-    search_args = {}
-    valid_types = models.FTS.TYPES.keys()
-
-    if params.get("type"):
-        set_types = set(params.getlist("type"))
-        invalid_types = set_types - valid_types
-        if invalid_types:
-            raise InvalidParameters(query, "type", invalid_types)
-        search_args["types"] = set_types & valid_types
-
-    if params.get("area"):
-        search_args["admin_areas"] = set(params.getlist("area"))
-
-    if params.get("page"):
-        try:
-            page_number = int(params.get("page"))
-            if page_number < 1:
-                raise ValueError
-        except (TypeError, ValueError):
-            raise InvalidParameters(query, "page", params.get("page"))
-        else:
-            search_args["page"] = page_number
-
-    return search_args
-
-
-def validate_after_search(query, params, types, areas):
-    """ Validates parameters after querying results and list of matching areas
-        and types.
-
-        :param query: Search query to be passed to exceptions.
-        :param params: MultiDict object for parameters returned by request.
-        :param types: Dictionary of matching types returned by filter_args().
-        :param areas: Dictionary of matching areas returned by filter_args().
-    """
-    invalid_types = set(params.getlist("type")) - types.keys()
-    if invalid_types:
-        raise InvalidParameters(query, "type", invalid_types)
-
-    invalid_areas = set(params.getlist("area")) - areas.keys()
-    if invalid_areas:
-        raise InvalidParameters(query, "area", invalid_areas)
-
 
 def filter_text(params, types, areas):
     """ Creates a string to be printed in search results describing what is

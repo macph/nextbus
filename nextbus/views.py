@@ -80,7 +80,7 @@ def add_search_form():
     """ Search form enabled in every view within blueprint by adding the form
         object to Flask's ``g``.
     """
-    g.form = forms.SearchPlaces()
+    g.form = forms.SearchPlaces(formdata=None)
     g.action = url_for("page.search_query")
 
 
@@ -115,6 +115,8 @@ def about():
 def search_query():
     """ Receives search query in POST request and redirects to another page.
     """
+    g.form.process(request.form)
+
     if g.form.submit_query.data and g.form.search_query.data:
         query = g.form.search_query.data
         query_url = query.replace(" ", "+")
@@ -134,21 +136,29 @@ def search_query():
             return redirect(url_for(".search_results", query=query_url))
 
 
+@page.route("/search/")
 @page.route("/search/<path:query>")
-def search_results(query):
+def search_results(query=""):
     """ Shows a list of search results.
 
         Query string attributes:
-        - type: Specify areas (admin areas and districts), places (localities)
+        - group: Specify areas (admin areas and districts), places (localities)
         or stops (stop points and areas). Can have multiple entries.
-        - area: Admin area code, can have multiple entries.
+        - area: Admin area code. Can have multiple entries.
         - page: Page number for results.
     """
     s_query = query.replace("+", " ")
     # Check if query has enough alphanumeric characters, else raise
     search.validate_characters(s_query)
-    # Retrieve request arguments, raise if they are not valid
-    args = search.validate_params(query, request.args)
+    # Set up form and retrieve request arguments
+    filters = forms.FilterResults(request.args)
+    args = {}
+    if filters.group.data:
+        args["types"] = filters.group.data
+    if filters.area.data:
+        args["admin_areas"] = filters.area.data
+    if "page" in request.args:
+        args["page"] = request.args.get("page")
 
     # Do the search; raise errors if necessary
     try:
@@ -169,16 +179,18 @@ def search_results(query):
         return redirect(url_for(".list_near_postcode", code=postcode_url))
     else:
         # List of results
-        # Recalculate to get the result types and areas to filter with
-        types, areas = search.filter_args(s_query)
-        # Check if query parameters match filter types
-        search.validate_after_search(query, request.args, types, areas)
+        groups, areas = search.filter_args(s_query)
+        filters.add_choices(groups, areas)
+        # Check the form data - if valid the area parameters are probably wrong
+        if not filters.validate():
+            raise search.InvalidParameters(s_query, "area",
+                                           args["admin_areas"])
         # Create a string describing what is being filtered
-        text = search.filter_text(request.args, types, areas)
+        text = search.filter_text(request.args, groups, areas)
 
         return render_template("search.html", query=s_query,
-                               results=result.list, filter_types=types,
-                               filter_areas=areas, filter_text=text)
+                               results=result.list, filters=filters,
+                               filter_text=text)
 
 
 @page.errorhandler(search.InvalidParameters)

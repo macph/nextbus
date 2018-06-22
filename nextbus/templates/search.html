@@ -1,9 +1,9 @@
 {% import 'functions.html' as f %}
 {% extends 'base.html' %}
-{% block title %}Search results for "{{ query }}"{% endblock %}
+{% block title %}Search results{{ " for \"%s\""|format(query) if query }}{% endblock %}
 
-{% set f_types = filter_types|default(false) and filter_types|length > 1 %}
-{% set f_areas = filter_areas|default(false) and filter_areas|length > 1 %}
+{% set f_groups = filters|default(false) and filters.group.choices|length > 1 %}
+{% set f_areas = filters|default(false) and filters.area.choices|length > 1 %}
 
 {# Set checkbox as checked if matching value is in query string #}
 {% macro checked(name, value) %}
@@ -11,17 +11,12 @@
 {% endmacro %}
 
 {# Sets up a list of checkboxes for each filter list #}
-{% macro filter_list(name, list) %}
+{% macro filter_list(field) %}
 <fieldset class="filter-list">
-    <legend>by {{ name }}</legend>
+    <legend>by {{ field.label }}</legend>
     <ul>
-        {% for value, label in list|dictsort(by='value') %}
-        <li>
-            <label class="filter-item" for"{{ name }}-{{ value }}">
-                <input type="checkbox" id="{{ name }}-{{ value }}" name="{{ name }}" value="{{ value }}" {{ checked(name, value) }}>
-                {{ label }}
-            </label>
-        </li>
+        {% for element in field.render_elements(class='filter-item') %}
+        <li>{{ element }}</li>
         {% endfor %}
     </ul>
 </fieldset>
@@ -48,7 +43,7 @@
 <div class="columns">
     <div class="column-1">
         <section id="filter-box" class="card card--aside">
-            {% if f_types or f_areas %}
+            {% if f_groups or f_areas %}
             <div class="heading-inline heading-inline--right">
                 <h2>Filter</h2>
                 <button id="filter-show-button" class="filter-button">Show</button>
@@ -56,11 +51,11 @@
             <div id="filter-wrapper" class="filter-form-wrapper">
                 <form id="filter-form" class="filter-form" method="get">
                     <div class="filter-form__scrolling">
-                        {% if f_types %}
-                        {{ filter_list('type', filter_types) }}
+                        {% if f_groups %}
+                        {{ filter_list(filters.group) }}
                         {% endif %}
                         {% if f_areas %}
-                        {{ filter_list('area', filter_areas) }}
+                        {{ filter_list(filters.area) }}
                         {% endif %}
                     </div>
                     <button id="filter-refresh-button" class="filter-submit">Refresh</button>
@@ -171,7 +166,7 @@
     resizeIndicator('indicator');
     revertColours('indicator--reversed');
 </script>
-{% if f_types or f_areas %}
+{% if f_groups or f_areas %}
 <script>
     let showFilter = false;
     let filterBox = document.getElementById('filter-box');

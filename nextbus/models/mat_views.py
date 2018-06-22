@@ -284,9 +284,7 @@ class FTS(utils.MaterializedView):
             :returns: Query expression with added filters, if any
         """
         if types is not None and set(types) - cls.TYPES.keys():
-            list_types = list(cls.TYPES.keys())
-            raise ValueError("Type(s) %s is invalid. Set of types must only "
-                             "contain the values %s." % (types, list_types))
+            raise ValueError("Invalid values for type parameter.")
 
         if types is not None:
             tables = []

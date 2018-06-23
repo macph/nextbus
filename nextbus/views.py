@@ -26,7 +26,8 @@ class EntityNotFound(Exception):
     pass
 
 
-def _group_objects(list_, attr=None, key=None, default=None, minimum=None):
+def _group_objects(list_, attr=None, key=None, default=None,
+                   minimum=MIN_GROUPED):
     """ Groups places or stops by the first letter of their names, or under a
         single key "A-Z" if the total is less than MIN_GROUPED.
 
@@ -257,7 +258,7 @@ def list_in_area(area_code):
     # Show list of localities with stops if districts do not exist
     if not area.districts:
         group_local = _group_objects(area.list_localities(), attr="name",
-                                     default="Places", minimum=MIN_GROUPED)
+                                     default="Places")
     else:
         group_local = {}
 
@@ -279,7 +280,7 @@ def list_in_district(district_code):
                              % district_code)
 
     group_local = _group_objects(district.list_localities(), attr="name",
-                                 default="Places", minimum=MIN_GROUPED)
+                                 default="Places")
 
     return render_template("district.html", district=district,
                            localities=group_local)
@@ -318,8 +319,7 @@ def list_in_locality(locality_code):
     if not group_areas and all(s.stop_area_ref is None for s in stops):
         group_areas = None
 
-    stops = _group_objects(stops, attr="name", default="Stops",
-                           minimum=MIN_GROUPED)
+    stops = _group_objects(stops, attr="name", default="Stops")
 
     return render_template("place.html", locality=locality, stops=stops,
                            grouped=group_areas)

@@ -92,7 +92,7 @@ class ParseStopPointTests(unittest.TestCase):
         ("OPp", "opp"),
         ("opp 23 Main Street", "opp 23"),
         ("opp and after", "opp aft"),
-        ("opposite 10", "opp 10"),
+        ("opposite no 10", "opp 10"),
         ("o/s", "o/s"),
         ("O/S", "o/s"),
         ("o/s 107/109", "o/s 107/."),

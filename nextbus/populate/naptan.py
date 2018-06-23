@@ -98,12 +98,13 @@ def _create_ind_parser():
         kw_one_of("in", replace="in"),
         kw_one_of("nr", replace="near"),
         kw_one_of("os", replace="o/s"),
+        kw_one_of("on", replace="on"),
         kw_one_of("to", replace="to")
     ])
     # Exclude common words, eg 'Stop' or 'Bay'.
     excluded_words = kw_one_of(
-        "and", "bay", "gate", "no.", "platform", "stance", "stances", "stand",
-        "stop", "the", "to"
+        "and", "bay", "gate", "no", "platform", "stance", "stances",
+        "stand", "stop", "the", "to"
     ).suppress()
     # Also exclude any punctuation on their own
     excluded_punct = pp.Word(

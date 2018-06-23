@@ -3,8 +3,6 @@ Tests for search queries.
 """
 import unittest
 
-from werkzeug.datastructures import MultiDict
-
 from nextbus import parser, search
 from nextbus.parser import _fix_parentheses
 import utils
@@ -144,43 +142,3 @@ class SearchCharacterValidationTests(unittest.TestCase):
 
     def test_search_correct(self):
         search.validate_characters("Beijing")
-
-
-class SearchTextTests(unittest.TestCase):
-    """ Tests for the filter text message. """
-    TYPES = {"stop": "Stops", "area": "Areas", "place": "Places"}
-    AREAS = {"083": "Greater Manchester", "084": "Hampshire",
-             "090": "Merseyside"}
-
-    def test_no_filters(self):
-        params = MultiDict()
-        self.assertIsNone(search.filter_text(params, self.TYPES, self.AREAS))
-
-    def test_2_types_only(self):
-        params = MultiDict([("type", "stop"), ("type", "place")])
-        self.assertEqual(search.filter_text(params, self.TYPES, self.AREAS),
-                         "Places and stops")
-
-    def test_all_types_only(self):
-        params = MultiDict([("type", "stop"), ("type", "place"),
-                            ("type", "area")])
-        self.assertEqual(search.filter_text(params, self.TYPES, self.AREAS),
-                         "Areas, places and stops")
-
-    def test_1_area_only(self):
-        params = MultiDict([("area", "083")])
-        self.assertEqual(search.filter_text(params, self.TYPES, self.AREAS),
-                         "All results within Greater Manchester")
-
-    def test_3_areas_only(self):
-        params = MultiDict([("area", "083"), ("area", "084"), ("area", "090")])
-        self.assertEqual(search.filter_text(params, self.TYPES, self.AREAS),
-                         "All results within Greater Manchester, Hampshire "
-                         "and Merseyside")
-
-    def test_types_and_areas(self):
-        params = MultiDict([("type", "stop"), ("type", "area"),
-                            ("area", "083"), ("area", "090")])
-        self.assertEqual(search.filter_text(params, self.TYPES, self.AREAS),
-                         "Areas and stops within Greater Manchester and "
-                         "Merseyside")

@@ -192,37 +192,3 @@ def validate_characters(query):
     """
     if not set(query) & SET_ALPHANUM:
         raise QueryTooShort(query)
-
-def filter_text(params, types, areas):
-    """ Creates a string to be printed in search results describing what is
-        being filtered.
-
-        :param params: MultiDict object for parameters returned by request.
-        :param types: Dictionary of matching types returned by filter_args().
-        :param areas: Dictionary of matching areas returned by filter_args().
-        :returns: Readable string with all types and areas joined, or None
-        if no parameters are specified.
-    """
-
-    def print_list(list_):
-        """ Converts a list [x, y, z] to a string 'x, y and z'. """
-        if not list_:
-            return ""
-        elif len(list_) == 1:
-            return list_[0]
-        else:
-            return ", ".join(list_[:-1]) + " and " + list_[-1]
-
-    str_types = print_list(sorted(v for k, v in types.items() if
-                                  k in params.getlist("type")))
-    str_areas = print_list(sorted(v for k, v in areas.items() if
-                                  k in params.getlist("area")))
-
-    if str_types and str_areas:
-        return str_types.capitalize() + " within " + str_areas
-    elif str_types:
-        return str_types.capitalize()
-    elif str_areas:
-        return "All results within " + str_areas
-    else:
-        return None

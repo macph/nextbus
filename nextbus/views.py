@@ -185,12 +185,9 @@ def search_results(query=""):
         if not filters.validate():
             raise search.InvalidParameters(s_query, "area",
                                            args["admin_areas"])
-        # Create a string describing what is being filtered
-        text = search.filter_text(request.args, groups, areas)
 
         return render_template("search.html", query=s_query,
-                               results=result.list, filters=filters,
-                               filter_text=text)
+                               results=result.list, filters=filters)
 
 
 @page.errorhandler(search.InvalidParameters)

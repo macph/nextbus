@@ -70,9 +70,6 @@
         <section class="card">
             {% if results is defined and results.total > 0 %}
             <h2>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h2>
-            {% if filter_text is not none %}
-            <p><strong>Filter:</strong> {{ filter_text }}</p>
-            {% endif %}
             {% if results.items|length > 0 %}
             {% call(item) f.print_list(results.items) %}
             {% if item.table_name == 'region' %}
@@ -127,9 +124,6 @@
             {% endif %}
             {% elif results is defined and (f_types or f_areas) %}
             <h2>No results found</h2>
-            {% if filter_text is not none %}
-            <p><strong>Filter:</strong> {{ filter_text }}</p>
-            {% endif %}
             <p>The filter choices you selected for query <strong>{{ query }}</strong> resulted in no matches.</p>
             <p><a href="?">Reset filters</a></p>
             {% elif results is defined %}

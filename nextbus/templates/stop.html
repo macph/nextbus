@@ -85,7 +85,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     let ld = new LiveData(
         "{{ stop.atco_code }}",
         "{{ stop.admin_area_ref }}",
-        "{{ url_for('api.stop_get_times') }}",
+        "{{ url_for('api.stop_get_times', atco_code='') }}",
         document.getElementById("services"),
         document.getElementById("liveTime"),
         document.getElementById("liveCountdown")

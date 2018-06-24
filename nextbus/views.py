@@ -487,21 +487,20 @@ def bad_request(status, message):
     return response
 
 
-@api.route("/stop/get", methods=["POST"])
-def stop_get_times():
+@api.route("/api/live/<atco_code>")
+def stop_get_times(atco_code=None):
     """ Requests and retrieve bus times. """
-    atco_code = request.form.get("code")
     if atco_code:
         matching_stop = (db.session.query(models.StopPoint.atco_code)
                          .filter_by(atco_code=atco_code).one_or_none())
         if not matching_stop:
-            current_app.logger.error("API accessed with invalid ATCO code %s" %
-                                     atco_code)
+            current_app.logger.warning("API accessed with invalid ATCO code %s"
+                                       % atco_code)
             return bad_request(404, "ATCO code does not exist")
     else:
-        current_app.logger.error("Data sent was not valid")
-        return bad_request(400, "Data is not valid; must have a 'code' "
-                           "parameter")
+        current_app.logger.warning("API accessed without ATCO code %s" %
+                                   atco_code)
+        return bad_request(400, "ATCO code is required.")
 
     try:
         times = tapi.get_nextbus_times(atco_code)
@@ -514,23 +513,17 @@ def stop_get_times():
     return jsonify(times)
 
 
-@api.route("/box", methods=["GET"])
+@api.route("/api/box", methods=["GET"])
 def get_stops_within():
     """ Gets list of stops within area as GeoJSON object. """
-    directions = ["north", "east", "south", "west"]
-
     try:
-        sides = {d: request.args.get(d) for d in directions}
-        if any(v is None for v in sides.items()):
-            raise ValueError
-    except (TypeError, ValueError):
-        return bad_request(400, "API accessed with invalid params:" % sides)
+        sides = {d: request.args.get(d) for d in location.Box._fields}
+        box = location.Box(**sides)
+        stops = models.StopPoint.within_box(box)
+    except TypeError:
+        return bad_request(400, "API accessed with invalid params: %r" % sides)
 
-    box = location.Box(**sides)
-    stops = models.StopPoint.within_box(box)
-    geojson = _list_geojson(stops)
-
-    return jsonify(geojson)
+    return jsonify(_list_geojson(stops))
 
 
 @page.app_errorhandler(EntityNotFound)

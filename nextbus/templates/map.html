@@ -158,7 +158,7 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
         activeStop = new LiveData(
             point.properties.atcoCode,
             point.properties.adminAreaRef,
-            "{{ url_for('api.stop_get_times') }}",
+            "{{ url_for('api.stop_get_times', atco_code='') }}",
             document.getElementById('services'),
             document.getElementById('live-time'),
             document.getElementById('live-countdown')

@@ -189,16 +189,16 @@ function removeSubElements(element) {
  * @constructor
  * @param {string} atcoCode ATCO code for stop
  * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
- * @param {string} postURL URL to send requests to
+ * @param {string} url URL to send requests to
  * @param {Element} tableElement Table element in document
  * @param {Element} timeElement Element in document showing time when data was retrieved
  * @param {Element} countdownElement Element in document showing time before next refresh
  */
-function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, countdownElement) {
+function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, countdownElement) {
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
-    this.postURL = postURL;
+    this.url = url;
     this.table = tableElement;
     this.headingTime = timeElement;
     this.headingCountdown = countdownElement;
@@ -214,12 +214,12 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
      * @param {function} callback Callback to be used upon successful request
      */
     this.getData = function(callback) {
-        console.log('Sending POST request to ' + self.postURL + ' with code="' +
+        console.log('Sending request to ' + self.url + ' with code="' +
                     self.atcoCode + '"');
         self.headingTime.textContent = 'Updating...'
         let request = new XMLHttpRequest();
-        request.open('POST', self.postURL, true);
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
+        request.open('GET', self.url + self.atcoCode, true);
+        request.setRequestHeader('Content-Type', 'charset=utf-8');
 
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE) {
@@ -241,7 +241,7 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
             }
         }
 
-        request.send("code=" + self.atcoCode);
+        request.send();
     };
 
     /**
@@ -267,8 +267,6 @@ function LiveData(atcoCode, adminAreaCode, postURL, tableElement, timeElement, c
         }
 
         if (self.data.services.length > 0) {
-            console.log('Found ' + self.data.services.length +
-                        ' services for stop "' + self.atcoCode + '".');
             if (self.isLive) {
                 self.headingTime.textContent = 'Live times at ' + self.data.local_time;
             } else {

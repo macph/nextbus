@@ -5,6 +5,9 @@ import logging
 import logging.config
 
 
+app_logger = logging.getLogger("nextbus")
+
+
 def _filter_sqlalchemy_log(level):
     """ Returns a function that filters SQLAlchemy records by setting a higher
         threshold.
@@ -77,7 +80,7 @@ DEBUG_LOG_CONFIG = {
 }
 
 
-def load_log_config(app):
+def load_config(app):
     """ Loads configuration for root and other loggers, depending on if the
         'ENV' flag was set to 'production' or 'development'.
     """

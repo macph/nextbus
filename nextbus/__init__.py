@@ -6,8 +6,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 
-from nextbus import parser
-from nextbus._logging import load_log_config
+from nextbus import logger, parser
 
 
 db = SQLAlchemy()
@@ -28,26 +27,21 @@ def create_app(config_obj=None, config_file=None):
     """
     # Create app
     app = Flask(__name__, instance_relative_config=True)
-    # Delete existing handlers (eg DebugHandler provided when app.debug=True)
-    # and let logs propagate to root
-    del app.logger.handlers[:]
-    app.logger.propagate = True
+    app.logger = logger.app_logger
+    # Load logging configuration
+    logger.load_config(app)
 
     # Load application configuration
     if not bool(config_obj) ^ bool(config_file):
         raise ValueError("A configuration object or file must be specified.")
     elif config_obj is not None:
         app.config.from_object(config_obj)
-        log_message = "Configuration loaded from object '%s'" % config_obj
+        app.logger.info("Configuration loaded from object '%s'" % config_obj)
     else:
         # Load app defaults first
         app.config.from_object("default_config.Config")
         app.config.from_pyfile(config_file)
-        log_message = "Configuration loaded from file '%s'" % config_file
-
-    # Load logging configuration
-    load_log_config(app)
-    app.logger.info(log_message)
+        app.logger.info("Configuration loaded from file '%s'" % config_file)
 
     # Initialise SQLAlchemy and Migrate in app
     db.init_app(app)

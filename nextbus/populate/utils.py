@@ -10,12 +10,12 @@ from flask import current_app
 import lxml.etree as et
 import sqlalchemy.dialects.postgresql as pg_sql
 
-from nextbus import db
+from nextbus import db, logger
 
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
 
-logger = logging.getLogger().getChild("populate")
+logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
 
 

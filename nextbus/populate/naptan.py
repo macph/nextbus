@@ -5,6 +5,7 @@ import collections
 import functools
 import operator
 import os
+import zipfile
 
 import dateutil.parser as dp
 import lxml.etree as et
@@ -35,6 +36,15 @@ def download_naptan_data(atco_codes=None):
         params["LA"] = "|".join(str(i) for i in atco_codes)
 
     new = file_ops.download(NAPTAN_URL, directory="temp", params=params)
+
+    if not zipfile.is_zipfile(new):
+        # An error has occurred with the download - supposed to be a zip
+        # archive. Try again with a full file download
+        utils.logger.warning("Download failed - trying again with full "
+                             "dataset")
+        os.remove(new)
+        del params["LA"]
+        new = file_ops.download(NAPTAN_URL, directory="temp", params=params)
 
     return new
 
@@ -155,14 +165,19 @@ class _NaPTANStops(object):
     """ Filters NaPTAN stop points and areas by ensuring only stop areas
         belonging to stop points within specified ATCO areas are filtered.
     """
-    def __init__(self, list_locality_codes=None):
+    def __init__(self, list_area_codes=None, list_locality_codes=None):
         self.area_codes = set()
         self.naptan_codes = set()
-        self.locality_codes = list_locality_codes
+
+        self.area = list_area_codes
+        self.localities = list_locality_codes
+
         self.ind_parser = _create_ind_parser()
 
     def parse_areas(self, area):
         """ Parses stop areas. """
+        if self.area and area.get("admin_area_ref") not in self.area:
+            return
         if area.get("modified") is not None:
             area["modified"] = dp.parse(area["modified"])
         # Add stop area code to list for checking later
@@ -172,20 +187,20 @@ class _NaPTANStops(object):
 
     def parse_points(self, point):
         """ Parses stop points. """
-        if point.get("modified") is not None:
-            point["modified"] = dp.parse(point["modified"])
+        if self.area and point.get("admin_area_ref") not in self.area:
+            return
         # Tram stops use the national admin area code for trams; need to use
         # locality code to determine whether stop is within specified area
-        if self.locality_codes:
-            if point["locality_ref"] not in self.locality_codes:
-                return
+        if self.localities and point["locality_ref"] not in self.localities:
+            return
 
+        if point.get("modified") is not None:
+            point["modified"] = dp.parse(point["modified"])
         # Create short indicator for display
         if point["indicator"] is not None:
             point["short_ind"] = self.ind_parser(point["indicator"])
         else:
             point["indicator"] = point["short_ind"] = ""
-
         # Remove stop area ref if it does not exist
         if point["stop_area_ref"] not in self.area_codes:
             point["stop_area_ref"] = None
@@ -388,17 +403,20 @@ def commit_naptan_data(archive=None, list_files=None):
         :param list_files: List of file paths for NaPTAN XML files.
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
-    query_atco_codes = db.session.query(models.AdminArea.atco_code).all()
+    query_area = db.session.query(models.AdminArea.code).all()
     query_local = db.session.query(models.Locality.code).all()
-    if not query_atco_codes or not query_local:
+    if not query_area or not query_local:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data."
                          "Populate the database with NPTG data first.")
 
     atco_codes = utils.get_atco_codes()
-    # Use full list of ATCO codes for downloading NaPTAN data
     local_codes = set(l.code for l in query_local) if atco_codes else None
-    all_atco_codes = set(a.atco_code for a in query_atco_codes)
+    area_codes = set(a.code for a in query_area) if atco_codes else None
+
+    # Use full list of ATCO codes for downloading NaPTAN data
+    query_atco = db.session.query(models.AdminArea.atco_code).all()
+    all_atco_codes = set(a.atco_code for a in query_atco)
 
     downloaded = None
     if archive is not None and list_files is not None:
@@ -412,7 +430,7 @@ def commit_naptan_data(archive=None, list_files=None):
         iter_files = file_ops.iter_archive(downloaded)
 
     # Go through data and create objects for committing to database
-    eval_stops = _NaPTANStops(local_codes)
+    eval_stops = _NaPTANStops(area_codes, local_codes)
     naptan = utils.DBEntries()
     for file_ in iter_files:
         new_data = _get_naptan_data(file_)

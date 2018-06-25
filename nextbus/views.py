@@ -516,12 +516,28 @@ def stop_get_times(atco_code=None):
 @api.route("/api/box", methods=["GET"])
 def get_stops_within():
     """ Gets list of stops within area as GeoJSON object. """
+    sides = {d: request.args.get(d) for d in location.Box._fields}
     try:
-        sides = {d: request.args.get(d) for d in location.Box._fields}
         box = location.Box(**sides)
         stops = models.StopPoint.within_box(box)
     except TypeError:
         return bad_request(400, "API accessed with invalid params: %r" % sides)
+
+    return jsonify(_list_geojson(stops))
+
+
+@api.route("/api/tile", methods=["GET"])
+def get_stops_tile():
+    """ Gets list of stops within a tile. """
+    args = [request.args.get(i) for i in ["x", "y", "z"]]
+    try:
+        coordinates = [int(i) for i in args]
+    except TypeError:
+        return bad_request(400, "API accessed with invalid params: %r" % args)
+
+    box = location.tile_to_box(*coordinates)
+    stops = models.StopPoint.within_box(box)
+    print(stops)
 
     return jsonify(_list_geojson(stops))
 

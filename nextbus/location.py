@@ -91,3 +91,26 @@ def format_dms(latitude, longitude):
 def check_bounds(latitude, longitude):
     """ Checks if a pair of coordinates is within the GB boundaries. """
     return GB_SOUTH < latitude < GB_NORTH and GB_EAST < longitude < GB_WEST
+
+
+def tile_to_box(tile_x, tile_y, zoom):
+    """ Gets bounding box from a tile with x and y coordinates and zoom level.
+    """
+    factor = 2 ** zoom
+
+    def latitude(y):
+        lat_rad = math.atan(math.sinh(math.pi - 2 * math.pi * y / factor))
+        return math.degrees(lat_rad)
+
+    def longitude(x):
+        return x * 360 / factor - 180
+
+    box = Box(
+        north=latitude(tile_y),
+        east=longitude(tile_x + 1),
+        south=latitude(tile_y + 1),
+        west=longitude(tile_x)
+    )
+    print(box)
+
+    return box

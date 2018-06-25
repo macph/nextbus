@@ -1197,7 +1197,10 @@ button:focus {
   #filter-show-button {
     display: none;
   }
+}
 
+/* Need wider screen for map */
+@media screen and (min-width: 800px) {
   .content--map {
     flex-direction: row-reverse;
   }

@@ -564,3 +564,209 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
 
     return map;
 }
+
+
+/**
+ * Detect IE use so can disable arrows - CSS transformations do not work properly
+ * Credit: https://stackoverflow.com/a/21712356
+ */
+function detectIE() {
+    let ua = window.navigator.userAgent;
+    return (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1);
+}
+
+
+function StopLayer(map, panel, callback) {
+    let self = this;
+    this.STOPS_VISIBLE = 16;
+    this.map = map;
+    this.panel = panel;
+    this.callback = callback;
+    this.isIE = detectIE();
+
+    this.currentStop = null;
+    this.loadedStops = new Object();
+
+    this.getIndex = function(coords) {
+        return 'x' + coords.x + 'y' + coords.y + 'z' + coords.z;
+    }
+
+    this.loadTile = function(coords) {
+        if (coords.z < self.STOPS_VISIBLE) {
+            return;
+        }
+        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y + '&z=' + coords.z;
+        let index = self.getIndex(coords);
+
+        let request = new XMLHttpRequest;
+        request.open('GET', url, true);
+        request.addEventListener('load', function() {
+            let data = JSON.parse(this.responseText);
+
+            if (data.features.length > 0) {
+                self.loadedStops[index] = self.createLayer(data);
+                self.loadedStops[index].addTo(self.map);
+                resizeIndicator('indicator-marker');
+            }
+        });
+        request.send();
+    }
+
+    this.removeTile = function(coords) {
+        let index = self.getIndex(coords);
+        if (typeof self.loadedStops[index] !== 'undefined') {
+            self.loadedStops[index].clearLayers();
+            self.map.removeLayer(self.loadedStops[index]);
+            delete self.loadedStops[index];
+        }
+    }
+
+    this.removeAll = function(coords) {
+        for (let index in self.loadedStops) {
+            if (self.loadedStops.hasOwnProperty(index)) {
+                self.loadedStops[index].clearLayers();
+                self.map.removeLayer(self.loadedStops[index]);
+                delete self.loadedStops[index];
+            }
+        }
+    }
+
+    this.createLayer = function(stops) {
+        let stopLayer = new L.GeoJSON(stops, {
+            pointToLayer: function(point, latLng) {
+                let ind;
+                if (point.properties.indicator !== '') {
+                    ind = '<span>' + point.properties.indicator + '</span>'
+                } else if (point.properties.stopType === 'BCS' ||
+                            point.properties.stopType === 'BCT') {
+                    ind = '<img src="' + BUS + '" width=28px>'
+                } else if (point.properties.stopType === 'PLT') {
+                    ind = '<img src="' + TRAM + '" width=28px>'
+                } else {
+                    ind = '';
+                }
+
+                let arrow;
+                if (!self.isIE) {
+                    let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
+                    arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
+                } else {
+                    arrow = '';
+                }
+
+                let area = 'area-' + point.properties.adminAreaRef;
+                let innerHTML = '<div class="indicator indicator-marker ' + area + '">' +
+                    arrow + ind + '</div>';
+
+                let icon = L.divIcon({
+                    className: 'marker',
+                    iconSize: null,
+                    html: innerHTML
+                });
+                let marker = L.marker(
+                    latLng,
+                    {
+                        icon: icon,
+                        title: point.properties.title,
+                        alt: point.properties.indicator
+                    }
+                );
+                // Move marker to front when mousing over
+                marker = marker.on('mouseover', function(event) {
+                    this.setZIndexOffset(1000);
+                });
+                // Move marker to original z offset when mousing out
+                marker = marker.on('mouseout', function(event) {
+                    this.setZIndexOffset(0);
+                });
+                // Add callback function to each marker with GeoJSON pointer object as argument
+                if (typeof self.callback !== 'undefined') {
+                    marker = marker.on('click', function(event) {
+                        self.callback(point)
+                    });
+                }
+
+                return marker;
+            }
+        });
+
+        return stopLayer;
+    };
+}
+
+
+function StopPanel(map, mapPanel) {
+    let self = this;
+    this.map = map;
+    this.mapPanel = mapPanel;
+}
+
+
+function StopMap(mapToken, mapContainer, mapPanel) {
+    let self = this;
+    this.mapContainer = mapContainer;
+    this.mapPanel = mapPanel;
+
+    this.map = null;
+    this.layer = L.tileLayer(
+        'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
+        {
+            minZoom: 9,
+            maxZoom: 18,
+            id: 'mapbox.emerald',
+            accessToken: mapToken
+        }
+    )
+
+    this.panel = new StopPanel(self.map, self.mapPanel);
+    this.stops = new StopLayer(self.map, self.panel);
+
+    this.init = function(latitude, longitude, zoom) {
+        self.map = L.map(self.mapContainer.id, {
+            zoom: zoom,
+            center: L.latLng(latitude, longitude),
+            minZoom: 9,
+            maxZoom: 18,
+            maxBounds: L.latLngBounds(
+                L.latLng(49.5, -9.0),
+                L.latLng(61.0, 2.5)
+            ),
+            attributionControl: false
+        });
+
+        self.panel.map = self.map;
+        self.stops.map = self.map;
+
+        self.map.on('zoomstart', function(event) {
+            if (self.map.getZoom() < self.stops.STOPS_VISIBLE) {
+                self.stops.removeAll();
+            }
+        })
+
+        self.map.on('zoomend', function(event) {
+            self.setURL();
+        });
+    
+        self.map.on('moveend', function(event) {
+            self.setURL();
+        });
+
+        self.layer.on('tileload', function(tile) {
+            self.stops.loadTile(tile.coords);
+        })
+
+        self.layer.on('tileunload', function(tile) {
+            self.stops.removeTile(tile.coords);
+        })
+
+        self.layer.addTo(self.map);
+    }
+
+    this.setURL = function() {
+        let center = self.map.getCenter();
+        let zoom = self.map.getZoom();
+        let newURL = MAP_URL + center.lat + ',' + center.lng + ',' + zoom;
+
+        history.replaceState(null, null, newURL);
+    }
+}

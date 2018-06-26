@@ -527,16 +527,13 @@ def get_stops_within():
 @api.route("/api/tile", methods=["GET"])
 def get_stops_tile():
     """ Gets list of stops within a tile. """
-    args = [request.args.get(i) for i in ["x", "y", "z"]]
+    args = [request.args.get(i) for i in ["x", "y"]]
     try:
-        x, y, z = map(int, args)
+        x, y = map(int, args)
     except TypeError:
         return bad_request(400, "API accessed with invalid params: %r" % args)
 
-    if z < 16:
-        return bad_request(400, "Zoom level too low")
-
-    box = location.tile_to_box(x, y, z)
+    box = location.tile_to_box(x, y, location.TILE_ZOOM)
     stops = models.StopPoint.within_box(box)
 
     return jsonify(_list_geojson(stops))

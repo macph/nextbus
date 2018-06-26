@@ -6,15 +6,15 @@ const INTERVAL = 60;
 const REFRESH = true;
 const STOPS_VISIBLE = 16;
 const TILE_LIMIT = 128;
+const TILE_ZOOM = 16;
 const TIME_LIMIT = 60;
 
 /**
  * Sets up element to activate geolocation and direct to correct page
  * @param {string} LocationURL URL to direct location requests to
  * @param {HTMLElement} activateElement Element to activate
- * @param {HTMLElement} errorElement Optional element to display message in case it does not work
  */
-function addGeolocation(LocationURL, activateElement, errorElement) {
+function addGeolocation(LocationURL, activateElement) {
     if (!navigator.geolocation) {
         console.log('Browser does not support geolocation.');
         return;
@@ -29,10 +29,6 @@ function addGeolocation(LocationURL, activateElement, errorElement) {
     }
     let error = function(err) {
         console.log('Geolocation error: ' + err);
-        if (typeof errorElement !== 'undefined') {
-            output.textContent = 'Unable to retrieve your location. ' +
-                'Try searching with a postcode.';
-        }
     }
 
     activateElement.addEventListener('click', function(event) {
@@ -216,8 +212,6 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
      * @param {function} callback Callback to be used upon successful request
      */
     this.getData = function(callback) {
-        console.log('Sending request to ' + self.url + ' with code="' +
-                    self.atcoCode + '"');
         self.headingTime.textContent = 'Updating...'
         let request = new XMLHttpRequest();
         request.open('GET', self.url + self.atcoCode, true);
@@ -588,10 +582,13 @@ function addMap(token, mapElement, stops, callback) {
  * the max limit is exceeded
  * @constructor
  * @param {number} max Max size of array before properties start being dropped
+ * @param {function} canDelete Function to check if the first entry can be removed. If not defined,
+ *    the first entry is always removed when the array is full.
  */
-function TileCache(max) {
+function TileCache(max, canDelete) {
     let self = this;
     this.max = max;
+    this.canDelete = canDelete;
     this._obj = new Object();
     this._array = new Array();
 
@@ -610,7 +607,7 @@ function TileCache(max) {
         if (self._obj.hasOwnProperty(key)) {
             let index = self._array.indexOf(key);
             if (index !== self.size() - 1) {
-                self._array.splice(self._array.indexOf(key));
+                self._array.splice(self._array.indexOf(key), 1);
                 self._array.push(key);
             }
             return self._obj[key];
@@ -636,9 +633,24 @@ function TileCache(max) {
     this.add = function(key, value) {
         self._obj[key] = value;
         self._array.push(key)
-        if (self.size() > self.max) {
+
+        if (self.size() <= self.max) {
+            return;
+        }
+
+        if (typeof self.check === 'undefined') {
             let first = self._array.shift();
             delete self._obj[first];
+            return;
+        }
+
+        for (let i = 0; i < self._array.length; i++) {
+            let key = self._array[i];
+            if (self.canDelete(self._obj[key])) {
+                let remove = self._array.splice(i, 1);
+                delete self._obj[remove];
+                break;
+            }
         }
     }
 
@@ -648,6 +660,13 @@ function TileCache(max) {
      */
     this.has = function(key) {
         return self._obj.hasOwnProperty(key);
+    }
+
+    /**
+     * Returns array of keys held by object
+     */
+    this.keys = function() {
+        return Object.keys(self._obj);
     }
 
     /**
@@ -687,25 +706,23 @@ function StopLayer(stopMap, callback) {
     this.isIE = detectIE();
 
     this.currentStop = null;
-    this.loadedStops = new TileCache(TILE_LIMIT);
+    this.loadedStops = new TileCache(TILE_LIMIT, function(layer) {
+        return (!self.stopMap.hasLayer(layer));
+    });
 
     /**
      * Get index to be used with list of stop tiles
      * @param {Object} coords Coordinates returned from tile event
      */
     this.getIndex = function(coords) {
-        return 'x' + coords.x + 'y' + coords.y + 'z' + coords.z;
+        return 'x' + coords.x + 'y' + coords.y;
     }
 
     /**
-     * Loads tile with stops - if it doesn't exist, download data
-     * @param {Object} coords Coordinates returned from tile event
+     * Loads tile with stops - if it doesn't exist in cache, download data
+     * @param {Object} coords Tile coordinates at level TILE_ZOOM
      */
     this.loadTile = function(coords) {
-        if (coords.z < STOPS_VISIBLE) {
-            return;
-        }
-
         let index = self.getIndex(coords);
         if (self.loadedStops.has(index)) {
             let stops = self.loadedStops.get(index);
@@ -716,12 +733,11 @@ function StopLayer(stopMap, callback) {
             return;
         }
 
-        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y + '&z=' + coords.z;
+        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y;
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
         request.addEventListener('load', function() {
             let data = JSON.parse(this.responseText);
-
             if (data.features.length > 0) {
                 self.loadedStops.add(index, self.createLayer(data));
                 self.loadedStops.get(index).addTo(self.stopMap.map);
@@ -734,27 +750,71 @@ function StopLayer(stopMap, callback) {
     }
 
     /**
-     * Removes tile - but data stays in list
-     * @param {Object} coords Coordinates returned from tile event
+     * Removes all tiles - but data stays in cache
      */
-    this.removeTile = function(coords) {
-        let index = self.getIndex(coords);
-        let stops = self.loadedStops.get(index);
-        if (stops !== null) {
-            self.stopMap.map.removeLayer(stops);
-        }
-    }
-
-    /**
-     * Removes tile - but data stays in list
-     * @param {Object} coords Coordinates returned from tile event
-     */
-    this.removeAll = function(coords) {
-        self.loadedStops.forEach(function(layer) {
-            if (self.stopMap.map.hasLayer(layer)) {
+    this.removeAllTiles = function() {
+        self.stopMap.map.eachLayer(function(layer) {
+            if (!(layer instanceof L.TileLayer)) {
                 self.stopMap.map.removeLayer(layer);
             }
         });
+    }
+
+    /**
+     * Gets coordinates of all tiles visible current map at level TILE_ZOOM
+     */
+    this._getTileCoordinates = function() {
+        let pixelScale = self.stopMap.layer.getTileSize();
+        let bounds = self.stopMap.map.getBounds();
+
+        let getTile = function(coords) {
+            let absolute = self.stopMap.map.project(coords, TILE_ZOOM)
+            return absolute.unscaleBy(pixelScale).floor();
+        }
+        let northwest = getTile(bounds.getNorthWest());
+        let southeast = getTile(bounds.getSouthEast());
+
+        let tileCoords = [];
+        for (let i = northwest.x; i <= southeast.x; i++) {
+            for (let j = northwest.y; j <= southeast.y; j++) {
+                tileCoords.push({x: i, y: j});
+            }
+        }
+
+        return tileCoords;
+    }
+
+    /**
+     * Updates all stop point tiles, removing hidden tiles and adding new tiles
+     */
+    this.updateTiles = function() {
+        if (self.stopMap.map.getZoom() < STOPS_VISIBLE) {
+            return;
+        }
+
+        let tiles = self._getTileCoordinates();
+        let tileIndices = tiles.map(self.getIndex);
+        let keys = self.loadedStops.keys();
+
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let index = tileIndices.indexOf(key);
+            if (index > -1) {
+                self.loadTile(tiles[index]);
+                tiles.splice(index, 1);
+                tileIndices.splice(index, 1);
+            } else {
+                let layer = self.loadedStops.select(key);
+                if (self.stopMap.map.hasLayer(layer)) {
+                    self.stopMap.map.removeLayer(layer);
+                }
+            }
+        }
+
+        /* Add all remaining tiles not in cache */
+        for (let i = 0; i < tiles.length; i++) {
+            self.loadTile(tiles[i]);
+        }
     }
 
     /**
@@ -1017,7 +1077,6 @@ function StopPanel(stopMap, mapPanel) {
             'live-time',
             'live-countdown'
         );
-        activeStop.startLoop();
     }
 
     /**
@@ -1095,30 +1154,28 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             attributionControl: false
         });
 
-        self.map.on('zoomstart', function(event) {
-            if (self.map.getZoom() < STOPS_VISIBLE) {
-                self.stops.removeAll();
-            }
-        })
-
         self.map.on('zoomend', function(event) {
+            if (self.map.getZoom() < STOPS_VISIBLE) {
+                self.stops.removeAllTiles();
+            } else {
+                self.stops.updateTiles();
+            }
             self.setURL();
             self.panel.setPanel(null, self.map.getZoom());
         });
     
         self.map.on('moveend', function(event) {
             self.setURL();
+            self.stops.updateTiles();
         });
 
-        self.layer.on('tileload', function(tile) {
-            self.stops.loadTile(tile.coords);
-        })
-
-        self.layer.on('tileunload', function(tile) {
-            self.stops.removeTile(tile.coords);
-        })
+        self.map.on('click', function(event) {
+            self.panel.currentStop = null;
+            self.panel.setPanel(null, self.map.getZoom());
+        });
 
         self.layer.addTo(self.map);
+        self.stops.updateTiles();
         self.panel.setPanel(point, zoomLevel);
     }
 

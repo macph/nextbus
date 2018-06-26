@@ -28,7 +28,6 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
                 <h2>Map</h2>
                 <button id="show-map-button">Show</button>
             </div>
-            <p><strong><span class="no-wrap">{{ coord[0] }}</span>, <span="no-wrap">{{ coord[1] }}</span></strong></p>
             <div id="stop-map" class="stop-map"></div>
         </section>
         <section class="card">
@@ -59,6 +58,8 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     resizeIndicator('indicator');
 </script>
 <script>
+    const BUS_SVG = "{{ url_for('static', filename='img/bus-white.svg') }}";
+    const TRAM_SVG = "{{ url_for('static', filename='img/tram-white.svg') }}";
     let mapButton = document.getElementById('show-map-button');
     let map = document.getElementById('stop-map');
 
@@ -70,11 +71,10 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     let mapTransitionCallback = function() {
         map.removeEventListener(mapTransitionEnd, mapTransitionCallback);
         mapButton.style.display = 'none';
-        addMap(map,
+        addMap(
             "{{ config.get('MAPBOX_APP_TOKEN') }}",
+            map.id,
             {{ data|tojson }},
-            "{{ url_for('static', filename='img/bus-white.svg') }}",
-            "{{ url_for('static', filename='img/tram-white.svg') }}",
             markerGoToStop
         );
         resizeIndicator('indicator-marker');

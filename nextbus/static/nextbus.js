@@ -4,6 +4,8 @@ Functions for list of stops.
 
 const INTERVAL = 60;
 const REFRESH = true;
+const STOPS_VISIBLE = 16;
+const TILE_LIMIT = 128;
 const TIME_LIMIT = 60;
 
 /**
@@ -189,19 +191,19 @@ function removeSubElements(element) {
  * @constructor
  * @param {string} atcoCode ATCO code for stop
  * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
- * @param {string} url URL to send requests to
- * @param {Element} tableElement Table element in document
- * @param {Element} timeElement Element in document showing time when data was retrieved
- * @param {Element} countdownElement Element in document showing time before next refresh
+ * @param {string} table Table element in document
+ * @param {string} time Element in document showing time when data was retrieved
+ * @param {string} countdown Element in document showing time before next refresh
  */
-function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, countdownElement) {
+function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
-    this.url = url;
-    this.table = tableElement;
-    this.headingTime = timeElement;
-    this.headingCountdown = countdownElement;
+    this.url = LIVE_URL;
+    this.table = table;
+    this.headingTime = time;
+    this.headingCountdown = countdown;
+    this.countdownElement = null;
     this.data = null;
 
     this.interval = null;
@@ -236,7 +238,7 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
                     self.headingTime.textContent = 'No data available';
                 }
                 if (typeof callback !== 'undefined') {
-                    callback();
+                    callback(self.atcoCode);
                 }
             }
         }
@@ -256,6 +258,9 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
             clLive = 'service--estimated';
         }
 
+        let container = document.getElementById(self.table);
+        let heading = document.getElementById(self.headingTime);
+
         /**
          * Prints remaining seconds as 'due' or 'x min'
          * @param {number} sec Remaining seconds
@@ -266,11 +271,11 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
             return str;
         }
 
-        if (self.data.services.length > 0) {
+        if (self.data !== null && self.data.services.length > 0) {
             if (self.isLive) {
-                self.headingTime.textContent = 'Live times at ' + self.data.local_time;
+                heading.textContent = 'Live times at ' + self.data.local_time;
             } else {
-                self.headingTime.textContent = 'Estimated times from ' + self.data.local_time;
+                heading.textContent = 'Estimated times from ' + self.data.local_time;
             }
 
             let table = document.createElement('div');
@@ -360,21 +365,23 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
                 table.appendChild(cAfter);
             }
             // Remove all existing elements
-            removeSubElements(self.table);
+            removeSubElements(container);
             // Add table
-            self.table.appendChild(table);
+            container.appendChild(table);
             console.log('Created table with ' + self.data.services.length +
                         ' services for stop "' + self.atcoCode + '".');
 
-        } else {
-            // Remove all existing elements if they exist
-            removeSubElements(self.table);
+        } else if (self.data !== null) {
+            removeSubElements(container);
             if (self.isLive) {
-                self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
+                heading.textContent = 'No services expected at ' + self.data.local_time;
             } else {
-                self.headingTime.textContent = 'No services found';
+                heading.textContent = 'No services found';
             }
             console.log('No services found for stop ' + self.atcoCode + '.');
+        } else {
+            heading.textContent = 'Updating...';
+            console.log('No data received yet when printed for stop ' + self.atcoCode);
         }
     };
 
@@ -412,50 +419,62 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
     };
 
     /**
-     * Starts up the class with interval for refreshing
-     * @param {function} callbackInter Function to be used when data comes in each interval.
-     *     The getData() function already checks if this function is defined before calling
-     * @param {function} callbackStart Function to be used when data comes in for the first time.
-     *     If this argument is undefined, the callbackInter function is used instead
+     * Starts up the class with interval for refreshing. If it is already active, the table and
+     * countdown are set to the correct elements again.
+     * @param {Object} callbacks Callback functions called at start, within interval or at end
+     * @param {function} callbacks.onStart At start of loop, when data is received.
+     *     If not defined the onInter function is called instead
+     * @param {function} callbacks.onInter Called every interval after initial interval
+     * @param {function} callbacks.onEnd Called when interval finishes and loop stops
      */
-    this.startLoop = function(callbackInter, callbackStart) {
-        let onInterval = callbackInter;
-        let onStart = (typeof callbackStart !== 'undefined') ? callbackStart : callbackInter;
+    this.startLoop = function(callbacks) {
+        let onInter, onStart, onEnd;
+        if (typeof callbacks !== 'undefined') {
+            onInter = callbacks.onInter;
+            onStart = (typeof callbacks.onStart !== 'undefined') ? callbacks.onStart : onInter;
+            onEnd = callbacks.onEnd;
+        }
+
+        self.countdownElement = document.getElementById(self.headingCountdown);
         if (self.loopActive) {
             if (self.loopEnding) {
                 self.loopEnding = false;
             }
             if (typeof onStart !== 'undefined') {
-                onStart();
+                onStart(self.atcoCode);
             }
+            self.printData();
             return;
-        } else {
-            self.getData(onStart);
         }
+
+        self.getData(onStart);
         if (REFRESH) {
             self.loopActive = true;
             let time = INTERVAL;
-            self.interval = setInterval(function () {
+            self.interval = setInterval(function() {
                 time--;
-                self.headingCountdown.textContent = (time > 0) ? time + 's' : 'now';
+                self.countdownElement.textContent = (time > 0) ? time + 's' : 'now';
                 if (time <= 0) {
                     if (self.loopEnding) {
                         self.loopActive = false;
                         self.loopEnding = false;
                         clearInterval(self.interval);
+                        if (typeof onEnd !== 'undefined') {
+                            onEnd(self.atcoCode);
+                        }
                     } else {
-                        self.getData(onInterval);
+                        self.getData(onInter);
                         time = INTERVAL;
                     }
                 }
             }, 1000);
         } else {
-            self.headingCountdown.textContent = '';
+            self.countdownElement.textContent.textContent = '';
         }
     };
 
     /**
-     * Stops the interval, leaving it paused. Can be restarted with startLoop() again
+     * Sets the loop to not repeat after it runs out. Can be restarted with startLoop() again
      * @param {function} callback - Calls function at same time
      */
     this.stopLoop = function(callback) {
@@ -463,7 +482,7 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
             self.loopEnding = true;
         }
         if (typeof callback !== 'undefined') {
-            callback();
+            callback(self.atcoCode);
         }
     };
 }
@@ -471,14 +490,12 @@ function LiveData(atcoCode, adminAreaCode, url, tableElement, timeElement, count
 
 /**
  * Creates a map element using Leaflet.js and returns it.
- * @param {HTMLElement} mapElement Empty div element to be used for map
- * @param {string} token Map token for access to Mapbox's maps
- * @param {JSON} stops Either a single stop or a list of stops in GeoJSON format
- * @param {string} busSVG Link to SVG source for bus icon
- * @param {string} tramSVG Link to SVG source for tram icon
+ * @param {string} mapToken Map token for access to Mapbox's maps
+ * @param {string} mapElement Empty div element to be used for map
+ * @param {Object} stops Either a single stop or a list of stops in GeoJSON format
  * @param {function} callback Optional callback function when clicking on a marker
  */
-function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
+function addMap(token, mapElement, stops, callback) {
     let layer = L.tileLayer(
         'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
         {
@@ -497,7 +514,7 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
             if (point.properties.indicator !== '') {
                 ind = '<span>' + point.properties.indicator + '</span>'
             } else {
-                let src = (point.properties.stopType === 'PLT') ? tramSVG : busSVG;
+                let src = (point.properties.stopType === 'PLT') ? TRAM_SVG : BUS_SVG;
                 let alt = (point.properties.stopType === 'PLT') ? 'Tram stop' : 'Bus stop';
                 ind = '<img src="' + src + '" width=28px alt="' + alt + '">'
             }
@@ -548,7 +565,7 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
     });
     let bounds = stopsGeo.getBounds();
 
-    let map = L.map(mapElement.id, {
+    let map = L.map(mapElement, {
         center: bounds.getCenter(),
         zoom: 18,
         minZoom: 9,
@@ -567,6 +584,87 @@ function addMap(mapElement, token, stops, busSVG, tramSVG, callback) {
 
 
 /**
+ * Stores tile layers in object and array such that properties are stored in order and dropped if
+ * the max limit is exceeded
+ * @constructor
+ * @param {number} max Max size of array before properties start being dropped
+ */
+function TileCache(max) {
+    let self = this;
+    this.max = max;
+    this._obj = new Object();
+    this._array = new Array();
+
+    /**
+     * Size of array
+     */
+    this.size = function() {
+        return Object.keys(self._obj).length
+    }
+
+    /**
+     * Gets object property by key and pushes it to front
+     * @param {string} key Object key
+     */
+    this.get = function(key) {
+        if (self._obj.hasOwnProperty(key)) {
+            let index = self._array.indexOf(key);
+            if (index !== self.size() - 1) {
+                self._array.splice(self._array.indexOf(key));
+                self._array.push(key);
+            }
+            return self._obj[key];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets object property but does not change its order
+     * @param {string} key Object key
+     */
+    this.select = function(key) {
+        return (self._obj.hasOwnProperty(key)) ? self._obj[key] : null;
+    }
+
+    /**
+     * Adds entry to array with key and value. If the array is already at maximum size, the first
+     * property is ejected
+     * @param {string} key Object key
+     * @param {Object} value Object property
+     */
+    this.add = function(key, value) {
+        self._obj[key] = value;
+        self._array.push(key)
+        if (self.size() > self.max) {
+            let first = self._array.shift();
+            delete self._obj[first];
+        }
+    }
+
+    /**
+     * Checks if key exists
+     * @param {string} key Object key
+     */
+    this.has = function(key) {
+        return self._obj.hasOwnProperty(key);
+    }
+
+    /**
+     * Iterates over all properties in array
+     * @param {function} func Function on each property in object
+     */
+    this.forEach = function(func) {
+        for (let key in self._obj) {
+            if (self._obj.hasOwnProperty(key)) {
+                func(self._obj[key]);
+            }
+        }
+    }
+}
+
+
+/**
  * Detect IE use so can disable arrows - CSS transformations do not work properly
  * Credit: https://stackoverflow.com/a/21712356
  */
@@ -576,101 +674,134 @@ function detectIE() {
 }
 
 
-function StopLayer(map, panel, callback) {
+/**
+ * Handles layers of stop markers
+ * @constructor
+ * @param {Object} stopMap Parent stop map object
+ * @param {function} callback Function for each marker when clicked
+ */
+function StopLayer(stopMap, callback) {
     let self = this;
-    this.STOPS_VISIBLE = 16;
-    this.map = map;
-    this.panel = panel;
+    this.stopMap = stopMap;
     this.callback = callback;
     this.isIE = detectIE();
 
     this.currentStop = null;
-    this.loadedStops = new Object();
+    this.loadedStops = new TileCache(TILE_LIMIT);
 
+    /**
+     * Get index to be used with list of stop tiles
+     * @param {Object} coords Coordinates returned from tile event
+     */
     this.getIndex = function(coords) {
         return 'x' + coords.x + 'y' + coords.y + 'z' + coords.z;
     }
 
+    /**
+     * Loads tile with stops - if it doesn't exist, download data
+     * @param {Object} coords Coordinates returned from tile event
+     */
     this.loadTile = function(coords) {
-        if (coords.z < self.STOPS_VISIBLE) {
+        if (coords.z < STOPS_VISIBLE) {
             return;
         }
-        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y + '&z=' + coords.z;
-        let index = self.getIndex(coords);
 
+        let index = self.getIndex(coords);
+        if (self.loadedStops.has(index)) {
+            let stops = self.loadedStops.get(index);
+            if (stops !== null) {
+                stops.addTo(self.stopMap.map);
+                resizeIndicator('indicator-marker');
+            }
+            return;
+        }
+
+        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y + '&z=' + coords.z;
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
         request.addEventListener('load', function() {
             let data = JSON.parse(this.responseText);
 
             if (data.features.length > 0) {
-                self.loadedStops[index] = self.createLayer(data);
-                self.loadedStops[index].addTo(self.map);
+                self.loadedStops.add(index, self.createLayer(data));
+                self.loadedStops.get(index).addTo(self.stopMap.map);
                 resizeIndicator('indicator-marker');
+            } else {
+                self.loadedStops.add(index, null);
             }
         });
         request.send();
     }
 
+    /**
+     * Removes tile - but data stays in list
+     * @param {Object} coords Coordinates returned from tile event
+     */
     this.removeTile = function(coords) {
         let index = self.getIndex(coords);
-        if (typeof self.loadedStops[index] !== 'undefined') {
-            self.loadedStops[index].clearLayers();
-            self.map.removeLayer(self.loadedStops[index]);
-            delete self.loadedStops[index];
+        let stops = self.loadedStops.get(index);
+        if (stops !== null) {
+            self.stopMap.map.removeLayer(stops);
         }
     }
 
+    /**
+     * Removes tile - but data stays in list
+     * @param {Object} coords Coordinates returned from tile event
+     */
     this.removeAll = function(coords) {
-        for (let index in self.loadedStops) {
-            if (self.loadedStops.hasOwnProperty(index)) {
-                self.loadedStops[index].clearLayers();
-                self.map.removeLayer(self.loadedStops[index]);
-                delete self.loadedStops[index];
+        self.loadedStops.forEach(function(layer) {
+            if (self.stopMap.map.hasLayer(layer)) {
+                self.stopMap.map.removeLayer(layer);
             }
-        }
+        });
     }
 
-    this.createLayer = function(stops) {
-        let stopLayer = new L.GeoJSON(stops, {
-            pointToLayer: function(point, latLng) {
-                let ind;
+    /**
+     * Creates marker element to be used in map
+     * @param {Object} point Point object from data
+     */
+    this.markerElement = function(point) {
+        let ind = '';
                 if (point.properties.indicator !== '') {
                     ind = '<span>' + point.properties.indicator + '</span>'
                 } else if (point.properties.stopType === 'BCS' ||
                             point.properties.stopType === 'BCT') {
-                    ind = '<img src="' + BUS + '" width=28px>'
+                    ind = '<img src="' + BUS_SVG + '" width=28px>'
                 } else if (point.properties.stopType === 'PLT') {
-                    ind = '<img src="' + TRAM + '" width=28px>'
-                } else {
-                    ind = '';
+                    ind = '<img src="' + TRAM_SVG + '" width=28px>'
                 }
 
-                let arrow;
+        let arrow = '';
                 if (!self.isIE) {
                     let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
                     arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
-                } else {
-                    arrow = '';
                 }
 
                 let area = 'area-' + point.properties.adminAreaRef;
-                let innerHTML = '<div class="indicator indicator-marker ' + area + '">' +
-                    arrow + ind + '</div>';
+        let indClass = 'indicator indicator-marker ' + area;
+        let innerHTML = '<div class="' + indClass + '">' + arrow + ind + '</div>';
 
+        return innerHTML;
+    }
+
+    /**
+     * Creates GeoJSON layer of stops from list of stops
+     * @param {Object} stops FeatureCollection data of stops within title
+     */
+    this.createLayer = function(stops) {
+        let stopLayer = new L.GeoJSON(stops, {
+            pointToLayer: function(point, latLng) {
                 let icon = L.divIcon({
                     className: 'marker',
                     iconSize: null,
-                    html: innerHTML
+                    html: self.markerElement(point)
                 });
-                let marker = L.marker(
-                    latLng,
-                    {
+                let marker = L.marker(latLng, {
                         icon: icon,
                         title: point.properties.title,
                         alt: point.properties.indicator
-                    }
-                );
+                });
                 // Move marker to front when mousing over
                 marker = marker.on('mouseover', function(event) {
                     this.setZIndexOffset(1000);
@@ -695,17 +826,229 @@ function StopLayer(map, panel, callback) {
 }
 
 
-function StopPanel(map, mapPanel) {
+/**
+ * Handles the stop panel
+ * @param {Object} stopMap Parent stop map object
+ * @param {HTMLElement} mapPanel Panel HTML element
+ */
+function StopPanel(stopMap, mapPanel) {
     let self = this;
-    this.map = map;
+    this.stopMap = stopMap
     this.mapPanel = mapPanel;
+    this.activeStops = new Object();
+    this.currentStop = null;
+
+    /**
+     * Gets index for list of stops
+     * @param {string} atcoCode
+     */
+    this.getIndex = function(atcoCode) {
+        return 's' + atcoCode;
+    }
+
+    /**
+     * Gets live data object for a bus stop or create one if it does not exist
+     * @param {string} atcoCode ATCO code for bus stop
+     * @param {string} adminAreaRef Admin area code for bus stop
+     * @param {string} table Table element ID
+     * @param {string} time Heading element ID
+     * @param {string} countdown Countdown element ID
+     */
+    this.getStop = function(atcoCode, adminAreaRef, table, time, countdown) {
+        let index = self.getIndex(atcoCode);
+        if (!self.activeStops.hasOwnProperty(index)) {
+            self.activeStops[index] = new LiveData(
+                atcoCode,
+                adminAreaRef,
+                table,
+                time,
+                countdown
+            );
+        }
+        self.stopAllLoops(atcoCode);
+        self.activeStops[index].startLoop({
+            onEnd: function(atcoCode) {
+                if (self.activeStops.hasOwnProperty(index)) {
+                    delete self.activeStops[index];
+                }
+            }
+        });
+        return self.activeStops[index];
+    }
+
+    /**
+     * Stops all loops
+     * @param {string} exceptCode ATCO code for bus stop to be excluded
+     */
+    this.stopAllLoops = function(exceptCode) {
+        let exceptIndex = (typeof exceptCode !== 'undefined') ? self.getIndex(exceptCode): null;
+        for (let index in self.activeStops) {
+            let valid = self.activeStops.hasOwnProperty(index);
+            if (valid && index !== exceptIndex) {
+                self.activeStops[index].stopLoop();
+            }
+        }
+    }
+
+    /**
+     * Clears all subelements from panel
+     */
+    this.clearPanel = function() {
+        while (self.mapPanel.firstChild) {
+            self.mapPanel.removeChild(self.mapPanel.firstChild);
+        }
+    }
+
+    /**
+     * Sets message when zoom level too small
+     */
+    this._setPanelOutOfZoom = function() {
+        let heading = document.createElement('div');
+        heading.className = 'heading heading--panel';
+        let headingText = document.createElement('h2');
+        headingText.textContent = 'Zoom in to see stops';
+        heading.appendChild(headingText);
+
+        self.clearPanel();
+        self.mapPanel.appendChild(heading);
+    }
+
+
+    /**
+     * Sets message when zoom level right
+     */
+    this._setPanelInZoom = function() {
+        let heading = document.createElement('div');
+        heading.className = 'heading heading--panel';
+        let headingText = document.createElement('h2');
+        headingText.textContent = 'Select a stop';
+        heading.appendChild(headingText);
+
+        self.clearPanel();
+        self.mapPanel.appendChild(heading);
+    }
+
+
+    /**
+     * Sets panel for bus stop live data and other associated info
+     * @param {Object} point GeoJSON data for stop point
+     */
+    this._setStopPanel = function(point) {
+        self.currentStop = point.properties.atcoCode;
+        self.stopMap.setURL();
+
+        let heading = document.createElement('div');
+        heading.className = 'heading-stop';
+
+        let stopInd = document.createElement('div');
+        stopInd.className = 'indicator area-' + point.properties.adminAreaRef;
+        let ind = null;
+        if (point.properties.indicator !== '') {
+            ind = document.createElement('span');
+            ind.textContent = point.properties.indicator;
+        } else if (point.properties.stopType === 'BCS' ||
+                    point.properties.stopType === 'BCT') {
+            ind = document.createElement('img');
+            ind.src = BUS_SVG;
+            ind.width = '28';
+            ind.alt = 'Bus stop';
+        } else if (point.properties.stopType === 'PLT') {
+            ind = document.createElement('img');
+            ind.src = TRAM_SVG;
+            ind.width = '28';
+            ind.alt = 'Tram stop';
+        }
+        stopInd.appendChild(ind);
+        let stopHeading = document.createElement('h1');
+        stopHeading.textContent = point.properties.name;
+        heading.appendChild(stopInd);
+        heading.appendChild(stopHeading);
+
+        let headingOuter = document.createElement('div');
+        headingOuter.className = 'heading heading--panel';
+        headingOuter.id = 'panel-heading-outer';
+        headingOuter.appendChild(heading);
+        if (point.properties.bearing !== null) {
+            let headingText = document.createElement('p');
+            if (point.properties.street !== null) {
+                headingText.innerHTML = '<strong>' + point.properties.street + '</strong>, ' +
+                    point.properties.bearing + '-bound';
+            } else {
+                headingText.textContent = point.properties.bearing + '-bound';
+            }
+            headingOuter.appendChild(headingText);
+        }
+
+        let liveTimes = document.createElement('section');
+        liveTimes.className = 'card card--panel';
+        let liveHeading = document.createElement('div');
+        liveHeading.className = 'heading-inline heading-inline--right';
+        let liveHeadingTime = document.createElement('h2');
+        liveHeadingTime.id = 'live-time';
+        liveHeadingTime.textContent = 'Retrieving live data...';
+        let liveHeadingCountdown = document.createElement('p');
+        liveHeadingCountdown.id = 'live-countdown';
+        liveHeading.appendChild(liveHeadingTime);
+        liveHeading.appendChild(liveHeadingCountdown);
+        let liveServices = document.createElement('div');
+        liveServices.id = 'services';
+        liveTimes.appendChild(liveHeading);
+        liveTimes.appendChild(liveServices);
+
+        let stopInfo = document.createElement('section');
+        stopInfo.className = 'card card--panel';
+        let infoHeading = document.createElement('h2');
+        infoHeading.textContent = 'Stop information';
+        let smsCode = document.createElement('p');
+        smsCode.innerHTML = 'SMS code <strong>' + point.properties.naptanCode+ '</strong>';
+        stopInfo.appendChild(infoHeading);
+        stopInfo.appendChild(smsCode);
+
+        self.clearPanel();
+        self.mapPanel.appendChild(headingOuter);
+        resizeIndicator('indicator');
+        self.mapPanel.appendChild(liveTimes);
+        self.mapPanel.appendChild(stopInfo);
+
+        let activeStop = self.getStop(
+            point.properties.atcoCode,
+            point.properties.adminAreaRef,
+            'services',
+            'live-time',
+            'live-countdown'
+        );
+        activeStop.startLoop();
+    }
+
+    /**
+     * Sets panel depending on existence of point data and zoom level
+     * @param {Object} point If not null, displays stop point live data/info
+     * @param {number} zoom Set message depending on zoom level
+     */
+    self.setPanel = function(point, zoom) {
+        if (point !== null) {
+            self._setStopPanel(point);
+        } else if (self.currentStop === null) {
+            if (zoom < STOPS_VISIBLE) {
+                self._setPanelOutOfZoom();
+            } else {
+                self._setPanelInZoom();
+            }
+        }
+    }
 }
 
 
+/**
+ * Handles the map container and stops
+ * @param {string} mapToken Mapbox token
+ * @param {string} mapContainer ID for map container element
+ * @param {string} mapPanel ID for map panel element
+ */
 function StopMap(mapToken, mapContainer, mapPanel) {
     let self = this;
-    this.mapContainer = mapContainer;
-    this.mapPanel = mapPanel;
+    this.mapContainer = document.getElementById(mapContainer);
+    this.mapPanel = document.getElementById(mapPanel);
 
     this.map = null;
     this.layer = L.tileLayer(
@@ -718,13 +1061,31 @@ function StopMap(mapToken, mapContainer, mapPanel) {
         }
     )
 
-    this.panel = new StopPanel(self.map, self.mapPanel);
-    this.stops = new StopLayer(self.map, self.panel);
+    this.panel = new StopPanel(this, this.mapPanel);
+    this.stops = new StopLayer(this, this.panel.setPanel);
 
-    this.init = function(latitude, longitude, zoom) {
+    /**
+     * Starts up the map and adds map events
+     * @param {Object} point GeoJSON for initial stop point
+     * @param {number} latitude Starts map at centre with latitude if point not defined
+     * @param {number} longitude Starts map at centre with longitude if point not defined
+     * @param {number} zoom Starts map at centre with zoom level if point not defined
+     */
+    this.init = function(point, latitude, longitude, zoom) {
+        let coords, zoomLevel;
+        if (latitude && longitude && zoom) {
+            coords = L.latLng(latitude, longitude);
+            zoomLevel = zoom;
+        } else if (point !== null) {
+            coords = L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]);
+            zoomLevel = 17;
+        } else {
+            throw 'Arguments passed to StopMap.init() not valid';
+        }
+
         self.map = L.map(self.mapContainer.id, {
-            zoom: zoom,
-            center: L.latLng(latitude, longitude),
+            zoom: zoomLevel,
+            center: coords,
             minZoom: 9,
             maxZoom: 18,
             maxBounds: L.latLngBounds(
@@ -734,17 +1095,15 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             attributionControl: false
         });
 
-        self.panel.map = self.map;
-        self.stops.map = self.map;
-
         self.map.on('zoomstart', function(event) {
-            if (self.map.getZoom() < self.stops.STOPS_VISIBLE) {
+            if (self.map.getZoom() < STOPS_VISIBLE) {
                 self.stops.removeAll();
             }
         })
 
         self.map.on('zoomend', function(event) {
             self.setURL();
+            self.panel.setPanel(null, self.map.getZoom());
         });
     
         self.map.on('moveend', function(event) {
@@ -760,12 +1119,19 @@ function StopMap(mapToken, mapContainer, mapPanel) {
         })
 
         self.layer.addTo(self.map);
+        self.panel.setPanel(point, zoomLevel);
     }
 
+    /**
+     * Sets page to new URL with current stop, coordinates and zoom
+     */
     this.setURL = function() {
         let center = self.map.getCenter();
         let zoom = self.map.getZoom();
-        let newURL = MAP_URL + center.lat + ',' + center.lng + ',' + zoom;
+
+        let stop = self.panel.currentStop;
+        let coords = center.lat + ',' + center.lng + ',' + zoom;
+        let newURL = (stop !== null) ? MAP_URL + stop + '/' + coords : MAP_URL + coords;
 
         history.replaceState(null, null, newURL);
     }

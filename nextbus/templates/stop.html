@@ -82,13 +82,13 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     resizeIndicator('indicator');
 </script>
 <script>
+    LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     let ld = new LiveData(
-        "{{ stop.atco_code }}",
-        "{{ stop.admin_area_ref }}",
-        "{{ url_for('api.stop_get_times', atco_code='') }}",
-        document.getElementById("services"),
-        document.getElementById("liveTime"),
-        document.getElementById("liveCountdown")
+        '{{ stop.atco_code }}',
+        '{{ stop.admin_area_ref }}',
+        'services',
+        'liveTime',
+        'liveCountdown'
     )
     ld.startLoop();
 </script>

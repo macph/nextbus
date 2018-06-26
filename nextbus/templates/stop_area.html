@@ -63,6 +63,8 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     resizeIndicator('indicator');
 </script>
 <script>
+    const BUS_SVG = "{{ url_for('static', filename='img/bus-white.svg') }}";
+    const TRAM_SVG = "{{ url_for('static', filename='img/tram-white.svg') }}";
     let area = {{ stop_area._asdict()|tojson }};
     let mapButton = document.getElementById('show-map-button');
     let map = document.getElementById('stop-map');
@@ -75,11 +77,10 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     let mapTransitionCallback = function() {
         map.removeEventListener(mapTransitionEnd, mapTransitionCallback);
         mapButton.style.display = 'none';
-        addMap(map,
+        addMap(
             "{{ config.get('MAPBOX_APP_TOKEN') }}",
+            map.id,
             {{ data|tojson }},
-            "{{ url_for('static', filename='img/bus-white.svg') }}",
-            "{{ url_for('static', filename='img/tram-white.svg') }}",
             markerGoToStop
         );
         resizeIndicator('indicator-marker');

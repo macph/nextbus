@@ -359,11 +359,10 @@ def list_near_location(coords):
                              "nowhere near Great Britain!")
 
     stops = models.StopPoint.in_range(latitude, longitude)
-    str_coord = location.format_dms(latitude, longitude)
     geojson = _list_geojson(stops)
 
-    return render_template("location.html", coord=coords,
-                           str_coord=str_coord, data=geojson, list_stops=stops)
+    return render_template("location.html", coord=coords, data=geojson,
+                           list_stops=stops)
 
 
 @page.route("/stop/area/<stop_area_code>")
@@ -471,12 +470,11 @@ def show_map_with_stop(atco_code, coords=None):
     if coords:
         latitude, longitude, zoom = coords
     if not coords or not location.check_bounds(latitude, longitude):
-        # Set to stop coordinates and zoom 17
-        latitude, longitude = stop.latitude, stop.longitude
-        zoom = 17
+        latitude, longitude = None, None
+        zoom = None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=stop)
+                           zoom=zoom, stop=stop.to_geojson())
 
 
 def bad_request(status, message):
@@ -531,13 +529,15 @@ def get_stops_tile():
     """ Gets list of stops within a tile. """
     args = [request.args.get(i) for i in ["x", "y", "z"]]
     try:
-        coordinates = [int(i) for i in args]
+        x, y, z = map(int, args)
     except TypeError:
         return bad_request(400, "API accessed with invalid params: %r" % args)
 
-    box = location.tile_to_box(*coordinates)
+    if z < 16:
+        return bad_request(400, "Zoom level too low")
+
+    box = location.tile_to_box(x, y, z)
     stops = models.StopPoint.within_box(box)
-    print(stops)
 
     return jsonify(_list_geojson(stops))
 

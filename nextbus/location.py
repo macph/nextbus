@@ -64,30 +64,6 @@ def get_distance(coord_1, coord_2):
     return distance
 
 
-def format_dms(latitude, longitude):
-    """ Formats latitude and longitude coordinates as a string with degrees,
-        minutes and seconds.
-
-        :param: latitude: latitude as float
-        :param: longitude: longitude as float
-        :returns: String in form "0°00′00.00″ N, 0°00′00.00″ E"
-    """
-    def to_dms(decimal):
-        degree, mod = divmod(abs(decimal) % 180, 1)
-        minute, mod = divmod(mod * 60, 1)
-        second = mod * 60
-
-        return degree, minute, second
-
-    n_s, e_w = "N" if latitude >= 0 else "S", "E" if longitude >= 0 else "W"
-    lat_dms, long_dms = to_dms(latitude), to_dms(longitude)
-
-    fmt = "%d° %02d′ %05.2f″" # Prime and double prime symbols used
-    string = "%s %s, %s %s" % (fmt % lat_dms, n_s, fmt % long_dms, e_w)
-
-    return string
-
-
 def check_bounds(latitude, longitude):
     """ Checks if a pair of coordinates is within the GB boundaries. """
     return GB_SOUTH < latitude < GB_NORTH and GB_EAST < longitude < GB_WEST
@@ -111,6 +87,5 @@ def tile_to_box(tile_x, tile_y, zoom):
         south=latitude(tile_y + 1),
         west=longitude(tile_x)
     )
-    print(box)
 
     return box

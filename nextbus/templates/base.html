@@ -20,6 +20,9 @@
                     <!--<img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="42px" alt="">-->
                     <span>nextbus</span>
                 </a>
+                <a class="header__right" href="{{ url_for('page.show_map') }}">
+                    <span>Map</span>
+                </a>
             </header>
         </div>
         {% endblock %}
@@ -38,9 +41,9 @@
         <div class="outer-footer">
             <footer class="footer">
                 {% block footer %}
-                <span class="footer__text">
+                <p class="footer__text">
                     &copy; Ewan Macpherson and data sources, 2017&ndash;18. <a href="{{ url_for('page.about') }}">About this website</a>
-                </span>
+                </p>
                 {% endblock %}
             </footer>
         </div>

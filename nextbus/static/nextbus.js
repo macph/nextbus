@@ -687,6 +687,7 @@ function detectIE() {
 function StopLayer(stopMap) {
     let self = this;
     this.stopMap = stopMap;
+    this.zCount = 0;
     this.isIE = detectIE();
     this.loadedStops = new TileCache(TILE_LIMIT);
 
@@ -835,11 +836,9 @@ function StopLayer(stopMap) {
                 });
                 // Move marker to front when mousing over
                 marker = marker.on('mouseover', function(event) {
-                    this.setZIndexOffset(1000);
-                });
-                // Move marker to original z offset when mousing out
-                marker = marker.on('mouseout', function(event) {
-                    this.setZIndexOffset(0);
+                    self.zCount += 100;
+                    this.setZIndexOffset(self.zCount);
+                    console.log(self.zCount);
                 });
                 // Add callback function to each marker with GeoJSON pointer object as argument
                 marker = marker.on('click', function(event) {
@@ -1034,8 +1033,14 @@ function StopPanel(stopMap, mapPanel) {
         infoHeading.textContent = 'Stop information';
         let smsCode = document.createElement('p');
         smsCode.innerHTML = 'SMS code <strong>' + point.properties.naptanCode+ '</strong>';
+        let stopLink = document.createElement('p');
+        let stopAnchor = document.createElement('a');
+        stopAnchor.href = STOP_URL + point.properties.atcoCode;
+        stopAnchor.textContent = point.properties.title;
+        stopLink.appendChild(stopAnchor);
         stopInfo.appendChild(infoHeading);
         stopInfo.appendChild(smsCode);
+        stopInfo.appendChild(stopLink);
 
         self.clearPanel();
         self.mapPanel.appendChild(headingOuter);
@@ -1093,7 +1098,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             zoomLevel = zoom;
         } else if (point !== null) {
             coords = L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]);
-            zoomLevel = 17;
+            zoomLevel = 18;
         } else {
             throw 'Arguments passed to StopMap.init() not valid';
         }
@@ -1110,7 +1115,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             attributionControl: false
         });
 
-        self.map.on('zoomend', function(event) {
+        self.map.on('zoomend', function() {
             if (self.map.getZoom() < STOPS_VISIBLE) {
                 self.stops.removeAllTiles();
             } else {
@@ -1119,12 +1124,12 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             self.panel.setPanel(null);
         });
     
-        self.map.on('moveend', function(event) {
+        self.map.on('moveend', function() {
             self.setURL();
             self.stops.updateTiles();
         });
 
-        self.map.on('click', function(event) {
+        self.map.on('click', function() {
             self.panel.stopAllLoops();
             self.panel.setPanel(null);
         });
@@ -1141,7 +1146,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
         let data = self.panel.getCurrentStop();
         let center = self.map.getCenter();
         let zoom = self.map.getZoom();
-        let stop = (data !== null) ? data.atcoCode + '/' : '';
+        let stop = (data !== null) ? 'stop/' + data.atcoCode + '/' : '';
 
         let newURL = MAP_URL + stop + center.lat + ',' + center.lng + ',' + zoom;
         history.replaceState(null, null, newURL);

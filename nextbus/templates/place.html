@@ -26,25 +26,26 @@
 
 {% block content %}
 <div class="columns">
-    {% if grouped is not none or stops|length > 1 %}
     <div class="column-1">
         <section class="card card--minor">
-            {% if grouped %}
-            <p><a href="?group=false">Ungroup stops</a></p>
-            {% elif grouped is not none %}
-            <p><a href="?group=true">Group stops</a></p>
-            {% endif %}
-            {% if stops|length > 1 %}
-            {{ f.print_index(stops) }}
-            {% endif %}
+            <h3><a href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">View on map</a></h3>
         </section>
+        {% if stops|length > 1 %}
+        <section class="card card--minor">
+            {{ f.print_index(stops) }}
+        </section>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="column-1 column--empty"></div>
-    {% endif %}
     <div class="column-3">
         <section class="card">
-            <h2>Stops</h2>
+            <div class="heading-inline heading-inline--right">
+                <h2>Stops</h2>
+                {% if grouped %}
+                <p><a href="?group=false">Ungroup stops</a></p>
+                {% elif grouped is not none %}
+                <p><a href="?group=true">Group stops</a></p>
+                {% endif %}
+            </div>
             {% if stops|length > 1 %}
             {% call(name, group) f.print_groups(stops|dictsort) %}
             <h3 id="{{ name }}">{{ name }}</h3>

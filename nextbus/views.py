@@ -298,7 +298,9 @@ def list_in_locality(locality_code):
     """
     locality = (
         models.Locality.query
-        .options(db.joinedload(models.Locality.district),
+        .options(db.undefer(models.Locality.latitude),
+                 db.undefer(models.Locality.longitude),
+                 db.joinedload(models.Locality.district),
                  db.joinedload(models.Locality.admin_area, innerjoin=True)
                  .joinedload(models.AdminArea.region, innerjoin=True))
         .get(locality_code.upper())
@@ -361,8 +363,8 @@ def list_near_location(coords):
     stops = models.StopPoint.in_range(latitude, longitude)
     geojson = _list_geojson(stops)
 
-    return render_template("location.html", coord=coords, data=geojson,
-                           list_stops=stops)
+    return render_template("location.html", latitude=latitude,
+                           longitude=longitude, data=geojson, list_stops=stops)
 
 
 @page.route("/stop/area/<stop_area_code>")
@@ -415,8 +417,11 @@ def stop_naptan(naptan_code):
 
 
 @page.route("/stop/atco/<atco_code>")
-def stop_atco(atco_code):
+def stop_atco(atco_code=''):
     """ Shows stop with ATCO code. """
+    if not atco_code:
+        abort(404)
+
     stop = (
         models.StopPoint.query
         .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
@@ -455,8 +460,8 @@ def show_map(coords=None):
                            zoom=zoom, stop=None)
 
 
-@page.route("/map/<atco_code>/")
-@page.route("/map/<atco_code>/<lat_long_zoom:coords>")
+@page.route("/map/stop/<atco_code>/")
+@page.route("/map/stop/<atco_code>/<lat_long_zoom:coords>")
 def show_map_with_stop(atco_code, coords=None):
     """ Shows map with a stop already selected. """
     stop = models.StopPoint.query.get(atco_code.upper())

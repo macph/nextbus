@@ -5,8 +5,8 @@ Functions for list of stops.
 const INTERVAL = 60;
 const REFRESH = true;
 const STOPS_VISIBLE = 16;
-const TILE_LIMIT = 128;
-const TILE_ZOOM = 16;
+const TILE_LIMIT = 64;
+const TILE_ZOOM = 15;
 const TIME_LIMIT = 60;
 
 /**
@@ -578,107 +578,93 @@ function addMap(token, mapElement, stops, callback) {
 
 
 /**
- * Stores tile layers in object and array such that properties are stored in order and dropped if
- * the max limit is exceeded
+ * Stores tile layers in map such that keys are stored in order and dropped if the max limit is
+ * exceeded
  * @constructor
  * @param {number} max Max size of array before properties start being dropped
- * @param {function} canDelete Function to check if the first entry can be removed. If not defined,
- *    the first entry is always removed when the array is full.
  */
-function TileCache(max, canDelete) {
+function TileCache(max) {
     let self = this;
     this.max = max;
-    this.canDelete = canDelete;
-    this._obj = new Object();
-    this._array = new Array();
+    this._data = new Map();
 
-    /**
-     * Size of array
-     */
-    this.size = function() {
-        return Object.keys(self._obj).length
-    }
-
-    /**
-     * Gets object property by key and pushes it to front
-     * @param {string} key Object key
-     */
-    this.get = function(key) {
-        if (self._obj.hasOwnProperty(key)) {
-            let index = self._array.indexOf(key);
-            if (index !== self.size() - 1) {
-                self._array.splice(self._array.indexOf(key), 1);
-                self._array.push(key);
-            }
-            return self._obj[key];
-        } else {
-            return null;
+    Object.defineProperty(this, 'size', {
+        get: function() {
+            return this._data.size;
         }
+    });
+
+    /**
+     * Create hash with Cantor pairing function
+     * @param {Object} coords Coordinates with properties x and y
+     */
+    this.hash = function(coords) {
+        return 0.5 * (coords.x + coords.y) * (coords.x + coords.y + 1) + coords.y;
     }
 
     /**
-     * Gets object property but does not change its order
-     * @param {string} key Object key
+     * Gets value from map by key and push to front if requested
+     * @param {Object} coords Coordinates with properties x and y
+     * @param {Boolean} push Push key/value to front
      */
-    this.select = function(key) {
-        return (self._obj.hasOwnProperty(key)) ? self._obj[key] : null;
-    }
-
-    /**
-     * Adds entry to array with key and value. If the array is already at maximum size, the first
-     * property is ejected
-     * @param {string} key Object key
-     * @param {Object} value Object property
-     */
-    this.add = function(key, value) {
-        self._obj[key] = value;
-        self._array.push(key)
-
-        if (self.size() <= self.max) {
+    this.get = function(coords, push) {
+        let key = self.hash(coords);
+        let obj = self._data.get(key);
+        if (typeof obj === 'undefined') {
             return;
         }
-
-        if (typeof self.check === 'undefined') {
-            let first = self._array.shift();
-            delete self._obj[first];
-            return;
+        if (push) {
+            self._data.delete(key);
+            self._data.set(key, obj);
         }
+        return obj.layer;
+    }
 
-        for (let i = 0; i < self._array.length; i++) {
-            let key = self._array[i];
-            if (self.canDelete(self._obj[key])) {
-                let remove = self._array.splice(i, 1);
-                delete self._obj[remove];
-                break;
-            }
+    /**
+     * Adds coordinates and layer to map, keeping to maximum size
+     * @param {Object} coords Coordinates with properties x and y
+     * @param {Object} layer Leaflet Layer object
+     */
+    this.set = function(coords, layer) {
+        self._data.set(self.hash(coords), {coords: coords, layer: layer});
+        if (self._data.size > self.max) {
+            let first = null;
+            self._data.forEach(function(layer, key) {
+                if (first === null) {
+                    first = key;
+                }
+            })
+            self._data.delete(first);
         }
     }
 
     /**
-     * Checks if key exists
-     * @param {string} key Object key
+     * Checks if coordinates exist in map
+     * @param {Object} coords Coordinates with properties x and y
      */
-    this.has = function(key) {
-        return self._obj.hasOwnProperty(key);
+    this.has = function(coords) {
+        return self._data.has(self.hash(coords));
     }
 
     /**
-     * Returns array of keys held by object
+     * Returns array of coordinates within map
      */
-    this.keys = function() {
-        return Object.keys(self._obj);
+    this.coords = function() {
+        let array = [];
+        self._data.forEach(function(obj, key) {
+            array.push(obj.coords);
+        })
+
+        return array;
     }
 
     /**
-     * Iterates over all properties in array
-     * @param {function} func Function on each property in object
+     * Iterates over each entry in map, with function accepting layer and coordinates objects
      */
     this.forEach = function(func) {
-        for (let key in self._obj) {
-            if (self._obj.hasOwnProperty(key)) {
-                func(self._obj[key]);
-            }
-        }
+        self._data.forEach(function(obj, key) {
+            func(obj.layer, obj.coords);
+        });
     }
 }
 
@@ -697,37 +683,22 @@ function detectIE() {
  * Handles layers of stop markers
  * @constructor
  * @param {Object} stopMap Parent stop map object
- * @param {function} callback Function for each marker when clicked
  */
-function StopLayer(stopMap, callback) {
+function StopLayer(stopMap) {
     let self = this;
     this.stopMap = stopMap;
-    this.callback = callback;
     this.isIE = detectIE();
-
-    this.currentStop = null;
-    this.loadedStops = new TileCache(TILE_LIMIT, function(layer) {
-        return (!self.stopMap.hasLayer(layer));
-    });
-
-    /**
-     * Get index to be used with list of stop tiles
-     * @param {Object} coords Coordinates returned from tile event
-     */
-    this.getIndex = function(coords) {
-        return 'x' + coords.x + 'y' + coords.y;
-    }
+    this.loadedStops = new TileCache(TILE_LIMIT);
 
     /**
      * Loads tile with stops - if it doesn't exist in cache, download data
      * @param {Object} coords Tile coordinates at level TILE_ZOOM
      */
     this.loadTile = function(coords) {
-        let index = self.getIndex(coords);
-        if (self.loadedStops.has(index)) {
-            let stops = self.loadedStops.get(index);
-            if (stops !== null) {
-                stops.addTo(self.stopMap.map);
+        let layer = self.loadedStops.get(coords, true);
+        if (typeof layer !== 'undefined') {
+            if (layer !== null) {
+                layer.addTo(self.stopMap.map);
                 resizeIndicator('indicator-marker');
             }
             return;
@@ -739,14 +710,25 @@ function StopLayer(stopMap, callback) {
         request.addEventListener('load', function() {
             let data = JSON.parse(this.responseText);
             if (data.features.length > 0) {
-                self.loadedStops.add(index, self.createLayer(data));
-                self.loadedStops.get(index).addTo(self.stopMap.map);
+                self.loadedStops.set(coords, self.createLayer(data));
+                self.loadedStops.get(coords).addTo(self.stopMap.map);
                 resizeIndicator('indicator-marker');
             } else {
-                self.loadedStops.add(index, null);
+                self.loadedStops.set(coords, null);
             }
         });
         request.send();
+    }
+
+    /**
+     * Removes all tiles - but data stays in cache
+     * @param {Object} coords Tile coordinates at level TILE_ZOOM
+     */
+    this.removeTile = function(coords) {
+        let layer = self.loadedStops.get(coords);
+        if (typeof layer !== 'undefined' && self.stopMap.map.hasLayer(layer)) {
+            self.stopMap.map.removeLayer(layer);
+        }
     }
 
     /**
@@ -793,28 +775,17 @@ function StopLayer(stopMap, callback) {
         }
 
         let tiles = self._getTileCoordinates();
-        let tileIndices = tiles.map(self.getIndex);
-        let keys = self.loadedStops.keys();
 
-        for (let i = 0; i < keys.length; i++) {
-            let key = keys[i];
-            let index = tileIndices.indexOf(key);
+        self.loadedStops.forEach(function(layer, coords) {
+            let index = tiles.indexOf(coords);
             if (index > -1) {
-                self.loadTile(tiles[index]);
+                self.loadTile(coords);
                 tiles.splice(index, 1);
-                tileIndices.splice(index, 1);
-            } else {
-                let layer = self.loadedStops.select(key);
-                if (self.stopMap.map.hasLayer(layer)) {
-                    self.stopMap.map.removeLayer(layer);
-                }
+            } else if (self.stopMap.map.hasLayer(layer)) {
+                self.stopMap.map.removeLayer(layer);
             }
-        }
-
-        /* Add all remaining tiles not in cache */
-        for (let i = 0; i < tiles.length; i++) {
-            self.loadTile(tiles[i]);
-        }
+        });
+        tiles.forEach(self.loadTile);
     }
 
     /**
@@ -823,22 +794,22 @@ function StopLayer(stopMap, callback) {
      */
     this.markerElement = function(point) {
         let ind = '';
-                if (point.properties.indicator !== '') {
-                    ind = '<span>' + point.properties.indicator + '</span>'
-                } else if (point.properties.stopType === 'BCS' ||
-                            point.properties.stopType === 'BCT') {
-                    ind = '<img src="' + BUS_SVG + '" width=28px>'
-                } else if (point.properties.stopType === 'PLT') {
-                    ind = '<img src="' + TRAM_SVG + '" width=28px>'
-                }
+        if (point.properties.indicator !== '') {
+            ind = '<span>' + point.properties.indicator + '</span>'
+        } else if (point.properties.stopType === 'BCS' ||
+                    point.properties.stopType === 'BCT') {
+            ind = '<img src="' + BUS_SVG + '" width=28px>'
+        } else if (point.properties.stopType === 'PLT') {
+            ind = '<img src="' + TRAM_SVG + '" width=28px>'
+        }
 
         let arrow = '';
-                if (!self.isIE) {
-                    let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
-                    arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
-                }
+        if (!self.isIE) {
+            let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
+            arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
+        }
 
-                let area = 'area-' + point.properties.adminAreaRef;
+        let area = 'area-' + point.properties.adminAreaRef;
         let indClass = 'indicator indicator-marker ' + area;
         let innerHTML = '<div class="' + indClass + '">' + arrow + ind + '</div>';
 
@@ -871,11 +842,9 @@ function StopLayer(stopMap, callback) {
                     this.setZIndexOffset(0);
                 });
                 // Add callback function to each marker with GeoJSON pointer object as argument
-                if (typeof self.callback !== 'undefined') {
-                    marker = marker.on('click', function(event) {
-                        self.callback(point)
-                    });
-                }
+                marker = marker.on('click', function(event) {
+                    self.stopMap.panel.setPanel(point);
+                });
 
                 return marker;
             }
@@ -895,16 +864,7 @@ function StopPanel(stopMap, mapPanel) {
     let self = this;
     this.stopMap = stopMap
     this.mapPanel = mapPanel;
-    this.activeStops = new Object();
-    this.currentStop = null;
-
-    /**
-     * Gets index for list of stops
-     * @param {string} atcoCode
-     */
-    this.getIndex = function(atcoCode) {
-        return 's' + atcoCode;
-    }
+    this.activeStops = new Map();
 
     /**
      * Gets live data object for a bus stop or create one if it does not exist
@@ -915,25 +875,38 @@ function StopPanel(stopMap, mapPanel) {
      * @param {string} countdown Countdown element ID
      */
     this.getStop = function(atcoCode, adminAreaRef, table, time, countdown) {
-        let index = self.getIndex(atcoCode);
-        if (!self.activeStops.hasOwnProperty(index)) {
-            self.activeStops[index] = new LiveData(
+        if (!self.activeStops.has(atcoCode)) {
+            self.activeStops.set(atcoCode, new LiveData(
                 atcoCode,
                 adminAreaRef,
                 table,
                 time,
                 countdown
-            );
+            ));
         }
+
         self.stopAllLoops(atcoCode);
-        self.activeStops[index].startLoop({
+        self.activeStops.get(atcoCode).startLoop({
             onEnd: function(atcoCode) {
-                if (self.activeStops.hasOwnProperty(index)) {
-                    delete self.activeStops[index];
-                }
+                self.activeStops.delete(atcoCode);
             }
         });
-        return self.activeStops[index];
+
+        return self.activeStops.get(atcoCode);
+    }
+
+    /**
+     * Finds the current stop shown on panel, or null if no stops are actively looping
+     */
+    this.getCurrentStop = function() {
+        let currentData = null;
+        self.activeStops.forEach(function(data) {
+            if (data.loopActive && !data.loopEnding) {
+                currentData = data;
+            }
+        });
+
+        return currentData;
     }
 
     /**
@@ -941,13 +914,24 @@ function StopPanel(stopMap, mapPanel) {
      * @param {string} exceptCode ATCO code for bus stop to be excluded
      */
     this.stopAllLoops = function(exceptCode) {
-        let exceptIndex = (typeof exceptCode !== 'undefined') ? self.getIndex(exceptCode): null;
-        for (let index in self.activeStops) {
-            let valid = self.activeStops.hasOwnProperty(index);
-            if (valid && index !== exceptIndex) {
-                self.activeStops[index].stopLoop();
+        self.activeStops.forEach(function(data, code) {
+            if (typeof exceptCode === 'undefined' || code !== exceptCode) {
+                data.stopLoop();
             }
+        });
+    }
+
+    /**
+     * Sets panel depending on existence of point data and zoom level
+     * @param {Object} point If not null, displays stop point live data/info
+     */
+    self.setPanel = function(point) {
+        if (point !== null) {
+            self._setStopPanel(point);
+        } else if (self.getCurrentStop() === null) {
+            self._setPanelMessage();
         }
+        self.stopMap.setURL();
     }
 
     /**
@@ -959,29 +943,20 @@ function StopPanel(stopMap, mapPanel) {
         }
     }
 
-    /**
-     * Sets message when zoom level too small
-     */
-    this._setPanelOutOfZoom = function() {
-        let heading = document.createElement('div');
-        heading.className = 'heading heading--panel';
-        let headingText = document.createElement('h2');
-        headingText.textContent = 'Zoom in to see stops';
-        heading.appendChild(headingText);
-
-        self.clearPanel();
-        self.mapPanel.appendChild(heading);
-    }
-
 
     /**
-     * Sets message when zoom level right
+     * Sets message on blank panel
      */
-    this._setPanelInZoom = function() {
+    this._setPanelMessage = function() {
         let heading = document.createElement('div');
         heading.className = 'heading heading--panel';
+
         let headingText = document.createElement('h2');
-        headingText.textContent = 'Select a stop';
+        if (self.stopMap.map.getZoom() < STOPS_VISIBLE) {
+            headingText.textContent = 'Zoom in to see stops';
+        } else {
+            headingText.textContent = 'Select a stop';
+        }
         heading.appendChild(headingText);
 
         self.clearPanel();
@@ -994,9 +969,6 @@ function StopPanel(stopMap, mapPanel) {
      * @param {Object} point GeoJSON data for stop point
      */
     this._setStopPanel = function(point) {
-        self.currentStop = point.properties.atcoCode;
-        self.stopMap.setURL();
-
         let heading = document.createElement('div');
         heading.className = 'heading-stop';
 
@@ -1021,6 +993,7 @@ function StopPanel(stopMap, mapPanel) {
         stopInd.appendChild(ind);
         let stopHeading = document.createElement('h1');
         stopHeading.textContent = point.properties.name;
+
         heading.appendChild(stopInd);
         heading.appendChild(stopHeading);
 
@@ -1078,23 +1051,6 @@ function StopPanel(stopMap, mapPanel) {
             'live-countdown'
         );
     }
-
-    /**
-     * Sets panel depending on existence of point data and zoom level
-     * @param {Object} point If not null, displays stop point live data/info
-     * @param {number} zoom Set message depending on zoom level
-     */
-    self.setPanel = function(point, zoom) {
-        if (point !== null) {
-            self._setStopPanel(point);
-        } else if (self.currentStop === null) {
-            if (zoom < STOPS_VISIBLE) {
-                self._setPanelOutOfZoom();
-            } else {
-                self._setPanelInZoom();
-            }
-        }
-    }
 }
 
 
@@ -1121,7 +1077,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
     )
 
     this.panel = new StopPanel(this, this.mapPanel);
-    this.stops = new StopLayer(this, this.panel.setPanel);
+    this.stops = new StopLayer(this);
 
     /**
      * Starts up the map and adds map events
@@ -1160,8 +1116,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
             } else {
                 self.stops.updateTiles();
             }
-            self.setURL();
-            self.panel.setPanel(null, self.map.getZoom());
+            self.panel.setPanel(null);
         });
     
         self.map.on('moveend', function(event) {
@@ -1170,26 +1125,25 @@ function StopMap(mapToken, mapContainer, mapPanel) {
         });
 
         self.map.on('click', function(event) {
-            self.panel.currentStop = null;
-            self.panel.setPanel(null, self.map.getZoom());
+            self.panel.stopAllLoops();
+            self.panel.setPanel(null);
         });
 
         self.layer.addTo(self.map);
         self.stops.updateTiles();
-        self.panel.setPanel(point, zoomLevel);
+        self.panel.setPanel(point);
     }
 
     /**
      * Sets page to new URL with current stop, coordinates and zoom
      */
     this.setURL = function() {
+        let data = self.panel.getCurrentStop();
         let center = self.map.getCenter();
         let zoom = self.map.getZoom();
+        let stop = (data !== null) ? data.atcoCode + '/' : '';
 
-        let stop = self.panel.currentStop;
-        let coords = center.lat + ',' + center.lng + ',' + zoom;
-        let newURL = (stop !== null) ? MAP_URL + stop + '/' + coords : MAP_URL + coords;
-
+        let newURL = MAP_URL + stop + center.lat + ',' + center.lng + ',' + zoom;
         history.replaceState(null, null, newURL);
     }
 }

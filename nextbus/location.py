@@ -15,7 +15,7 @@ GB_EAST = -8
 GB_SOUTH = 49
 GB_WEST = 2
 GB_CENTRE = 54.00366, -2.547855
-TILE_ZOOM = 16
+TILE_ZOOM = 15
 
 Box = collections.namedtuple("BoundingBox", ["north", "east", "south", "west"])
 

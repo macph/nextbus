@@ -69,15 +69,20 @@ p {
 
 .dashed-list {
   margin: 10px 0;
+  padding-left: 20px;
   list-style-type: none;
   font-size: 1.6rem;
   line-height: 1.4;
 }
 
+.dashed-list > li {
+  margin: 5px 0;
+}
+
 .dashed-list > li:before {
   content: "\2013";
   position: absolute;
-  margin-left: -1.1em; 
+  margin-left: -1.1em;
 }
 
 

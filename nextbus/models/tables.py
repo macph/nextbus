@@ -261,6 +261,14 @@ class StopPoint(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
+    _join_other = db.and_(
+        db.foreign(stop_area_ref).isnot(None),
+        db.remote(stop_area_ref) == db.foreign(stop_area_ref),
+        db.remote(atco_code) != db.foreign(atco_code)
+    )
+    other_stops = db.relationship("StopPoint", primaryjoin=_join_other, uselist=True,
+                                  order_by="StopPoint.name, StopPoint.short_ind")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Declared in case it needs to be defined for stops near a point

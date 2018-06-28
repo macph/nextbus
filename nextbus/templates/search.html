@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 {% block title %}Search results{{ " for \"%s\""|format(query) if query }}{% endblock %}
 
-{% set f_groups = filters|default(false) and filters.group.choices|length > 1 %}
+{% set f_groups = filters|default(false) and filters.group.choices %}
 {% set f_areas = filters|default(false) and filters.area.choices|length > 1 %}
 
 {# Set checkbox as checked if matching value is in query string #}
@@ -10,20 +10,18 @@
 {% if value in request.args.getlist(name) %}checked{% endif %}
 {% endmacro %}
 
-{# Sets up a list of checkboxes for each filter list #}
-{% macro filter_list(field) %}
-<fieldset class="filter-list">
-    <legend>by {{ field.label }}</legend>
-    <ul>
-        {% for element in field.render_elements(class='filter-item') %}
-        <li>{{ element }}</li>
-        {% endfor %}
-    </ul>
-</fieldset>
+{% macro group_tab(value, name, selected) %}
+<li>
+    {% if selected %}
+    <div class="tab tab--active"><span>{{ name }}</span></div>
+    {% else %}
+    <a class="tab" href="{{ modify_query(group=value, page=none) }}">{{ name }}</a>
+    {% endif %}
+</li>
 {% endmacro %}
 
 {% block heading %}
-<h1>Search results</h1>
+<h1>Search</h1>
 {% endblock %}
 
 {% block content %}
@@ -34,57 +32,69 @@
             <form class="search-form" action="{{ g.action }}" method="post" name="search">
                 {% set aria = {'aria-label': 'Find a bus stop'} %}
                 {{ g.form.hidden_tag() }}
+                {% if query is not none %}
                 {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required, **aria) }}
+                {% else %}
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
+                {% endif %}
                 {{ g.form.submit_query(id='submit-form') }}
             </form>
         </section>
     </div>
 </div>
+{% if query is not none %}
 <div class="columns">
+    {% if f_areas %}
     <div class="column-1">
         <section id="filter-box" class="card card--aside">
-            {% if f_groups or f_areas %}
             <div class="heading-inline heading-inline--right">
-                <h2>Filter</h2>
+                <h3>Filter by area</h3>
                 <button id="filter-show-button" class="filter-button">Show</button>
             </div>
             <div id="filter-wrapper" class="filter-form-wrapper">
                 <form id="filter-form" class="filter-form" method="get">
                     <div class="filter-form__scrolling">
-                        {% if f_groups %}
-                        {{ filter_list(filters.group) }}
-                        {% endif %}
-                        {% if f_areas %}
-                        {{ filter_list(filters.area) }}
-                        {% endif %}
+                        <ul class="filter-list">
+                            {% for element in filters.area.render_elements(class='filter-item') %}
+                            <li>{{ element }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
                     <button id="filter-refresh-button" class="filter-submit">Refresh</button>
                 </form>
             </div>
-            {% else %}
-            <h2>Filter</h2>
-            {% endif %}
         </section>
     </div>
+    {% else %}
+    <div class="column-1 column--empty"></div>
+    {% endif %}
     <div class="column-3">
+        {% if f_groups %}
+        <ul class="tabs">
+            {{ group_tab(none, 'All results', 'group' not in request.args) }}
+            {% for value, name in filters.group.choices %}
+            {{ group_tab(value, name, request.args['group'] == value) }}
+            {% endfor %}
+        </ul>
+        {% endif %}
         <section class="card">
             {% if results is defined and results.total > 0 %}
             <h2>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h2>
             {% if results.items|length > 0 %}
             {% call(item) f.print_list(results.items) %}
             {% if item.table_name == 'region' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><strong>{{ item.name }}</strong></a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
             {% elif item.table_name == 'admin_area' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><strong>{{ item.name }}</strong></a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
             {% elif item.table_name == 'district' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</span></a>
             {% elif item.table_name == 'locality' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
+            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</span></a>
             {% elif item.table_name == 'stop_area' %}
             <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
                     {{ f.print_stop_indicator(item, reverse=true) }}
-                    <div class="item__label">{{ item.name }}</div>
+                    <span class="item__label">{{ item.name }}</span>
                 </div>
                 {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
                 <p>{{ place|join(', ') }}</p>
@@ -124,7 +134,7 @@
             {% endif %}
             {% elif results is defined and (f_types or f_areas) %}
             <h2>No results found</h2>
-            <p>The filter choices you selected for query <strong>{{ query }}</strong> resulted in no matches.</p>
+            <p>No matching results for <strong>{{ query }}</strong> with the filters you selected.</p>
             <p><a href="?">Reset filters</a></p>
             {% elif results is defined %}
             <h2>No results found</h2>
@@ -153,6 +163,7 @@
         </section>
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block script %}

@@ -170,18 +170,19 @@ def search_all(query, types=None, admin_areas=None, page=1):
     return result
 
 
-def filter_args(query):
+def filter_args(query, admin_areas=None):
     """ Find all matching result types and admin areas to be filtered.
 
     :param query: Query text returned from search form.
+    :param admin_areas: Filter possible groups with pre-selected admin areas.
     :returns: Tuple of two lists: the result types and administrative areas,
     with the latter a list of tuples.
     """
     parsed = ts_parser(query)
-    types, args = models.FTS.matching_types(parsed, NAMES_ONLY)
+    types, args = models.FTS.matching_types(parsed, admin_areas, NAMES_ONLY)
 
-    current_app.logger.info("Search query %r have possible filters %r and %r" %
-                            (query, types, args))
+    current_app.logger.debug("Search query %r have possible filters %r and %r"
+                             % (query, types, args))
 
     return types, args
 

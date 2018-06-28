@@ -95,7 +95,10 @@ def modify_query(**values):
     args = request.args.copy()
 
     for attr, new_value in values.items():
-        args[attr] = new_value
+        if new_value is not None:
+            args[attr] = new_value
+        elif attr in args:
+            del args[attr]
 
     return request.path + "?" + url_encode(args)
 
@@ -139,7 +142,7 @@ def search_query():
 
 @page.route("/search/")
 @page.route("/search/<path:query>")
-def search_results(query=""):
+def search_results(query=None):
     """ Shows a list of search results.
 
         Query string attributes:
@@ -148,22 +151,23 @@ def search_results(query=""):
         - area: Admin area code. Can have multiple entries.
         - page: Page number for results.
     """
+    if query is None:
+        # Blank search page
+        return render_template("search.html", query=query)
+
     s_query = query.replace("+", " ")
     # Check if query has enough alphanumeric characters, else raise
     search.validate_characters(s_query)
     # Set up form and retrieve request arguments
     filters = forms.FilterResults(request.args)
-    args = {}
-    if filters.group.data:
-        args["types"] = filters.group.data
-    if filters.area.data:
-        args["admin_areas"] = filters.area.data
-    if "page" in request.args:
-        args["page"] = request.args.get("page")
-
-    # Do the search; raise errors if necessary
     try:
-        result = search.search_all(s_query, **args)
+        # Do the search; raise errors if necessary
+        result = search.search_all(
+            s_query,
+            types=filters.group.data if filters.group.data else None,
+            admin_areas=filters.area.data if filters.area.data else None,
+            page=filters.page.data
+        )
         if not result:
             raise ValueError
     except ValueError:
@@ -180,12 +184,12 @@ def search_results(query=""):
         return redirect(url_for(".list_near_postcode", code=postcode_url))
     else:
         # List of results
-        groups, areas = search.filter_args(s_query)
+        groups, areas = search.filter_args(s_query, filters.area.data)
         filters.add_choices(groups, areas)
         # Check the form data - if valid the area parameters are probably wrong
         if not filters.validate():
             raise search.InvalidParameters(s_query, "area",
-                                           args["admin_areas"])
+                                           filters.area.data)
 
         return render_template("search.html", query=s_query,
                                results=result.list, filters=filters)

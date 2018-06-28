@@ -7,7 +7,7 @@
         <h1>Live bus times in Great Britain</h2>
     </div>
     <div class="search-box-above"></div>
-    <section class="card search-box">
+    <section class="card card--max-width search-box">
         <form class="search-form" action="{{ g.action }}" method="post" name="search">
             {% set aria = {'aria-label': 'Find a bus stop'} %}
             {{ g.form.hidden_tag() }}

@@ -346,7 +346,7 @@ class FTS(utils.MaterializedView):
         return match
 
     @classmethod
-    def matching_types(cls, query, names_only=True):
+    def matching_types(cls, query, admin_areas=None, names_only=True):
         """ Finds all admin areas and table names covering matching results for
             a query.
 
@@ -354,6 +354,7 @@ class FTS(utils.MaterializedView):
             filtering.
 
             :param query: A ParseResult object or a string.
+            :param admin_areas: Filter by admin areas to get matching types
             :param names_only: Sets thresholds for search rankings such that
             only results that match the higher weighted lexemes are retained.
             :returns: A tuple with a dict of types and a dict of tuples with
@@ -372,17 +373,26 @@ class FTS(utils.MaterializedView):
             .filter(cls._match(string))
         )
         if names_only:
-            expr = cls._apply_filters(expr, cls._ts_rank(string_not))
+            expr = cls._apply_filters(expr, rank=cls._ts_rank(string_not))
 
         result = expr.all()
         # Sort results into separate sets and group tables into types
-        tables = {row.table_name for row in result}
+        areas = {row.admin_area_ref: row.admin_area_name for row in result
+                 if row.admin_area_ref is not None}
+
+        if admin_areas:
+            invalid_areas = set(admin_areas) - areas.keys()
+            if invalid_areas:
+                raise ValueError("Areas %r not found in set of filters" %
+                                 invalid_areas)
+            tables = {row.table_name for row in result
+                      if row.admin_area_ref in admin_areas}
+        else:
+            tables = {row.table_name for row in result}
+
         types = {}
         for type_, (name, models) in cls.TYPES.items():
             if tables & set(t.__tablename__ for t in models):
                 types[type_] = name
-
-        areas = {row.admin_area_ref: row.admin_area_name for row in result
-                 if row.admin_area_ref is not None}
 
         return types, areas

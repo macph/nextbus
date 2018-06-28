@@ -2,7 +2,7 @@
 Forms for searching bus stops.
 """
 from flask_wtf import FlaskForm
-from wtforms.fields import SelectMultipleField, SubmitField
+from wtforms.fields import IntegerField, SelectMultipleField, SubmitField
 from wtforms.fields.html5 import SearchField
 from wtforms.validators import InputRequired
 from wtforms.widgets import CheckboxInput, ListWidget
@@ -39,6 +39,7 @@ class FilterResults(FlaskForm):
 
     group = MultipleCheckboxField("group")
     area = MultipleCheckboxField("area")
+    page = IntegerField("page", default=1)
 
     def add_choices(self, groups, areas):
         """ Populate with available choices and selected by arguments passed

@@ -1,0 +1,5 @@
+recursive-include nextbus/populate *.json *.xml *.xslt
+recursive-include nextbus/static *.css *.js *.svg
+recursive-include nextbus/templates *.html
+include LICENSE
+include *.py

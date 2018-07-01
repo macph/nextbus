@@ -5,7 +5,7 @@ import collections
 import string
 
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
-                   redirect, request, url_for)
+                   redirect, request, session, url_for)
 from requests import HTTPError
 from werkzeug.urls import url_encode
 
@@ -74,6 +74,22 @@ def _list_geojson(list_stops):
     return geojson
 
 
+def _get_starred_stops():
+    """ Get list of starred stops from session, querying and ordering them. """
+    if "stops" not in session:
+        return
+
+    starred = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True))
+        .filter(models.StopPoint.naptan_code.in_(session["stops"]))
+        .all()
+    )
+    starred.sort(key=lambda s: session["stops"].index(s.naptan_code))
+
+    return starred
+
+
 @page.before_app_request
 def add_search_form():
     """ Search form enabled in every view within blueprint by adding the form
@@ -104,7 +120,7 @@ def modify_query(**values):
 @page.route("/")
 def index():
     """ The home page. """
-    return render_template("index.html")
+    return render_template("index.html", starred=_get_starred_stops())
 
 
 @page.route("/about")
@@ -542,6 +558,44 @@ def get_stops_tile():
     stops = models.StopPoint.within_box(box)
 
     return jsonify(_list_geojson(stops))
+
+
+@api.route("/api/starred", methods=["POST", "DELETE"])
+def starred_stop():
+    sms = request.form.get("smsCode", "").lower()
+    if not sms:
+        return bad_request(400, "API accessed without valid SMS code")
+
+    if request.method == "POST":
+        if "stops" in session and sms not in session["stops"]:
+            stop = models.StopPoint.query.filter_by(
+                naptan_code=sms).one_or_none()
+            if stop is not None:
+                session["stops"].append(sms)
+                session.modified = True
+            else:
+                return bad_request(404, "SMS code %r does not exist" % sms)
+        elif "stops" not in session:
+            session["stops"] = [sms]
+            session.permanent = True
+            session.modified = True
+
+    else:
+        if "stops" not in session:
+            return bad_request(400, "No cookie has been set")
+        elif sms not in session["stops"]:
+            return bad_request(404, "SMS code %r not found within cookie data"
+                               % sms)
+        else:
+            session["stops"].remove(sms)
+            session.modified = True
+
+    if session.modified:
+        return jsonify({"message": "cookie successfully changed",
+                        "stops": repr(session["stops"])})
+    else:
+        return jsonify({"message": "cookie not changed",
+                        "stops": repr(session["stops"])})
 
 
 @page.app_errorhandler(EntityNotFound)

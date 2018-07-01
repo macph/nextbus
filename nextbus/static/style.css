@@ -190,13 +190,16 @@ button:focus {
 
 .button {
   height: 36px;
-  width: calc(100% + 15px);
-  margin: 15px -15px;
+  width: 100%;
+  margin: 15px 0;
   padding: 0 8px;
+  box-sizing: border-box;
   background: rgb(224, 224, 224);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-family: inherit;
   font-size: 1.7rem;
   color: inherit;
@@ -207,9 +210,14 @@ button:focus {
   text-decoration: none;
 }
 
+.button:visited {
+    text-decoration: none;
+    color: inherit;
+}
+
 .button:focus {
   background: rgb(255, 167, 38);
-  color: white;
+  color: white !important;
 }
 
 /*
@@ -1167,11 +1175,7 @@ button:focus {
   
 /* Split into two columns */
 @media screen and (min-width: 720px) {
-  .button {
-    width: auto;
-    margin-left: 0;
-    margin-right: 0;
-  }
+
   .columns {
     flex-direction: row;
   }

@@ -1,4 +1,5 @@
-{% extends "base.html" %}
+{% import 'functions.html' as f %}
+{% extends 'base.html' %}
 {% block title %}Index{% endblock %}
 
 {% block main %}
@@ -7,36 +8,57 @@
         <h1>Live bus times in Great Britain</h2>
     </div>
     <div class="search-box-above"></div>
-    <section class="card card--max-width search-box">
-        <form class="search-form" action="{{ g.action }}" method="post" name="search">
-            {% set aria = {'aria-label': 'Find a bus stop'} %}
-            {{ g.form.hidden_tag() }}
-            {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', autofocus=true, required=g.form.search_query.flags.required, **aria) }}
-            {{ g.form.submit_query(id='submit-form') }}
-        </form>
-        <ul id="search-box-links" class="search-box__links">
-            <li><a href="{{ url_for('page.list_regions') }}">Browse all regions</a></li>
-            <li><a id="expand-help-content">Help with searching</a></li>
-        </ul>
-        <div id="help-content" class="search-box__hidden-help">
-            <h3>What can I search?</h3>
-            <p>
-                A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.
-            </p>
-            <p>
-                A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.
-            </p>
-            <p>
-                <strong>Stop names, streets, areas</strong>&mdash;the names of stops or areas can be searched. You can add place, town or city names to help narrow down your search.
-            </p>
-        </div>
-    </section>
+    <div>
+        <section class="card card--max-width search-box">
+            <form class="search-form" action="{{ g.action }}" method="post" name="search">
+                {% set aria = {'aria-label': 'Find a bus stop'} %}
+                {{ g.form.hidden_tag() }}
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', autofocus=true, required=g.form.search_query.flags.required, **aria) }}
+                {{ g.form.submit_query(id='submit-form') }}
+            </form>
+            <ul id="search-box-links" class="search-box__links">
+                <li><a href="{{ url_for('page.list_regions') }}">Browse all regions</a></li>
+                <li><a id="expand-help-content">Help with searching</a></li>
+            </ul>
+            <div id="help-content" class="search-box__hidden-help">
+                <h3>What can I search?</h3>
+                <p>
+                    A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.
+                </p>
+                <p>
+                    A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.
+                </p>
+                <p>
+                    <strong>Stop names, streets, areas</strong>&mdash;the names of stops or areas can be searched. You can add place, town or city names to help narrow down your search.
+                </p>
+            </div>
+        </section>
+        <section class="card card--max-width">
+            <h2>Starred stops</h2>
+
+            {% if starred is not none and starred|length > 0 %}
+            {% call(s) f.print_list(starred) %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
+                <div class="item--stop">
+                    {{ f.print_stop_indicator(s) }}
+                    <div class="item__label">{{ s.name }}</div>
+                </div>
+                <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
+            </a>
+            {% endcall %}
+            {% else %}
+            <p>You can add your favourite stops here! Just search for them and star them.</p>
+            {% endif %}
+        </section>
+    </div>
     <div class="search-box-below"></div>
 </main>
 {% endblock %}
 
 {% block script %}
 <script>
+    resizeIndicator('indicator');
+
     let helpHidden = true;
     let helpLink = document.getElementById('expand-help-content');
     let helpContent = document.getElementById('help-content');

@@ -38,6 +38,53 @@ function addGeolocation(LocationURL, activateElement) {
 
 
 /**
+ * Sends requests to modify cookie data with list of starred stops
+ * @constructor
+ * @param {string} url URL to send POST and DELETE requests to
+ */
+function StarredStops(url) {
+    let self = this;
+    this.url = url;
+    this.active = false;
+    this.r = new XMLHttpRequest();
+
+    this.add = function(element, code) {
+        if (self.active) {
+            return;
+        }
+        self.r.onload = function() {
+            self.active = false;
+            element.blur();
+            element.onclick = function(event) {
+                self.remove(event.target, code);
+            };
+            element.textContent = 'Remove starred stop';
+        };
+        self.r.open("POST", self.url, true);
+        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        self.r.send("smsCode=" + code);
+    };
+
+    this.remove = function(element, code) {
+        if (self.active) {
+            return;
+        }
+        self.r.onload = function() {
+            self.active = false;
+            element.blur();
+            element.onclick = function(event) {
+                self.add(event.target, code);
+            };
+            element.textContent = 'Add starred stop';
+        };
+        self.r.open("DELETE", self.url, true);
+        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        self.r.send("smsCode=" + code);
+    };
+}
+
+
+/**
  * Checks transition ending events to see which one is applicable, from Modernizr
  * @param {HTMLElement} element
  * @returns {string}

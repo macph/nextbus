@@ -10,8 +10,14 @@ class Config(object):
                                     # the above address
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False         # Must be kept False and let all SQLAlchemy queries be logged
+
     WTF_CSRF_ENABLED = True         # Enables CSRF in WTForms objects
     SECRET_KEY = None               # A different secret key must be set in production
+    PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60
+                                    # Time to expire if cookie is permanent (1 year)
+    SESSION_REFRESH_EACH_REQUEST = False
+                                    # With permanent cookie, only update if necessary
+
     ATCO_CODES = None               # Filters ATCO areas when populating, either None for all areas
                                     # or a list of integer codes
     GEOLOCATION_ENABLED = False     # Enables geolocation on webpages, which requires HTTPS

@@ -44,6 +44,11 @@
     <div class="column-1">
         <section class="card card--minor">
             <a class="button" href="{{ url_for('page.show_map_with_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
+            {% if stop.naptan_code not in session.get('stops', []) %}
+            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');"><span>Add starred stop</span></button>
+            {% else %}
+            <button class="button" onclick="starred.remove(this, '{{ stop.naptan_code }}');"><span>Remove starred stop</span></button>
+            {% endif %}
         </section>
         <section class="card card--aside">
             <h2>Stop information</h2>
@@ -67,7 +72,10 @@
 
 {% block script %}
 <script>
-        resizeIndicator('indicator');
+    resizeIndicator('indicator');
+
+    let starred = new StarredStops("{{ url_for('api.starred_stop') }}");
+
     LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     let ld = new LiveData(
         '{{ stop.atco_code }}',

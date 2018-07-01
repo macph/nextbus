@@ -22,11 +22,11 @@ body {
   width: 100%;
   min-height: 100vh;
   box-sizing: border-box;
-  background-color: rgb(240, 240, 240);
+  background: rgb(240, 240, 240);
 }
 
 h1 {
-  margin: 16px 0;
+  margin: 24px 0;
   font-size: 2.7rem;
   font-weight: 700;
 }
@@ -54,7 +54,7 @@ hr {
 
 p {
   margin: 10px 0;
-  line-height: 1.4;
+  line-height: 1.5;
   font-size: 1.6rem;
 }
 
@@ -72,7 +72,7 @@ p {
   padding-left: 20px;
   list-style-type: none;
   font-size: 1.6rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .dashed-list > li {
@@ -185,6 +185,34 @@ button:focus {
 }
 
 /*
+ *  LINK BUTTONS
+ */
+
+.button {
+  height: 36px;
+  width: calc(100% + 15px);
+  margin: 15px -15px;
+  padding: 0 8px;
+  background: rgb(224, 224, 224);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 1.7rem;
+  color: inherit;
+}
+
+.button:hover {
+  background: lightgrey;
+  text-decoration: none;
+}
+
+.button:focus {
+  background: rgb(255, 167, 38);
+  color: white;
+}
+
+/*
  *  COLUMNS
  */
 
@@ -225,7 +253,7 @@ button:focus {
   box-sizing: border-box;
   margin: 20px 0;
   padding: 5px 15px;
-  background-color: white;
+  background: white;
   border: none;
   /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); */
 }
@@ -236,9 +264,9 @@ button:focus {
 
 /* Always transparent with reduced margins in mobile */
 .card--minor {
-  margin-top: 5px;
-  margin-bottom: 5px;
-  background-color: transparent;
+  background: transparent;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .card--min-height {
@@ -284,7 +312,7 @@ button:focus {
 
 .outer-footer,
 .footer {
-  height: 48px;
+  height: 56px;
 }
 
 /*
@@ -294,7 +322,7 @@ button:focus {
 .outer-header {
   z-index: 3;
   flex: none;
-  background-color: rgb(0, 33, 113);
+  background: rgb(0, 33, 113);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -392,7 +420,7 @@ button:focus {
 .heading-stop {
   display: flex;
   align-items: center;
-  margin: 10px 0;
+  margin: 16px 0;
 }
 
 .heading-stop > .indicator {
@@ -570,7 +598,7 @@ button:focus {
 }
 
 .tab:hover {
-  background-color: rgb(224, 224, 224);
+  background: rgb(224, 224, 224);
   text-decoration: none;
 }
 
@@ -583,7 +611,7 @@ button:focus {
 }
 
 .tab--active:hover {
-  background-color: white;
+  background: white;
 }
 
 /*
@@ -633,7 +661,7 @@ button:focus {
 }
 
 .filter-item:hover {
-  background-color: rgb(224, 224, 224);
+  background: rgb(224, 224, 224);
 }
 
 .filter-submit {
@@ -904,7 +932,7 @@ button:focus {
   padding: 0.2em;
   border-radius: 1.8em;
   border: 0.1em solid rgb(0, 33, 113);
-  background-color: rgb(0, 33, 113);
+  background: rgb(0, 33, 113);
   color: white;
   font-size: 1em;
   font-weight: 700;
@@ -1024,7 +1052,7 @@ button:focus {
   z-index: -1;
   width: 1.7em;
   height: 1.7em;
-  background-color: inherit;
+  background: inherit;
   transform-origin: bottom right;
 }
 
@@ -1090,7 +1118,7 @@ button:focus {
 }
 
 .map-panel__footer {
-  flex: 0 0 48px;
+  flex: 0 0 auto;
 }
 
 .footer--panel {
@@ -1139,6 +1167,11 @@ button:focus {
   
 /* Split into two columns */
 @media screen and (min-width: 720px) {
+  .button {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
   .columns {
     flex-direction: row;
   }
@@ -1186,7 +1219,7 @@ button:focus {
   .card--aside {
     margin-top: 5px;
     margin-bottom: 5px;
-    background-color: transparent;
+    background: transparent;
   }
   
   .list-index {

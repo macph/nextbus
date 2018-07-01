@@ -28,7 +28,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--minor">
-            <h3><a href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">View on map</a></h3>
+            <a class="button" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}"><span>View on map</span></a>
         </section>
         {% if stops|length > 1 %}
         <section class="card card--minor">

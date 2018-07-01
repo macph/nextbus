@@ -11,7 +11,6 @@
 <nav>
     <ul class="breadcrumbs breadcrumbs--trailing">
         <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        <li>&sdot;&sdot;&sdot;</li>
         {% if stop.locality.district is not none %}
         <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
         {% else %}
@@ -43,8 +42,8 @@
         </section>
     </div>
     <div class="column-1">
-        <section class="card card--aside">
-            <h3><a href="{{ url_for('page.show_map_with_stop', atco_code=stop.atco_code) }}">View on map</a></h3>
+        <section class="card card--minor">
+            <a class="button" href="{{ url_for('page.show_map_with_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
         </section>
         <section class="card card--aside">
             <h2>Stop information</h2>

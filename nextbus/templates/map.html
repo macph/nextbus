@@ -45,12 +45,11 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
 <script>
     const BUS_SVG = "{{ url_for('static', filename='img/bus-white.svg') }}";
     const TRAM_SVG = "{{ url_for('static', filename='img/tram-white.svg') }}";
-    const BOX_URL = "{{ url_for('api.get_stops_within') }}";
     const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     const MAP_URL = "{{ url_for('page.show_map') }}";
     const STOP_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
     const TILE_URL = "{{ url_for('api.get_stops_tile') }}";
-    const STARRED_URL = "{{ url_for('api.starred_stop') }}";
+    const STARRED_URL = "{{ url_for('api.starred') }}";
 </script>
 <script>
     let set = "{{ ('stops' in session)|tojson }}" === 'true';

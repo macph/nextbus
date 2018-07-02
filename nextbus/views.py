@@ -6,6 +6,7 @@ import string
 
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
                    redirect, request, session, url_for)
+from flask.views import MethodView
 from requests import HTTPError
 from werkzeug.urls import url_encode
 
@@ -15,7 +16,7 @@ from nextbus import db, forms, location, models, parser, search, tapi
 MIN_GROUPED = 72
 
 
-api = Blueprint("api", __name__, template_folder="templates")
+api = Blueprint("api", __name__, template_folder="templates", url_prefix="/api")
 page = Blueprint("page", __name__, template_folder="templates")
 
 
@@ -401,9 +402,7 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
 
-    geojson = _list_geojson(area.stop_points)
-
-    return render_template("stop_area.html", stop_area=area, data=geojson)
+    return render_template("stop_area.html", stop_area=area)
 
 
 @page.route("/stop/sms/<naptan_code>")
@@ -426,10 +425,7 @@ def stop_naptan(naptan_code):
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=301)
 
-    static = request.args.get("static") == "true"
-    data = tapi.get_live_data(stop.atco_code) if static else None
-
-    return render_template("stop.html", stop=stop, live_data=data)
+    return render_template("stop.html", stop=stop)
 
 
 @page.route("/stop/atco/<atco_code>")
@@ -454,10 +450,7 @@ def stop_atco(atco_code=''):
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=301)
 
-    static = request.args.get("static") == "true"
-    data = tapi.get_live_data(stop.atco_code) if static else None
-
-    return render_template("stop.html", stop=stop, live_data=data)
+    return render_template("stop.html", stop=stop)
 
 
 @page.route("/map/")
@@ -506,7 +499,7 @@ def bad_request(status, message):
     return response
 
 
-@api.route("/api/live/<atco_code>")
+@api.route("/live/<atco_code>")
 def stop_get_times(atco_code=None):
     """ Requests and retrieve bus times. """
     if atco_code:
@@ -532,20 +525,7 @@ def stop_get_times(atco_code=None):
     return jsonify(times)
 
 
-@api.route("/api/box", methods=["GET"])
-def get_stops_within():
-    """ Gets list of stops within area as GeoJSON object. """
-    sides = {d: request.args.get(d) for d in location.Box._fields}
-    try:
-        box = location.Box(**sides)
-        stops = models.StopPoint.within_box(box)
-    except TypeError:
-        return bad_request(400, "API accessed with invalid params: %r" % sides)
-
-    return jsonify(_list_geojson(stops))
-
-
-@api.route("/api/tile", methods=["GET"])
+@api.route("/tile", methods=["GET"])
 def get_stops_tile():
     """ Gets list of stops within a tile. """
     args = [request.args.get(i) for i in ["x", "y"]]
@@ -560,8 +540,7 @@ def get_stops_tile():
     return jsonify(_list_geojson(stops))
 
 
-@api.route("/api/starred", methods=["GET", "POST", "DELETE"])
-def starred_stop():
+class StarredStop(MethodView):
     """ API to manipulate list of starred stops on cookie, with all responses
         sent in JSON.
 
@@ -569,14 +548,22 @@ def starred_stop():
         POST: Add starred NaPTAN code to cookie list
         DELETE: Delete starred NaPTAN code from cookie list
     """
-    if request.method == "GET":
-        return jsonify({"stops": session.get("stops")})
+    def get(self, naptan_code):
+        if naptan_code is None:
+            return jsonify({"stops": session.get("stops")})
 
-    sms = request.form.get("smsCode", "").lower()
-    if not sms:
-        return bad_request(400, "API accessed without valid SMS code")
+        sms = naptan_code.lower()
+        stop = models.StopPoint.query.filter_by(naptan_code=sms).one_or_none()
+        if stop is not None:
+            return jsonify({"stop": sms})
+        else:
+            return bad_request(404, "SMS code %r does not exist" % sms)
 
-    if request.method == "POST":
+    def post(self, naptan_code):
+        if naptan_code is None:
+            return bad_request(400, "API accessed without valid SMS code")
+
+        sms = naptan_code.lower()
         if "stops" in session and sms in session["stops"]:
             return bad_request(400, "Cookie already exists")
         elif "stops" in session:
@@ -592,17 +579,32 @@ def starred_stop():
             session.permanent = True
             session.modified = True
 
-    else:
+        return "", 204
+
+    def delete(self, naptan_code):
         if "stops" not in session:
             return bad_request(400, "No cookie has been set")
-        elif sms not in session["stops"]:
-            return bad_request(404, "SMS code %r not found within cookie data"
-                               % sms)
-        else:
+
+        sms = naptan_code.lower() if naptan_code is not None else None
+        if naptan_code is None:
+            session["stops"] = []
+            session.permanent = False
+            session.modified = True
+        elif sms in session["stops"]:
             session["stops"].remove(sms)
             session.modified = True
+        else:
+            return bad_request(404, "SMS code %r not found within cookie data"
+                               % sms)
 
-    return "", 204
+        return "", 204
+
+
+api.add_url_rule("/starred/", view_func=StarredStop.as_view("starred"),
+                 methods=["GET", "DELETE"],  defaults={"naptan_code": None})
+api.add_url_rule("/starred/<naptan_code>",
+                 view_func=StarredStop.as_view("starred_stop"),
+                 methods=["GET", "POST", "DELETE"])
 
 
 @page.app_errorhandler(EntityNotFound)

@@ -79,7 +79,7 @@
 <script>
     resizeIndicator('indicator');
 
-    const STARRED_URL = "{{ url_for('api.starred_stop') }}"
+    const STARRED_URL = "{{ url_for('api.starred') }}"
     let set = "{{ ('stops' in session)|tojson }}" === 'true';
     let info = document.getElementById('cookie-request-info');
     let starred = new StarredStops(set, info);

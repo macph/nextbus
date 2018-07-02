@@ -1,14 +1,14 @@
 {% import 'functions.html' as f %}
 {% extends 'base.html' %}
-{% block title %}Index{% endblock %}
+{% block outer_title %}nextbus{% endblock %}
 
 {% block main %}
 <main class="content content--center">
-    <div class="heading">
-        <h1>Live bus times in Great Britain</h2>
-    </div>
     <div class="search-box-above"></div>
     <div>
+        <div class="heading">
+            <h2>Live bus times in Great Britain</h2>
+        </div>
         <section class="card card--max-width search-box">
             <form class="search-form" action="{{ g.action }}" method="post" name="search">
                 {% set aria = {'aria-label': 'Find a bus stop'} %}
@@ -34,7 +34,6 @@
             </div>
         </section>
         <section class="card card--max-width">
-            <h2>Starred stops</h2>
             {% if starred is not none and starred|length > 0 %}
             {% call(s) f.print_list(starred) %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">

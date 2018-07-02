@@ -99,9 +99,9 @@ function StarredStops(cookieSet, info) {
                 callback();
             }
         };
-        self.r.open("POST", STARRED_URL, true);
+        self.r.open("POST", STARRED_URL + code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        self.r.send("smsCode=" + code);
+        self.r.send();
     };
 
     this.remove = function(element, code, callback) {
@@ -119,9 +119,9 @@ function StarredStops(cookieSet, info) {
                 callback();
             }
         };
-        self.r.open("DELETE", STARRED_URL, true);
+        self.r.open("DELETE", STARRED_URL + code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        self.r.send("smsCode=" + code);
+        self.r.send();
     };
 }
 
@@ -1143,7 +1143,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         goTo.onclick = function() {
             goTo.blur();
             self.stopMap.map.flyTo(
-                L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]), 17
+                L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]), 18
             );
         }
         actions.appendChild(goTo);

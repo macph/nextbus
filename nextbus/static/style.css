@@ -517,6 +517,7 @@ button:focus {
 
 /* Centers the content in middle of page */
 .content--center {
+  padding-top: 20px;
   align-items: center;
   justify-content: stretch;
 }
@@ -527,7 +528,7 @@ button:focus {
 }
 
 .search-box-below {
-  flex: 3;
+  flex: 2;
 }
 
 .search-box {

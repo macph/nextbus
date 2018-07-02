@@ -50,20 +50,24 @@ integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh
     const MAP_URL = "{{ url_for('page.show_map') }}";
     const STOP_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
     const TILE_URL = "{{ url_for('api.get_stops_tile') }}";
+    const STARRED_URL = "{{ url_for('api.starred_stop') }}";
+</script>
+<script>
+    let set = "{{ ('stops' in session)|tojson }}" === 'true';
 </script>
 {% if stop is not none and (latitude and longitude and zoom) %}
 <script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content');
+    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init({{ stop|tojson }}, {{ latitude }}, {{ longitude }}, {{ zoom }});
 </script>
 {% elif stop is not none %}
 <script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content');
+    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init({{ stop|tojson }});
 </script>
 {% elif latitude and longitude and zoom %}
 <script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content');
+    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init(null, {{ latitude }}, {{ longitude }}, {{ zoom }});
 </script>
 {% endif %}

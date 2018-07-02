@@ -17,7 +17,7 @@
             <span>Search</span>
         </a>
     </header>
-    <div id="header-search-bar" class="search-bar">
+    <div id="header-search-bar" class="hidden search-bar">
         <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
             {% set aria = {'aria-label': 'Find a bus stop'} %}
             {{ g.form.hidden_tag() }}

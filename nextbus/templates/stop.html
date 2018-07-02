@@ -44,7 +44,12 @@
     <div class="column-1">
         <section class="card card--minor">
             <a class="button" href="{{ url_for('page.show_map_with_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
-            {% if stop.naptan_code not in session.get('stops', []) %}
+            {% if 'stops' not in session %}
+            <div id="cookie-request-info" class="hidden" style="margin: -5px 0;">
+                <p>This will add a cookie to your device with a list of starred stops. No other identifiable information is stored. If you're happy with this, click again.</p>
+            </div>
+            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');"><span>Add starred stop</span></button>
+            {% elif stop.naptan_code not in session['stops'] %}
             <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');"><span>Add starred stop</span></button>
             {% else %}
             <button class="button" onclick="starred.remove(this, '{{ stop.naptan_code }}');"><span>Remove starred stop</span></button>
@@ -74,9 +79,12 @@
 <script>
     resizeIndicator('indicator');
 
-    let starred = new StarredStops("{{ url_for('api.starred_stop') }}");
+    const STARRED_URL = "{{ url_for('api.starred_stop') }}"
+    let set = "{{ ('stops' in session)|tojson }}" === 'true';
+    let info = document.getElementById('cookie-request-info');
+    let starred = new StarredStops(set, info);
 
-    LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
+    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     let ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',

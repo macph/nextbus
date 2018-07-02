@@ -155,7 +155,7 @@ input[type="submit"],
 button {
   height: 28px;
   /* Same padding for both default & active to eliminate text shift */
-  padding: 0 8px;
+  padding: 0 16px;
   border: none;
   background: rgb(224, 224, 224);
   /* required as Safari has its own default appearance */
@@ -175,7 +175,7 @@ button:hover {
 
 input[type="submit"]:active,
 button:active {
-  padding: 0 8px;
+  padding: 0 16px;
 }
 
 input[type="submit"]:focus,
@@ -403,6 +403,16 @@ button:focus {
 }
 
 /*
+ *  HIDDEN ELEMENTS
+ */
+
+.hidden {
+  overflow: hidden;
+  height: 0;
+  transition: height 0.2s ease-out;
+}
+
+/*
  *  INLINE HEADINGS
  */
 
@@ -475,9 +485,7 @@ button:focus {
   position: absolute;
   top: 48px; /* Height of header */
   width: 100%;
-  height: 0;
   z-index: 4;
-  overflow: hidden;
   box-sizing: border-box;
   background: rgb(0, 33, 113);
   transition: height 0.2s ease-out;
@@ -545,12 +553,6 @@ button:focus {
 
 .search-box__links > li:not(:last-child):after {
   content: " | ";
-}
-
-.search-box__hidden-help {
-  overflow: hidden;
-  height: 0px;
-  transition: height 0.4s ease-out;
 }
 
 /*
@@ -628,9 +630,6 @@ button:focus {
 
 .filter-form-wrapper {
   margin: 0 -15px;
-  height: 0;
-  overflow: hidden;
-  transition: height 0.4s ease-out;
 }
 
 .filter-form {
@@ -1024,21 +1023,6 @@ button:focus {
  *  JS MAP CONTAINER
  */
 
-.stop-map {
-  margin: 15px -15px -5px;
-  width: calc(100% + 30px);
-  height: 0;
-  overflow: hidden;
-  padding-bottom: 0;
-  transition: padding-bottom 0.4s ease-out;
-}
-
-/* Maintain a 1:1 ratio or 4:3 on larger screens */
-.stop-map--open,
-.stop-map--open--small {
-  padding-bottom: 100%;
-}
-
 .marker {
   font-family: "europa", sans-serif;
   font-size: 0.9rem;
@@ -1166,10 +1150,6 @@ button:focus {
   .tabs {
     margin-left: 10px;
     margin-right: 10px;
-  }
-
-  .stop-map--open--small {
-    padding-bottom: 75%;
   }
 }
   

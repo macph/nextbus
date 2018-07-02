@@ -560,14 +560,26 @@ def get_stops_tile():
     return jsonify(_list_geojson(stops))
 
 
-@api.route("/api/starred", methods=["POST", "DELETE"])
+@api.route("/api/starred", methods=["GET", "POST", "DELETE"])
 def starred_stop():
+    """ API to manipulate list of starred stops on cookie, with all responses
+        sent in JSON.
+
+        GET: Send list of starred stops by NaPTAN code
+        POST: Add starred NaPTAN code to cookie list
+        DELETE: Delete starred NaPTAN code from cookie list
+    """
+    if request.method == "GET":
+        return jsonify({"stops": session.get("stops")})
+
     sms = request.form.get("smsCode", "").lower()
     if not sms:
         return bad_request(400, "API accessed without valid SMS code")
 
     if request.method == "POST":
-        if "stops" in session and sms not in session["stops"]:
+        if "stops" in session and sms in session["stops"]:
+            return bad_request(400, "Cookie already exists")
+        elif "stops" in session:
             stop = models.StopPoint.query.filter_by(
                 naptan_code=sms).one_or_none()
             if stop is not None:
@@ -575,7 +587,7 @@ def starred_stop():
                 session.modified = True
             else:
                 return bad_request(404, "SMS code %r does not exist" % sms)
-        elif "stops" not in session:
+        else:
             session["stops"] = [sms]
             session.permanent = True
             session.modified = True
@@ -590,12 +602,7 @@ def starred_stop():
             session["stops"].remove(sms)
             session.modified = True
 
-    if session.modified:
-        return jsonify({"message": "cookie successfully changed",
-                        "stops": repr(session["stops"])})
-    else:
-        return jsonify({"message": "cookie not changed",
-                        "stops": repr(session["stops"])})
+    return "", 204
 
 
 @page.app_errorhandler(EntityNotFound)

@@ -40,15 +40,51 @@ function addGeolocation(LocationURL, activateElement) {
 /**
  * Sends requests to modify cookie data with list of starred stops
  * @constructor
- * @param {string} url URL to send POST and DELETE requests to
+ * @param {Boolean} cookieSet Whether cookie has been set in first place or not
+ * @param {HTMLElement} info Info element to show for setting cookie data
  */
-function StarredStops(url) {
+function StarredStops(cookieSet, info) {
     let self = this;
-    this.url = url;
+    this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
+    this.info = info;
+    this.data = null;
     this.active = false;
     this.r = new XMLHttpRequest();
 
-    this.add = function(element, code) {
+    this._confirm = function(element, code) {
+        let resizeInfo = function() {
+            self.info.style.height = 'auto';
+            self.info.style.height = self.info.scrollHeight + 'px';
+        };
+        self.info.style.height = self.info.scrollHeight + 'px';
+        window.addEventListener('resize', resizeInfo);
+    
+        element.blur();
+        element.textContent = 'Confirm starred stop';
+        element.onclick = function() {
+            self.set = true;
+            self.add(element, code, function() {
+                self.info.style.height = 0 + 'px';
+                window.removeEventListener('resize', resizeInfo);
+            });
+        };
+    }
+
+    this.get = function(callback) {
+        self.r.onload = function() {
+            newData = JSON.parse(this.responseText);
+            self.data = newData.stops;
+            callback();
+        }
+        self.r.open("GET", STARRED_URL, true);
+        self.r.send();
+    }
+
+    this.add = function(element, code, callback) {
+        if (!self.set) {
+            self._confirm(element, code);
+            return;
+        }
         if (self.active) {
             return;
         }
@@ -59,14 +95,17 @@ function StarredStops(url) {
                 self.remove(event.target, code);
             };
             element.textContent = 'Remove starred stop';
+            if (typeof callback !== 'undefined') {
+                callback();
+            }
         };
-        self.r.open("POST", self.url, true);
+        self.r.open("POST", STARRED_URL, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send("smsCode=" + code);
     };
 
-    this.remove = function(element, code) {
-        if (self.active) {
+    this.remove = function(element, code, callback) {
+        if (self.active || !self.set) {
             return;
         }
         self.r.onload = function() {
@@ -76,8 +115,11 @@ function StarredStops(url) {
                 self.add(event.target, code);
             };
             element.textContent = 'Add starred stop';
+            if (typeof callback !== 'undefined') {
+                callback();
+            }
         };
-        self.r.open("DELETE", self.url, true);
+        self.r.open("DELETE", STARRED_URL, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send("smsCode=" + code);
     };
@@ -102,6 +144,7 @@ function getTransitionEnd(element) {
         }
     }
 }
+
 
 /**
  * Adds events for showing search bar for most pages
@@ -885,7 +928,6 @@ function StopLayer(stopMap) {
                 marker = marker.on('mouseover', function(event) {
                     self.zCount += 100;
                     this.setZIndexOffset(self.zCount);
-                    console.log(self.zCount);
                 });
                 // Add callback function to each marker with GeoJSON pointer object as argument
                 marker = marker.on('click', function(event) {
@@ -905,11 +947,13 @@ function StopLayer(stopMap) {
  * Handles the stop panel
  * @param {Object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
+ * @param {Boolean} cookieSet Whether the cookie has been set or not
  */
-function StopPanel(stopMap, mapPanel) {
+function StopPanel(stopMap, mapPanel, cookieSet) {
     let self = this;
     this.stopMap = stopMap
     this.mapPanel = mapPanel;
+    this.starred = new StarredStops(cookieSet, null);
     this.activeStops = new Map();
 
     /**
@@ -1089,11 +1133,28 @@ function StopPanel(stopMap, mapPanel) {
         stopInfo.appendChild(smsCode);
         stopInfo.appendChild(stopLink);
 
+        let actions = document.createElement('section');
+        actions.className = 'card card--minor card--panel';
+        let goTo = document.createElement('button');
+        goTo.className = 'button';
+        let goToInner = document.createElement('span');
+        goToInner.textContent = 'Go to stop';
+        goTo.appendChild(goToInner);
+        goTo.onclick = function() {
+            goTo.blur();
+            self.stopMap.map.flyTo(
+                L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]), 17
+            );
+        }
+        actions.appendChild(goTo);
+
+
         self.clearPanel();
         self.mapPanel.appendChild(headingOuter);
         resizeIndicator('indicator');
         self.mapPanel.appendChild(liveTimes);
         self.mapPanel.appendChild(stopInfo);
+        self.mapPanel.appendChild(actions);
 
         let activeStop = self.getStop(
             point.properties.atcoCode,
@@ -1102,7 +1163,43 @@ function StopPanel(stopMap, mapPanel) {
             'live-time',
             'live-countdown'
         );
-    }
+
+        self.starred.get(function() {
+            let codeInList;
+            if (!self.starred.set) {
+                let info = document.createElement('div');
+                info.className = 'hidden';
+                info.style.margin = '-5px 0';
+                let infoInner = document.createElement('p');
+                infoInner.textContent = 'This will add a cookie to your device with a list of ' +
+                    'starred stops. No other identifiable information is stored. If you\'re happy ' +
+                    'with this, click again.';
+                info.appendChild(infoInner);
+                actions.appendChild(info);
+                self.starred.info = info;
+                codeInList = false;
+            } else {
+                codeInList = self.starred.data.indexOf(point.properties.naptanCode) > -1;
+            }
+
+            starred = document.createElement('button');
+            starred.className = 'button';
+            starredInner = document.createElement('span');
+            starred.appendChild(starredInner);
+            if (!self.starred.set || !codeInList) {
+                starredInner.textContent = 'Add starred stop';
+                starred.onclick = function() {
+                    self.starred.add(starred, point.properties.naptanCode);
+                };
+            } else {
+                starredInner.textContent = 'Remove starred stop';
+                starred.onclick = function() {
+                    self.starred.remove(starred, point.properties.naptanCode);
+                };
+            }
+            actions.appendChild(starred);
+        });
+    };
 }
 
 
@@ -1111,8 +1208,9 @@ function StopPanel(stopMap, mapPanel) {
  * @param {string} mapToken Mapbox token
  * @param {string} mapContainer ID for map container element
  * @param {string} mapPanel ID for map panel element
+ * @param {Boolean} cookieSet Whether the cookie has been set or not
  */
-function StopMap(mapToken, mapContainer, mapPanel) {
+function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
     let self = this;
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
@@ -1128,7 +1226,7 @@ function StopMap(mapToken, mapContainer, mapPanel) {
         }
     )
 
-    this.panel = new StopPanel(this, this.mapPanel);
+    this.panel = new StopPanel(this, this.mapPanel, cookieSet);
     this.stops = new StopLayer(this);
 
     /**

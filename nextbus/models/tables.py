@@ -4,7 +4,7 @@ Models for the nextbus database.
 from sqlalchemy.ext import hybrid
 
 from nextbus import db, location
-from nextbus.models import utils
+from nextbus.models import types, utils
 
 MIN_GROUPED = 72
 MAX_DIST = 500
@@ -382,3 +382,350 @@ class Postcode(utils.BaseModel):
     def stops_in_range(self):
         """ Returns a list of all stop points within range. """
         return StopPoint.in_range(self.latitude, self.longitude)
+
+
+class Operator(utils.BaseModel):
+    """ Bus/metro service operator. """
+    __tablename__ = "operator"
+
+    code = db.Column(db.Text, primary_key=True)
+
+    local_codes = db.relationship("LocalOperator",
+                                  order_by="LocalOperator.code",
+                                  backref="operator")
+
+
+class LocalOperator(utils.BaseModel):
+    """ Operator codes within regions for each operator. """
+    __tablename__ = "local_operator"
+
+    code = db.Column(db.Text, primary_key=True)
+    region_ref = db.Column(
+        db.VARCHAR(2),
+        db.ForeignKey("region.code", ondelete="CASCADE"),
+        primary_key=True
+    )
+    operator_ref = db.Column(
+        db.Text,
+        db.ForeignKey("operator.code", ondelete="CASCADE"),
+        nullable=False
+    )
+    name = db.Column(db.Text, nullable=True)
+
+
+class Service(utils.BaseModel):
+    """ Service group. """
+    __tablename__ = "service"
+
+    code = db.Column(db.Text, primary_key=True)
+    origin = db.Column(db.Text, nullable=False)
+    destination = db.Column(db.Text, nullable=False)
+    date_start = db.Column(db.Date, nullable=False)
+    date_end = db.Column(db.Date)
+    local_operator_ref = db.Column(db.Text, nullable=False)
+    region_ref = db.Column(db.VARCHAR(2), nullable=False)
+    mode = db.Column(
+        db.Enum(types.ServiceMode, name="service_mode"),
+        nullable=False
+    )
+    direction = db.Column(
+        db.Enum(types.Direction, name="direction"),
+        nullable=False
+    )
+    # add classification?
+    availability = db.Column(
+        db.Enum(types.ServiceAvailability, name="service_availability"),
+        nullable=False
+    )
+    modified = db.deferred(db.Column(db.DateTime))
+
+    operator = db.relationship("Operator", secondary="LocalOperator",
+                               uselist=False)
+    lines = db.relationship("ServiceLine", backref="service", order_by="name")
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ["local_operator_ref", "region_ref"],
+            ["local_operator.code", "local_operator.region_ref"],
+            ondelete="CASCADE"
+        ),
+        db.CheckConstraint("date_start <= date_end")
+    )
+
+
+class ServiceLine(utils.BaseModel):
+    """ Line label for a service. """
+    __tablename__ = "service_line"
+
+    id = db.Column(db.Text, primary_key=True)
+    name = db.Column(db.Text)
+    service_ref = db.Column(
+        db.Text,
+        db.ForeignKey("service.code", ondelete="CASCADE"),
+        nullable=False
+    )
+
+
+# Add JourneyPatternInterchange?
+
+
+class JourneyPattern(utils.BaseModel):
+    """ Sequences of timing links. """
+    __tablename__ = "journey_pattern"
+
+    id = db.Column(db.Text, primary_key=True)
+    service_ref = db.Column(
+        db.Text,
+        db.ForeignKey("service.code", ondelete="CASCADE"),
+        nullable=False
+    )
+    direction = db.Column(db.Enum(types.Direction), nullable=False)
+    modified = db.deferred(db.Column(db.DateTime))
+
+    sections = db.relationship("JourneySection", secondary="JourneySections",
+                               back_populates="patterns",
+                               order_by="JourneySections.sequence")
+    links = db.relationship(
+        "JourneyLink",
+        primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
+        secondary="join(JourneySections, JourneySection, "
+                  "JourneySections.section_ref == JourneySection.id",
+        secondaryjoin="JourneySection.id == JourneyLink.section_ref",
+        back_populates="patterns",
+        order_by="JourneySections.sequence, sequence"
+    )
+
+
+class JourneySections(utils.BaseModel):
+    """ Sequences of journey sections for a pattern. """
+    __tablename__ = "journey_sections"
+
+    pattern_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    section_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey_section.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+    sequence = db.Column(db.Integer, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("pattern_ref", "sequence"),
+    )
+
+
+class JourneySection(utils.BaseModel):
+    """ Sequences of journey timing links. """
+    __tablename__ = "journey_section"
+
+    id = db.Column(db.Text, primary_key=True)
+
+    sections = db.relationship("JourneyPattern", secondary="JourneySections",
+                               back_populates="sections")
+    links = db.relationship("JourneyLink", backref="section",
+                            order_by="JourneyLink.sequence")
+
+
+class JourneyLink(utils.BaseModel):
+    """ Link between two stops with timing. """
+    __tablename__ = "journey_link"
+
+    id = db.Column(db.Integer, primary_key=True)
+    section_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey_section.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    stop_start = db.Column(
+        db.VARCHAR(12),
+        db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
+        nullable=False
+    )
+    wait_start = db.Column(db.Integer, nullable=False)
+    timing_start = db.Column(
+        db.Enum(types.StopTiming, name="stop_timing"),
+        nullable=False
+    )
+    stopping_start = db.Column(db.Boolean, nullable=False)
+    stop_end = db.Column(
+        db.VARCHAR(12),
+        db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
+        nullable=False
+    )
+    wait_end = db.Column(db.Integer, nullable=False)
+    timing_end = db.Column(
+        db.Enum(types.StopTiming, name="stop_timing"),
+        nullable=False
+    )
+    stopping_end = db.Column(db.Boolean, nullable=False)
+    run_time = db.Column(db.Integer, nullable=False)
+    direction = db.Column(db.Enum(types.Direction, name="direction"))
+    # Direction for associated RouteLink
+    route_direction = db.Column(db.Enum(types.Direction, nullable=False))
+    sequence = db.Column(db.Integer)
+
+    patterns = db.relationship(
+        "JourneyPattern",
+        primaryjoin="JourneySection.id == JourneyLink.section_ref",
+        secondary="join(JourneySection, JourneySections, "
+                  "JourneySection.id == JourneySections.section_ref",
+        secondaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
+        back_populates="links"
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("section_ref", "sequence"),
+    )
+
+
+class Journey(utils.BaseModel):
+    """ Individual vehicle journey for a service. """
+    __tablename__ = "journey"
+
+    code = db.Column(db.Text, primary_key=True)
+    service_ref = db.Column(
+        db.Text,
+        db.ForeignKey("service.code", ondelete="CASCADE"),
+        nullable=False
+    )
+    line_ref = db.Column(
+        db.Text,
+        db.ForeignKey("service_line.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    pattern_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    departure = db.Column(db.Time, nullable=False)
+    # Add frequency?
+    # Use bitwise operators for ISO day of week (1-7) and week of month (0-4)
+    days = db.Column(db.Integer, db.CheckConstraint("days < 256"),
+                     nullable=False)
+    weeks = db.Column(db.Integer, db.CheckConstraint("weeks < 32"))
+
+    organisations = db.relationship("Organisation", secondary="Organisations",
+                                    back_populates="journeys")
+    holidays = db.relationship("Holiday", secondary="Holidays",
+                               back_populates="journeys")
+    holiday_dates = db.relationship(
+        "BankHolidayDate", secondary="BankHolidays",
+        secondaryjoin="BankHolidays.name == BankHolidayDate.name"
+    )
+    special_days = db.relationship("SpecialDay", backref="journey")
+
+
+class Organisation(utils.BaseModel):
+    """ Organisation with operating and non-operating periods. """
+    __tablename__ = "organisation"
+
+    code = db.Column(db.Text, primary_key=True)
+
+    periods = db.relationship("OperatingPeriod", backref="organisation")
+    excluded = db.relationship("OperatingDate", backref="organisation")
+
+    journeys = db.relationship("Journey", secondary="Organisations",
+                               back_populates="organisations")
+
+
+class Organisations(utils.BaseModel):
+    """ Associated table for journeys and organisations. """
+    __tablename__ = "organisations"
+
+    org_ref = db.Column(
+        db.Text,
+        db.ForeignKey("organisation.code", ondelete="CASCADE"),
+        primary_key=True
+    )
+    journey_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey.code", ondelete="CASCADE"),
+        primary_key=True
+    )
+    operational = db.Column(db.Boolean, nullable=False)
+    working = db.Column(db.Boolean, nullable=False)
+
+
+class OperatingDate(utils.BaseModel):
+    """ Dates to be excluded from operating periods. As they are not related
+        to operating periods they will have higher priority.
+    """
+    __tablename__ = "operating_date"
+
+    id = db.Column(db.Text, primary_key=True)
+    org_ref = db.Column(
+        db.Text,
+        db.ForeignKey("organisation.code", ondelete="CASCADE"),
+        nullable=False
+    )
+    date = db.Column(db.Date, nullable=False)
+    working = db.Column(db.Boolean, nullable=False)
+
+
+class OperatingPeriod(utils.BaseModel):
+    """ List of operating periods. """
+    __tablename__ = "operating_period"
+
+    id = db.Column(db.Text, primary_key=True)
+    org_ref = db.Column(
+        db.Text,
+        db.ForeignKey("organisation.code", ondelete="CASCADE"),
+        nullable=False
+    )
+    date_start = db.Column(db.Date, nullable=False)
+    date_end = db.Column(db.Date, nullable=False)
+    working = db.Column(db.Boolean, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("date_start <= date_end"),
+    )
+
+
+class SpecialPeriod(utils.BaseModel):
+    """ Special days specified by journeys. """
+    __tablename__ = "special_period"
+
+    id = db.Column(db.Integer, primary_key=True)
+    journey_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey.code", ondelete="CASCADE"),
+    )
+    date_start = db.Column(db.Date)
+    date_end = db.Column(db.Date)
+    operational = db.Column(db.Boolean, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("date_start <= date_end"),
+        db.UniqueConstraint("journey_ref", "date_start", "date_end")
+    )
+
+
+class BankHolidayDate(utils.BaseModel):
+    """ Bank holiday dates. """
+    __tablename__ = "bank_holiday_date"
+
+    name = db.Column(
+        db.Enum(types.BankHoliday, name="bank_holiday"),
+        primary_key=True
+    )
+    date = db.Column(db.Date, primary_key=True)
+
+
+class BankHolidays(utils.BaseModel):
+    """ Bank holidays associated with journeys """
+    __tablename__ = "bank_holidays"
+
+    name = db.Column(
+        db.Enum(types.BankHoliday, name="bank_holiday"),
+        primary_key=True
+    )
+    journey_ref = db.Column(
+        db.Text,
+        db.ForeignKey("journey.code", ondelete="CASCADE"),
+        primary_key=True
+    )
+    operational = db.Column(db.Boolean)

@@ -10,9 +10,7 @@ import dateutil.parser as dp
 import lxml.etree as et
 
 from nextbus import db, models
-from nextbus.populate.utils import (DBEntries, ext_function_text,
-                                    get_atco_codes, xml_as_dict,
-                                    XSLTExtFunctions)
+import nextbus.populate.utils as pop_utils
 import utils
 
 class ElementDictTests(unittest.TestCase):
@@ -29,7 +27,7 @@ class ElementDictTests(unittest.TestCase):
         del self.expected
 
     def test_element_to_dict(self):
-        new_dict = xml_as_dict(self.element)
+        new_dict = pop_utils.xml_as_dict(self.element)
         self.assertEqual(new_dict, self.expected)
 
 
@@ -39,60 +37,58 @@ class ElementTextTests(unittest.TestCase):
         functions.
     """
     @staticmethod
-    @ext_function_text
-    def passthrough(instance, context, result, *args, **kwargs):
+    @pop_utils.ext_function_text
+    def passthrough(context, result, *args, **kwargs):
         """ Simple function to pass through all arguments """
-        return instance, context, result, args, kwargs
+        return context, result, args, kwargs
 
     def test_decorator_one_element(self):
         result = [et.Element("name")]
         result[0].text = "text content"
-        output = self.passthrough(None, None, result)
-        self.assertEqual(output[2], "text content")
+        output = self.passthrough(None, result)
+        self.assertEqual(output[1], "text content")
 
     def test_decorator_one_string(self):
         result = ["text content"]
-        output = self.passthrough(None, None, result)
-        self.assertEqual(output[2], "text content")
+        output = self.passthrough(None, result)
+        self.assertEqual(output[1], "text content")
 
     def test_decorator_empty(self):
         result = []
-        output = self.passthrough(None, None, result)
+        output = self.passthrough(None, result)
         self.assertEqual(output, None)
 
     def test_decorator_multiple(self):
         result = [et.Element("name"), "text content 2"]
         result[0].text = "text content 1"
         with self.assertRaises(ValueError):
-            self.passthrough(None, None, result)
+            self.passthrough(None, result)
 
 
 class ExtensionTests(unittest.TestCase):
     """ Testing all methonds in the ``_ExtFunctions`` class. """
     def setUp(self):
-        self.ext = XSLTExtFunctions()
         self.result = [et.Element("name")]
 
     def tearDown(self):
-        del self.ext
         del self.result
 
     def test_ext_replace_string(self):
         self.result[0].text = "Upper Warlingham"
-        self.assertEqual(self.ext.replace(None, self.result, "Warl", "Wold"),
+        self.assertEqual(pop_utils.replace(None, self.result, "Warl", "Wold"),
                          "Upper Woldingham")
 
     def test_ext_upper_string(self):
         self.result[0].text = "East Grinstead"
-        self.assertEqual(self.ext.upper(None, self.result), "EAST GRINSTEAD")
+        self.assertEqual(pop_utils.upper(None, self.result), "EAST GRINSTEAD")
 
     def test_ext_lower_string(self):
         self.result[0].text = "East Grinstead"
-        self.assertEqual(self.ext.lower(None, self.result), "east grinstead")
+        self.assertEqual(pop_utils.lower(None, self.result), "east grinstead")
 
     def test_ext_capitalize_string(self):
         self.result[0].text = "St james's GATE (stop D)"
-        self.assertEqual(self.ext.capitalize(None, self.result),
+        self.assertEqual(pop_utils.capitalize(None, self.result),
                          "St James's Gate (Stop D)")
 
 
@@ -100,21 +96,21 @@ class AtcoCodeTests(utils.BaseAppTests):
     """ Test the retrieval of ATCO codes from the config """
     def test_default_codes(self):
         self.app.config["ATCO_CODES"] = None
-        self.assertEqual(get_atco_codes(), None)
+        self.assertEqual(pop_utils.get_atco_codes(), None)
 
     def test_yorkshire_codes(self):
         self.app.config["ATCO_CODES"] = [370, 450]
-        self.assertEqual(get_atco_codes(), [370, 450, 940])
+        self.assertEqual(pop_utils.get_atco_codes(), [370, 450, 940])
     
     def test_invalid_type(self):
         self.app.config["ATCO_CODES"] = ["string", 370]
         with self.assertRaisesRegex(ValueError, "must be integers"):
-            get_atco_codes()
+            pop_utils.get_atco_codes()
 
     def test_invalid_string(self):
         self.app.config["ATCO_CODES"] = "string"
         with self.assertRaisesRegex(ValueError, "must be set to either"):
-            get_atco_codes()
+            pop_utils.get_atco_codes()
 
 
 class EntryTests(unittest.TestCase):
@@ -153,7 +149,7 @@ class EntryTests(unittest.TestCase):
         return row
 
     def setUp(self):
-        self.db_entries = DBEntries(io.StringIO(self.XML))
+        self.db_entries = pop_utils.DBEntries(io.StringIO(self.XML))
 
     def tearDown(self):
         del self.db_entries
@@ -212,7 +208,7 @@ class EntryDBTests(utils.BaseAppTests):
     def setUp(self):
         self.create_tables()
         # Set up temporary file to be read by et.parse()
-        self.db_entries = DBEntries(self.xml)
+        self.db_entries = pop_utils.DBEntries(self.xml)
 
     def tearDown(self):
         self.drop_tables()

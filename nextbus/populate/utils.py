@@ -73,56 +73,65 @@ def ext_function_text(func):
         None.
     """
     @functools.wraps(func)
-    def _function_with_text(instance, context, result, *args, **kwargs):
+    def ext_function_with_text(context, result, *args, **kwargs):
         if len(result) == 1:
             try:
                 text = result[0].text
             except AttributeError:
                 text = str(result[0])
-            return func(instance, context, text, *args, **kwargs)
+            return func(context, text, *args, **kwargs)
         elif len(result) > 1:
             raise ValueError("XPath query returned multiple elements.")
         else:
             return None
 
-    return _function_with_text
+    return ext_function_with_text
 
 
-class XSLTExtFunctions(object):
-    """ Extension for modifying data in NaPTAN/NPTG data. """
+xslt_func = et.FunctionNamespace(NXB_EXT_URI)
 
-    @ext_function_text
-    def replace(self, _, result, original, substitute):
-        """ Replace substrings within content. """
-        return result.replace(original, substitute)
 
-    @ext_function_text
-    def upper(self, _, result):
-        """ Convert all letters in content to uppercase. """
-        return result.upper()
+@xslt_func
+@ext_function_text
+def replace(_, result, original, substitute):
+    """ Replace substrings within content. """
+    return result.replace(original, substitute)
 
-    @ext_function_text
-    def lower(self, _, result):
-        """ Convert all letters in content to lowercase. """
-        return result.lower()
 
-    @ext_function_text
-    def remove_spaces(self, _, result):
-        """ Remove all spaces from content. """
-        return "".join(result.strip())
+@xslt_func
+@ext_function_text
+def upper(_, result):
+    """ Convert all letters in content to uppercase. """
+    return result.upper()
 
-    @ext_function_text
-    def capitalize(self, _, result):
-        """ Capitalises every word in a string, include these enclosed within
-            brackets and excluding apostrophes.
-        """
-        list_words = result.lower().split()
-        for _w, word in enumerate(list_words):
-            for _c, char in enumerate(word):
-                if char.isalpha():
-                    list_words[_w] = word[:_c] + char.upper() + word[_c+1:]
-                    break
-        return " ".join(list_words)
+
+@xslt_func
+@ext_function_text
+def lower(_, result):
+    """ Convert all letters in content to lowercase. """
+    return result.lower()
+
+
+@xslt_func
+@ext_function_text
+def remove_spaces(_, result):
+    """ Remove all spaces from content. """
+    return "".join(result.strip())
+
+
+@xslt_func
+@ext_function_text
+def capitalize(_, result):
+    """ Capitalises every word in a string, include these enclosed within
+        brackets and excluding apostrophes.
+    """
+    list_words = result.lower().split()
+    for _w, word in enumerate(list_words):
+        for _c, char in enumerate(word):
+            if char.isalpha():
+                list_words[_w] = word[:_c] + char.upper() + word[_c+1:]
+                break
+    return " ".join(list_words)
 
 
 def get_atco_codes():

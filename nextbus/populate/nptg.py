@@ -67,7 +67,6 @@ def _get_nptg_data(nptg_file, atco_codes=None):
     data = et.parse(nptg_file)
     names = {"n": data.xpath("namespace-uri(.)")}
     transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
-    ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
@@ -112,7 +111,7 @@ def _get_nptg_data(nptg_file, atco_codes=None):
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += ref
 
-    new_data = data.xslt(transform, extensions=ext)
+    new_data = data.xslt(transform)
 
     return new_data
 

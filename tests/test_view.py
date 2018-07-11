@@ -24,7 +24,8 @@ class GeoJsonTests(utils.BaseAppTests):
             "title": "Cherry Tree Road (adj)",
             "adminAreaRef": "099",
             "bearing": "SW",
-            "stopType": "BCT"
+            "stopType": "BCT",
+            "street": "Psalter Lane"
         }
     }
 

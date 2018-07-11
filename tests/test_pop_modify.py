@@ -13,6 +13,7 @@ from nextbus.populate.modify import (_create_row, _delete_row, _replace_row,
 import utils
 
 
+LOGGER = "nextbus.populate.modify"
 MODIFY_XML = b"""\
 <data>
   <table model="Region">
@@ -101,7 +102,7 @@ class DeleteEntryTests(utils.BaseAppTests):
 
     def test_row_deleted_no_match(self):
         d_london = et.Element("delete", attrib={"code": "L"})
-        with database_session(), self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs(LOGGER) as log:
             _delete_row(models.Region, d_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",
@@ -139,7 +140,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
                           attrib={"old": "Greater Yorkshire"},
                           text="Lesser Yorkshire")
 
-        with database_session(), self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs(LOGGER) as log:
             _replace_row(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Greater Yorkshire' for {'code': 'Y'} "
@@ -151,7 +152,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
                           attrib={"old": "Greater Yorkshire"},
                           text="Yorkshire")
 
-        with database_session(), self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs(LOGGER) as log:
             _replace_row(models.Region, r_yorkshire)
 
         self.assertIn("Region.name: 'Yorkshire' for {'code': 'Y'} already "
@@ -162,7 +163,7 @@ class ReplaceEntryTests(utils.BaseAppTests):
         create_subelement(r_london, "name", attrib={"old": "London"},
                           text="Greater London")
 
-        with database_session(), self.assertLogs("populate.modify") as log:
+        with database_session(), self.assertLogs(LOGGER) as log:
             _replace_row(models.Region, r_london)
 
         self.assertIn("No rows matching {'code': 'L'} for model 'Region'",

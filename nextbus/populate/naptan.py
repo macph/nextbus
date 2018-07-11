@@ -389,8 +389,7 @@ def _get_naptan_data(naptan_file):
     """
     naptan_data = et.parse(naptan_file)
     transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
-    ext = et.Extension(utils.XSLTExtFunctions(), None, ns=utils.NXB_EXT_URI)
-    new_data = naptan_data.xslt(transform, extensions=ext)
+    new_data = naptan_data.xslt(transform)
 
     return new_data
 

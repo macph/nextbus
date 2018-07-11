@@ -48,6 +48,12 @@ def cli():
 @click.option("--nspl-path", "-P", "nspl_f", default=None,
               type=click.Path(exists=True),
               help="Add NSPL postcode data from specified JSON file.")
+@click.option("--tnds", "-t", "tnds_d", is_flag=True,
+              help="Download TNDS data and add to database.")
+@click.option("--tnds-path", "-T", "tnds_f", default=None,
+              type=click.Path(exists=True),
+              help="Add TNDS services data from specified zip file with XML "
+              "files.")
 @click.option("--modify", "-m", "modify_d", is_flag=True,
               help="Modify values in existing data with modify.xml.")
 @click.option("--backup", "-b", "backup", is_flag=True,
@@ -56,8 +62,8 @@ def cli():
               type=click.Path(), help="Back up database to a specified dump "
               "file before populating database.")
 @click.pass_context
-def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
-             backup, backup_f):
+def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
+             tnds_f, modify_d, backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
     from flask import current_app
@@ -66,7 +72,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
 
     errors = False
     use_backup = False
-    options = {"g": False, "n": False, "p": False, "m": False}
+    options = {"g": False, "n": False, "p": False, "t": False, "m": False}
 
     if nptg_d and nptg_f:
         click.echo("Download (-g) and filepath (-G) options for NPTG data are "
@@ -91,6 +97,12 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
     else:
         options["p"] = nspl_d or nspl_f
 
+    if tnds_d and tnds_f:
+        click.echo("Download (-t) and filepath (-T) options for TNDS data are "
+                   "mutually exclusive.")
+    else:
+        options["t"] = tnds_d or tnds_f
+
     options["m"] = modify_d
 
     if backup and backup_f:
@@ -113,6 +125,8 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, modify_d,
             populate.commit_naptan_data(archive=naptan_file)
         if options["p"]:
             populate.commit_nspl_data(file_=nspl_f)
+        if options["t"]:
+            populate.commit_tnds_data(archive=tnds_f)
         if options["m"]:
             populate.modify_data()
         # Update view after population

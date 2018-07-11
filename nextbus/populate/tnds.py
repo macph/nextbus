@@ -1,19 +1,19 @@
 """
 Populate bus route and timetable data from TNDS.
 """
-import datetime
 import ftplib
 import os
-import re
 
 from flask import current_app
+import lxml.etree as et
 
 from definitions import ROOT_DIR
 from nextbus import db, models
-from nextbus.populate.utils import logger
+from nextbus.populate import file_ops, utils
 
 
 TNDS_URL = r"ftp.tnds.basemap.co.uk"
+TNDS_XSLT = r"nextbus/populate/tnds.xslt"
 
 
 def download_tnds_files():
@@ -32,62 +32,44 @@ def download_tnds_files():
     if not list_regions:
         raise ValueError("NPTG data not populated yet.")
 
-    logger.info("Opening FTP connection to %r with credentials" % TNDS_URL)
+    paths = []
+    utils.logger.info("Opening FTP connection to %r with credentials" %
+                      TNDS_URL)
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
         for region in list_regions:
             file_name = region + ".zip"
             file_path = os.path.join(ROOT_DIR, "temp", file_name)
-            logger.info("Downloading file %r from %r" % (file_name, TNDS_URL))
+            utils.logger.info("Downloading file %r from %r" %
+                              (file_name, TNDS_URL))
             with open(file_path, "wb") as file_:
                 ftp.retrbinary("RETR " + file_name, file_.write)
 
-
-PARSE_DURATION = re.compile(
-    r"^(|[-+])P(?=.+)(?:(?:)|(\d+)Y)(?:(?:)|(\d+)M)(?:(?:)|(\d+)D)"
-    r"(?:T?(?:)(?:)(?:)|T(?:(?:)|(\d+)H)(?:(?:)|(\d+)M)"
-    r"(?:(?:)|(\d*\.?\d+|\d+\.?\d*)S))$"
-)
+    return paths
 
 
-def convert_duration(duration, ignore=False):
-    """ Converts a time duration from XML data to a timedelta object.
+def _get_tnds_transform(region):
+    """ Uses XSLT to convert TNDS XML data into several separate datasets. """
+    tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))
+    xsl_ns = {"xsl": tnds_xslt.xpath("namespace-uri(.)")}
+    region_param = tnds_xslt.xpath("//xsl:param[@name='region']",
+                                   namespaces=xsl_ns)[0]
+    region_param.text = region
+    transform = et.XSLT(tnds_xslt)
 
-        If the 'ignore' parameter is set to False, specifying a year or month
-        value other than zero will raise an exception as they cannot be used
-        without context.
-
-        :param duration: Duration value obtained from XML element
-        :param ignore: If True, will ignore non zero year or month values
-        instead of raising exception
-        :returns: timedelta object
-    """
-    match = PARSE_DURATION.match(duration)
-    if not match:
-        raise ValueError("Parsing %r failed - not a valid XML duration value."
-                         % duration)
-
-    if not ignore and any(i is not None and int(i) != 0 for i in
-                          [match.group(2), match.group(3)]):
-        raise ValueError("Year and month values cannot be used in timedelta "
-                         "objects - they need context.")
-
-    def convert(group, func):
-        return func(group) if group is not None else 0
-
-    delta = datetime.timedelta(
-        days=convert(match.group(4), int),
-        hours=convert(match.group(5), int),
-        minutes=convert(match.group(6), int),
-        seconds=convert(match.group(7), float)
-    )
-
-    if match.group(1) == '-':
-        delta *= -1
-
-    return delta
+    return transform
 
 
-def commit_tnds_data(archives=None):
+def commit_tnds_data(archive=None):
     """ Commits TNDS data to database. """
+    list_archives = download_tnds_files() if archive is None else [archive]
 
-    return
+    for archive in list_archives:
+        transform = _get_tnds_transform("Y")
+        for file_ in file_ops.iter_archive(archive):
+            data = et.parse(file_)
+            try:
+                new_data = transform(data)
+            except et.XSLTApplyError as err:
+                utils.logger.error(err.error_log)
+                raise
+            new_data.write(os.path.join(ROOT_DIR, "temp/Y", file_.name), pretty_print=True)

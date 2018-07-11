@@ -3,19 +3,27 @@ Utilities for the populate subpackage.
 """
 import collections
 import contextlib
+import datetime
 import functools
 import itertools
 import logging
+import re
+
 
 from flask import current_app
 import lxml.etree as et
-import sqlalchemy.dialects.postgresql as pg_sql
 
 from nextbus import db, logger
 
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
 ROW_LIMIT = 10000
+# Parses an ISO8601 duration string, eg 'P1Y2M3DT4H5M6.7S'
+PARSE_DURATION = re.compile(
+    r"^(|[-+])P(?=.+)(?:(?:)|(\d+)Y)(?:(?:)|(\d+)M)(?:(?:)|(\d+)D)"
+    r"(?:T?(?:)(?:)(?:)|T(?:(?:)|(\d+)H)(?:(?:)|(\d+)M)"
+    r"(?:(?:)|(\d*\.?\d+|\d+\.?\d*)S))$"
+)
 
 logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
@@ -264,3 +272,110 @@ class DBEntries(object):
                 logger.info("Inserting %d %s objects into database" %
                             (len(data), model.__name__))
                 batch_insert(model.__table__.insert(), data)
+
+
+def convert_duration(duration, ignore=False):
+    """ Converts a time duration from XML data to a timedelta object.
+
+        If the 'ignore' parameter is set to False, specifying a year or month
+        value other than zero will raise an exception as they cannot be used
+        without context.
+
+        :param duration: Duration value obtained from XML element
+        :param ignore: If True, will ignore non zero year or month values
+        instead of raising exception
+        :returns: timedelta object
+    """
+    match = PARSE_DURATION.match(duration)
+    if not match:
+        raise ValueError("Parsing %r failed - not a valid XML duration value."
+                         % duration)
+
+    if not ignore and any(i is not None and int(i) != 0 for i in
+                          [match.group(2), match.group(3)]):
+        raise ValueError("Year and month values cannot be used in timedelta "
+                         "objects - they need context.")
+
+    def convert(group, func):
+        return func(group) if group is not None else 0
+
+    delta = datetime.timedelta(
+        days=convert(match.group(4), int),
+        hours=convert(match.group(5), int),
+        minutes=convert(match.group(6), int),
+        seconds=convert(match.group(7), float)
+    )
+
+    if match.group(1) == '-':
+        delta *= -1
+
+    return delta
+
+
+@xslt_func
+def days_of_week(_, element):
+    """ Gets days of week as an integer with Monday-Sunday corresponding to
+        bits 1-7.
+    """
+    week = 0
+    mon, tues, wed, thurs, fri, sat, sun = range(1, 8)
+    children = [child.tag for child in element]
+
+    if "MondayToSunday" in children:
+        for i in range(mon, sun + 1):
+            week |= 1 << i
+        return week
+
+    if "Weekend" in children:
+        for i in range(sat, sun + 1):
+            week |= 1 << i
+        return week
+
+    if "Sunday" in children:
+        week |= 1 << sun
+
+    if "NotSaturday" in children:
+        for i in range(mon, fri + 1):
+            week |= 1 << i
+        return week
+
+    if "MondayToSaturday" in children:
+        for i in range(mon, sat + 1):
+            week |= 1 << i
+        return week
+
+    if "Saturday" in children:
+        week |= 1 << sat
+
+    if "MondayToFriday" in children:
+        for i in range(mon, fri + 1):
+            week |= 1 << i
+        return week
+
+    if "Monday" in children:
+        week |= 1 << mon
+    if "Tuesday" in children:
+        week |= 1 << tues
+    if "Wednesday" in children:
+        week |= 1 << wed
+    if "Thursday" in children:
+        week |= 1 << thurs
+    if "Friday" in children:
+        week |= 1 << fri
+
+    return week
+
+
+@xslt_func
+def weeks_of_month(_, element):
+    """ Gets weeks of month as an integer with first to fifth weeks
+        corresponding to bits 0-4.
+
+        If no weeks are found, None is returned.
+    """
+    month = 0
+    for i in element.iterdescendants():
+        if i.tag == "WeekNumber":
+            month |= 1 << int(i.text)
+
+    return month if month != 0 else None

@@ -43,33 +43,49 @@ def download_tnds_files():
                               (file_name, TNDS_URL))
             with open(file_path, "wb") as file_:
                 ftp.retrbinary("RETR " + file_name, file_.write)
+            paths.append(file_path)
 
     return paths
 
 
-def _get_tnds_transform(region):
+def _get_tnds_transform():
     """ Uses XSLT to convert TNDS XML data into several separate datasets. """
     tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))
-    xsl_ns = {"xsl": tnds_xslt.xpath("namespace-uri(.)")}
-    region_param = tnds_xslt.xpath("//xsl:param[@name='region']",
-                                   namespaces=xsl_ns)[0]
-    region_param.text = region
     transform = et.XSLT(tnds_xslt)
 
     return transform
 
 
-def commit_tnds_data(archive=None):
-    """ Commits TNDS data to database. """
-    list_archives = download_tnds_files() if archive is None else [archive]
+def commit_tnds_data(archive=None, region=None):
+    """ Commits TNDS data to database.
 
-    for archive in list_archives:
-        transform = _get_tnds_transform("Y")
+        :param archive: Path to a zipped archive with TNDS XML documents. If
+        None, they will be downloaded.
+        :param region: Region code for archive file.
+    """
+    if archive is None:
+        # Download required files and get region code from each filename
+        list_archives = download_tnds_files()
+        regions = [os.path.splitext(os.path.basename(a))[0]
+                   for a in list_archives]
+    elif region is None:
+        raise TypeError("A region code must be specified for archive %s."
+                        % archive)
+    else:
+        # Use archive and associated region code
+        list_archives = [archive]
+        regions = [region]
+
+    transform = _get_tnds_transform()
+    for archive, region in zip(list_archives, regions):
+        str_region = et.XSLT.strparam(region)
         for file_ in file_ops.iter_archive(archive):
             data = et.parse(file_)
             try:
-                new_data = transform(data)
-            except et.XSLTApplyError as err:
-                utils.logger.error(err.error_log)
+                new_data = transform(data, region=str_region)
+            except (et.XSLTParseError, et.XSLTApplyError) as err:
+                for error_message in getattr(err, "error_log"):
+                    utils.logger.error(error_message)
                 raise
-            new_data.write(os.path.join(ROOT_DIR, "temp/Y", file_.name), pretty_print=True)
+            new_data.write(os.path.join(ROOT_DIR, "temp/Y", file_.name),
+                           pretty_print=True)

@@ -274,7 +274,7 @@ class DBEntries(object):
                 batch_insert(model.__table__.insert(), data)
 
 
-def convert_duration(duration, ignore=False):
+def duration_delta(duration, ignore=False):
     """ Converts a time duration from XML data to a timedelta object.
 
         If the 'ignore' parameter is set to False, specifying a year or month
@@ -313,66 +313,100 @@ def convert_duration(duration, ignore=False):
 
 
 @xslt_func
-def days_of_week(_, element):
-    """ Gets days of week as an integer with Monday-Sunday corresponding to
-        bits 1-7.
+@ext_function_text
+def convert_duration(_, result):
+    """ Extension function to convert duration. """
+    delta = duration_delta(result)
+
+    return delta.seconds
+
+
+@xslt_func
+def days_week(_, nodes=None):
+    """ Gets days of week from a RegularDayType element.
+
+        Returned as an integer with Monday-Sunday corresponding to bits 1-7. If
+        nodes is None Monday-Friday is returned as the default.
     """
     week = 0
     mon, tues, wed, thurs, fri, sat, sun = range(1, 8)
-    children = [child.tag for child in element]
 
-    if "MondayToSunday" in children:
-        for i in range(mon, sun + 1):
+    def set_days(first, last=None):
+        """ Sets bits for an inclusive range of days. """
+        nonlocal week
+        last_ = last if last is not None else first
+        for i in range(first, last_ + 1):
             week |= 1 << i
+
+    try:
+        element = nodes[0]
+    except (IndexError, TypeError):
+        element = nodes
+
+    if element is None:
+        # Default is Monday to Friday
+        set_days(mon, fri)
         return week
 
-    if "Weekend" in children:
-        for i in range(sat, sun + 1):
-            week |= 1 << i
+    ns = {"txc": element.xpath("namespace-uri(.)")}
+    xpath = et.XPathElementEvaluator(element, namespaces=ns)
+
+    if not xpath("txc:DaysOfWeek"):
         return week
 
-    if "Sunday" in children:
-        week |= 1 << sun
-
-    if "NotSaturday" in children:
-        for i in range(mon, fri + 1):
-            week |= 1 << i
+    if xpath("txc:DaysOfWeek[txc:MondayToSunday]"):
+        set_days(mon, sun)
         return week
 
-    if "MondayToSaturday" in children:
-        for i in range(mon, sat + 1):
-            week |= 1 << i
+    if xpath("txc:DaysOfWeek[txc:Weekend]"):
+        set_days(sat, sun)
         return week
 
-    if "Saturday" in children:
-        week |= 1 << sat
+    if xpath("txc:DaysOfWeek[txc:Sunday]"):
+        set_days(sun)
 
-    if "MondayToFriday" in children:
-        for i in range(mon, fri + 1):
-            week |= 1 << i
+    if xpath("txc:DaysOfWeek[txc:NotSaturday]"):
+        set_days(mon, fri)
         return week
 
-    if "Monday" in children:
-        week |= 1 << mon
-    if "Tuesday" in children:
-        week |= 1 << tues
-    if "Wednesday" in children:
-        week |= 1 << wed
-    if "Thursday" in children:
-        week |= 1 << thurs
-    if "Friday" in children:
-        week |= 1 << fri
+    if xpath("txc:DaysOfWeek[txc:MondayToSaturday]"):
+        set_days(mon, sat)
+        return week
+
+    if xpath("txc:DaysOfWeek[txc:Saturday]"):
+        set_days(sat)
+
+    if xpath("txc:DaysOfWeek[txc:MondayToFriday]"):
+        set_days(mon, fri)
+        return week
+
+    if xpath("txc:DaysOfWeek[txc:Monday]"):
+        set_days(mon)
+    if xpath("txc:DaysOfWeek[txc:Tuesday]"):
+        set_days(tues)
+    if xpath("txc:DaysOfWeek[txc:Wednesday]"):
+        set_days(wed)
+    if xpath("txc:DaysOfWeek[txc:Thursday]"):
+        set_days(thurs)
+    if xpath("txc:DaysOfWeek[txc:Friday]"):
+        set_days(fri)
 
     return week
 
 
 @xslt_func
-def weeks_of_month(_, element):
-    """ Gets weeks of month as an integer with first to fifth weeks
-        corresponding to bits 0-4.
+def weeks_month(_, nodes):
+    """ Gets weeks of month from a PeriodicDayType element.
 
-        If no weeks are found, None is returned.
+        Returned as an integer with first to fifth weeks corresponding to bits
+        0-4. If no weeks are found, None is returned.
     """
+    try:
+        element = nodes[0]
+    except IndexError:
+        # No PeriodicDayType element was found
+        return None
+
     month = 0
     for i in element.iterdescendants():
         if i.tag == "WeekNumber":

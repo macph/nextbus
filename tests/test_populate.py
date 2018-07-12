@@ -92,6 +92,100 @@ class ExtensionTests(unittest.TestCase):
                          "St James's Gate (Stop D)")
 
 
+class DayWeekTests(unittest.TestCase):
+    """ Testing the days_week extension function. """
+    ns = "{http://some_namespace/}"
+
+    def setUp(self):
+        self.node = et.Element(self.ns + "RegularDayType")
+        self.nodes = [self.node]
+        self.days = et.Element(self.ns + "DaysOfWeek")
+
+    def tearDown(self):
+        del self.node, self.nodes
+
+    def test_holidays(self):
+        et.SubElement(self.node, self.ns + "HolidaysOnly")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 0)
+
+    def test_full_week(self):
+        self.node.append(self.days)
+        et.SubElement(self.days, self.ns + "MondayToSunday")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 254)
+
+    def test_weekend(self):
+        self.node.append(self.days)
+        et.SubElement(self.days, self.ns + "Weekend")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 192)
+
+    def test_not_saturday(self):
+        self.node.append(self.days)
+        et.SubElement(self.days, self.ns + "Sunday")
+        et.SubElement(self.days, self.ns + "NotSaturday")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 190)
+
+    def test_not_sunday(self):
+        self.node.append(self.days)
+        et.SubElement(self.days, self.ns + "MondayToSaturday")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 126)
+
+    def test_mon_wed_fri(self):
+        self.node.append(self.days)
+        et.SubElement(self.days, self.ns + "Monday")
+        et.SubElement(self.days, self.ns + "Wednesday")
+        et.SubElement(self.days, self.ns + "Friday")
+
+        self.assertEqual(pop_utils.days_week(None, self.nodes), 42)
+
+
+class DurationTests(unittest.TestCase):
+    """ Testing the duration converter """
+    def test_one_second(self):
+        delta = pop_utils.duration_delta("PT1S")
+        self.assertEqual(delta.total_seconds(), 1)
+    def test_one_second_zero_padding(self):
+        delta = pop_utils.duration_delta("PT01S")
+        self.assertEqual(delta.total_seconds(), 1)
+
+    def test_half_second(self):
+        delta = pop_utils.duration_delta("PT0.5S")
+        self.assertEqual(delta.total_seconds(), 0.5)
+
+    def test_minutes(self):
+        delta = pop_utils.duration_delta("PT1M30S")
+        self.assertEqual(delta.total_seconds(), 90)
+
+    def test_hours(self):
+        delta = pop_utils.duration_delta("PT1H60M60S")
+        self.assertEqual(delta.total_seconds(), 7260)
+
+    def test_days(self):
+        delta = pop_utils.duration_delta("P6DT1H1M1S")
+        print(delta)
+        self.assertEqual(delta.total_seconds(), 522061)
+
+    def test_t_missing(self):
+        with self.assertRaises(ValueError):
+            pop_utils.duration_delta("P1H1M1S")
+
+    def test_t_wrong_place(self):
+        with self.assertRaises(ValueError):
+            pop_utils.duration_delta("PT1D1M")
+
+    def test_months(self):
+        with self.assertRaises(ValueError):
+            pop_utils.duration_delta("P1M1DT1H")
+
+    def test_years(self):
+        with self.assertRaises(ValueError):
+            pop_utils.duration_delta("P1Y1D")
+
+
 class AtcoCodeTests(utils.BaseAppTests):
     """ Test the retrieval of ATCO codes from the config """
     def test_default_codes(self):

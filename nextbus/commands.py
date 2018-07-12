@@ -50,10 +50,10 @@ def cli():
               help="Add NSPL postcode data from specified JSON file.")
 @click.option("--tnds", "-t", "tnds_d", is_flag=True,
               help="Download TNDS data and add to database.")
-@click.option("--tnds-path", "-T", "tnds_f", default=None,
-              type=click.Path(exists=True),
+@click.option("--tnds-path", "-T", "tnds_f", default=(None, None),
+              type=(click.Path(exists=True), str),
               help="Add TNDS services data from specified zip file with XML "
-              "files.")
+              "files and a region code.")
 @click.option("--modify", "-m", "modify_d", is_flag=True,
               help="Modify values in existing data with modify.xml.")
 @click.option("--backup", "-b", "backup", is_flag=True,
@@ -97,11 +97,11 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
     else:
         options["p"] = nspl_d or nspl_f
 
-    if tnds_d and tnds_f:
+    if tnds_d and tnds_f[0]:
         click.echo("Download (-t) and filepath (-T) options for TNDS data are "
                    "mutually exclusive.")
     else:
-        options["t"] = tnds_d or tnds_f
+        options["t"] = tnds_d or tnds_f[0]
 
     options["m"] = modify_d
 
@@ -126,7 +126,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
         if options["p"]:
             populate.commit_nspl_data(file_=nspl_f)
         if options["t"]:
-            populate.commit_tnds_data(archive=tnds_f)
+            populate.commit_tnds_data(archive=tnds_f[0], region=tnds_f[1])
         if options["m"]:
             populate.modify_data()
         # Update view after population

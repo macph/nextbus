@@ -1,6 +1,7 @@
 """
 Testing the database.
 """
+import collections
 import datetime
 import functools
 import os
@@ -159,41 +160,72 @@ class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
         return {c: getattr(model_object, c) for c in columns}
 
 
+def _xml_elements_equal(e1, e2, _root=None):
+    """ Main function for assessing equality of XML elements.
+
+        Goes through each child element recursively, checking each element's
+        tag, tail, text and attributes. Returns list of differences and paths
+        they are contained in.
+    """
+    messages = []
+    diffs = []
+    # Check tags, text, tails, attributes and number of subelements
+    if e1.tag != e2.tag:
+        diffs.append("tags: %r != %r" % (e1.tag, e2.tag))
+    if e1.text != e2.text:
+        diffs.append("text: %r != %r" % (e1.text, e2.text))
+    if e1.tail != e2.tail:
+        diffs.append("tail: %r != %r" % (e1.tail, e2.tail))
+    if e1.attrib != e2.attrib:
+        diffs.append("attr: %r != %r" % (e1.attrib, e2.attrib))
+    if len(e1) != len(e2):
+        diffs.append("%d != %d subelements" % (len(e1), len(e2)))
+        # Find differences in number of named subelements
+        e1_tags = [e.tag for e in e1]
+        e2_tags = [e.tag for e in e2]
+        diff_count = {e: e2_tags.count(e) - e1_tags.count(e) for e in
+                      set(e1_tags) | set(e2_tags)}
+        diffs.extend("    %+d %r" % (v, k) for k, v in diff_count.items()
+                     if v != 0)
+
+    if diffs:
+        if _root is not None and e1.tag == e2.tag:
+            diffs.insert(0, _root.getpath(e1))
+        elif _root is not None and e1.tag != e2.tag:
+            diffs.insert(0, "within %s" % _root.getpath(e1.getparent()))
+        else:
+            diffs.insert(0, "within root")
+
+        messages.append("\n    ".join(diffs))
+
+    if len(e1) > 0 and len(e1) == len(e2) and e1.tag == e2.tag:
+        # If elements compared have children, iterate through them recursively
+        sub_diffs = []
+        # Set first element as root when recursing
+        root = et.ElementTree(e1) if _root is None else _root
+        for c1, c2 in zip(e1, e2):
+            sub = _xml_elements_equal(c1, c2, root)
+            sub_diffs.extend(sub)
+        messages.extend(sub_diffs)
+
+    return messages
+
+
 class BaseXMLTests(unittest.TestCase):
     """ Base tests for comparing XML files. """
     # Use parser which removes blank text from transformed XML files
     parser = et.XMLParser(remove_blank_text=True)
 
-    def assertXMLElementsEqual(self, e1, e2, msg=None, _path=None):
+    def assertXMLElementsEqual(self, elem1, elem2, msg=None):
         """ Compares two XML Element objects by iterating through each
             tag recursively and comparing their tags, text, tails and
             attributes.
         """
-        message = []
-        # Check tags, text, tails, attributes and number of subelements
-        if e1.tag != e2.tag:
-            message.append("Tags %r != %r" % (e1.tag, e2.tag))
-        if e1.text != e2.text:
-            message.append("Text %r != %r" % (e1.text, e2.text))
-        if e1.tail != e2.tail:
-            message.append("Tail strings %r != %r" % (e1.tail, e2.tail))
-        if e1.attrib != e2.attrib:
-            message.append("Attributes %r != %r" % (e1.attrib, e1.attrib))
-        if len(e1) != len(e2):
-            message.append("%d != %d subelements" % (len(e1), len(e2)))
-
-        # Errors found: create message and raise exception
-        if message:
-            if _path is not None and e1.tag == e2.tag:
-                message.insert(0, "For element %s/%s:" % (_path, e1.tag))
-            elif _path is not None and e1.tag != e2.tag:
-                message.insert(0, "For subelements within %s:" % _path)
-
-            new_msg = self._formatMessage(msg, "\n".join(message))
+        diffs = _xml_elements_equal(elem1, elem2)
+        if diffs:
+            # Raise exception
+            count = len(diffs)
+            diffs.insert(0, "%d difference%s found: " %
+                         (count, "" if count == 1 else "s"))
+            new_msg = self._formatMessage(msg, "\n\n".join(diffs))
             raise self.failureException(new_msg)
-
-        # If elements compared have children, iterate through them recursively
-        if len(e1) > 0:
-            new_path = e1.tag if _path is None else _path + "/" + e1.tag
-            for c1, c2 in zip(e1, e2):
-                self.assertXMLElementsEqual(c1, c2, _path=new_path)

@@ -1,0 +1,1041 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TransXChange xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.transxchange.org.uk/ http://www.transxchange.org.uk/schema/2.1/TransXChange_general.xsd" CreationDateTime="2018-03-19T10:08:00-00:00" ModificationDateTime="2018-03-19T10:08:00-00:00" Modification="new" RevisionNumber="0" FileName="SVRYSCO120.xml" SchemaVersion="2.1" RegistrationDocument="false" xmlns="http://www.transxchange.org.uk/">
+  <ServicedOrganisations>
+    <ServicedOrganisation>
+      <OrganisationCode>1</OrganisationCode>
+      <Name>ExampleOrganisation</Name>
+      <WorkingDays>
+        <DateRange>
+          <StartDate>2018-01-08</StartDate>
+          <EndDate>2018-02-09</EndDate>
+        </DateRange>
+        <DateRange>
+          <StartDate>2018-02-19</StartDate>
+          <EndDate>2018-03-23</EndDate>
+        </DateRange>
+        <DateExclusion>2018-02-26</DateExclusion>
+      </WorkingDays>
+      <Holidays>
+        <DateRange>
+          <StartDate>2018-04-09</StartDate>
+          <EndDate>2018-05-04</EndDate>
+        </DateRange>
+        <DateRange>
+          <StartDate>2018-05-08</StartDate>
+          <EndDate>2018-05-25</EndDate>
+        </DateRange>
+        <DateRange>
+          <StartDate>2018-06-04</StartDate>
+          <EndDate>2018-07-23</EndDate>
+        </DateRange>
+        <DateExclusion>2018-04-16</DateExclusion>
+        <DateExclusion>2018-07-13</DateExclusion>
+      </Holidays>
+    </ServicedOrganisation>
+  </ServicedOrganisations>
+  <StopPoints/>
+  <RouteSections>
+    <RouteSection id="YSCO120_004">
+      <RouteLink id="YSCO120_004_80826">
+        <From>
+          <StopPointRef>370021129</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021130</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80827">
+        <From>
+          <StopPointRef>370021130</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021134</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80828">
+        <From>
+          <StopPointRef>370021134</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021136</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80829">
+        <From>
+          <StopPointRef>370021136</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021138</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80830">
+        <From>
+          <StopPointRef>370021138</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020764</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80831">
+        <From>
+          <StopPointRef>370020764</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020789</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80832">
+        <From>
+          <StopPointRef>370020789</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020771</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80833">
+        <From>
+          <StopPointRef>370020771</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020772</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80834">
+        <From>
+          <StopPointRef>370020772</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020376</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80835">
+        <From>
+          <StopPointRef>370020376</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370023677</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80836">
+        <From>
+          <StopPointRef>370023677</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020361</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80837">
+        <From>
+          <StopPointRef>370020361</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020362</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80838">
+        <From>
+          <StopPointRef>370020362</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370022796</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80839">
+        <From>
+          <StopPointRef>370022796</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370023176</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80840">
+        <From>
+          <StopPointRef>370023176</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370027392</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80841">
+        <From>
+          <StopPointRef>370027392</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370023715</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80842">
+        <From>
+          <StopPointRef>370023715</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370022816</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80843">
+        <From>
+          <StopPointRef>370022816</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370022788</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_004_80844">
+        <From>
+          <StopPointRef>370022788</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370070005</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+    </RouteSection>
+    <RouteSection id="YSCO120_006">
+      <RouteLink id="YSCO120_006_80964">
+        <From>
+          <StopPointRef>370022831</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370022881</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80965">
+        <From>
+          <StopPointRef>370022881</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370023697</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80966">
+        <From>
+          <StopPointRef>370023697</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020360</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80967">
+        <From>
+          <StopPointRef>370020360</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020378</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80968">
+        <From>
+          <StopPointRef>370020378</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020377</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80969">
+        <From>
+          <StopPointRef>370020377</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020775</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80970">
+        <From>
+          <StopPointRef>370020775</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020790</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80971">
+        <From>
+          <StopPointRef>370020790</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020773</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80972">
+        <From>
+          <StopPointRef>370020773</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370020778</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80973">
+        <From>
+          <StopPointRef>370020778</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021137</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80974">
+        <From>
+          <StopPointRef>370021137</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021135</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80975">
+        <From>
+          <StopPointRef>370021135</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021132</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80976">
+        <From>
+          <StopPointRef>370021132</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021131</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="YSCO120_006_80977">
+        <From>
+          <StopPointRef>370021131</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>370021128</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+    </RouteSection>
+  </RouteSections>
+  <Routes>
+    <Route id="YSCO120_004">
+      <Description>Fulwood - Halfway</Description>
+      <RouteSectionRef>YSCO120_004</RouteSectionRef>
+    </Route>
+    <Route id="YSCO120_009">
+      <Description>Halfway - Fulwood</Description>
+      <RouteSectionRef>YSCO120_009</RouteSectionRef>
+    </Route>
+  </Routes>
+  <JourneyPatternSections>
+    <JourneyPatternSection id="JPS_YSCO120-73">
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80826">
+        <From>
+          <StopPointRef>370021129</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <Activity>pickUp</Activity>
+        </From>
+        <To>
+          <StopPointRef>370021130</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80826</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80827">
+        <From>
+          <StopPointRef>370021130</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021134</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80827</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80828">
+        <From>
+          <StopPointRef>370021134</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021136</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80828</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80829">
+        <From>
+          <StopPointRef>370021136</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021138</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80829</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80830">
+        <From>
+          <StopPointRef>370021138</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020764</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80830</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80831">
+        <From>
+          <StopPointRef>370020764</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020789</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80831</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80832">
+        <From>
+          <StopPointRef>370020789</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020771</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80832</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80833">
+        <From>
+          <StopPointRef>370020771</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020772</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80833</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80834">
+        <From>
+          <StopPointRef>370020772</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <WaitTime>PT60S</WaitTime>
+        </From>
+        <To>
+          <StopPointRef>370020376</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80834</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80835">
+        <From>
+          <StopPointRef>370020376</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370023677</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80835</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT180S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80836">
+        <From>
+          <StopPointRef>370023677</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020361</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80836</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80837">
+        <From>
+          <StopPointRef>370020361</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020362</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80837</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80838">
+        <From>
+          <StopPointRef>370020362</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370022796</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80838</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80839">
+        <From>
+          <StopPointRef>370022796</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370023176</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80839</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80840">
+        <From>
+          <StopPointRef>370023176</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370027392</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80840</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80841">
+        <From>
+          <StopPointRef>370027392</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370023715</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80841</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT180S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80842">
+        <From>
+          <StopPointRef>370023715</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370022816</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80842</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80843">
+        <From>
+          <StopPointRef>370022816</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370022788</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_004_80843</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-73_80844">
+        <From>
+          <StopPointRef>370022788</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370070005</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <Activity>setDown</Activity>
+        </To>
+        <RouteLinkRef>YSCO120_004_80844</RouteLinkRef>
+        <Direction>inbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+    <JourneyPatternSection id="JPS_YSCO120-77">
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80964">
+        <From>
+          <StopPointRef>370022831</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <Activity>pickUp</Activity>
+        </From>
+        <To>
+          <StopPointRef>370022881</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80964</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80965">
+        <From>
+          <StopPointRef>370022881</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370023697</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80965</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT180S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80966">
+        <From>
+          <StopPointRef>370023697</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020360</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80966</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80967">
+        <From>
+          <StopPointRef>370020360</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020378</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+          <Activity>pass</Activity>
+        </To>
+        <RouteLinkRef>YSCO120_006_80967</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80968">
+        <From>
+          <StopPointRef>370020378</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <StopPointRef>370020377</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80968</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT180S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80969">
+        <From>
+          <StopPointRef>370020377</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020775</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80969</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT180S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80970">
+        <From>
+          <StopPointRef>370020775</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020790</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80970</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80971">
+        <From>
+          <StopPointRef>370020790</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020773</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80971</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80972">
+        <From>
+          <StopPointRef>370020773</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020778</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80972</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80973">
+        <From>
+          <StopPointRef>370020778</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021137</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80973</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80974">
+        <From>
+          <StopPointRef>370021137</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021135</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80974</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80975">
+        <From>
+          <StopPointRef>370021135</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021132</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80975</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80976">
+        <From>
+          <StopPointRef>370021132</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021131</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80976</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT0S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS_YSCO120-77_80977">
+        <From>
+          <StopPointRef>370021131</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021128</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <Activity>setDown</Activity>
+        </To>
+        <RouteLinkRef>YSCO120_006_80977</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+  </JourneyPatternSections>
+  <Operators>
+    <Operator id="YTC">
+      <NationalOperatorCode>SYRK</NationalOperatorCode>
+      <OperatorCode>YTC</OperatorCode>
+      <OperatorShortName>Stagecoach Yorkshire</OperatorShortName>
+    </Operator>
+  </Operators>
+  <Services>
+    <Service>
+      <ServiceCode>YSCO120</ServiceCode>
+      <Lines>
+        <Line id="0">
+          <LineName>120</LineName>
+        </Line>
+      </Lines>
+      <OperatingPeriod>
+        <StartDate>2018-01-28</StartDate>
+        <EndDate>2038-01-17</EndDate>
+      </OperatingPeriod>
+      <RegisteredOperatorRef>YTC</RegisteredOperatorRef>
+      <StopRequirements>
+        <NoNewStopsRequired />
+      </StopRequirements>
+      <Mode>bus</Mode>
+      <Description>Halfway - Fulwood</Description>
+      <StandardService>
+        <Origin>Halfway</Origin>
+        <Destination>Fulwood</Destination>
+        <JourneyPattern id="JPS_YSCO120-73">
+          <Direction>inbound</Direction>
+          <JourneyPatternSectionRefs>JPS_YSCO120-73</JourneyPatternSectionRefs>
+          <OperatingProfile>
+            <RegularDayType>
+              <DaysOfWeek>
+                <Monday />
+                <Tuesday />
+                <Wednesday />
+                <Thursday />
+                <Friday />
+                <Saturday />
+              </DaysOfWeek>
+            </RegularDayType>
+            <SpecialDaysOperation>
+              <DaysOfNonOperation>
+                <DateRange>
+                  <StartDate>2018-04-03</StartDate>
+                  <EndDate>2018-04-03</EndDate>
+                </DateRange>
+              </DaysOfNonOperation>
+            </SpecialDaysOperation>
+          </OperatingProfile>
+        </JourneyPattern>
+        <JourneyPattern id="JPS_YSCO120-77">
+          <Direction>outbound</Direction>
+          <JourneyPatternSectionRefs>JPS_YSCO120-77</JourneyPatternSectionRefs>
+        </JourneyPattern>
+      </StandardService>
+    </Service>
+  </Services>
+  <VehicleJourneys>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <VehicleJourneyCode>72099</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <DepartureTime>14:19:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <OperatingProfile>
+        <RegularDayType>
+          <DaysOfWeek>
+            <NotSaturday />
+          </DaysOfWeek>
+        </RegularDayType>
+        <PeriodicDayType>
+          <WeekOfMonth>
+            <WeekNumber>first</WeekNumber>
+          </WeekOfMonth>
+          <WeekOfMonth>
+            <WeekNumber>third</WeekNumber>
+          </WeekOfMonth>
+        </PeriodicDayType>
+      </OperatingProfile>
+      <VehicleJourneyCode>72100</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <DepartureTime>16:19:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <OperatingProfile>
+        <RegularDayType>
+          <DaysOfWeek>
+            <MondayToSunday />
+          </DaysOfWeek>
+        </RegularDayType>
+        <ServicedOrganisationDayType>
+          <DaysOfOperation>
+            <WorkingDays>
+              <ServicedOrganisationRef>1</ServicedOrganisationRef>
+            </WorkingDays>
+          </DaysOfOperation>
+          <DaysOfNonOperation>
+            <Holidays>
+              <ServicedOrganisationRef>1</ServicedOrganisationRef>
+            </Holidays>
+          </DaysOfNonOperation>
+        </ServicedOrganisationDayType>
+        <SpecialDaysOperation>
+          <DaysOfNonOperation>
+            <DateRange>
+              <StartDate>2018-04-03</StartDate>
+              <EndDate>2018-04-03</EndDate>
+            </DateRange>
+          </DaysOfNonOperation>
+        </SpecialDaysOperation>
+        <BankHolidayOperation>
+          <DaysOfNonOperation>
+            <AllBankHolidays />
+          </DaysOfNonOperation>
+        </BankHolidayOperation>
+      </OperatingProfile>
+      <VehicleJourneyCode>72101</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <DepartureTime>18:19:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <OperatingProfile>
+        <RegularDayType>
+          <HolidaysOnly />
+        </RegularDayType>
+        <ServicedOrganisationDayType>
+          <DaysOfOperation>
+            <Holidays>
+              <ServicedOrganisationRef>1</ServicedOrganisationRef>
+            </Holidays>
+          </DaysOfOperation>
+          <DaysOfNonOperation>
+            <WorkingDays>
+              <ServicedOrganisationRef>1</ServicedOrganisationRef>
+            </WorkingDays>
+          </DaysOfNonOperation>
+        </ServicedOrganisationDayType>
+        <SpecialDaysOperation>
+          <DaysOfOperation>
+            <DateRange>
+              <StartDate>2018-04-03</StartDate>
+              <EndDate>2018-04-03</EndDate>
+            </DateRange>
+          </DaysOfOperation>
+        </SpecialDaysOperation>
+        <BankHolidayOperation>
+          <DaysOfOperation>
+            <AllHolidaysExceptChristmas />
+            <Christmas />
+            <DisplacementHolidays />
+            <EarlyRunOff />
+          </DaysOfOperation>
+        </BankHolidayOperation>
+      </OperatingProfile>
+      <VehicleJourneyCode>72102</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <DepartureTime>18:19:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <VehicleJourneyCode>72118</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <DepartureTime>14:32:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <OperatingProfile>
+        <RegularDayType>
+          <DaysOfWeek>
+            <Monday />
+            <Tuesday />
+            <Wednesday />
+            <Thursday />
+            <Friday />
+            <Saturday />
+            <Sunday />
+          </DaysOfWeek>
+        </RegularDayType>
+        <SpecialDaysOperation>
+          <DaysOfNonOperation>
+            <DateRange>
+              <StartDate>2018-04-03</StartDate>
+              <EndDate>2018-04-03</EndDate>
+            </DateRange>
+          </DaysOfNonOperation>
+        </SpecialDaysOperation>
+        <BankHolidayOperation>
+          <DaysOfNonOperation>
+            <ChristmasDay />
+            <BoxingDay />
+            <GoodFriday />
+            <NewYearsDay />
+            <LateSummerHolidayNotScotland />
+            <MayDay />
+            <EasterMonday />
+            <SpringBank />
+          </DaysOfNonOperation>
+        </BankHolidayOperation>
+      </OperatingProfile>
+      <VehicleJourneyCode>72119</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <DepartureTime>16:32:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <OperatingProfile>
+        <RegularDayType>
+          <HolidaysOnly />
+        </RegularDayType>
+        <SpecialDaysOperation>
+          <DaysOfOperation>
+            <DateRange>
+              <StartDate>2018-04-03</StartDate>
+              <EndDate>2018-04-03</EndDate>
+            </DateRange>
+          </DaysOfOperation>
+        </SpecialDaysOperation>
+        <BankHolidayOperation>
+          <DaysOfOperation>
+            <HolidayMondays />
+            <Christmas />
+          </DaysOfOperation>
+        </BankHolidayOperation>
+      </OperatingProfile>
+      <VehicleJourneyCode>72287</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <DepartureTime>16:32:00</DepartureTime>
+    </VehicleJourney>
+  </VehicleJourneys>
+</TransXChange>

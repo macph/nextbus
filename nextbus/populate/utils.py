@@ -330,7 +330,6 @@ def days_week(_, nodes=None):
     """
     week = 0
     mon, tues, wed, thurs, fri, sat, sun = range(1, 8)
-
     def set_days(first, last=None):
         """ Sets bits for an inclusive range of days. """
         nonlocal week
@@ -340,7 +339,9 @@ def days_week(_, nodes=None):
 
     try:
         element = nodes[0]
-    except (IndexError, TypeError):
+    except IndexError:
+        element = None
+    except TypeError:
         element = nodes
 
     if element is None:
@@ -350,9 +351,6 @@ def days_week(_, nodes=None):
 
     ns = {"txc": element.xpath("namespace-uri(.)")}
     xpath = et.XPathElementEvaluator(element, namespaces=ns)
-
-    if not xpath("txc:DaysOfWeek"):
-        return week
 
     if xpath("txc:DaysOfWeek[txc:MondayToSunday]"):
         set_days(mon, sun)
@@ -366,6 +364,7 @@ def days_week(_, nodes=None):
         set_days(sun)
 
     if xpath("txc:DaysOfWeek[txc:NotSaturday]"):
+        set_days(sun)
         set_days(mon, fri)
         return week
 
@@ -401,15 +400,29 @@ def weeks_month(_, nodes):
         Returned as an integer with first to fifth weeks corresponding to bits
         0-4. If no weeks are found, None is returned.
     """
+    weeks = {
+        "first": 0,
+        "second": 1,
+        "third": 2,
+        "fourth": 3,
+        "fifth": 4,
+    }
+
     try:
         element = nodes[0]
     except IndexError:
-        # No PeriodicDayType element was found
-        return None
+        element = None
 
+    if element is None:
+        return
+
+    ns = {"txc": element.xpath("namespace-uri(.)")}
     month = 0
-    for i in element.iterdescendants():
-        if i.tag == "WeekNumber":
-            month |= 1 << int(i.text)
+    for w in element.xpath("//txc:WeekNumber", namespaces=ns):
+        try:
+            number = int(w.text) - 1
+        except (TypeError, ValueError):
+            number = weeks[w.text.lower()]
+        month |= 1 << number
 
-    return month if month != 0 else None
+    return month if month > 0 else None

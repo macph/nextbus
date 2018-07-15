@@ -5,7 +5,7 @@
                xmlns:func="http://nextbus.org/functions" 
                xmlns:exsl="http://exslt.org/common"
                xmlns:re="http://exslt.org/regular-expressions"
-               exclude-result-prefixes="func exsl re txc">
+               exclude-result-prefixes="xsl func exsl re txc">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="region"/>
   <xsl:param name="modified" select="txc:TransXChange/@ModificationDateTime"/>
@@ -19,10 +19,6 @@
   <xsl:param name="journey_links" select="$sections/txc:JourneyPatternTimingLink"/>
 
   <xsl:param name="organisations" select="txc:TransXChange/txc:ServicedOrganisations/txc:ServicedOrganisation"/>
-  <xsl:param name="organisation_workings" select="$organisations/txc:WorkingDays/txc:DateRange"/>
-  <xsl:param name="organisation_holidays" select="$organisations/txc:Holidays/txc:DateRange"/>
-  <xsl:param name="organisation_working_excluded" select="$organisations/txc:WorkingDays/txc:DateExclusion"/>
-  <xsl:param name="organisation_holiday_excluded" select="$organisations/txc:Holidays/txc:DateExclusion"/>
 
   <xsl:param name="vehicle_journeys" select="txc:TransXChange/txc:VehicleJourneys/txc:VehicleJourney"/>
 
@@ -153,7 +149,7 @@
     <JourneySections>
       <pattern_ref><xsl:value-of select="ancestor::txc:JourneyPattern/@id"/></pattern_ref>
       <section_ref><xsl:value-of select="current()"/></section_ref>
-      <sequence><xsl:value-of select="1 + count(preceding-sibling::*)"/></sequence>
+      <sequence><xsl:value-of select="count(preceding-sibling::txc:JourneyPatternSectionRefs)"/></sequence>
     </JourneySections>
   </xsl:template>
 
@@ -161,16 +157,26 @@
     <JourneyLink>
       <section_ref><xsl:value-of select="ancestor::txc:JourneyPatternSection/@id"/></section_ref>
       <stop_start><xsl:value-of select="txc:From/txc:StopPointRef"/></stop_start>
-      <wait_start><xsl:value-of select="func:convert_duration(txc:From/txc:WaitTime)"/></wait_start>
+      <wait_start>
+        <xsl:choose>
+          <xsl:when test="txc:From/txc:WaitTime"><xsl:value-of select="func:convert_duration(txc:From/txc:WaitTime)"/></xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </wait_start>
       <timing_start><xsl:value-of select="txc:From/txc:TimingStatus"/></timing_start>
       <stopping_start>
         <xsl:choose>
-          <xsl:when test="txc:To[txc:Activity[.='pass']]">0</xsl:when>
+          <xsl:when test="txc:From[txc:Activity[.='pass']]">0</xsl:when>
           <xsl:otherwise>1</xsl:otherwise>
         </xsl:choose>
       </stopping_start>
       <stop_end><xsl:value-of select="txc:To/txc:StopPointRef"/></stop_end>
-      <wait_end><xsl:value-of select="func:convert_duration(txc:To/txc:WaitTime)"/></wait_end>
+      <wait_end>
+        <xsl:choose>
+          <xsl:when test="txc:To/txc:WaitTime"><xsl:value-of select="func:convert_duration(txc:To/txc:WaitTime)"/></xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </wait_end>
       <timing_end><xsl:value-of select="txc:To/txc:TimingStatus"/></timing_end>
       <stopping_end>
         <xsl:choose>
@@ -181,13 +187,15 @@
       <run_time><xsl:value-of select="func:convert_duration(txc:RunTime)"/></run_time>
       <direction><xsl:value-of select="txc:Direction"/></direction>
       <route_direction><xsl:value-of select="key('key_route_links', txc:RouteLinkRef)/txc:Direction"/></route_direction>
-      <sequence><xsl:value-of select="1 + count(preceding-sibling::*)"/></sequence>
+      <sequence><xsl:value-of select="count(preceding-sibling::txc:JourneyPatternTimingLink)"/></sequence>
     </JourneyLink>
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney">
+    <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
+    <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <Journey>
-      <code><xsl:value-of select="concat(txc:ServiceRef, '-', txc:VehicleJourneyCode)"/></code>
+      <code><xsl:value-of select="concat($region, txc:VehicleJourneyCode)"/></code>
       <service_ref><xsl:value-of select="txc:ServiceRef"/></service_ref>
       <line_ref>
         <xsl:choose>
@@ -197,11 +205,24 @@
       </line_ref>
       <pattern_ref><xsl:value-of select="txc:JourneyPatternRef"/></pattern_ref>
       <departure><xsl:value-of select="txc:DepartureTime"/></departure>
-      <xsl:call-template name="operating_profile">
-        <xsl:with-param name="vj_op" select="txc:OperatingProfile"/>
-        <xsl:with-param name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
-        <xsl:with-param name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
-      </xsl:call-template>
+      <xsl:choose>
+        <xsl:when test="txc:OperatingProfile">
+          <days><xsl:value-of select="func:days_week(txc:OperatingProfile/txc:RegularDayType)"/></days>
+          <weeks><xsl:value-of select="func:weeks_month(txc:OperatingProfile/txc:PeriodicDayType)"/></weeks>
+        </xsl:when>
+        <xsl:when test="$jp_op">
+          <days><xsl:value-of select="func:days_week($jp_op/txc:RegularDayType)"/></days>
+          <weeks><xsl:value-of select="func:weeks_month($jp_op/txc:PeriodicDayType)"/></weeks>
+        </xsl:when>
+        <xsl:when test="$s_op">
+          <days><xsl:value-of select="func:days_week($s_op/txc:RegularDayType)"/></days>
+          <weeks><xsl:value-of select="func:weeks_month($s_op/txc:PeriodicDayType)"/></weeks>
+        </xsl:when>
+        <xsl:otherwise>
+          <days><xsl:value-of select="func:days_week()"/></days>
+          <weeks/>
+        </xsl:otherwise>
+      </xsl:choose>
     </Journey>
   </xsl:template>
 
@@ -218,8 +239,8 @@
         <date><xsl:value-of select="current()"/></date>
         <working>
           <xsl:choose>
-            <xsl:when test="ancestor::txc:WorkingDays">1</xsl:when>
-            <xsl:otherwise>0</xsl:otherwise>
+            <xsl:when test="ancestor::txc:WorkingDays">0</xsl:when>
+            <xsl:otherwise>1</xsl:otherwise>
           </xsl:choose>
         </working>
       </OperatingDate>
@@ -231,7 +252,7 @@
   </xsl:template>
 
   <xsl:template match="txc:ServicedOrganisation" mode="operating_periods">
-    <xsl:for-each select="//txc:DateRange">
+    <xsl:for-each select=".//txc:DateRange">
       <OperatingPeriod>
         <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
         <date_start><xsl:value-of select="txc:StartDate"/></date_start>
@@ -251,7 +272,7 @@
     <xsl:param name="working"/>
     <Organisations>
       <org_ref><xsl:value-of select="concat($region, current())"/></org_ref>
-      <journey_ref><xsl:value-of select="concat(ancestor::txc:VehicleJourney/txc:ServiceRef, '-', ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
+      <journey_ref><xsl:value-of select="concat($region, ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
       <operational><xsl:value-of select="$operational"/></operational>
       <working><xsl:value-of select="$working"/></working>
     </Organisations>
@@ -299,212 +320,182 @@
   </xsl:template>
 
   <xsl:template name="special_days">
-    <xsl:param name="operational"/>
+    <xsl:param name="code"/>
     <SpecialPeriod>
-      <journey_ref><xsl:value-of select="concat(ancestor::txc:VehicleJourney/txc:ServiceRef, '-', ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
+      <journey_ref><xsl:value-of select="$code"/></journey_ref>
       <date_start><xsl:value-of select="txc:StartDate"/></date_start>
       <date_end><xsl:value-of select="txc:EndDate"/></date_end>
-      <operational><xsl:value-of select="$operational"/></operational>
+      <operational>
+        <xsl:choose>
+          <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </operational>
     </SpecialPeriod>
   </xsl:template>
 
   <xsl:template name="sequence_special">
+    <xsl:param name="code"/>
     <xsl:param name="refs"/>
     <xsl:for-each select="$refs">
       <xsl:call-template name="special_days">
-        <xsl:with-param name="operational">
-          <xsl:choose>
-            <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
-            <xsl:otherwise>0</xsl:otherwise>
-          </xsl:choose>
-        </xsl:with-param>
+        <xsl:with-param name="code" select="$code"/>
       </xsl:call-template>
     </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="special_periods">
+    <xsl:variable name="code" select="concat($region, txc:VehicleJourneyCode)"/>
+    <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
+    <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <xsl:choose>
       <xsl:when test="txc:OperatingProfile">
         <xsl:call-template name="sequence_special">
+          <xsl:with-param name="code" select="$code"/>
           <xsl:with-param name="refs" select="txc:OperatingProfile//txc:DateRange"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile">
+      <xsl:when test="$jp_op">
         <xsl:call-template name="sequence_special">
-          <xsl:with-param name="refs" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile//txc:DateRange"/>
+          <xsl:with-param name="code" select="$code"/>
+          <xsl:with-param name="refs" select="$jp_op//txc:DateRange"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="key('services', txc:ServiceRef)/txc:OperatingProfile">
+      <xsl:when test="$s_op">
         <xsl:call-template name="sequence_special">
-          <xsl:with-param name="refs" select="key('services', txc:ServiceRef)/txc:OperatingProfile//txc:DateRange"/>
+          <xsl:with-param name="code" select="$code"/>
+          <xsl:with-param name="refs" select="$s_op//txc:DateRange"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise/>
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template name="bank_holiday">
-    <xsl:param name="operational"/>
-    <xsl:param name="holiday" select="false()"/>
-    <xsl:choose>
-      <xsl:when test="boolean($holiday = 'AllBankHolidays' or current() = 'AllBankHolidays')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">AllHolidaysExceptChristmas</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">Christmas</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">DisplacementHolidays</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="boolean($holiday = 'EarlyRunOff' or current() = 'EarlyRunOff')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">ChristmasEve</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">NewYearsEve</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="boolean($holiday = 'AllHolidaysExceptChristmas' or current() = 'AllHolidaysExceptChristmas')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">NewYearsDay</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">Jan2ndScotland</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">GoodFriday</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="boolean($holiday = 'HolidayMondays' or current() = 'HolidayMondays')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">EasterMonday</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">MayDay</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">SpringBank</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">LateSummerHolidayNotScotland</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">AugustBankHolidayScotland</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="boolean($holiday = 'Christmas' or current() = 'Christmas')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">ChristmasDay</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">BoxingDay</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:when test="boolean($holiday = 'DisplacementHolidays' or current() = 'DisplacementHolidays')">
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">ChristmasDayHoliday</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">BoxingDayHoliday</xsl:with-param>
-        </xsl:call-template>
-        <xsl:call-template name="bank_holiday">
-          <xsl:with-param name="operational" select="$operational"/>
-          <xsl:with-param name="holiday">NewYearsDayHoliday</xsl:with-param>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <BankHolidays>
-          <name>
-            <xsl:choose>
-              <xsl:when test="$holiday"><xsl:value-of select="holiday"/></xsl:when>
-              <xsl:otherwise><xsl:value-of select="local-name(current())"/></xsl:otherwise>
-            </xsl:choose>
-          </name>
-          <journey_ref><xsl:value-of select="concat(ancestor::txc:VehicleJourney/txc:ServiceRef, '-', ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
-          <operational><xsl:value-of select="$operational"/></operational>
-        </BankHolidays>
-      </xsl:otherwise>
-    </xsl:choose>
+  <xsl:template name="bank_holiday_group">
+    <xsl:param name="code">0</xsl:param>
+    <xsl:variable name="holiday" select="local-name()"/>
+    <xsl:variable name="holidays">
+      <xsl:choose>
+        <xsl:when test="boolean($holiday = 'AllBankHolidays')">
+          <holiday>NewYearsDay</holiday>
+          <xsl:if test="boolean($region = 'S')">
+            <holiday>Jan2ndScotland</holiday>
+          </xsl:if>
+          <holiday>GoodFriday</holiday>
+          <holiday>EasterMonday</holiday>
+          <holiday>MayDay</holiday>
+          <holiday>SpringBank</holiday>
+          <xsl:if test="boolean($region = 'S')">
+            <holiday>AugustBankHolidayScotland</holiday>
+          </xsl:if>
+          <xsl:if test="boolean($region != 'S')">
+            <holiday>LateSummerHolidayNotScotland</holiday>
+          </xsl:if>
+          <holiday>ChristmasDay</holiday>
+          <holiday>BoxingDay</holiday>
+          <holiday>ChristmasDayHoliday</holiday>
+          <holiday>BoxingDayHoliday</holiday>
+          <holiday>NewYearsDayHoliday</holiday>
+        </xsl:when>
+        <xsl:when test="boolean($holiday = 'EarlyRunOff')">
+          <holiday>ChristmasEve</holiday>
+          <holiday>NewYearsEve</holiday>
+        </xsl:when>
+        <xsl:when test="boolean($holiday = 'AllHolidaysExceptChristmas')">
+          <holiday>NewYearsDay</holiday>
+          <xsl:if test="boolean($region = 'S')">
+            <holiday>Jan2ndScotland</holiday>
+          </xsl:if>
+          <holiday>GoodFriday</holiday>
+          <holiday>EasterMonday</holiday>
+          <holiday>MayDay</holiday>
+          <holiday>SpringBank</holiday>
+          <xsl:if test="boolean($region = 'S')">
+            <holiday>AugustBankHolidayScotland</holiday>
+          </xsl:if>
+          <xsl:if test="boolean($region != 'S')">
+            <holiday>LateSummerHolidayNotScotland</holiday>
+          </xsl:if>
+        </xsl:when>
+        <xsl:when test="boolean($holiday = 'HolidayMondays')">
+          <holiday>EasterMonday</holiday>
+          <holiday>MayDay</holiday>
+          <holiday>SpringBank</holiday>
+          <xsl:if test="boolean($region = 'S')">
+            <holiday>AugustBankHolidayScotland</holiday>
+          </xsl:if>
+          <xsl:if test="boolean($region != 'S')">
+            <holiday>LateSummerHolidayNotScotland</holiday>
+          </xsl:if>
+        </xsl:when>
+        <xsl:when test="boolean($holiday = 'Christmas')">
+          <holiday>ChristmasDay</holiday>
+          <holiday>BoxingDay</holiday>
+        </xsl:when>
+        <xsl:when test="boolean($holiday = 'DisplacementHolidays')">
+          <holiday>ChristmasDayHoliday</holiday>
+          <holiday>BoxingDayHoliday</holiday>
+          <holiday>NewYearsDayHoliday</holiday>
+        </xsl:when>
+        <xsl:otherwise>
+          <holiday/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="operational">
+      <xsl:choose>
+        <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
+        <xsl:otherwise>0</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:for-each select="exsl:node-set($holidays)/holiday">
+      <BankHolidays>
+        <name>
+          <xsl:choose>
+            <xsl:when test="current()/text()"><xsl:value-of select="current()"/></xsl:when>
+            <xsl:otherwise><xsl:value-of select="$holiday"/></xsl:otherwise>
+          </xsl:choose>
+        </name>
+        <journey_ref><xsl:value-of select="$code"/></journey_ref>
+        <operational><xsl:value-of select="$operational"/></operational>
+      </BankHolidays>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template name="sequence_bank_holidays">
+    <xsl:param name="code"/>
     <xsl:param name="refs"/>
     <xsl:for-each select="$refs">
-      <xsl:call-template name="bank_holiday">
-        <xsl:with-param name="operational">
-          <xsl:choose>
-            <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
-            <xsl:otherwise>0</xsl:otherwise>
-          </xsl:choose>
-        </xsl:with-param>
+      <xsl:call-template name="bank_holiday_group">
+        <xsl:with-param name="code" select="$code"/>
       </xsl:call-template>
     </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="bank_holidays">
+    <xsl:variable name="code" select="concat($region, txc:VehicleJourneyCode)"/>
+    <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
+    <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <xsl:choose>
       <xsl:when test="txc:OperatingProfile">
         <xsl:call-template name="sequence_bank_holidays">
+          <xsl:with-param name="code" select="$code"/>
           <xsl:with-param name="refs" select="txc:OperatingProfile/txc:BankHolidayOperation/*/*"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile">
+      <xsl:when test="$jp_op">
         <xsl:call-template name="sequence_bank_holidays">
-          <xsl:with-param name="refs" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="code" select="$code"/>
+          <xsl:with-param name="refs" select="$jp_op/txc:BankHolidayOperation/*/*"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="key('services', txc:ServiceRef)/txc:OperatingProfile">
+      <xsl:when test="$s_op">
         <xsl:call-template name="sequence_bank_holidays">
-          <xsl:with-param name="refs" select="key('services', txc:ServiceRef)/txc:OperatingProfile/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="code" select="$code"/>
+          <xsl:with-param name="refs" select="$s_op/txc:BankHolidayOperation/*/*"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise/>
-    </xsl:choose>
-  </xsl:template>
-
-  <xsl:template name="operating_profile">
-    <xsl:param name="vj_op"/>
-    <xsl:param name="jp_op"/>
-    <xsl:param name="s_op"/>
-    <xsl:choose>
-      <xsl:when test="$vj_op">
-        <days><xsl:value-of select="func:days_week($vj_op/txc:RegularDayType)"/></days>
-        <weeks><xsl:value-of select="func:weeks_month($vj_op/txc:PeriodicDayType)"/></weeks>
-      </xsl:when>
-      <xsl:when test="$jp_op">
-        <days><xsl:value-of select="func:days_week($jp_op/txc:RegularDayType)"/></days>
-        <weeks><weeks><xsl:value-of select="func:weeks_month($jp_op/txc:PeriodicDayType)"/></weeks></weeks>
-      </xsl:when>
-      <xsl:when test="$s_op">
-        <days><xsl:value-of select="func:days_week($s_op/txc:RegularDayType)"/></days>
-        <weeks><weeks><xsl:value-of select="func:weeks_month($s_op/txc:PeriodicDayType)"/></weeks></weeks>
-      </xsl:when>
-      <xsl:otherwise>
-        <days><xsl:value-of select="func:days_week()"/></days>
-        <weeks/>
-      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 </xsl:transform>

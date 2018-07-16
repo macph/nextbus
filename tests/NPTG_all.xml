@@ -4,12 +4,12 @@
     <Region>
       <code>GB</code>
       <name>Great Britain</name>
-      <modified>2008-02-07T16:03:46</modified>
+      <modified py_type="datetime">2008-02-07T16:03:46</modified>
     </Region>
     <Region>
       <code>Y</code>
       <name>Yorkshire</name>
-      <modified>2006-01-25T07:54:31</modified>
+      <modified py_type="datetime">2006-01-25T07:54:31</modified>
     </Region>
   </Regions>
   <AdminAreas>
@@ -18,14 +18,14 @@
       <region_ref>GB</region_ref>
       <atco_code>940</atco_code>
       <name>National - National Tram</name>
-      <modified>2008-02-08T14:41:15</modified>
+      <modified py_type="datetime">2008-02-08T14:41:15</modified>
     </AdminArea>
     <AdminArea>
       <code>099</code>
       <region_ref>Y</region_ref>
       <atco_code>370</atco_code>
       <name>South Yorkshire</name>
-      <modified>2006-01-25T07:54:33</modified>
+      <modified py_type="datetime">2006-01-25T07:54:33</modified>
     </AdminArea>
   </AdminAreas>
   <Districts>
@@ -33,13 +33,13 @@
       <code>247</code>
       <admin_area_ref>099</admin_area_ref>
       <name>Doncaster</name>
-      <modified>2006-01-25T07:54:36</modified>
+      <modified py_type="datetime">2006-01-25T07:54:36</modified>
     </District>
     <District>
       <code>263</code>
       <admin_area_ref>099</admin_area_ref>
       <name>Sheffield</name>
-      <modified>2006-01-25T07:54:36</modified>
+      <modified py_type="datetime">2006-01-25T07:54:36</modified>
     </District>
   </Districts>
   <Localities>
@@ -49,11 +49,11 @@
       <parent_ref>N0077767</parent_ref>
       <admin_area_ref>099</admin_area_ref>
       <district_ref>263</district_ref>
-      <easting>432828</easting>
-      <northing>385109</northing>
-      <longitude>-1.508178</longitude>
-      <latitude>53.36184</latitude>
-      <modified>2005-10-05T10:45:06</modified>
+      <easting py_type="int">432828</easting>
+      <northing py_type="int">385109</northing>
+      <longitude py_type="float">-1.508178</longitude>
+      <latitude py_type="float">53.36184</latitude>
+      <modified py_type="datetime">2005-10-05T10:45:06</modified>
     </Locality>
     <Locality>
       <code>E0057890</code>
@@ -61,11 +61,11 @@
       <parent_ref>N0077767</parent_ref>
       <admin_area_ref>099</admin_area_ref>
       <district_ref>263</district_ref>
-      <easting>435331</easting>
-      <northing>387240</northing>
-      <longitude>-1.470331</longitude>
-      <latitude>53.38084</latitude>
-      <modified>2009-07-22T11:48:53</modified>
+      <easting py_type="int">435331</easting>
+      <northing py_type="int">387240</northing>
+      <longitude py_type="float">-1.470331</longitude>
+      <latitude py_type="float">53.38084</latitude>
+      <modified py_type="datetime">2009-07-22T11:48:53</modified>
     </Locality>
     <Locality>
       <code>N0060732</code>
@@ -73,11 +73,11 @@
       <parent_ref>N0077767</parent_ref>
       <admin_area_ref>099</admin_area_ref>
       <district_ref>263</district_ref>
-      <easting>433217</easting>
-      <northing>385748</northing>
-      <longitude>-1.502266</longitude>
-      <latitude>53.36756</latitude>
-      <modified>2005-10-05T10:48:39</modified>
+      <easting py_type="int">433217</easting>
+      <northing py_type="int">385748</northing>
+      <longitude py_type="float">-1.502266</longitude>
+      <latitude py_type="float">53.36756</latitude>
+      <modified py_type="datetime">2005-10-05T10:48:39</modified>
     </Locality>
   </Localities>
 </Data>

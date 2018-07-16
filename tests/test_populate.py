@@ -13,22 +13,82 @@ from nextbus import db, models
 import nextbus.populate.utils as pop_utils
 import utils
 
+
 class ElementDictTests(unittest.TestCase):
     """ Testing the ``xml_as_dict`` function. """
+    XML = """\
+        <data>
+            <a/>
+            <b>Foo</b>
+            <c py_type="bool">0</c>
+            <d py_type="bool">false</d>
+            <e py_type="bool">True</e>
+            <f py_type="int"/>
+            <g py_type="int">512</g>
+            <h py_type="float">0.5</h>
+            <i py_type="datetime">2018-05-09T05:10:15</i>
+        </data>
+    """
+    EXPECTED = {
+        "a": None,
+        "b": "Foo",
+        "c": False,
+        "d": False,
+        "e": True,
+        "f": None,
+        "g": 512,
+        "h": 0.5,
+        "i": datetime.datetime(2018, 5, 9, 5, 10, 15)
+    }
+
     def setUp(self):
-        self.element = et.Element("data")
-        for i in range(10):
-            sub = et.SubElement(self.element, "tag%d" % i)
-            sub.text = "content %d" % i
-        self.expected = {"tag%d" % i: "content %d" % i for i in range(10)}
+        self.element = et.XML(self.XML)
+        self.expected = self.EXPECTED.copy()
 
     def tearDown(self):
-        del self.element
-        del self.expected
+        del self.element, self.expected
 
     def test_element_to_dict(self):
         new_dict = pop_utils.xml_as_dict(self.element)
         self.assertEqual(new_dict, self.expected)
+
+    def test_element_with_duration(self):
+        sub = et.SubElement(self.element, "j")
+        sub.set("py_type", "duration")
+        sub.text = "PT5H5M5S"
+        self.expected["j"] = datetime.timedelta(seconds=18305)
+
+        new_dict = pop_utils.xml_as_dict(self.element)
+        self.assertEqual(new_dict, self.expected)
+
+    def test_element_multiple(self):
+        sub = et.SubElement(self.element, "i")
+        
+        with self.assertRaisesRegex(ValueError, "Multiple elements"):
+            pop_utils.xml_as_dict(self.element)
+
+    def test_element_invalid_type(self):
+        sub = et.SubElement(self.element, "j")
+        sub.set("py_type", "wrong_type")
+
+        with self.assertRaisesRegex(ValueError, "Invalid py_type attribute"):
+            pop_utils.xml_as_dict(self.element)
+
+    def test_element_invalid_bool(self):
+        sub = et.SubElement(self.element, "j")
+        sub.set("py_type", "bool")
+        sub.text = "Neither"
+
+        with self.assertRaisesRegex(ValueError, "cannot be converted"):
+            pop_utils.xml_as_dict(self.element)
+
+    def test_element_cannot_convert(self):
+        sub = et.SubElement(self.element, "j")
+        sub.set("py_type", "int")
+        sub.text = "foobar"
+
+        with self.assertRaisesRegex(ValueError, "cannot be converted"):
+            pop_utils.xml_as_dict(self.element)
 
 
 class ElementTextTests(unittest.TestCase):

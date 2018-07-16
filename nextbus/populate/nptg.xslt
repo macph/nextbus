@@ -32,7 +32,7 @@
     <Region>
       <code><xsl:value-of select="f:upper(n:RegionCode)"/></code>
       <name><xsl:value-of select="n:Name"/></name>
-      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+      <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
     </Region>
   </xsl:template>
 
@@ -42,7 +42,7 @@
       <region_ref><xsl:value-of select="ancestor::n:Region/n:RegionCode"/></region_ref>
       <atco_code><xsl:value-of select="n:AtcoAreaCode"/></atco_code>
       <name><xsl:value-of select="n:Name"/></name>
-      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+      <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
     </AdminArea>
   </xsl:template>
 
@@ -53,7 +53,7 @@
         <xsl:value-of select="ancestor::n:AdministrativeArea/n:AdministrativeAreaCode"/>
       </admin_area_ref>
       <name><xsl:value-of select="n:Name"/></name>
-      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+      <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
     </District>
   </xsl:template>
 
@@ -72,11 +72,11 @@
           <xsl:otherwise/>
         </xsl:choose>
       </district_ref>
-      <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
-      <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
-      <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
-      <latitude><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
-      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+      <easting py_type="int"><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
+      <northing py_type="int"><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
+      <longitude py_type="float"><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
+      <latitude py_type="float"><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
+      <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
     </Locality>
   </xsl:template>
 

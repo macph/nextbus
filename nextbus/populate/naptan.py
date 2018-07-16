@@ -7,7 +7,6 @@ import operator
 import os
 import zipfile
 
-import dateutil.parser as dp
 import lxml.etree as et
 import pyparsing as pp
 
@@ -178,9 +177,6 @@ class _NaPTANStops(object):
         """ Parses stop areas. """
         if self.area and area.get("admin_area_ref") not in self.area:
             return
-        if area.get("modified") is not None:
-            area["modified"] = dp.parse(area["modified"])
-        # Add stop area code to list for checking later
         self.area_codes.add(area["code"])
 
         return area
@@ -193,9 +189,6 @@ class _NaPTANStops(object):
         # locality code to determine whether stop is within specified area
         if self.localities and point["locality_ref"] not in self.localities:
             return
-
-        if point.get("modified") is not None:
-            point["modified"] = dp.parse(point["modified"])
         # Create short indicator for display
         if point["indicator"] is not None:
             point["short_ind"] = self.ind_parser(point["indicator"])

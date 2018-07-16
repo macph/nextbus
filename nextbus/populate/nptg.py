@@ -25,16 +25,6 @@ def download_nptg_data():
     return new
 
 
-def _add_modified_date(area):
-    """ Helper function to convert last modified date (as a string) to a
-        DateTime object.
-    """
-    if area.get("modified") is not None:
-        area["modified"] = dp.parse(area["modified"])
-
-    return area
-
-
 def _remove_districts():
     """ Removes districts without associated localities. """
     query_districts = (
@@ -140,13 +130,10 @@ def commit_nptg_data(archive=None, list_files=None):
     for file_ in iter_files:
         new_data = _get_nptg_data(file_, atco_codes)
         nptg.set_data(new_data)
-        nptg.add("Regions/Region", models.Region, func=_add_modified_date)
-        nptg.add("AdminAreas/AdminArea", models.AdminArea,
-                 func=_add_modified_date)
-        nptg.add("Districts/District", models.District,
-                 func=_add_modified_date)
-        nptg.add("Localities/Locality", models.Locality,
-                 func=_add_modified_date)
+        nptg.add("Regions/Region", models.Region)
+        nptg.add("AdminAreas/AdminArea", models.AdminArea)
+        nptg.add("Districts/District", models.District)
+        nptg.add("Localities/Locality", models.Locality)
 
     # Commit changes to database
     nptg.commit()

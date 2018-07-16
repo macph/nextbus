@@ -4,7 +4,7 @@
     <Region>
       <code>GB</code>
       <name>Great Britain</name>
-      <modified>2008-02-07T16:03:46</modified>
+      <modified py_type="datetime">2008-02-07T16:03:46</modified>
     </Region>
   </Regions>
   <AdminAreas>
@@ -13,7 +13,7 @@
       <region_ref>GB</region_ref>
       <atco_code>940</atco_code>
       <name>National - National Tram</name>
-      <modified>2008-02-08T14:41:15</modified>
+      <modified py_type="datetime">2008-02-08T14:41:15</modified>
     </AdminArea>
   </AdminAreas>
   <Districts/>

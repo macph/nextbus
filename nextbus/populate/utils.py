@@ -9,7 +9,7 @@ import itertools
 import logging
 import re
 
-
+import dateutil.parser as dp
 from flask import current_app
 import lxml.etree as et
 
@@ -64,14 +64,54 @@ def batch_insert(statement, list_rows, limit=None):
         db.session.execute(statement.values(chunk))
 
 
-def xml_as_dict(element):
-    """ Helper function to create a dictionary from a XML element.
+def xml_as_dict(element, convert=True):
+    """ Creates a dictionary from a flat XML element. If convert is True,
+        ``py_type`` attributes are used to coerce values.
+
+        Types:
+        - ``bool``: Converts boolean strings such as 0, true or False.
+        - ``int``: integers
+        - ``float``: floating point numbers
+        - ``datetime``: Parsed as datetime objects
 
         :param element: XML Element object
+        :param convert: If True, use attributes to convert values.
         :returns: A dictionary with keys matching subelement tags in the
         element.
     """
-    return {i.tag: i.text for i in element}
+    def _bool(value):
+        if value in {"1", "true", "True"}:
+            return True
+        elif value in {"0", "false", "False"}:
+            return False
+        else:
+            raise ValueError("%r does not represent a boolean value." % value)
+
+    convs = {
+        "bool": _bool,
+        "int": int,
+        "float": float,
+        "datetime": dp.parse,
+        "duration": duration_delta
+    }
+
+    data = {}
+    for i in element:
+        if i.tag in data:
+            raise ValueError("Multiple elements have the same tag %r." % i.tag)
+        if convert and "py_type" in i.keys():
+            try:
+                conv = convs[i.get("py_type")]
+                data[i.tag] = conv(i.text) if i.text is not None else None
+            except KeyError:
+                raise ValueError("Invalid py_type attribute.")
+            except (TypeError, ValueError) as err:
+                raise ValueError("Text %r cannot be converted with type %r." %
+                                 (i.text, i.get("py_type"))) from err
+        else:
+            data[i.tag] = i.text
+
+    return data
 
 
 def ext_function_text(func):

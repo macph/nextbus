@@ -164,12 +164,13 @@ def get_atco_codes():
 
 class DBEntries(object):
     """ Collects a list of database entries from XML data and commits them. """
-    def __init__(self, xml_data=None):
+    def __init__(self, xml_data=None, log_each=True):
         self.data = None
         if xml_data is not None:
             self.set_data(xml_data)
         self.entries = collections.OrderedDict()
         self.conflicts = {}
+        self.log_each = log_each
 
     def set_data(self, xml_data):
         """ Sets the source XML data to a new ElementTree object. """
@@ -209,8 +210,9 @@ class DBEntries(object):
         if not list_elements:
             return
 
-        logger.info("Parsing %d %s elements" %
-                    (len(list_elements), model.__name__))
+        if self.log_each:
+            logger.info("Parsing %d %s elements" %
+                        (len(list_elements), model.__name__))
         # Create list for model and iterate over all elements
         for element in list_elements:
             data = xml_as_dict(element)
@@ -236,6 +238,10 @@ class DBEntries(object):
         """ Does a Python-side check of duplicates before executing INSERT
             statements.
 
+            If a 'modified' column exists, it is used to find the most recent
+            version, otherwise duplicates are checked on their contents and
+            raising a ValueError if they differ.
+
             INSERT ON CONFLICT DO UPDATE statements work better with single
             tuples of values, but we are using multi-valued inserts here.
         """
@@ -245,12 +251,21 @@ class DBEntries(object):
             found = {}
             for entry in self.entries[model]:
                 try:
-                    i = tuple(entry[i] for i in indices)
+                    i = tuple(entry[j] for j in indices)
                 except KeyError as err:
                     raise KeyError("Field names %r does not exist for model %s"
                                    % (indices, model.__name__)) from err
-                if i not in found or entry["modified"] > found[i]["modified"]:
+                current = entry.get("modified")
+                if i not in found:
                     found[i] = entry
+                elif current is not None and current > found[i]["modified"]:
+                    found[i] = entry
+                elif current is None and entry != found[i]:
+                    # Not comparing on last modified datesbut values do not
+                    # match - no way to tell which to pick. Raise error
+                    raise ValueError("Entries %r and %r do not match. Without "
+                                     "last modified dates they cannot be "
+                                     "picked." % (entry, found[i]))
                 else:
                     removed += 1
             if removed > 0:

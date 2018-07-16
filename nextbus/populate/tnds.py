@@ -55,6 +55,81 @@ def _get_tnds_transform():
 
     return transform
 
+def _str_bool(string):
+    """ Returns strings '1' or '0' as booleans. """
+    booleans = {"1": True, "0": False}
+
+    return booleans[string]
+
+
+def _parse_journey_link(obj):
+    obj["stopping_start"] = _str_bool(obj["stopping_start"])
+    obj["stopping_end"] = _str_bool(obj["stopping_end"])
+
+    return obj
+
+
+def _parse_working(obj):
+    obj["working"] = _str_bool(obj["working"])
+
+    return obj
+
+
+def _parse_organisations(obj):
+    obj["operational"] = _str_bool(obj["operational"])
+    obj["working"] = _str_bool(obj["working"])
+
+    return obj
+
+
+def _parse_operational(obj):
+    obj["operational"] = _str_bool(obj["operational"])
+
+    return obj
+
+
+def _commit_each_tnds(transform, archive, region):
+    """ Transforms each XML file and commit data to DB. """
+    str_region = et.XSLT.strparam(region)
+    tnds = utils.DBEntries(log_each=False)
+    for file_ in file_ops.iter_archive(archive):
+        utils.logger.info("Parsing file %r for region %r" %
+                          (file_.name, region))
+        data = et.parse(file_)
+        try:
+            new_data = transform(data, region=str_region)
+        except (et.XSLTParseError, et.XSLTApplyError) as err:
+            for error_message in getattr(err, "error_log"):
+                utils.logger.error(error_message)
+            raise
+
+        tnds.set_data(new_data)
+        tnds.add("OperatorGroup/Operator", models.Operator, indices=("code",))
+        tnds.add("LocalOperatorGroup/LocalOperator", models.LocalOperator,
+                 indices=("region_ref", "code"))
+        tnds.add("ServiceGroup/Service", models.Service)
+        tnds.add("ServiceLineGroup/ServiceLine", models.ServiceLine)
+        tnds.add("JourneyPatternGroup/JourneyPattern", models.JourneyPattern)
+        tnds.add("JourneySectionGroup/JourneySection", models.JourneySection)
+        tnds.add("JourneySectionsGroup/JourneySections", models.JourneySections)
+        tnds.add("JourneyLinkGroup/JourneyLink", models.JourneyLink,
+                 func=_parse_journey_link)
+        tnds.add("JourneyGroup/Journey", models.Journey)
+        tnds.add("OrganisationGroup/Organisation", models.Organisation,
+                 indices=("code",))
+        tnds.add("OperatingDateGroup/OperatingDate", models.OperatingDate,
+                 func=_parse_working)
+        tnds.add("OperatingPeriodGroup/OperatingPeriod", models.OperatingPeriod,
+                 func=_parse_working)
+        tnds.add("OrganisationsGroup/Organisations", models.Organisations,
+                 func=_parse_organisations)
+        tnds.add("SpecialPeriodGroup/SpecialPeriod", models.SpecialPeriod,
+                 func=_parse_operational)
+        tnds.add("BankHolidaysGroup/BankHolidays", models.BankHolidays,
+                 func=_parse_operational)
+
+    tnds.commit()
+
 
 def commit_tnds_data(archive=None, region=None):
     """ Commits TNDS data to database.
@@ -78,14 +153,4 @@ def commit_tnds_data(archive=None, region=None):
 
     transform = _get_tnds_transform()
     for archive, region in zip(list_archives, regions):
-        str_region = et.XSLT.strparam(region)
-        for file_ in file_ops.iter_archive(archive):
-            data = et.parse(file_)
-            try:
-                new_data = transform(data, region=str_region)
-            except (et.XSLTParseError, et.XSLTApplyError) as err:
-                for error_message in getattr(err, "error_log"):
-                    utils.logger.error(error_message)
-                raise
-            new_data.write(os.path.join(ROOT_DIR, "temp/Y", file_.name),
-                           pretty_print=True)
+        _commit_each_tnds(transform, archive, region)

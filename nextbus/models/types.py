@@ -4,6 +4,11 @@ Custom types, eg Enums, for relational models.
 from enum import Enum
 
 
+def enum_values(enum):
+    """ Gets all values in an enumeration. """
+    return [m.value for m in enum]
+
+
 class Direction(Enum):
     """ Enumeration for route direction. """
     INBOUND = "inbound"
@@ -17,17 +22,8 @@ class Direction(Enum):
 class ServiceMode(Enum):
     """ Mode of service (eg bus, metro) """
     BUS = "bus"
-    UNDERGROUND = "underground"
+    METRO = "metro"
     TRAM = "tram"
-
-
-class ServiceAvailability(Enum):
-    """ Times of day the service runs at. """
-    ALL = "all"
-    NIGHT = "night"
-    OFF_PEAK = "off_peak"
-    PEAK = "peak"
-    DAYTIME = "daytime"
 
 
 class StopTiming(Enum):

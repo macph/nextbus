@@ -79,7 +79,6 @@
   <xsl:template match="txc:Operator" mode="national">
     <Operator>
       <code><xsl:value-of select="func:upper(txc:NationalOperatorCode)"/></code>
-      <name><xsl:value-of select="txc:OperatorShortName"/></name>
     </Operator>
   </xsl:template>
 
@@ -88,6 +87,7 @@
       <operator_ref><xsl:value-of select="func:upper(txc:NationalOperatorCode)"/></operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
       <code><xsl:value-of select="func:upper(txc:OperatorCode)"/></code>
+      <name><xsl:value-of select="txc:OperatorShortName"/></name>
     </LocalOperator>
   </xsl:template>
 
@@ -100,19 +100,18 @@
       <date_end><xsl:value-of select="txc:OperatingPeriod/txc:EndDate"/></date_end>
       <local_operator_ref><xsl:value-of select="txc:RegisteredOperatorRef"/></local_operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
-      <mode><xsl:value-of select="txc:Mode"/></mode>
+      <mode>
+        <xsl:choose>
+          <xsl:when test="boolean(txc:Mode = 'underground')">metro</xsl:when>
+          <xsl:otherwise><xsl:value-of select="txc:Mode"/></xsl:otherwise>
+        </xsl:choose>
+      </mode>
       <direction>
         <xsl:choose>
           <xsl:when test="txc:Direction"><xsl:value-of select="txc:Direction"/></xsl:when>
           <xsl:otherwise>outbound</xsl:otherwise>
         </xsl:choose>
       </direction>
-      <availability>
-        <xsl:choose>
-          <xsl:when test="txc:ServiceAvailability"><xsl:value-of select="txc:ServiceAvailability"/></xsl:when>
-          <xsl:otherwise>daytime</xsl:otherwise>
-        </xsl:choose>
-      </availability>
       <modified><xsl:value-of select="$modified"/></modified>
     </Service>
   </xsl:template>

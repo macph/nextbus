@@ -2,7 +2,6 @@
   <OperatorGroup>
     <Operator>
       <code>SYRK</code>
-      <name>Stagecoach Yorkshire</name>
     </Operator>
   </OperatorGroup>
   <LocalOperatorGroup>
@@ -10,6 +9,7 @@
       <operator_ref>SYRK</operator_ref>
       <region_ref>Y</region_ref>
       <code>YTC</code>
+      <name>Stagecoach Yorkshire</name>
     </LocalOperator>
   </LocalOperatorGroup>
   <ServiceGroup>
@@ -23,7 +23,6 @@
       <region_ref>Y</region_ref>
       <mode>bus</mode>
       <direction>outbound</direction>
-      <availability>daytime</availability>
       <modified>2018-03-19T10:08:00-00:00</modified>
     </Service>
   </ServiceGroup>

@@ -390,9 +390,9 @@ class Operator(utils.BaseModel):
 
     code = db.Column(db.Text, primary_key=True)
 
-    local_codes = db.relationship("LocalOperator",
-                                  order_by="LocalOperator.code",
-                                  backref="operator")
+    # local_codes = db.relationship("LocalOperator",
+    #                               order_by="LocalOperator.code",
+    #                               backref="operator")
 
 
 class LocalOperator(utils.BaseModel):
@@ -425,23 +425,21 @@ class Service(utils.BaseModel):
     local_operator_ref = db.Column(db.Text, nullable=False)
     region_ref = db.Column(db.VARCHAR(2), nullable=False)
     mode = db.Column(
-        db.Enum(types.ServiceMode, name="service_mode"),
+        db.Enum(types.ServiceMode, name="service_mode",
+                values_callable=types.enum_values),
         nullable=False
     )
     direction = db.Column(
-        db.Enum(types.Direction, name="direction"),
+        db.Enum(types.Direction, name="direction",
+                values_callable=types.enum_values),
         nullable=False
     )
-    # add classification?
-    availability = db.Column(
-        db.Enum(types.ServiceAvailability, name="service_availability"),
-        nullable=False
-    )
+    # add classification and availability?
     modified = db.deferred(db.Column(db.DateTime))
 
-    operator = db.relationship("Operator", secondary="LocalOperator",
-                               uselist=False)
-    lines = db.relationship("ServiceLine", backref="service", order_by="name")
+    # operator = db.relationship("Operator", secondary="LocalOperator",
+    #                            uselist=False)
+    # lines = db.relationship("ServiceLine", backref="service", order_by="name")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -479,21 +477,25 @@ class JourneyPattern(utils.BaseModel):
         db.ForeignKey("service.code", ondelete="CASCADE"),
         nullable=False
     )
-    direction = db.Column(db.Enum(types.Direction), nullable=False)
+    direction = db.Column(
+        db.Enum(types.Direction, name="direction",
+                values_callable=types.enum_values),
+        nullable=False
+    )
     modified = db.deferred(db.Column(db.DateTime))
 
-    sections = db.relationship("JourneySection", secondary="JourneySections",
-                               back_populates="patterns",
-                               order_by="JourneySections.sequence")
-    links = db.relationship(
-        "JourneyLink",
-        primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
-        secondary="join(JourneySections, JourneySection, "
-                  "JourneySections.section_ref == JourneySection.id",
-        secondaryjoin="JourneySection.id == JourneyLink.section_ref",
-        back_populates="patterns",
-        order_by="JourneySections.sequence, sequence"
-    )
+    # sections = db.relationship("JourneySection", secondary="JourneySections",
+    #                            back_populates="patterns",
+    #                            order_by="JourneySections.sequence")
+    # links = db.relationship(
+    #     "JourneyLink",
+    #     primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
+    #     secondary="join(JourneySections, JourneySection, "
+    #               "JourneySections.section_ref == JourneySection.id",
+    #     secondaryjoin="JourneySection.id == JourneyLink.section_ref",
+    #     back_populates="patterns",
+    #     order_by="JourneySections.sequence, sequence"
+    # )
 
 
 class JourneySections(utils.BaseModel):
@@ -523,10 +525,10 @@ class JourneySection(utils.BaseModel):
 
     id = db.Column(db.Text, primary_key=True)
 
-    sections = db.relationship("JourneyPattern", secondary="JourneySections",
-                               back_populates="sections")
-    links = db.relationship("JourneyLink", backref="section",
-                            order_by="JourneyLink.sequence")
+    # sections = db.relationship("JourneyPattern", secondary="JourneySections",
+    #                            back_populates="sections")
+    # links = db.relationship("JourneyLink", backref="section",
+    #                         order_by="JourneyLink.sequence")
 
 
 class JourneyLink(utils.BaseModel):
@@ -546,7 +548,8 @@ class JourneyLink(utils.BaseModel):
     )
     wait_start = db.Column(db.Integer, nullable=False)
     timing_start = db.Column(
-        db.Enum(types.StopTiming, name="stop_timing"),
+        db.Enum(types.StopTiming, name="stop_timing",
+                values_callable=types.enum_values),
         nullable=False
     )
     stopping_start = db.Column(db.Boolean, nullable=False)
@@ -557,24 +560,32 @@ class JourneyLink(utils.BaseModel):
     )
     wait_end = db.Column(db.Integer, nullable=False)
     timing_end = db.Column(
-        db.Enum(types.StopTiming, name="stop_timing"),
+        db.Enum(types.StopTiming, name="stop_timing",
+                values_callable=types.enum_values),
         nullable=False
     )
     stopping_end = db.Column(db.Boolean, nullable=False)
     run_time = db.Column(db.Integer, nullable=False)
-    direction = db.Column(db.Enum(types.Direction, name="direction"))
+    direction = db.Column(
+        db.Enum(types.Direction, name="direction",
+                values_callable=types.enum_values)
+    )
     # Direction for associated RouteLink
-    route_direction = db.Column(db.Enum(types.Direction, nullable=False))
+    route_direction = db.Column(
+        db.Enum(types.Direction, name="direction",
+                values_callable=types.enum_values),
+        nullable=False
+    )
     sequence = db.Column(db.Integer)
 
-    patterns = db.relationship(
-        "JourneyPattern",
-        primaryjoin="JourneySection.id == JourneyLink.section_ref",
-        secondary="join(JourneySection, JourneySections, "
-                  "JourneySection.id == JourneySections.section_ref",
-        secondaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
-        back_populates="links"
-    )
+    # patterns = db.relationship(
+    #     "JourneyPattern",
+    #     primaryjoin="JourneySection.id == JourneyLink.section_ref",
+    #     secondary="join(JourneySection, JourneySections, "
+    #               "JourneySection.id == JourneySections.section_ref",
+    #     secondaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
+    #     back_populates="links"
+    # )
 
     __table_args__ = (
         db.UniqueConstraint("section_ref", "sequence"),
@@ -608,15 +619,15 @@ class Journey(utils.BaseModel):
                      nullable=False)
     weeks = db.Column(db.Integer, db.CheckConstraint("weeks < 32"))
 
-    organisations = db.relationship("Organisation", secondary="Organisations",
-                                    back_populates="journeys")
-    holidays = db.relationship("Holiday", secondary="Holidays",
-                               back_populates="journeys")
-    holiday_dates = db.relationship(
-        "BankHolidayDate", secondary="BankHolidays",
-        secondaryjoin="BankHolidays.name == BankHolidayDate.name"
-    )
-    special_days = db.relationship("SpecialDay", backref="journey")
+    # organisations = db.relationship("Organisation", secondary="Organisations",
+    #                                 back_populates="journeys")
+    # holidays = db.relationship("Holiday", secondary="Holidays",
+    #                            back_populates="journeys")
+    # holiday_dates = db.relationship(
+    #     "BankHolidayDate", secondary="BankHolidays",
+    #     secondaryjoin="BankHolidays.name == BankHolidayDate.name"
+    # )
+    # special_days = db.relationship("SpecialDay", backref="journey")
 
 
 class Organisation(utils.BaseModel):
@@ -625,11 +636,10 @@ class Organisation(utils.BaseModel):
 
     code = db.Column(db.Text, primary_key=True)
 
-    periods = db.relationship("OperatingPeriod", backref="organisation")
-    excluded = db.relationship("OperatingDate", backref="organisation")
-
-    journeys = db.relationship("Journey", secondary="Organisations",
-                               back_populates="organisations")
+    # periods = db.relationship("OperatingPeriod", backref="organisation")
+    # excluded = db.relationship("OperatingDate", backref="organisation")
+    # journeys = db.relationship("Journey", secondary="Organisations",
+    #                            back_populates="organisations")
 
 
 class Organisations(utils.BaseModel):
@@ -709,7 +719,8 @@ class BankHolidayDate(utils.BaseModel):
     __tablename__ = "bank_holiday_date"
 
     name = db.Column(
-        db.Enum(types.BankHoliday, name="bank_holiday"),
+        db.Enum(types.BankHoliday, name="bank_holiday",
+                values_callable=types.enum_values),
         primary_key=True
     )
     date = db.Column(db.Date, primary_key=True)
@@ -720,7 +731,8 @@ class BankHolidays(utils.BaseModel):
     __tablename__ = "bank_holidays"
 
     name = db.Column(
-        db.Enum(types.BankHoliday, name="bank_holiday"),
+        db.Enum(types.BankHoliday, name="bank_holiday",
+                values_callable=types.enum_values),
         primary_key=True
     )
     journey_ref = db.Column(

@@ -55,38 +55,6 @@ def _get_tnds_transform():
 
     return transform
 
-def _str_bool(string):
-    """ Returns strings '1' or '0' as booleans. """
-    booleans = {"1": True, "0": False}
-
-    return booleans[string]
-
-
-def _parse_journey_link(obj):
-    obj["stopping_start"] = _str_bool(obj["stopping_start"])
-    obj["stopping_end"] = _str_bool(obj["stopping_end"])
-
-    return obj
-
-
-def _parse_working(obj):
-    obj["working"] = _str_bool(obj["working"])
-
-    return obj
-
-
-def _parse_organisations(obj):
-    obj["operational"] = _str_bool(obj["operational"])
-    obj["working"] = _str_bool(obj["working"])
-
-    return obj
-
-
-def _parse_operational(obj):
-    obj["operational"] = _str_bool(obj["operational"])
-
-    return obj
-
 
 def _commit_each_tnds(transform, archive, region):
     """ Transforms each XML file and commit data to DB. """
@@ -112,21 +80,15 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("JourneyPatternGroup/JourneyPattern", models.JourneyPattern)
         tnds.add("JourneySectionGroup/JourneySection", models.JourneySection)
         tnds.add("JourneySectionsGroup/JourneySections", models.JourneySections)
-        tnds.add("JourneyLinkGroup/JourneyLink", models.JourneyLink,
-                 func=_parse_journey_link)
+        tnds.add("JourneyLinkGroup/JourneyLink", models.JourneyLink)
         tnds.add("JourneyGroup/Journey", models.Journey)
         tnds.add("OrganisationGroup/Organisation", models.Organisation,
                  indices=("code",))
-        tnds.add("OperatingDateGroup/OperatingDate", models.OperatingDate,
-                 func=_parse_working)
-        tnds.add("OperatingPeriodGroup/OperatingPeriod", models.OperatingPeriod,
-                 func=_parse_working)
-        tnds.add("OrganisationsGroup/Organisations", models.Organisations,
-                 func=_parse_organisations)
-        tnds.add("SpecialPeriodGroup/SpecialPeriod", models.SpecialPeriod,
-                 func=_parse_operational)
-        tnds.add("BankHolidaysGroup/BankHolidays", models.BankHolidays,
-                 func=_parse_operational)
+        tnds.add("OperatingDateGroup/OperatingDate", models.OperatingDate)
+        tnds.add("OperatingPeriodGroup/OperatingPeriod", models.OperatingPeriod)
+        tnds.add("OrganisationsGroup/Organisations", models.Organisations)
+        tnds.add("SpecialPeriodGroup/SpecialPeriod", models.SpecialPeriod)
+        tnds.add("BankHolidaysGroup/BankHolidays", models.BankHolidays)
 
     tnds.commit()
 

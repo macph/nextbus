@@ -23,7 +23,7 @@
       <region_ref>Y</region_ref>
       <mode>bus</mode>
       <direction>outbound</direction>
-      <modified>2018-03-19T10:08:00-00:00</modified>
+      <modified py_type="datetime">2018-03-19T10:08:00-00:00</modified>
     </Service>
   </ServiceGroup>
   <ServiceLineGroup>
@@ -38,13 +38,13 @@
       <id>JPS_YSCO120-73</id>
       <service_ref>YSCO120</service_ref>
       <direction>inbound</direction>
-      <modified/>
+      <modified py_type="datetime"/>
     </JourneyPattern>
     <JourneyPattern>
       <id>JPS_YSCO120-77</id>
       <service_ref>YSCO120</service_ref>
       <direction>outbound</direction>
-      <modified/>
+      <modified py_type="datetime"/>
     </JourneyPattern>
   </JourneyPatternGroup>
   <JourneySectionsGroup>
@@ -72,14 +72,14 @@
       <id>JPS_YSCO120-73_80826</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370021129</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>PTP</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021130</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>0</sequence>
@@ -88,14 +88,14 @@
       <id>JPS_YSCO120-73_80827</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370021130</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021134</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>1</sequence>
@@ -104,14 +104,14 @@
       <id>JPS_YSCO120-73_80828</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370021134</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021136</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>2</sequence>
@@ -120,14 +120,14 @@
       <id>JPS_YSCO120-73_80829</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370021136</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021138</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>3</sequence>
@@ -136,14 +136,14 @@
       <id>JPS_YSCO120-73_80830</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370021138</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020764</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>4</sequence>
@@ -152,14 +152,14 @@
       <id>JPS_YSCO120-73_80831</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020764</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020789</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>5</sequence>
@@ -168,14 +168,14 @@
       <id>JPS_YSCO120-73_80832</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020789</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020771</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>6</sequence>
@@ -184,14 +184,14 @@
       <id>JPS_YSCO120-73_80833</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020771</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020772</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>PTP</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>7</sequence>
@@ -200,14 +200,14 @@
       <id>JPS_YSCO120-73_80834</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020772</stop_start>
-      <wait_start>60</wait_start>
+      <wait_start py_type="duration">PT60S</wait_start>
       <timing_start>PTP</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020376</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>8</sequence>
@@ -216,14 +216,14 @@
       <id>JPS_YSCO120-73_80835</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020376</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370023677</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>180</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT180S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>9</sequence>
@@ -232,14 +232,14 @@
       <id>JPS_YSCO120-73_80836</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370023677</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020361</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>10</sequence>
@@ -248,14 +248,14 @@
       <id>JPS_YSCO120-73_80837</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020361</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020362</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>11</sequence>
@@ -264,14 +264,14 @@
       <id>JPS_YSCO120-73_80838</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370020362</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370022796</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>12</sequence>
@@ -280,14 +280,14 @@
       <id>JPS_YSCO120-73_80839</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370022796</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370023176</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>13</sequence>
@@ -296,14 +296,14 @@
       <id>JPS_YSCO120-73_80840</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370023176</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370027392</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>14</sequence>
@@ -312,14 +312,14 @@
       <id>JPS_YSCO120-73_80841</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370027392</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370023715</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>PTP</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>180</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT180S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>15</sequence>
@@ -328,14 +328,14 @@
       <id>JPS_YSCO120-73_80842</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370023715</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>PTP</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370022816</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>16</sequence>
@@ -344,14 +344,14 @@
       <id>JPS_YSCO120-73_80843</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370022816</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370022788</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>17</sequence>
@@ -360,14 +360,14 @@
       <id>JPS_YSCO120-73_80844</id>
       <section_ref>JPS_YSCO120-73</section_ref>
       <stop_start>370022788</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370070005</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>PTP</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>inbound</direction>
       <route_direction>inbound</route_direction>
       <sequence>18</sequence>
@@ -376,14 +376,14 @@
       <id>JPS_YSCO120-77_80964</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370022831</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>PTP</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370022881</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>0</sequence>
@@ -392,14 +392,14 @@
       <id>JPS_YSCO120-77_80965</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370022881</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370023697</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>180</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT180S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>1</sequence>
@@ -408,14 +408,14 @@
       <id>JPS_YSCO120-77_80966</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370023697</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020360</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>2</sequence>
@@ -424,14 +424,14 @@
       <id>JPS_YSCO120-77_80967</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020360</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020378</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>0</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">0</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>3</sequence>
@@ -440,14 +440,14 @@
       <id>JPS_YSCO120-77_80968</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020378</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>0</stopping_start>
+      <stopping_start py_type="bool">0</stopping_start>
       <stop_end>370020377</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>180</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT180S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>4</sequence>
@@ -456,14 +456,14 @@
       <id>JPS_YSCO120-77_80969</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020377</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020775</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>PTP</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>180</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT180S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>5</sequence>
@@ -472,14 +472,14 @@
       <id>JPS_YSCO120-77_80970</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020775</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>PTP</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020790</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>6</sequence>
@@ -488,14 +488,14 @@
       <id>JPS_YSCO120-77_80971</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020790</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020773</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>7</sequence>
@@ -504,14 +504,14 @@
       <id>JPS_YSCO120-77_80972</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020773</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370020778</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>8</sequence>
@@ -520,14 +520,14 @@
       <id>JPS_YSCO120-77_80973</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370020778</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021137</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>9</sequence>
@@ -536,14 +536,14 @@
       <id>JPS_YSCO120-77_80974</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370021137</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021135</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>60</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT60S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>10</sequence>
@@ -552,14 +552,14 @@
       <id>JPS_YSCO120-77_80975</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370021135</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021132</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>11</sequence>
@@ -568,14 +568,14 @@
       <id>JPS_YSCO120-77_80976</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370021132</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021131</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>OTH</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>0</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT0S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>12</sequence>
@@ -584,14 +584,14 @@
       <id>JPS_YSCO120-77_80977</id>
       <section_ref>JPS_YSCO120-77</section_ref>
       <stop_start>370021131</stop_start>
-      <wait_start>0</wait_start>
+      <wait_start py_type="duration">PT0S</wait_start>
       <timing_start>OTH</timing_start>
-      <stopping_start>1</stopping_start>
+      <stopping_start py_type="bool">1</stopping_start>
       <stop_end>370021128</stop_end>
-      <wait_end>0</wait_end>
+      <wait_end py_type="duration">PT0S</wait_end>
       <timing_end>PTP</timing_end>
-      <stopping_end>1</stopping_end>
-      <run_time>120</run_time>
+      <stopping_end py_type="bool">1</stopping_end>
+      <run_time py_type="duration">PT120S</run_time>
       <direction>outbound</direction>
       <route_direction>outbound</route_direction>
       <sequence>13</sequence>
@@ -671,17 +671,17 @@
     <OperatingDate>
       <org_ref>Y1</org_ref>
       <date>2018-02-26</date>
-      <working>0</working>
+      <working py_type="bool">0</working>
     </OperatingDate>
     <OperatingDate>
       <org_ref>Y1</org_ref>
       <date>2018-04-16</date>
-      <working>1</working>
+      <working py_type="bool">1</working>
     </OperatingDate>
     <OperatingDate>
       <org_ref>Y1</org_ref>
       <date>2018-07-13</date>
-      <working>1</working>
+      <working py_type="bool">1</working>
     </OperatingDate>
   </OperatingDateGroup>
   <OperatingPeriodGroup>
@@ -689,57 +689,57 @@
       <org_ref>Y1</org_ref>
       <date_start>2018-01-08</date_start>
       <date_end>2018-02-09</date_end>
-      <working>1</working>
+      <working py_type="bool">1</working>
     </OperatingPeriod>
     <OperatingPeriod>
       <org_ref>Y1</org_ref>
       <date_start>2018-02-19</date_start>
       <date_end>2018-03-23</date_end>
-      <working>1</working>
+      <working py_type="bool">1</working>
     </OperatingPeriod>
     <OperatingPeriod>
       <org_ref>Y1</org_ref>
       <date_start>2018-04-09</date_start>
       <date_end>2018-05-04</date_end>
-      <working>0</working>
+      <working py_type="bool">0</working>
     </OperatingPeriod>
     <OperatingPeriod>
       <org_ref>Y1</org_ref>
       <date_start>2018-05-08</date_start>
       <date_end>2018-05-25</date_end>
-      <working>0</working>
+      <working py_type="bool">0</working>
     </OperatingPeriod>
     <OperatingPeriod>
       <org_ref>Y1</org_ref>
       <date_start>2018-06-04</date_start>
       <date_end>2018-07-23</date_end>
-      <working>0</working>
+      <working py_type="bool">0</working>
     </OperatingPeriod>
   </OperatingPeriodGroup>
   <OrganisationsGroup>
     <Organisations>
       <org_ref>Y1</org_ref>
       <journey_ref>Y72101</journey_ref>
-      <operational>1</operational>
-      <working>1</working>
+      <operational py_type="bool">1</operational>
+      <working py_type="bool">1</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
-      <working>0</working>
+      <operational py_type="bool">0</operational>
+      <working py_type="bool">0</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
-      <working>0</working>
+      <operational py_type="bool">1</operational>
+      <working py_type="bool">0</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
       <journey_ref>Y72102</journey_ref>
-      <operational>0</operational>
-      <working>1</working>
+      <operational py_type="bool">0</operational>
+      <working py_type="bool">1</working>
     </Organisations>
   </OrganisationsGroup>
   <SpecialPeriodGroup>
@@ -747,223 +747,223 @@
       <journey_ref>Y72099</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
       <journey_ref>Y72101</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
       <journey_ref>Y72102</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </SpecialPeriod>
     <SpecialPeriod>
       <journey_ref>Y72119</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
       <journey_ref>Y72287</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </SpecialPeriod>
   </SpecialPeriodGroup>
   <BankHolidaysGroup>
     <BankHolidays>
       <name>NewYearsDay</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerHolidayNotScotland</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDayHoliday</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDayHoliday</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDayHoliday</name>
       <journey_ref>Y72101</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDay</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerHolidayNotScotland</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDayHoliday</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDayHoliday</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDayHoliday</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasEve</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsEve</name>
       <journey_ref>Y72102</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDay</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerHolidayNotScotland</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
       <journey_ref>Y72119</journey_ref>
-      <operational>0</operational>
+      <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerHolidayNotScotland</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
       <journey_ref>Y72287</journey_ref>
-      <operational>1</operational>
+      <operational py_type="bool">1</operational>
     </BankHolidays>
   </BankHolidaysGroup>
 </Data>

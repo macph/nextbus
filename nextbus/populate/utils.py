@@ -368,15 +368,6 @@ def duration_delta(duration, ignore=False):
 
 
 @xslt_func
-@ext_function_text
-def convert_duration(_, result):
-    """ Extension function to convert duration. """
-    delta = duration_delta(result)
-
-    return delta.seconds
-
-
-@xslt_func
 def days_week(_, nodes=None):
     """ Gets days of week from a RegularDayType element.
 

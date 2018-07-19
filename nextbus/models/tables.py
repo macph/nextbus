@@ -266,8 +266,37 @@ class StopPoint(utils.BaseModel):
         db.remote(stop_area_ref) == db.foreign(stop_area_ref),
         db.remote(atco_code) != db.foreign(atco_code)
     )
-    other_stops = db.relationship("StopPoint", primaryjoin=_join_other, uselist=True,
-                                  order_by="StopPoint.name, StopPoint.short_ind")
+    other_stops = db.relationship(
+        "StopPoint",
+        primaryjoin=_join_other,
+        uselist=True,
+        order_by="StopPoint.name, StopPoint.short_ind"
+    )
+    journey_links = db.relationship(
+        "JourneyLink",
+        primaryjoin="or_(JourneyLink.stop_start == StopPoint.atco_code, "
+                    "JourneyLink.stop_end == StopPoint.atco_code)",
+        backref=db.backref("stops", uselist=True)
+    )
+    preceding_stops = db.relationship(
+        "StopPoint",
+        secondary="journey_link",
+        primaryjoin="JourneyLink.stop_end == StopPoint.atco_code",
+        secondaryjoin="StopPoint.atco_code == JourneyLink.stop_start",
+        backref="following_stops"
+    )
+    services = db.relationship(
+        "Service",
+        secondary="join(JourneyLink, JourneySection, "
+                  "JourneySection.id == JourneyLink.section_ref)"
+                  ".join(JourneySections, "
+                  "JourneySections.section_ref == JourneySection.id)"
+                  ".join(JourneyPattern, "
+                  "JourneyPattern.id == JourneySections.pattern_ref)",
+        primaryjoin="or_(JourneyLink.stop_start == StopPoint.atco_code, "
+                    "JourneyLink.stop_end == StopPoint.atco_code)",
+        secondaryjoin="Service.code == JourneyPattern.service_ref"
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -390,9 +419,9 @@ class Operator(utils.BaseModel):
 
     code = db.Column(db.Text, primary_key=True)
 
-    # local_codes = db.relationship("LocalOperator",
-    #                               order_by="LocalOperator.code",
-    #                               backref="operator")
+    local_codes = db.relationship("LocalOperator",
+                                  order_by="LocalOperator.code",
+                                  backref="operator")
 
 
 class LocalOperator(utils.BaseModel):
@@ -411,6 +440,8 @@ class LocalOperator(utils.BaseModel):
         nullable=False
     )
     name = db.Column(db.Text, nullable=True)
+
+    services = db.relationship("Service", backref="local_operator")
 
 
 class Service(utils.BaseModel):
@@ -437,9 +468,11 @@ class Service(utils.BaseModel):
     # add classification and availability?
     modified = db.deferred(db.Column(db.DateTime))
 
-    # operator = db.relationship("Operator", secondary="LocalOperator",
-    #                            uselist=False)
-    # lines = db.relationship("ServiceLine", backref="service", order_by="name")
+    operator = db.relationship("Operator", secondary="local_operator",
+                               uselist=False)
+    lines = db.relationship("ServiceLine", backref="service",
+                            order_by="ServiceLine.name")
+    patterns = db.relationship("JourneyPattern", backref="service")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -464,6 +497,8 @@ class ServiceLine(utils.BaseModel):
         index=True
     )
 
+    journeys = db.relationship("Journey", backref="line")
+
 
 # Add JourneyPatternInterchange?
 
@@ -486,18 +521,18 @@ class JourneyPattern(utils.BaseModel):
     )
     modified = db.deferred(db.Column(db.DateTime))
 
-    # sections = db.relationship("JourneySection", secondary="JourneySections",
-    #                            back_populates="patterns",
-    #                            order_by="JourneySections.sequence")
-    # links = db.relationship(
-    #     "JourneyLink",
-    #     primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
-    #     secondary="join(JourneySections, JourneySection, "
-    #               "JourneySections.section_ref == JourneySection.id",
-    #     secondaryjoin="JourneySection.id == JourneyLink.section_ref",
-    #     back_populates="patterns",
-    #     order_by="JourneySections.sequence, sequence"
-    # )
+    sections = db.relationship("JourneySection", secondary="journey_sections",
+                               backref="patterns",
+                               order_by="JourneySections.sequence")
+    links = db.relationship(
+        "JourneyLink",
+        primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
+        secondary="join(JourneySections, JourneySection, "
+                  "JourneySections.section_ref == JourneySection.id)",
+        secondaryjoin="JourneySection.id == JourneyLink.section_ref",
+        backref="patterns",
+        order_by="JourneySections.sequence, JourneyLink.sequence"
+    )
 
 
 class JourneySections(utils.BaseModel):
@@ -528,11 +563,8 @@ class JourneySection(utils.BaseModel):
     __tablename__ = "journey_section"
 
     id = db.Column(db.Text, primary_key=True)
-
-    # sections = db.relationship("JourneyPattern", secondary="JourneySections",
-    #                            back_populates="sections")
-    # links = db.relationship("JourneyLink", backref="section",
-    #                         order_by="JourneyLink.sequence")
+    links = db.relationship("JourneyLink", backref="section",
+                            order_by="JourneyLink.sequence")
 
 
 class JourneyLink(utils.BaseModel):
@@ -585,15 +617,6 @@ class JourneyLink(utils.BaseModel):
     )
     sequence = db.Column(db.Integer, index=True)
 
-    # patterns = db.relationship(
-    #     "JourneyPattern",
-    #     primaryjoin="JourneySection.id == JourneyLink.section_ref",
-    #     secondary="join(JourneySection, JourneySections, "
-    #               "JourneySection.id == JourneySections.section_ref",
-    #     secondaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
-    #     back_populates="links"
-    # )
-
     __table_args__ = (
         db.UniqueConstraint("section_ref", "sequence"),
     )
@@ -629,15 +652,11 @@ class Journey(utils.BaseModel):
                      nullable=False)
     weeks = db.Column(db.Integer, db.CheckConstraint("weeks < 32"))
 
-    # organisations = db.relationship("Organisation", secondary="Organisations",
-    #                                 back_populates="journeys")
-    # holidays = db.relationship("Holiday", secondary="Holidays",
-    #                            back_populates="journeys")
-    # holiday_dates = db.relationship(
-    #     "BankHolidayDate", secondary="BankHolidays",
-    #     secondaryjoin="BankHolidays.name == BankHolidayDate.name"
-    # )
-    # special_days = db.relationship("SpecialDay", backref="journey")
+    holiday_dates = db.relationship(
+        "BankHolidayDate", secondary="bank_holidays",
+        secondaryjoin="BankHolidays.name == BankHolidayDate.name"
+    )
+    special_days = db.relationship("SpecialPeriod", backref="journey")
 
 
 class Organisation(utils.BaseModel):
@@ -646,10 +665,10 @@ class Organisation(utils.BaseModel):
 
     code = db.Column(db.Text, primary_key=True)
 
-    # periods = db.relationship("OperatingPeriod", backref="organisation")
-    # excluded = db.relationship("OperatingDate", backref="organisation")
-    # journeys = db.relationship("Journey", secondary="Organisations",
-    #                            back_populates="organisations")
+    periods = db.relationship("OperatingPeriod", backref="organisation")
+    excluded = db.relationship("OperatingDate", backref="organisation")
+    journeys = db.relationship("Journey", secondary="organisations",
+                               backref="organisations")
 
 
 class Organisations(utils.BaseModel):

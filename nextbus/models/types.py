@@ -42,7 +42,7 @@ class BankHoliday(Enum):
     EASTER_MONDAY = "EasterMonday"
     MAY_DAY = "MayDay"
     SPRING_BANK = "SpringBank"
-    LATE_SUMMER = "LateSummerHolidayNotScotland"
+    LATE_SUMMER = "LateSummerBankHolidayNotScotland"
     AUGUST_BANK = "AugustBankHolidayScotland"
     CHRISTMAS_DAY = "ChristmasDay"
     BOXING_DAY = "BoxingDay"

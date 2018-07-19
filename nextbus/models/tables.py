@@ -460,7 +460,8 @@ class ServiceLine(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
 
 
@@ -475,7 +476,8 @@ class JourneyPattern(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
     direction = db.Column(
         db.Enum(types.Direction, name="direction",
@@ -505,14 +507,16 @@ class JourneySections(utils.BaseModel):
     pattern_ref = db.Column(
         db.Text,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
+        index=True
     )
     section_ref = db.Column(
         db.Text,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True,
+        index=True
     )
-    sequence = db.Column(db.Integer, nullable=False)
+    sequence = db.Column(db.Integer, nullable=False, index=True)
 
     __table_args__ = (
         db.UniqueConstraint("pattern_ref", "sequence"),
@@ -539,14 +543,16 @@ class JourneyLink(utils.BaseModel):
     section_ref = db.Column(
         db.Text,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
     stop_start = db.Column(
         db.VARCHAR(12),
         db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
-        nullable=False
+        nullable=True,
+        index=True
     )
-    wait_start = db.Column(db.Integer, nullable=False)
+    wait_start = db.Column(db.Interval, nullable=False)
     timing_start = db.Column(
         db.Enum(types.StopTiming, name="stop_timing",
                 values_callable=types.enum_values),
@@ -556,16 +562,17 @@ class JourneyLink(utils.BaseModel):
     stop_end = db.Column(
         db.VARCHAR(12),
         db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
-        nullable=False
+        nullable=True,
+        index=True
     )
-    wait_end = db.Column(db.Integer, nullable=False)
+    wait_end = db.Column(db.Interval, nullable=False)
     timing_end = db.Column(
         db.Enum(types.StopTiming, name="stop_timing",
                 values_callable=types.enum_values),
         nullable=False
     )
     stopping_end = db.Column(db.Boolean, nullable=False)
-    run_time = db.Column(db.Integer, nullable=False)
+    run_time = db.Column(db.Interval, nullable=False)
     direction = db.Column(
         db.Enum(types.Direction, name="direction",
                 values_callable=types.enum_values)
@@ -576,7 +583,7 @@ class JourneyLink(utils.BaseModel):
                 values_callable=types.enum_values),
         nullable=False
     )
-    sequence = db.Column(db.Integer)
+    sequence = db.Column(db.Integer, index=True)
 
     # patterns = db.relationship(
     #     "JourneyPattern",
@@ -600,17 +607,20 @@ class Journey(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
     line_ref = db.Column(
         db.Text,
         db.ForeignKey("service_line.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
     pattern_ref = db.Column(
         db.Text,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True
     )
     departure = db.Column(db.Time, nullable=False)
     # Add frequency?
@@ -666,7 +676,7 @@ class OperatingDate(utils.BaseModel):
     """
     __tablename__ = "operating_date"
 
-    id = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
@@ -680,7 +690,7 @@ class OperatingPeriod(utils.BaseModel):
     """ List of operating periods. """
     __tablename__ = "operating_period"
 
-    id = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),

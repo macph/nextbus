@@ -388,7 +388,7 @@
             <holiday>AugustBankHolidayScotland</holiday>
           </xsl:if>
           <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerHolidayNotScotland</holiday>
+            <holiday>LateSummerBankHolidayNotScotland</holiday>
           </xsl:if>
           <holiday>ChristmasDay</holiday>
           <holiday>BoxingDay</holiday>
@@ -413,7 +413,7 @@
             <holiday>AugustBankHolidayScotland</holiday>
           </xsl:if>
           <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerHolidayNotScotland</holiday>
+            <holiday>LateSummerBankHolidayNotScotland</holiday>
           </xsl:if>
         </xsl:when>
         <xsl:when test="boolean($holiday = 'HolidayMondays')">
@@ -424,7 +424,7 @@
             <holiday>AugustBankHolidayScotland</holiday>
           </xsl:if>
           <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerHolidayNotScotland</holiday>
+            <holiday>LateSummerBankHolidayNotScotland</holiday>
           </xsl:if>
         </xsl:when>
         <xsl:when test="boolean($holiday = 'Christmas')">

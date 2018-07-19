@@ -48,6 +48,24 @@ def download_tnds_files():
     return paths
 
 
+def _parse_journey_links():
+    """ Checks starting and stopping points, removing references if they do
+        not exist (eg are inactive or do not have valid NaPTAN codes).
+    """
+    query_stops = db.session.query(models.StopPoint.atco_code)
+    set_stops = set(c.atco_code for c in query_stops.all())
+
+    def parse_journey_links(obj):
+        if obj["stop_start"] not in set_stops:
+            obj["stop_start"] = None
+        if obj["stop_end"] not in set_stops:
+            obj["stop_end"] = None
+
+        return obj
+
+    return parse_journey_links
+
+
 def _get_tnds_transform():
     """ Uses XSLT to convert TNDS XML data into several separate datasets. """
     tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))
@@ -60,6 +78,7 @@ def _commit_each_tnds(transform, archive, region):
     """ Transforms each XML file and commit data to DB. """
     str_region = et.XSLT.strparam(region)
     tnds = utils.DBEntries(log_each=False)
+    parse_journey_links = _parse_journey_links()
     for file_ in file_ops.iter_archive(archive):
         utils.logger.info("Parsing file %r for region %r" %
                           (file_.name, region))
@@ -80,7 +99,8 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("JourneyPatternGroup/JourneyPattern", models.JourneyPattern)
         tnds.add("JourneySectionGroup/JourneySection", models.JourneySection)
         tnds.add("JourneySectionsGroup/JourneySections", models.JourneySections)
-        tnds.add("JourneyLinkGroup/JourneyLink", models.JourneyLink)
+        tnds.add("JourneyLinkGroup/JourneyLink", models.JourneyLink,
+                 func=parse_journey_links)
         tnds.add("JourneyGroup/Journey", models.Journey)
         tnds.add("OrganisationGroup/Organisation", models.Organisation,
                  indices=("code",))

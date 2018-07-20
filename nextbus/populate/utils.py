@@ -274,7 +274,7 @@ class DBEntries(object):
 
             new_entries.append(data)
 
-    def _check_duplicates(self):
+    def _check_duplicates(self, warn=False):
         """ Does a Python-side check of duplicates before executing INSERT
             statements.
 
@@ -284,6 +284,9 @@ class DBEntries(object):
 
             INSERT ON CONFLICT DO UPDATE statements work better with single
             tuples of values, but we are using multi-valued inserts here.
+
+            :param warn: Logs a warning for conflicting entries that are not
+            equal, with extra entries discarded. If False, an error is raised.
         """
         for model in self.conflicts:
             removed = 0
@@ -301,11 +304,19 @@ class DBEntries(object):
                 elif current is not None and current > found[i]["modified"]:
                     found[i] = entry
                 elif current is None and entry != found[i]:
-                    # Not comparing on last modified datesbut values do not
-                    # match - no way to tell which to pick. Raise error
-                    raise ValueError("Entries %r and %r do not match. Without "
-                                     "last modified dates they cannot be "
-                                     "picked." % (entry, found[i]))
+                    if warn:
+                        logger.warn(
+                            "Entries %r and %r for model %s do not match" %
+                            (entry, found[i], model.__name__)
+                        )
+                    else:
+                        # Not comparing on last modified dates but values do
+                        # not match - no way to tell which to pick. Raise error
+                        raise ValueError(
+                            "Entries %r and %r do not match. Without last "
+                            "modified dates they cannot be picked." %
+                            (entry, found[i])
+                        )
                 else:
                     removed += 1
             if removed > 0:
@@ -313,16 +324,17 @@ class DBEntries(object):
                             (removed, model.__name__))
             self.entries[model] = list(found.values())
 
-    def commit(self):
+    def commit(self, delete=False):
         """ Commits all entries to database. """
         if not self.entries:
             raise ValueError("No data have been added yet.")
-        self._check_duplicates()
+        self._check_duplicates(warn=True)
         with database_session():
             for model, data in self.entries.items():
-                # Delete existing rows
-                logger.info("Deleting old %s objects" % model.__name__)
-                db.session.execute(model.__table__.delete())
+                if delete:
+                    # Delete existing rows
+                    logger.info("Deleting old %s objects" % model.__name__)
+                    db.session.execute(model.__table__.delete())
                 # Add new rows
                 logger.info("Inserting %d %s objects into database" %
                             (len(data), model.__name__))

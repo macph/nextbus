@@ -432,7 +432,7 @@ def commit_naptan_data(archive=None, list_files=None):
         naptan.add("StopPoints/StopPoint", models.StopPoint,
                    eval_stops.parse_points, indices=("naptan_code",))
     # Commit changes to database
-    naptan.commit()
+    naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas
     _remove_stop_areas()
     _set_stop_area_locality()

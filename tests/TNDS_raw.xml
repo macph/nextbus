@@ -348,7 +348,7 @@
     </Route>
   </Routes>
   <JourneyPatternSections>
-    <JourneyPatternSection id="JPS_YSCO120-73">
+    <JourneyPatternSection id="JPS-73">
       <JourneyPatternTimingLink id="JPS_YSCO120-73_80826">
         <From>
           <StopPointRef>370021129</StopPointRef>
@@ -817,9 +817,9 @@
       <StandardService>
         <Origin>Halfway</Origin>
         <Destination>Fulwood</Destination>
-        <JourneyPattern id="JPS_YSCO120-73">
+        <JourneyPattern id="JPS-73">
           <Direction>inbound</Direction>
-          <JourneyPatternSectionRefs>JPS_YSCO120-73</JourneyPatternSectionRefs>
+          <JourneyPatternSectionRefs>JPS-73</JourneyPatternSectionRefs>
           <OperatingProfile>
             <RegularDayType>
               <DaysOfWeek>
@@ -854,7 +854,7 @@
       <VehicleJourneyCode>72099</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <JourneyPatternRef>JPS-73</JourneyPatternRef>
       <DepartureTime>14:19:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>
@@ -877,7 +877,7 @@
       <VehicleJourneyCode>72100</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <JourneyPatternRef>JPS-73</JourneyPatternRef>
       <DepartureTime>16:19:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>
@@ -917,7 +917,7 @@
       <VehicleJourneyCode>72101</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <JourneyPatternRef>JPS-73</JourneyPatternRef>
       <DepartureTime>18:19:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>
@@ -958,7 +958,7 @@
       <VehicleJourneyCode>72102</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-73</JourneyPatternRef>
+      <JourneyPatternRef>JPS-73</JourneyPatternRef>
       <DepartureTime>18:19:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>
@@ -997,7 +997,7 @@
             <BoxingDay />
             <GoodFriday />
             <NewYearsDay />
-            <LateSummerHolidayNotScotland />
+            <LateSummerBankHolidayNotScotland />
             <MayDay />
             <EasterMonday />
             <SpringBank />

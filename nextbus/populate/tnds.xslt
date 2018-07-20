@@ -4,14 +4,13 @@
                xmlns:txc="http://www.transxchange.org.uk/"
                xmlns:func="http://nextbus.org/functions" 
                xmlns:exsl="http://exslt.org/common"
-               xmlns:re="http://exslt.org/regular-expressions"
                exclude-result-prefixes="xsl func exsl re txc">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="region"/>
   <xsl:param name="modified" select="txc:TransXChange/@ModificationDateTime"/>
 
   <xsl:param name="operators" select="txc:TransXChange/txc:Operators/txc:Operator"/>
-  <xsl:param name="services" select="txc:TransXChange/txc:Services/txc:Service[txc:StandardService]"/>
+  <xsl:param name="services" select="txc:TransXChange/txc:Services/txc:Service[txc:StandardService][txc:Mode[.='underground' or .='metro' or .='bus' or .='tram']]"/>
   <xsl:param name="lines" select="$services/txc:Lines/txc:Line"/>
   <xsl:param name="patterns" select="$services/txc:StandardService/txc:JourneyPattern"/>
   <xsl:param name="pattern_sections" select="$patterns/txc:JourneyPatternSectionRefs"/>
@@ -22,83 +21,87 @@
 
   <xsl:param name="vehicle_journeys" select="txc:TransXChange/txc:VehicleJourneys/txc:VehicleJourney"/>
 
+  <xsl:key name="key_operators" match="txc:TransXChange/txc:Operators/txc:Operator" use="@id"/>
   <xsl:key name="key_route_links" match="txc:TransXChange/txc:RouteSections/txc:RouteSection/txc:RouteLink" use="@id"/>
   <xsl:key name="key_services" match="txc:TransXChange/txc:Services/txc:Service[txc:StandardService]" use="txc:ServiceCode"/>
   <xsl:key name="key_patterns" match="txc:TransXChange/txc:Services/txc:Service/txc:StandardService/txc:JourneyPattern" use="@id"/>
+  <xsl:key name="key_pattern_sections" match="txc:TransXChange/txc:Services/txc:Service/txc:StandardService/txc:JourneyPattern/txc:JourneyPatternSectionRefs" use="."/>
 
   <xsl:template match="txc:TransXChange">
     <Data>
-      <OperatorGroup>
-        <xsl:apply-templates select="$operators" mode="national"/>
-      </OperatorGroup>
-      <LocalOperatorGroup>
-        <xsl:apply-templates select="$operators" mode="local"/>
-      </LocalOperatorGroup>
-      <ServiceGroup>
-        <xsl:apply-templates select="$services"/>
-      </ServiceGroup>
-      <ServiceLineGroup>
-        <xsl:apply-templates select="$lines"/>
-      </ServiceLineGroup>
-      <JourneyPatternGroup>
-        <xsl:apply-templates select="$patterns"/>
-      </JourneyPatternGroup>
-      <JourneySectionsGroup>
-        <xsl:apply-templates select="$pattern_sections"/>
-      </JourneySectionsGroup>
-      <JourneySectionGroup>
-        <xsl:apply-templates select="$sections"/>
-      </JourneySectionGroup>
-      <JourneyLinkGroup>
-        <xsl:apply-templates select="$journey_links"/>
-      </JourneyLinkGroup>
-      <JourneyGroup>
-        <xsl:apply-templates select="$vehicle_journeys"/>
-      </JourneyGroup>
-      <OrganisationGroup>
-        <xsl:apply-templates select="$organisations"/>
-      </OrganisationGroup>
-      <OperatingDateGroup>
-        <xsl:apply-templates select="$organisations" mode="excluded_days"/>
-      </OperatingDateGroup>
-      <OperatingPeriodGroup>
-        <xsl:apply-templates select="$organisations" mode="operating_periods"/>
-      </OperatingPeriodGroup>
-      <OrganisationsGroup>
-        <xsl:apply-templates select="$vehicle_journeys" mode="organisations_served"/>
-      </OrganisationsGroup>
-      <SpecialPeriodGroup>
-        <xsl:apply-templates select="$vehicle_journeys" mode="special_periods"/>
-      </SpecialPeriodGroup>
-      <BankHolidaysGroup>
-        <xsl:apply-templates select="$vehicle_journeys" mode="bank_holidays"/>
-      </BankHolidaysGroup>
+      <xsl:if test="boolean($services)">
+        <OperatorGroup>
+          <xsl:apply-templates select="$operators" mode="national"/>
+        </OperatorGroup>
+        <LocalOperatorGroup>
+          <xsl:apply-templates select="$operators" mode="local"/>
+        </LocalOperatorGroup>
+        <ServiceGroup>
+          <xsl:apply-templates select="$services"/>
+        </ServiceGroup>
+        <ServiceLineGroup>
+          <xsl:apply-templates select="$lines"/>
+        </ServiceLineGroup>
+        <JourneyPatternGroup>
+          <xsl:apply-templates select="$patterns"/>
+        </JourneyPatternGroup>
+        <JourneySectionsGroup>
+          <xsl:apply-templates select="$pattern_sections"/>
+        </JourneySectionsGroup>
+        <JourneySectionGroup>
+          <xsl:apply-templates select="$sections"/>
+        </JourneySectionGroup>
+        <JourneyLinkGroup>
+          <xsl:apply-templates select="$journey_links"/>
+        </JourneyLinkGroup>
+        <JourneyGroup>
+          <xsl:apply-templates select="$vehicle_journeys"/>
+        </JourneyGroup>
+        <OrganisationGroup>
+          <xsl:apply-templates select="$organisations"/>
+        </OrganisationGroup>
+        <OperatingDateGroup>
+          <xsl:apply-templates select="$organisations" mode="excluded_days"/>
+        </OperatingDateGroup>
+        <OperatingPeriodGroup>
+          <xsl:apply-templates select="$organisations" mode="operating_periods"/>
+        </OperatingPeriodGroup>
+        <OrganisationsGroup>
+          <xsl:apply-templates select="$vehicle_journeys" mode="organisations_served"/>
+        </OrganisationsGroup>
+        <SpecialPeriodGroup>
+          <xsl:apply-templates select="$vehicle_journeys" mode="special_periods"/>
+        </SpecialPeriodGroup>
+        <BankHolidaysGroup>
+          <xsl:apply-templates select="$vehicle_journeys" mode="bank_holidays"/>
+        </BankHolidaysGroup>
+      </xsl:if>
     </Data>
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="national">
     <Operator>
-      <code><xsl:value-of select="func:upper(txc:NationalOperatorCode)"/></code>
+      <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
     </Operator>
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="local">
     <LocalOperator>
-      <operator_ref><xsl:value-of select="func:upper(txc:NationalOperatorCode)"/></operator_ref>
+      <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
-      <code><xsl:value-of select="func:upper(txc:OperatorCode)"/></code>
+      <code><xsl:value-of select="txc:OperatorCode"/></code>
       <name><xsl:value-of select="txc:OperatorShortName"/></name>
     </LocalOperator>
   </xsl:template>
 
   <xsl:template match="txc:Service">
     <Service>
-      <code><xsl:value-of select="func:upper(txc:ServiceCode)"/></code>
+      <code><xsl:value-of select="txc:ServiceCode"/></code>
       <origin><xsl:value-of select="txc:StandardService/txc:Origin"/></origin>
       <destination><xsl:value-of select="txc:StandardService/txc:Destination"/></destination>
       <date_start><xsl:value-of select="txc:OperatingPeriod/txc:StartDate"/></date_start>
       <date_end><xsl:value-of select="txc:OperatingPeriod/txc:EndDate"/></date_end>
-      <local_operator_ref><xsl:value-of select="txc:RegisteredOperatorRef"/></local_operator_ref>
+      <local_operator_ref><xsl:value-of select="key('key_operators', txc:RegisteredOperatorRef)/txc:OperatorCode"/></local_operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
       <mode>
         <xsl:choose>
@@ -131,7 +134,12 @@
 
   <xsl:template match="txc:JourneyPattern">
     <JourneyPattern>
-      <id><xsl:value-of select="@id"/></id>
+      <id>
+        <xsl:choose>
+          <xsl:when test="contains(@id, ancestor::txc:Service/txc:ServiceCode)"><xsl:value-of select="@id"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(ancestor::txc:Service/txc:ServiceCode, '-', @id)"/></xsl:otherwise>
+        </xsl:choose>
+      </id>
       <service_ref><xsl:value-of select="ancestor::txc:Service/txc:ServiceCode"/></service_ref>
       <direction><xsl:value-of select="txc:Direction"/></direction>
       <modified py_type="datetime"><xsl:if test="@ModificationDateTime"><xsl:value-of select="@ModificationDateTime"/></xsl:if></modified>
@@ -140,21 +148,45 @@
 
   <xsl:template match="txc:JourneyPatternSection">
     <JourneySection>
-      <id><xsl:value-of select="@id"/></id>
+      <id>
+        <xsl:choose>
+          <xsl:when test="contains(@id, key('key_pattern_sections', @id)/ancestor::txc:Service/txc:ServiceCode)"><xsl:value-of select="@id"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(key('key_pattern_sections', @id)/ancestor::txc:Service/txc:ServiceCode, '-', @id)"/></xsl:otherwise>
+        </xsl:choose>
+      </id>
     </JourneySection>
   </xsl:template>
 
   <xsl:template match="txc:JourneyPatternSectionRefs">
     <JourneySections>
-      <pattern_ref><xsl:value-of select="ancestor::txc:JourneyPattern/@id"/></pattern_ref>
-      <section_ref><xsl:value-of select="current()"/></section_ref>
+      <xsl:variable name="jp_id" select="ancestor::txc:JourneyPattern/@id"/>
+      <pattern_ref>
+        <xsl:choose>
+          <xsl:when test="contains($jp_id, ancestor::txc:Service/txc:ServiceCode)"><xsl:value-of select="$jp_id"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(ancestor::txc:Service/txc:ServiceCode, '-', $jp_id)"/></xsl:otherwise>
+        </xsl:choose>
+      </pattern_ref>
+      <section_ref>
+        <xsl:choose>
+          <xsl:when test="contains(current(), ancestor::txc:Service/txc:ServiceCode)"><xsl:value-of select="current()"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(ancestor::txc:Service/txc:ServiceCode, '-', current())"/></xsl:otherwise>
+        </xsl:choose>
+      </section_ref>
       <sequence><xsl:value-of select="count(preceding-sibling::txc:JourneyPatternSectionRefs)"/></sequence>
     </JourneySections>
   </xsl:template>
 
   <xsl:template match="txc:JourneyPatternTimingLink">
+    <xsl:variable name="jp_id" select="ancestor::txc:JourneyPatternSection/@id"/>
+    <xsl:variable name="jp_ref" select="key('key_pattern_sections', $jp_id)"/>
+    <xsl:variable name="s_ref" select="$jp_ref/ancestor::txc:Service/txc:ServiceCode"/>
     <JourneyLink>
-      <section_ref><xsl:value-of select="ancestor::txc:JourneyPatternSection/@id"/></section_ref>
+      <section_ref>
+        <xsl:choose>
+          <xsl:when test="contains($jp_id, $s_ref)"><xsl:value-of select="$jp_id"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($s_ref, '-', $jp_id)"/></xsl:otherwise>
+        </xsl:choose>
+      </section_ref>
       <stop_start><xsl:value-of select="txc:From/txc:StopPointRef"/></stop_start>
       <wait_start py_type="duration">
         <xsl:choose>
@@ -191,7 +223,8 @@
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney">
-    <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
+    <xsl:variable name="jp" select="key('key_patterns', txc:JourneyPatternRef)"/>
+    <xsl:variable name="jp_op" select="$jp/txc:OperatingProfile"/>
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <Journey>
       <code><xsl:value-of select="concat($region, txc:VehicleJourneyCode)"/></code>
@@ -202,7 +235,12 @@
           <xsl:otherwise><xsl:value-of select="concat(txc:ServiceRef, '-', txc:LineRef)"/></xsl:otherwise>
         </xsl:choose>
       </line_ref>
-      <pattern_ref><xsl:value-of select="txc:JourneyPatternRef"/></pattern_ref>
+      <pattern_ref>
+        <xsl:choose>
+          <xsl:when test="contains(txc:JourneyPatternRef, $jp/ancestor::txc:Service/txc:ServiceCode)"><xsl:value-of select="txc:JourneyPatternRef"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($jp/ancestor::txc:Service/txc:ServiceCode, '-', txc:JourneyPatternRef)"/></xsl:otherwise>
+        </xsl:choose>
+      </pattern_ref>
       <departure><xsl:value-of select="txc:DepartureTime"/></departure>
       <xsl:choose>
         <xsl:when test="txc:OperatingProfile">

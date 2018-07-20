@@ -136,7 +136,7 @@ def commit_nptg_data(archive=None, list_files=None):
         nptg.add("Localities/Locality", models.Locality)
 
     # Commit changes to database
-    nptg.commit()
+    nptg.commit(delete=True)
     # Remove all orphaned districts
     _remove_districts()
 

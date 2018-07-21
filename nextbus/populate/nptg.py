@@ -130,10 +130,10 @@ def commit_nptg_data(archive=None, list_files=None):
     for file_ in iter_files:
         new_data = _get_nptg_data(file_, atco_codes)
         nptg.set_data(new_data)
-        nptg.add("Regions/Region", models.Region)
-        nptg.add("AdminAreas/AdminArea", models.AdminArea)
-        nptg.add("Districts/District", models.District)
-        nptg.add("Localities/Locality", models.Locality)
+        nptg.add("Region", models.Region)
+        nptg.add("AdminArea", models.AdminArea)
+        nptg.add("District", models.District)
+        nptg.add("Locality", models.Locality)
 
     # Commit changes to database
     nptg.commit(delete=True)

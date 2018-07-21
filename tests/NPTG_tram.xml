@@ -1,21 +1,15 @@
 <?xml version="1.0"?>
 <Data xmlns:n="http://www.naptan.org.uk/">
-  <Regions>
-    <Region>
-      <code>GB</code>
-      <name>Great Britain</name>
-      <modified py_type="datetime">2008-02-07T16:03:46</modified>
-    </Region>
-  </Regions>
-  <AdminAreas>
-    <AdminArea>
-      <code>147</code>
-      <region_ref>GB</region_ref>
-      <atco_code>940</atco_code>
-      <name>National - National Tram</name>
-      <modified py_type="datetime">2008-02-08T14:41:15</modified>
-    </AdminArea>
-  </AdminAreas>
-  <Districts/>
-  <Localities/>
+  <Region>
+    <code>GB</code>
+    <name>Great Britain</name>
+    <modified py_type="datetime">2008-02-07T16:03:46</modified>
+  </Region>
+  <AdminArea>
+    <code>147</code>
+    <region_ref>GB</region_ref>
+    <atco_code>940</atco_code>
+    <name>National - National Tram</name>
+    <modified py_type="datetime">2008-02-08T14:41:15</modified>
+  </AdminArea>
 </Data>

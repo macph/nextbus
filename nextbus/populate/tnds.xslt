@@ -227,7 +227,12 @@
     <xsl:variable name="jp_op" select="$jp/txc:OperatingProfile"/>
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <Journey>
-      <code><xsl:value-of select="concat($region, txc:VehicleJourneyCode)"/></code>
+      <code>
+        <xsl:choose>
+          <xsl:when test="contains(txc:VehicleJourneyCode, txc:ServiceRef)"><xsl:value-of select="txc:VehicleJourneyCode"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(txc:ServiceRef, '-', txc:VehicleJourneyCode)"/></xsl:otherwise>
+        </xsl:choose>
+      </code>
       <service_ref><xsl:value-of select="txc:ServiceRef"/></service_ref>
       <line_ref>
         <xsl:choose>
@@ -284,16 +289,17 @@
     </xsl:for-each>
   </xsl:template>
 
-  <xsl:template name="operating_periods">
-    <xsl:param name="working"/>
-  </xsl:template>
-
   <xsl:template match="txc:ServicedOrganisation" mode="operating_periods">
     <xsl:for-each select=".//txc:DateRange">
       <OperatingPeriod>
         <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
         <date_start><xsl:value-of select="txc:StartDate"/></date_start>
-        <date_end><xsl:value-of select="txc:EndDate"/></date_end>
+        <date_end>
+          <xsl:choose>
+            <xsl:when test="boolean(txc:EndDate)"><xsl:value-of select="txc:EndDate"/></xsl:when>
+            <xsl:otherwise><xsl:value-of select="txc:StartDate"/></xsl:otherwise>
+          </xsl:choose>
+        </date_end>
         <working py_type="bool">
           <xsl:choose>
             <xsl:when test="ancestor::txc:WorkingDays">1</xsl:when>
@@ -307,9 +313,15 @@
   <xsl:template name="organisation_days">
     <xsl:param name="operational"/>
     <xsl:param name="working"/>
+    <xsl:variable name="vj" select="ancestor::txc:VehicleJourney"/>
     <Organisations>
       <org_ref><xsl:value-of select="concat($region, current())"/></org_ref>
-      <journey_ref><xsl:value-of select="concat($region, ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
+      <journey_ref>
+        <xsl:choose>
+          <xsl:when test="contains($vj/txc:VehicleJourneyCode, $vj/txc:ServiceRef)"><xsl:value-of select="$vj/txc:VehicleJourneyCode"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($vj/txc:ServiceRef, '-', $vj/txc:VehicleJourneyCode)"/></xsl:otherwise>
+        </xsl:choose>
+      </journey_ref>
       <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
       <working py_type="bool"><xsl:value-of select="$working"/></working>
     </Organisations>
@@ -382,7 +394,12 @@
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="special_periods">
-    <xsl:variable name="code" select="concat($region, txc:VehicleJourneyCode)"/>
+    <xsl:variable name="code">
+      <xsl:choose>
+        <xsl:when test="contains(txc:VehicleJourneyCode, txc:ServiceRef)"><xsl:value-of select="txc:VehicleJourneyCode"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat(txc:ServiceRef, '-', txc:VehicleJourneyCode)"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <xsl:choose>
@@ -510,7 +527,12 @@
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="bank_holidays">
-    <xsl:variable name="code" select="concat($region, txc:VehicleJourneyCode)"/>
+    <xsl:variable name="code">
+      <xsl:choose>
+        <xsl:when test="contains(txc:VehicleJourneyCode, txc:ServiceRef)"><xsl:value-of select="txc:VehicleJourneyCode"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat(txc:ServiceRef, '-', txc:VehicleJourneyCode)"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <xsl:choose>

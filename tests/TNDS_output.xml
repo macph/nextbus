@@ -566,7 +566,7 @@
   </JourneyLinkGroup>
   <JourneyGroup>
     <Journey>
-      <code>Y72099</code>
+      <code>YSCO120-72099</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>YSCO120-JPS-73</pattern_ref>
@@ -575,7 +575,7 @@
       <weeks/>
     </Journey>
     <Journey>
-      <code>Y72100</code>
+      <code>YSCO120-72100</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>YSCO120-JPS-73</pattern_ref>
@@ -584,7 +584,7 @@
       <weeks>5</weeks>
     </Journey>
     <Journey>
-      <code>Y72101</code>
+      <code>YSCO120-72101</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>YSCO120-JPS-73</pattern_ref>
@@ -593,7 +593,7 @@
       <weeks/>
     </Journey>
     <Journey>
-      <code>Y72102</code>
+      <code>YSCO120-72102</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>YSCO120-JPS-73</pattern_ref>
@@ -602,7 +602,7 @@
       <weeks/>
     </Journey>
     <Journey>
-      <code>Y72118</code>
+      <code>YSCO120-72118</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>JPS_YSCO120-77</pattern_ref>
@@ -611,7 +611,7 @@
       <weeks/>
     </Journey>
     <Journey>
-      <code>Y72119</code>
+      <code>YSCO120-72119</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>JPS_YSCO120-77</pattern_ref>
@@ -620,7 +620,7 @@
       <weeks/>
     </Journey>
     <Journey>
-      <code>Y72287</code>
+      <code>YSCO120-72287</code>
       <service_ref>YSCO120</service_ref>
       <line_ref>YSCO120-0</line_ref>
       <pattern_ref>JPS_YSCO120-77</pattern_ref>
@@ -686,56 +686,56 @@
   <OrganisationsGroup>
     <Organisations>
       <org_ref>Y1</org_ref>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">1</operational>
       <working py_type="bool">1</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
       <working py_type="bool">0</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
       <working py_type="bool">0</working>
     </Organisations>
     <Organisations>
       <org_ref>Y1</org_ref>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">0</operational>
       <working py_type="bool">1</working>
     </Organisations>
   </OrganisationsGroup>
   <SpecialPeriodGroup>
     <SpecialPeriod>
-      <journey_ref>Y72099</journey_ref>
+      <journey_ref>YSCO120-72099</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
       <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
       <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
       <operational py_type="bool">1</operational>
     </SpecialPeriod>
     <SpecialPeriod>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
       <operational py_type="bool">0</operational>
     </SpecialPeriod>
     <SpecialPeriod>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <date_start>2018-04-03</date_start>
       <date_end>2018-04-03</date_end>
       <operational py_type="bool">1</operational>
@@ -744,192 +744,192 @@
   <BankHolidaysGroup>
     <BankHolidays>
       <name>NewYearsDay</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerBankHolidayNotScotland</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDayHoliday</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDayHoliday</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDayHoliday</name>
-      <journey_ref>Y72101</journey_ref>
+      <journey_ref>YSCO120-72101</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDay</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerBankHolidayNotScotland</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDayHoliday</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDayHoliday</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDayHoliday</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasEve</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsEve</name>
-      <journey_ref>Y72102</journey_ref>
+      <journey_ref>YSCO120-72102</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>GoodFriday</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>NewYearsDay</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerBankHolidayNotScotland</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
-      <journey_ref>Y72119</journey_ref>
+      <journey_ref>YSCO120-72119</journey_ref>
       <operational py_type="bool">0</operational>
     </BankHolidays>
     <BankHolidays>
       <name>EasterMonday</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>MayDay</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>SpringBank</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>LateSummerBankHolidayNotScotland</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>ChristmasDay</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
     <BankHolidays>
       <name>BoxingDay</name>
-      <journey_ref>Y72287</journey_ref>
+      <journey_ref>YSCO120-72287</journey_ref>
       <operational py_type="bool">1</operational>
     </BankHolidays>
   </BankHolidaysGroup>

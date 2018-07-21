@@ -13,18 +13,10 @@
 
   <xsl:template match="n:NationalPublicTransportGazetteer">
     <Data>
-      <Regions>
-        <xsl:apply-templates select="$regions"/>
-      </Regions>
-      <AdminAreas>
-        <xsl:apply-templates select="$areas"/>
-      </AdminAreas>
-      <Districts>
-        <xsl:apply-templates select="$districts"/>
-      </Districts>
-      <Localities>
-        <xsl:apply-templates select="$localities"/>
-      </Localities>
+      <xsl:apply-templates select="$regions"/>
+      <xsl:apply-templates select="$areas"/>
+      <xsl:apply-templates select="$districts"/>
+      <xsl:apply-templates select="$localities"/>
     </Data>
   </xsl:template>
 

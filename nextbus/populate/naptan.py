@@ -160,45 +160,45 @@ def _create_ind_parser():
     return parse_indicator
 
 
-class _NaPTANStops(object):
-    """ Filters NaPTAN stop points and areas by ensuring only stop areas
-        belonging to stop points within specified ATCO areas are filtered.
+def _setup_naptan_functions(list_area_codes=None, list_locality_codes=None):
+    """ Sets up XSLT extension functions to filter stop points and areas as
+        well as parsing indicators for stop points.
     """
-    def __init__(self, list_area_codes=None, list_locality_codes=None):
-        self.area_codes = set()
-        self.naptan_codes = set()
+    area_codes = set()
+    areas = list_area_codes
+    localities = list_locality_codes
+    ind_parser = _create_ind_parser()
 
-        self.area = list_area_codes
-        self.localities = list_locality_codes
+    @utils.xslt_func
+    @utils.ext_function_text
+    def in_admin_area(_, admin_area_ref):
+        """ Checks if stop area is in list of admin areas. """
+        return areas is None or admin_area_ref in areas
 
-        self.ind_parser = _create_ind_parser()
+    @utils.xslt_func
+    @utils.ext_function_text
+    def in_locality(_, locality_ref):
+        """ Checks if stop point is in list of localities. """
+        return localities is None or locality_ref in localities
 
-    def parse_areas(self, area):
-        """ Parses stop areas. """
-        if self.area and area.get("admin_area_ref") not in self.area:
-            return
-        self.area_codes.add(area["code"])
+    @utils.xslt_func
+    @utils.ext_function_text
+    def add_area_code(_, stop_area_code):
+        """ Adds stop area code for checking later. """
+        area_codes.add(stop_area_code)
+        return True
 
-        return area
+    @utils.xslt_func
+    @utils.ext_function_text
+    def parse_ind(_, indicator):
+        """ Shortens indicator for display. """
+        return ind_parser(indicator)
 
-    def parse_points(self, point):
-        """ Parses stop points. """
-        if self.area and point.get("admin_area_ref") not in self.area:
-            return
-        # Tram stops use the national admin area code for trams; need to use
-        # locality code to determine whether stop is within specified area
-        if self.localities and point["locality_ref"] not in self.localities:
-            return
-        # Create short indicator for display
-        if point["indicator"] is not None:
-            point["short_ind"] = self.ind_parser(point["indicator"])
-        else:
-            point["indicator"] = point["short_ind"] = ""
-        # Remove stop area ref if it does not exist
-        if point["stop_area_ref"] not in self.area_codes:
-            point["stop_area_ref"] = None
-
-        return point
+    @utils.xslt_func
+    @utils.ext_function_text
+    def has_stop_area(_, stop_area_ref):
+        """ Checks list of stop areas code to see if ref is valid. """
+        return stop_area_ref in area_codes
 
 
 def _remove_stop_areas():
@@ -377,7 +377,6 @@ def _get_naptan_data(naptan_file):
         within the specified admin areas.
 
         :param naptan_file: File-like object or path for a source XML file
-        :param list_area_codes: List of administrative area codes
         :returns: Transformed data as a XML ElementTree object
     """
     naptan_data = et.parse(naptan_file)
@@ -422,15 +421,13 @@ def commit_naptan_data(archive=None, list_files=None):
         iter_files = file_ops.iter_archive(downloaded)
 
     # Go through data and create objects for committing to database
-    eval_stops = _NaPTANStops(area_codes, local_codes)
+    _setup_naptan_functions(area_codes, local_codes)
     naptan = utils.DBEntries()
     for file_ in iter_files:
         new_data = _get_naptan_data(file_)
         naptan.set_data(new_data)
-        naptan.add("StopAreas/StopArea", models.StopArea,
-                   eval_stops.parse_areas)
-        naptan.add("StopPoints/StopPoint", models.StopPoint,
-                   eval_stops.parse_points, indices=("naptan_code",))
+        naptan.add("StopArea", models.StopArea)
+        naptan.add("StopPoint", models.StopPoint, indices=("naptan_code",))
     # Commit changes to database
     naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas

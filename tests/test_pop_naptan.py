@@ -8,8 +8,9 @@ import unittest
 import lxml.etree as et
 
 from nextbus import db, models
-from nextbus.populate.naptan import (_create_ind_parser, _get_naptan_data,
-    _remove_stop_areas, _set_stop_area_locality, commit_naptan_data)
+from nextbus.populate.naptan import (
+    _create_ind_parser, _get_naptan_data, _remove_stop_areas,
+    _set_stop_area_locality, _setup_naptan_functions, commit_naptan_data)
 from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
                                    commit_nptg_data)
 import utils
@@ -45,6 +46,7 @@ class NptgXsltTests(utils.BaseXMLTests):
 class NaptanXsltTests(utils.BaseXMLTests):
     """ Testing `_get_naptan_data` function which transforms NPTG data. """
     def test_naptan_transform_all_areas(self):
+        _setup_naptan_functions()
         data = _get_naptan_data(NAPTAN_RAW)
 
         expected = et.parse(NAPTAN_ALL, self.parser)
@@ -243,8 +245,8 @@ class PostprocessingTests(utils.BaseAppTests):
         areas = models.StopArea.query.one()
         self.assertEqual(utils.STOP_AREA, self.model_as_dict(areas))
 
-class PopulateTests(utils.BaseAppTests):
 
+class PopulateTests(utils.BaseAppTests):
     def setUp(self):
         self.create_tables()
 
@@ -286,8 +288,8 @@ class PopulateTests(utils.BaseAppTests):
         with self.subTest("areas"):
             areas = models.StopArea.query.all()
             # Two stop areas do not have any stops, therefore 68 not 70
-            self.assertEqual(len(areas), 46)
+            self.assertEqual(len(areas), 8)
 
         with self.subTest("stops"):
             stops = models.StopPoint.query.all()
-            self.assertEqual(len(stops), 174)
+            self.assertEqual(len(stops), 46)

@@ -522,7 +522,12 @@ def stop_get_times(atco_code=None):
                                  "with data %r" % atco_code, exc_info=True)
         return bad_request(503, "There was a problem with the external API")
 
-    return jsonify(times)
+    response = jsonify(times)
+    # Set headers to ensure data is up to date
+    response.cache_control.private = True
+    response.cache_control.max_age = 60
+
+    return response
 
 
 @api.route("/tile", methods=["GET"])

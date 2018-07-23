@@ -64,31 +64,74 @@ def batch_insert(statement, list_rows, limit=None):
         db.session.execute(statement.values(chunk))
 
 
+def duration_delta(duration, ignore=False):
+    """ Converts a time duration from XML data to a timedelta object.
+
+        If the 'ignore' parameter is set to False, specifying a year or month
+        value other than zero will raise an exception as they cannot be used
+        without context.
+
+        :param duration: Duration value obtained from XML element
+        :param ignore: If True, will ignore non zero year or month values
+        instead of raising exception
+        :returns: timedelta object
+    """
+    match = PARSE_DURATION.match(duration)
+    if not match:
+        raise ValueError("Parsing %r failed - not a valid XML duration value."
+                         % duration)
+
+    if not ignore and any(i is not None and int(i) != 0 for i in
+                          [match.group(2), match.group(3)]):
+        raise ValueError("Year and month values cannot be used in timedelta "
+                         "objects - they need context.")
+
+    def convert(group, func):
+        return func(group) if group is not None else 0
+
+    delta = datetime.timedelta(
+        days=convert(match.group(4), int),
+        hours=convert(match.group(5), int),
+        minutes=convert(match.group(6), int),
+        seconds=convert(match.group(7), float)
+    )
+
+    if match.group(1) == '-':
+        delta *= -1
+
+    return delta
+
+
 def xml_as_dict(element, convert=True):
     """ Creates a dictionary from a flat XML element. If convert is True,
         ``py_type`` attributes are used to coerce values.
 
+        If another attribute ``py_null`` is truthy or omitted, the value None
+        can be returned for an empty element otherwise the default conversion
+        value (eg ``str()``) is used.
+
         Types:
-        - ``bool``: Converts boolean strings such as 0, true or False.
+        - ``bool``: Converts boolean strings such as 0 or true.
         - ``int``: integers
         - ``float``: floating point numbers
         - ``datetime``: Parsed as datetime objects
 
         :param element: XML Element object
-        :param convert: If True, use attributes to convert values.
+        :param convert: If True, use attributes to convert values. The
         :returns: A dictionary with keys matching subelement tags in the
         element.
     """
-    def _bool(value):
-        if value in {"1", "true", "True"}:
+    def _bool(value="0"):
+        if value in {"1", "true"}:
             return True
-        elif value in {"0", "false", "False"}:
+        elif value in {"0", "false"}:
             return False
         else:
             raise ValueError("%r does not represent a boolean value." % value)
 
     convs = {
         "bool": _bool,
+        "str": str,
         "int": int,
         "float": float,
         "datetime": dp.parse,
@@ -99,17 +142,26 @@ def xml_as_dict(element, convert=True):
     for i in element:
         if i.tag in data:
             raise ValueError("Multiple elements have the same tag %r." % i.tag)
-        if convert and "py_type" in i.keys():
-            try:
-                conv = convs[i.get("py_type")]
-                data[i.tag] = conv(i.text) if i.text is not None else None
-            except KeyError:
-                raise ValueError("Invalid py_type attribute.")
-            except (TypeError, ValueError) as err:
-                raise ValueError("Text %r cannot be converted with type %r." %
-                                 (i.text, i.get("py_type"))) from err
+
+        nullable = "py_null" not in i.keys() or _bool(i.get("py_null"))
+        type_ = i.get("py_type")
+        if convert and type_ is not None:
+            conv = convs.get(type_)
+            if conv is None:
+                raise ValueError("Invalid py_type attribute: %r" % type_)
         else:
-            data[i.tag] = i.text
+            conv = str
+
+        try:
+            if i.text is not None:
+                data[i.tag] = conv(i.text)
+            elif not nullable:
+                data[i.tag] = conv()
+            else:
+                data[i.tag] = None
+        except (TypeError, ValueError) as err:
+            raise ValueError("Text %r cannot be converted with type %r." %
+                             (i.text, type_)) from err
 
     return data
 
@@ -339,41 +391,3 @@ class DBEntries(object):
                 logger.info("Inserting %d %s objects into database" %
                             (len(data), model.__name__))
                 batch_insert(model.__table__.insert(), data)
-
-
-def duration_delta(duration, ignore=False):
-    """ Converts a time duration from XML data to a timedelta object.
-
-        If the 'ignore' parameter is set to False, specifying a year or month
-        value other than zero will raise an exception as they cannot be used
-        without context.
-
-        :param duration: Duration value obtained from XML element
-        :param ignore: If True, will ignore non zero year or month values
-        instead of raising exception
-        :returns: timedelta object
-    """
-    match = PARSE_DURATION.match(duration)
-    if not match:
-        raise ValueError("Parsing %r failed - not a valid XML duration value."
-                         % duration)
-
-    if not ignore and any(i is not None and int(i) != 0 for i in
-                          [match.group(2), match.group(3)]):
-        raise ValueError("Year and month values cannot be used in timedelta "
-                         "objects - they need context.")
-
-    def convert(group, func):
-        return func(group) if group is not None else 0
-
-    delta = datetime.timedelta(
-        days=convert(match.group(4), int),
-        hours=convert(match.group(5), int),
-        minutes=convert(match.group(6), int),
-        seconds=convert(match.group(7), float)
-    )
-
-    if match.group(1) == '-':
-        delta *= -1
-
-    return delta

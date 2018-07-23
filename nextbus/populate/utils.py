@@ -8,6 +8,8 @@ import functools
 import itertools
 import logging
 import re
+import shutil
+import tempfile
 
 import dateutil.parser as dp
 from flask import current_app
@@ -46,22 +48,6 @@ def database_session():
         raise
     finally:
         db.session.remove()
-
-
-def batch_insert(statement, list_rows, limit=None):
-    """ Executes multi-valued inserts in batches.
-
-        :param statement: Statement to be executed.
-        :param list_rows: Iterable of dictionaries to be added.
-        :param limit: Limit on rows in each batch - if None ROW_LIMIT is used.
-    """
-    _limit = ROW_LIMIT if limit is None else limit
-    iter_rows = iter(list_rows)
-    while True:
-        chunk = list(itertools.islice(iter_rows, _limit))
-        if not chunk:
-            break
-        db.session.execute(statement.values(chunk))
 
 
 def duration_delta(duration, ignore=False):
@@ -231,6 +217,7 @@ def capitalize(_, result):
             if char.isalpha():
                 list_words[_w] = word[:_c] + char.upper() + word[_c+1:]
                 break
+
     return " ".join(list_words)
 
 
@@ -254,15 +241,16 @@ def get_atco_codes():
     return codes
 
 
-class DBEntries(object):
-    """ Collects a list of database entries from XML data and commits them. """
-    def __init__(self, xml_data=None, log_each=True):
+class PopulateData(object):
+    """ Collects a list of database entries from XML data and populate database.
+    """
+    def __init__(self, xml_data=None):
         self.data = None
         if xml_data is not None:
             self.set_data(xml_data)
         self.entries = collections.OrderedDict()
         self.conflicts = {}
-        self.log_each = log_each
+        self.cd = DataCopy()
 
     def set_data(self, xml_data):
         """ Sets the source XML data to a new ElementTree object. """
@@ -271,27 +259,19 @@ class DBEntries(object):
         except TypeError:
             self.data = xml_data
 
-    def add(self, xpath_query, model, func=None, indices=None):
+    def add(self, xpath_query, model, indices=None):
         """ Iterates through a list of elements, creating a list of dicts.
-
-            With a parsing function, each entry can be filtered out or
-            modified. Can add constraint or indices to use in PostgreSQL's
-            INSERT ON CONFLICT DO UPDATE statements. All existing rows are
-            deleted before iterating.
 
             :param xpath_query: XPath query to retrieve list of elements
             :param model: Database model
-            :param func: Function to evaluate each new object, with the current
-            object being evaluated as the only argument.
             :param indices: Sequence of string or Column objects, which should
-            be unique, to assess in a ON CONFLICT DO UPDATE statement
+            be unique, for checking duplicates
         """
         if self.data is None:
             raise ValueError("No source XML data has been set.")
         # Find all elements matching query
         list_elements = self.data.xpath(xpath_query)
 
-        # Check indices and add them for INSERT ON CONFLICT statements
         if indices is not None:
             self.conflicts[model] = indices
 
@@ -301,38 +281,63 @@ class DBEntries(object):
 
         if not list_elements:
             return
-
-        if self.log_each:
-            logger.info("Parsing %d %s elements" %
-                        (len(list_elements), model.__name__))
         # Create list for model and iterate over all elements
         for element in list_elements:
-            data = xml_as_dict(element)
-            if func is not None:
-                try:
-                    new_data = func(data)
-                    if new_data is None:
-                        continue
-                    else:
-                        data = new_data
-                except TypeError as err:
-                    if "positional argument" in str(err):
-                        raise TypeError(
-                            "Filter function must receive the current object "
-                            "as the only argument."
-                        ) from err
-                    else:
-                        raise
+            new_entries.append(xml_as_dict(element, convert=False))
 
-            new_entries.append(data)
-
-    def _check_duplicates(self, warn=False):
-        """ Does a Python-side check of duplicates before executing INSERT
-            statements.
+    def _process_duplicates(self, model, warn):
+        """ Iterates through all entries for a model, removing duplicates.
 
             If a 'modified' column exists, it is used to find the most recent
             version, otherwise duplicates are checked on their contents and
             raising a ValueError if they differ.
+
+            :param warn: Logs a warning for conflicting entries that are not
+            equal, with extra entries discarded. If False, an error is raised.
+        """
+        indices = self.conflicts[model]
+        removed = 0
+        found = {}
+        for entry in self.entries[model]:
+            try:
+                i = tuple(entry[j] for j in indices)
+            except KeyError as err:
+                raise KeyError("Field names %r does not exist for model %s"
+                               % (indices, model.__name__)) from err
+
+            current = entry.get("modified")
+            if i not in found:
+                found[i] = entry
+            elif current is not None:
+                if dp.parse(current) > dp.parse(found[i]["modified"]):
+                    found[i] = entry
+                else:
+                    removed += 1
+            elif entry != found[i]:
+                if warn:
+                    logger.warn(
+                        "Entries %r and %r for model %s do not match" %
+                        (entry, found[i], model.__name__)
+                    )
+                else:
+                    # Not comparing on last modified dates but values do
+                    # not match - no way to tell which to pick. Raise error
+                    raise ValueError(
+                        "Entries %r and %r do not match. Without last modified "
+                        "dates they cannot be picked." % (entry, found[i])
+                    )
+            else:
+                removed += 1
+
+        if removed > 0:
+            logger.info("%d duplicate %s objects removed" %
+                        (removed, model.__name__))
+
+        return list(found.values())
+
+    def _check_duplicates(self, warn=False):
+        """ Does a Python-side check of duplicates before executing INSERT
+            statements.
 
             INSERT ON CONFLICT DO UPDATE statements work better with single
             tuples of values, but we are using multi-valued inserts here.
@@ -341,53 +346,120 @@ class DBEntries(object):
             equal, with extra entries discarded. If False, an error is raised.
         """
         for model in self.conflicts:
-            removed = 0
-            indices = self.conflicts[model]
-            found = {}
-            for entry in self.entries[model]:
-                try:
-                    i = tuple(entry[j] for j in indices)
-                except KeyError as err:
-                    raise KeyError("Field names %r does not exist for model %s"
-                                   % (indices, model.__name__)) from err
-                current = entry.get("modified")
-                if i not in found:
-                    found[i] = entry
-                elif current is not None and current > found[i]["modified"]:
-                    found[i] = entry
-                elif current is None and entry != found[i]:
-                    if warn:
-                        logger.warn(
-                            "Entries %r and %r for model %s do not match" %
-                            (entry, found[i], model.__name__)
-                        )
-                    else:
-                        # Not comparing on last modified dates but values do
-                        # not match - no way to tell which to pick. Raise error
-                        raise ValueError(
-                            "Entries %r and %r do not match. Without last "
-                            "modified dates they cannot be picked." %
-                            (entry, found[i])
-                        )
-                else:
-                    removed += 1
-            if removed > 0:
-                logger.info("%d duplicate %s objects removed" %
-                            (removed, model.__name__))
-            self.entries[model] = list(found.values())
+            self.entries[model] = self._process_duplicates(model, warn)
 
     def commit(self, delete=False):
         """ Commits all entries to database. """
         if not self.entries:
             raise ValueError("No data have been added yet.")
         self._check_duplicates(warn=True)
-        with database_session():
-            for model, data in self.entries.items():
-                if delete:
-                    # Delete existing rows
-                    logger.info("Deleting old %s objects" % model.__name__)
-                    db.session.execute(model.__table__.delete())
-                # Add new rows
-                logger.info("Inserting %d %s objects into database" %
-                            (len(data), model.__name__))
-                batch_insert(model.__table__.insert(), data)
+        self.cd.copy(self.entries, delete=delete)
+
+
+class DataCopy(object):
+    """ Sets up an interface for copying data to DB. """
+    SEP = "\t"
+    NULL = r"\N"
+    LIMIT = 1000000
+
+    def __init__(self):
+        # Get metadata from existing database for server defaults
+        self.engine = db.session.get_bind()
+        self.metadata = db.MetaData()
+        self.metadata.reflect(bind=self.engine)
+
+    def _parse_row(self, table, obj):
+        """ Parses each object, excluding columns that have server defaults (eg
+            sequences).
+        """
+        row = []
+        columns = []
+        for col in table.columns:
+            if col.name in obj:
+                value = obj[col.name]
+                if value is not None:
+                    # Escape backslash characters and delimiters within values
+                    value = value.replace("\\", "\\\\")
+                    value = value.replace(self.SEP, "\\" + self.SEP)
+                else:
+                    value = self.NULL
+                row.append(value)
+                columns.append(col.name)
+            elif not col.nullable and col.server_default is None:
+                raise ValueError(
+                    "Non-nullable column %r:%r does not have a default value; "
+                    "can't use data %r" % (table.name, col.name, obj)
+                )
+
+        return row, columns
+
+    def write_copy_file(self, file_, table_name, data):
+        """ Writes data from list of dicts to a temporary file for import. """
+        table = self.metadata.tables[table_name]
+        columns = None
+        for obj in data:
+            row, cols = self._parse_row(table, obj)
+            # Compare columns to ensure they are all the same
+            if columns is None:
+                columns = cols
+            elif cols != columns:
+                raise ValueError("Row have different columns %r for "
+                                 "table %r." % (cols, table_name))
+
+            file_.write(self.SEP.join(row) + "\n")
+
+        file_.seek(0)  # Rewind file
+
+        return columns
+
+    def _batch_copy(self, cursor, table_name, data):
+        """ Iterates over rows in batches. """
+        iter_rows = iter(data)
+        while True:
+            chunk = list(itertools.islice(iter_rows, self.LIMIT))
+            if not chunk:
+                break
+
+            # Create a temporary file to store copy data
+            file_ = tempfile.TemporaryFile(mode="w+")
+            columns = self.write_copy_file(file_, table_name, chunk)
+
+            try:
+                cursor.copy_from(file_, table_name, sep=self.SEP,
+                                 null=self.NULL, columns=columns)
+            except:
+                # Save copy file for debugging and raise again
+                error_file = "temp/error_data"
+                logger.error("Error occurred with COPY; saving file to %r" %
+                             error_file)
+                logger.debug("Columns: %r" % columns)
+                with open(error_file, "w") as f:
+                    file_.seek(0)
+                    shutil.copyfileobj(file_, f)
+                raise
+            finally:
+                file_.close()
+
+    def copy(self, dataset, delete=False):
+        """ Copies all data to the database.
+
+            :param dataset: Dict with models as keys and lists of dicts as
+            values. All dicts must have the same keys.
+            :param delete: Truncates existing data.
+        """
+        connection = self.engine.raw_connection()
+        try:
+            with connection.cursor() as cursor:
+                for model, data in dataset.items():
+                    table_name = model.__tablename__
+                    if delete:
+                        logger.info("Deleting old %r rows" % table_name)
+                        cursor.execute("TRUNCATE %s CASCADE;" % table_name)
+                    logger.info("Copying data to %r" % table_name)
+                    self._batch_copy(cursor, table_name, data)
+            connection.commit()
+        except:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()

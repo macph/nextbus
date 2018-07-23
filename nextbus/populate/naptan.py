@@ -429,13 +429,15 @@ def commit_naptan_data(archive=None, list_files=None):
 
     # Go through data and create objects for committing to database
     _setup_naptan_functions(area_codes, local_codes)
-    naptan = utils.DBEntries()
+    naptan = utils.PopulateData()
     for file_ in iter_files:
+        file_name = file_.name if hasattr(file_, "name") else file_
+        utils.logger.info("Parsing file %r" % file_name)
         new_data = _get_naptan_data(file_)
         naptan.set_data(new_data)
         naptan.add("StopArea", models.StopArea)
         naptan.add("StopPoint", models.StopPoint, indices=("naptan_code",))
-    # Commit changes to database
+
     naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas
     _remove_stop_areas()

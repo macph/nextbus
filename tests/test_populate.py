@@ -218,8 +218,8 @@ class AtcoCodeTests(utils.BaseAppTests):
             pop_utils.get_atco_codes()
 
 
-class EntryTests(unittest.TestCase):
-    """ Tests on _DBEntries without database commits """
+class EntryTests(utils.BaseAppTests):
+    """ Tests on PopulateData without database commits """
     XML = (
         "<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
         "<modified>2006-01-25T07:54:31</modified></Region></Regions>"
@@ -240,21 +240,17 @@ class EntryTests(unittest.TestCase):
     EXPECTED_DT = {
         "code": "Y",
         "name": "Yorkshire",
-        "modified": datetime.datetime(2006, 1, 25, 7, 54, 31)
+        "modified": "2006-01-25T07:54:31"
     }
     EXPECTED_NW = {
         "code": "NW",
         "name": "North West",
-        "modified": datetime.datetime(2006, 1, 25, 7, 54, 31)
+        "modified": "2006-01-25T07:54:31"
     }
 
-    @staticmethod
-    def _add_modified_date(row):
-        row["modified"] = dp.parse(row["modified"])
-        return row
-
     def setUp(self):
-        self.db_entries = pop_utils.DBEntries(io.StringIO(self.XML))
+        with self.app.app_context():
+            self.db_entries = pop_utils.PopulateData(io.StringIO(self.XML))
 
     def tearDown(self):
         del self.db_entries
@@ -270,33 +266,17 @@ class EntryTests(unittest.TestCase):
         self.assertEqual(self.db_entries.entries[models.Region],
                          [self.EXPECTED] * 2)
 
-    def test_add_items_func(self):
-        self.db_entries.add("Regions/Region", models.Region,
-                            func=self._add_modified_date)
-        self.assertEqual(self.db_entries.entries[models.Region][0],
-                         self.EXPECTED_DT)
-
-    def test_add_item_wrong_function(self):
-        def func(item, _):
-            return item
-        with self.assertRaisesRegex(TypeError, "the only argument"):
-            self.db_entries.add("Regions/Region", models.Region, func=func)
-
     def test_no_duplicate(self):
         self.db_entries.set_data(io.StringIO(self.XML_TWO))
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
-                            func=self._add_modified_date)
-        print(self.db_entries.entries)
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
         self.db_entries._check_duplicates()
         self.assertEqual(self.db_entries.entries[models.Region],
                          [self.EXPECTED_NW, self.EXPECTED_DT])
 
     def test_remove_duplicate(self):
         self.db_entries.set_data(io.StringIO(self.XML))
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
-                            func=self._add_modified_date)
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",),
-                            func=self._add_modified_date)
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
+        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
         self.db_entries._check_duplicates()
         self.assertEqual(len(self.db_entries.entries[models.Region]), 1)
         self.assertEqual(self.db_entries.entries[models.Region][0],
@@ -304,7 +284,7 @@ class EntryTests(unittest.TestCase):
 
 
 class EntryDBTests(utils.BaseAppTests):
-    """ Tests on _DBEntries and committing changes to database """
+    """ Tests on PopulateData and committing changes to database """
     xml = io.BytesIO(
         b"<Data><Regions><Region><code>Y</code><name>Yorkshire</name>"
         b"<modified/></Region></Regions></Data>"
@@ -313,7 +293,8 @@ class EntryDBTests(utils.BaseAppTests):
     def setUp(self):
         self.create_tables()
         # Set up temporary file to be read by et.parse()
-        self.db_entries = pop_utils.DBEntries(self.xml)
+        with self.app.app_context():
+            self.db_entries = pop_utils.PopulateData(self.xml)
 
     def tearDown(self):
         self.drop_tables()

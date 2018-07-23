@@ -27,7 +27,6 @@ def _create_row(model, element):
         :param element: A ``create`` XML element.
         :returns: Number of rows created.
     """
-    # Create each model in a similar way to DBEntries.add()
     data = utils.xml_as_dict(element)
     # Check if types match DateTime and use datetime parser
     for key in data:

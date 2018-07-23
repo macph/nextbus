@@ -197,7 +197,7 @@ def _get_tnds_transform():
 def _commit_each_tnds(transform, archive, region):
     """ Transforms each XML file and commit data to DB. """
     str_region = et.XSLT.strparam(region)
-    tnds = utils.DBEntries(log_each=False)
+    tnds = utils.PopulateData()
     setup_tnds_xslt_functions()
 
     for file_ in file_ops.iter_archive(archive):

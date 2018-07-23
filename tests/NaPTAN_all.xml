@@ -95,8 +95,8 @@
     <landmark>Sheffield Interchange A4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>A3</indicator>
-    <short_ind>A3</short_ind>
+    <indicator py_null="false">A3</indicator>
+    <short_ind py_null="false">A3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435710</easting>
     <northing py_type="int">387182</northing>
@@ -115,8 +115,8 @@
     <landmark>Sheffield Interchange A5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>A4</indicator>
-    <short_ind>A4</short_ind>
+    <indicator py_null="false">A4</indicator>
+    <short_ind py_null="false">A4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435710</easting>
     <northing py_type="int">387167</northing>
@@ -135,8 +135,8 @@
     <landmark>Sheffield Interchange A6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>A5</indicator>
-    <short_ind>A5</short_ind>
+    <indicator py_null="false">A5</indicator>
+    <short_ind py_null="false">A5</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435715</easting>
     <northing py_type="int">387144</northing>
@@ -155,8 +155,8 @@
     <landmark>Sheffield Interchange B3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B3</indicator>
-    <short_ind>B3</short_ind>
+    <indicator py_null="false">B3</indicator>
+    <short_ind py_null="false">B3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435720</easting>
     <northing py_type="int">387189</northing>
@@ -175,8 +175,8 @@
     <landmark>Sheffield Interchange B4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B4</indicator>
-    <short_ind>B4</short_ind>
+    <indicator py_null="false">B4</indicator>
+    <short_ind py_null="false">B4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435722</easting>
     <northing py_type="int">387169</northing>
@@ -195,8 +195,8 @@
     <landmark>Sheffield Interchange B5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B5</indicator>
-    <short_ind>B5</short_ind>
+    <indicator py_null="false">B5</indicator>
+    <short_ind py_null="false">B5</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435725</easting>
     <northing py_type="int">387151</northing>
@@ -215,8 +215,8 @@
     <landmark>Sheffield Interchange B6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B6</indicator>
-    <short_ind>B6</short_ind>
+    <indicator py_null="false">B6</indicator>
+    <short_ind py_null="false">B6</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435727</easting>
     <northing py_type="int">387133</northing>
@@ -235,8 +235,8 @@
     <landmark>Sheffield Interchange C1</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C1</indicator>
-    <short_ind>C1</short_ind>
+    <indicator py_null="false">C1</indicator>
+    <short_ind py_null="false">C1</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435741</easting>
     <northing py_type="int">387222</northing>
@@ -255,8 +255,8 @@
     <landmark>Sheffield Interchange C2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C2</indicator>
-    <short_ind>C2</short_ind>
+    <indicator py_null="false">C2</indicator>
+    <short_ind py_null="false">C2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435743</easting>
     <northing py_type="int">387205</northing>
@@ -275,8 +275,8 @@
     <landmark>Sheffield Interchange C3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C3</indicator>
-    <short_ind>C3</short_ind>
+    <indicator py_null="false">C3</indicator>
+    <short_ind py_null="false">C3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435745</easting>
     <northing py_type="int">387187</northing>
@@ -295,8 +295,8 @@
     <landmark>Sheffield Interchange C4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C4</indicator>
-    <short_ind>C4</short_ind>
+    <indicator py_null="false">C4</indicator>
+    <short_ind py_null="false">C4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435747</easting>
     <northing py_type="int">387166</northing>
@@ -315,8 +315,8 @@
     <landmark>Sheffield Interchange C5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C5</indicator>
-    <short_ind>C5</short_ind>
+    <indicator py_null="false">C5</indicator>
+    <short_ind py_null="false">C5</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435750</easting>
     <northing py_type="int">387147</northing>
@@ -335,8 +335,8 @@
     <landmark>Sheffield Interchange C6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>C6</indicator>
-    <short_ind>C6</short_ind>
+    <indicator py_null="false">C6</indicator>
+    <short_ind py_null="false">C6</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435751</easting>
     <northing py_type="int">387129</northing>
@@ -355,8 +355,8 @@
     <landmark>Sheffield Interchange D2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>D2</indicator>
-    <short_ind>D2</short_ind>
+    <indicator py_null="false">D2</indicator>
+    <short_ind py_null="false">D2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435760</easting>
     <northing py_type="int">387206</northing>
@@ -375,8 +375,8 @@
     <landmark>Sheffield Interchange D3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>D3</indicator>
-    <short_ind>D3</short_ind>
+    <indicator py_null="false">D3</indicator>
+    <short_ind py_null="false">D3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435762</easting>
     <northing py_type="int">387189</northing>
@@ -395,8 +395,8 @@
     <landmark>Sheffield Interchange D4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>D4</indicator>
-    <short_ind>D4</short_ind>
+    <indicator py_null="false">D4</indicator>
+    <short_ind py_null="false">D4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435763</easting>
     <northing py_type="int">387165</northing>
@@ -415,8 +415,8 @@
     <landmark>Sheffield Interchange D5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>D5</indicator>
-    <short_ind>D5</short_ind>
+    <indicator py_null="false">D5</indicator>
+    <short_ind py_null="false">D5</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435766</easting>
     <northing py_type="int">387149</northing>
@@ -435,8 +435,8 @@
     <landmark>Sheffield Interchange D6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>D6</indicator>
-    <short_ind>D6</short_ind>
+    <indicator py_null="false">D6</indicator>
+    <short_ind py_null="false">D6</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435768</easting>
     <northing py_type="int">387131</northing>
@@ -455,8 +455,8 @@
     <landmark>Sheffield Interchange E6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E6</indicator>
-    <short_ind>E6</short_ind>
+    <indicator py_null="false">E6</indicator>
+    <short_ind py_null="false">E6</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435783</easting>
     <northing py_type="int">387131</northing>
@@ -475,8 +475,8 @@
     <landmark>Sheffield Interchange E9</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E4</indicator>
-    <short_ind>E4</short_ind>
+    <indicator py_null="false">E4</indicator>
+    <short_ind py_null="false">E4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435780</easting>
     <northing py_type="int">387168</northing>
@@ -495,8 +495,8 @@
     <landmark>Sheffield Interchange E1</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E1</indicator>
-    <short_ind>E1</short_ind>
+    <indicator py_null="false">E1</indicator>
+    <short_ind py_null="false">E1</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435778</easting>
     <northing py_type="int">387214</northing>
@@ -515,8 +515,8 @@
     <landmark>Sheffield Interchange E2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E2</indicator>
-    <short_ind>E2</short_ind>
+    <indicator py_null="false">E2</indicator>
+    <short_ind py_null="false">E2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435776</easting>
     <northing py_type="int">387196</northing>
@@ -535,8 +535,8 @@
     <landmark>Sheffield Interchange E3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E3</indicator>
-    <short_ind>E3</short_ind>
+    <indicator py_null="false">E3</indicator>
+    <short_ind py_null="false">E3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435778</easting>
     <northing py_type="int">387184</northing>
@@ -555,8 +555,8 @@
     <landmark>Sheffield Interchange E5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>E5</indicator>
-    <short_ind>E5</short_ind>
+    <indicator py_null="false">E5</indicator>
+    <short_ind py_null="false">E5</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435781</easting>
     <northing py_type="int">387150</northing>
@@ -575,8 +575,8 @@
     <landmark>10231</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B1</indicator>
-    <short_ind>B1</short_ind>
+    <indicator py_null="false">B1</indicator>
+    <short_ind py_null="false">B1</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435716</easting>
     <northing py_type="int">387210</northing>
@@ -595,8 +595,8 @@
     <landmark>10232</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>A1</indicator>
-    <short_ind>A1</short_ind>
+    <indicator py_null="false">A1</indicator>
+    <short_ind py_null="false">A1</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435707</easting>
     <northing py_type="int">387209</northing>
@@ -615,8 +615,8 @@
     <landmark>10233</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>A2</indicator>
-    <short_ind>A2</short_ind>
+    <indicator py_null="false">A2</indicator>
+    <short_ind py_null="false">A2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435709</easting>
     <northing py_type="int">387193</northing>
@@ -635,8 +635,8 @@
     <landmark>10234</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator>B2</indicator>
-    <short_ind>B2</short_ind>
+    <indicator py_null="false">B2</indicator>
+    <short_ind py_null="false">B2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435718</easting>
     <northing py_type="int">387200</northing>
@@ -655,8 +655,8 @@
     <landmark>Opposite The Cavendish</landmark>
     <street>West Street</street>
     <crossing>Fitzwilliam Street</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434708</easting>
     <northing py_type="int">387146</northing>
@@ -675,8 +675,8 @@
     <landmark>20361</landmark>
     <street>West Street</street>
     <crossing>Mappin Street</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434744</easting>
     <northing py_type="int">387171</northing>
@@ -695,8 +695,8 @@
     <landmark>Opposite Barracks</landmark>
     <street>Glossop Road</street>
     <crossing>Gell Street</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434510</easting>
     <northing py_type="int">387147</northing>
@@ -715,8 +715,8 @@
     <landmark>Endcliffe Park</landmark>
     <street>Ecclesall Road</street>
     <crossing>Rustlings Road</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
     <easting py_type="int">433034</easting>
     <northing py_type="int">385672</northing>
@@ -735,8 +735,8 @@
     <landmark>Outside Trinity Church</landmark>
     <street>Ecclesall Road</street>
     <crossing>Rustlings Road</crossing>
-    <indicator>opp</indicator>
-    <short_ind>opp</short_ind>
+    <indicator py_null="false">opp</indicator>
+    <short_ind py_null="false">opp</short_ind>
     <locality_ref>N0060732</locality_ref>
     <easting py_type="int">433017</easting>
     <northing py_type="int">385650</northing>
@@ -755,8 +755,8 @@
     <landmark>Opposite Harry Ramsden's</landmark>
     <street>Ecclesall Road</street>
     <crossing>Greystones Road</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
     <easting py_type="int">432831</easting>
     <northing py_type="int">385409</northing>
@@ -775,8 +775,8 @@
     <landmark>Adj. to Church</landmark>
     <street>Ecclesall Road</street>
     <crossing>Greystones Road</crossing>
-    <indicator>nr</indicator>
-    <short_ind>near</short_ind>
+    <indicator py_null="false">nr</indicator>
+    <short_ind py_null="false">near</short_ind>
     <locality_ref>E0029982</locality_ref>
     <easting py_type="int">432837</easting>
     <northing py_type="int">385290</northing>
@@ -795,8 +795,8 @@
     <landmark>Outside Victoria Wines</landmark>
     <street>Rustlings Road</street>
     <crossing>Ecclesall Road</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
     <easting py_type="int">432878</easting>
     <northing py_type="int">385657</northing>
@@ -815,8 +815,8 @@
     <landmark>Opposite Victoria Wines/Outsid</landmark>
     <street>Rustlings Road</street>
     <crossing>Ecclesall Road</crossing>
-    <indicator>nr</indicator>
-    <short_ind>near</short_ind>
+    <indicator py_null="false">nr</indicator>
+    <short_ind py_null="false">near</short_ind>
     <locality_ref>N0060732</locality_ref>
     <easting py_type="int">432910</easting>
     <northing py_type="int">385662</northing>
@@ -835,8 +835,8 @@
     <landmark>Wicker Arches</landmark>
     <street>Wicker</street>
     <crossing>Wicker Arches</crossing>
-    <indicator>WK4</indicator>
-    <short_ind>WK4</short_ind>
+    <indicator py_null="false">WK4</indicator>
+    <short_ind py_null="false">WK4</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435904</easting>
     <northing py_type="int">388039</northing>
@@ -855,8 +855,8 @@
     <landmark>Pharmacy</landmark>
     <street>Wicker</street>
     <crossing>Wk1</crossing>
-    <indicator>WK1</indicator>
-    <short_ind>WK1</short_ind>
+    <indicator py_null="false">WK1</indicator>
+    <short_ind py_null="false">WK1</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435855</easting>
     <northing py_type="int">387971</northing>
@@ -875,8 +875,8 @@
     <landmark>22848</landmark>
     <street>Wicker</street>
     <crossing>Wicker</crossing>
-    <indicator>WK3</indicator>
-    <short_ind>WK3</short_ind>
+    <indicator py_null="false">WK3</indicator>
+    <short_ind py_null="false">WK3</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435897</easting>
     <northing py_type="int">388028</northing>
@@ -895,8 +895,8 @@
     <landmark>23677</landmark>
     <street>Glossop Road</street>
     <crossing>Regent Terrace</crossing>
-    <indicator>adj</indicator>
-    <short_ind>adj</short_ind>
+    <indicator py_null="false">adj</indicator>
+    <short_ind py_null="false">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434586</easting>
     <northing py_type="int">387155</northing>
@@ -915,8 +915,8 @@
     <landmark>Wk2</landmark>
     <street>Wicker</street>
     <crossing>Wk2</crossing>
-    <indicator>WK2</indicator>
-    <short_ind>WK2</short_ind>
+    <indicator py_null="false">WK2</indicator>
+    <short_ind py_null="false">WK2</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435799</easting>
     <northing py_type="int">387864</northing>
@@ -935,8 +935,8 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator>From City</indicator>
-    <short_ind>from CITY</short_ind>
+    <indicator py_null="false">From City</indicator>
+    <short_ind py_null="false">from CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435941</easting>
     <northing py_type="int">386910</northing>
@@ -955,8 +955,8 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator>To City</indicator>
-    <short_ind>to CITY</short_ind>
+    <indicator py_null="false">To City</indicator>
+    <short_ind py_null="false">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435930</easting>
     <northing py_type="int">386912</northing>
@@ -975,8 +975,8 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator>From City</indicator>
-    <short_ind>from CITY</short_ind>
+    <indicator py_null="false">From City</indicator>
+    <short_ind py_null="false">from CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434834</easting>
     <northing py_type="int">387190</northing>
@@ -995,8 +995,8 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator>To City</indicator>
-    <short_ind>to CITY</short_ind>
+    <indicator py_null="false">To City</indicator>
+    <short_ind py_null="false">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434878</easting>
     <northing py_type="int">387219</northing>

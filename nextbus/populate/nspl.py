@@ -7,7 +7,7 @@ import os
 from flask import current_app
 
 from definitions import ROOT_DIR
-from nextbus import db, models
+from nextbus import models
 from nextbus.populate import file_ops, utils
 
 
@@ -91,8 +91,6 @@ def commit_nspl_data(file_=None):
 
         :param file_: Path for JSON file. If None, initiates download from
         the Camden Open Data API.
-        :param batch: Use multiple INSERT statements within the transcation,
-        each with max of ROW_LIMIT tuples.
     """
     atco_codes = current_app.config.get("ATCO_CODES")
     if atco_codes is not None and not isinstance(atco_codes, list):
@@ -126,12 +124,7 @@ def commit_nspl_data(file_=None):
             "latitude":             row["latitude"]
         })
 
-    with utils.database_session():
-        utils.logger.info("Deleting previous rows")
-        db.session.execute(models.Postcode.__table__.delete())
-        utils.logger.info("Adding %d %s objects to database" %
-                          (len(postcodes), models.Postcode.__name__))
-        utils.batch_insert(models.Postcode.__table__.insert(), postcodes)
+    utils.DataCopy().copy({models.Postcode: postcodes}, delete=True)
 
     if downloaded_file is not None:
         utils.logger.info("New file %r downloaded; can be deleted" %

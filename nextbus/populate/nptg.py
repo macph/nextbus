@@ -132,8 +132,10 @@ def commit_nptg_data(archive=None, list_files=None):
         iter_files = file_ops.iter_archive(downloaded)
 
     # Go through data and create objects for committing to database
-    nptg = utils.DBEntries()
+    nptg = utils.PopulateData()
     for file_ in iter_files:
+        file_name = file_.name if hasattr(file_, "name") else file_
+        utils.logger.info("Parsing file %r" % file_name)
         new_data = _get_nptg_data(file_, atco_codes)
         nptg.set_data(new_data)
         nptg.add("Region", models.Region)
@@ -141,7 +143,6 @@ def commit_nptg_data(archive=None, list_files=None):
         nptg.add("District", models.District)
         nptg.add("Locality", models.Locality)
 
-    # Commit changes to database
     nptg.commit(delete=True)
     # Remove all orphaned districts
     _remove_districts()

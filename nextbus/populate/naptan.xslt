@@ -84,12 +84,12 @@
         </crossing>
         <xsl:choose>
           <xsl:when test="boolean(n:Descriptor/n:Indicator)">
-            <indicator><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
-            <short_ind><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
+            <indicator py_null="false"><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
+            <short_ind py_null="false"><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
           </xsl:when>
           <xsl:otherwise>
-            <indicator/>
-            <short_ind/>
+            <indicator py_null="false"/>
+            <short_ind py_null="false"/>
           </xsl:otherwise>
         </xsl:choose>
         <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>

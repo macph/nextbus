@@ -28,8 +28,8 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator>From City</indicator>
-    <short_ind>to CATH.</short_ind>
+    <indicator py_null="false">From City</indicator>
+    <short_ind py_null="false">to CATH.</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435941</easting>
     <northing py_type="int">386910</northing>
@@ -48,8 +48,8 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator>To City</indicator>
-    <short_ind>to CITY</short_ind>
+    <indicator py_null="false">To City</indicator>
+    <short_ind py_null="false">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">435930</easting>
     <northing py_type="int">386912</northing>
@@ -68,8 +68,8 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator>From City</indicator>
-    <short_ind>from CITY</short_ind>
+    <indicator py_null="false">From City</indicator>
+    <short_ind py_null="false">from CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434834</easting>
     <northing py_type="int">387190</northing>
@@ -88,8 +88,8 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator>To City</indicator>
-    <short_ind>to CITY</short_ind>
+    <indicator py_null="false">To City</indicator>
+    <short_ind py_null="false">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
     <easting py_type="int">434878</easting>
     <northing py_type="int">387219</northing>

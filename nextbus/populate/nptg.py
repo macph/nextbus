@@ -56,7 +56,7 @@ def _get_nptg_data(nptg_file, atco_codes=None):
     utils.logger.info("Opening NPTG files")
     data = et.parse(nptg_file)
     names = {"n": data.xpath("namespace-uri(.)")}
-    transform = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
+    xslt_data = et.parse(os.path.join(ROOT_DIR, NPTG_XSLT))
 
     if atco_codes:
         # Filter by ATCO area - use NPTG data to find correct admin area codes
@@ -95,13 +95,19 @@ def _get_nptg_data(nptg_file, atco_codes=None):
         }
 
         # Modify the XPath queries to filter by admin area
-        xsl_names = {"xsl": transform.xpath("namespace-uri(.)")}
+        xsl_names = {"xsl": xslt_data.xpath("namespace-uri(.)")}
         for k, ref in area_ref.items():
-            param = transform.xpath("//xsl:param[@name='%s']" % k,
+            param = xslt_data.xpath("//xsl:param[@name='%s']" % k,
                                     namespaces=xsl_names)[0]
             param.attrib["select"] += ref
 
-    new_data = data.xslt(transform)
+    transform = et.XSLT(xslt_data)
+    try:
+        new_data = transform(data)
+    except (et.XSLTParseError, et.XSLTApplyError) as err:
+        for error_message in getattr(err, "error_log"):
+            utils.logger.error(error_message)
+        raise
 
     return new_data
 

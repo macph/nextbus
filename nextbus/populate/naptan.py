@@ -380,8 +380,15 @@ def _get_naptan_data(naptan_file):
         :returns: Transformed data as a XML ElementTree object
     """
     naptan_data = et.parse(naptan_file)
-    transform = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
-    new_data = naptan_data.xslt(transform)
+    xslt_data = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
+    transform = et.XSLT(xslt_data)
+
+    try:
+        new_data = transform(naptan_data)
+    except (et.XSLTParseError, et.XSLTApplyError) as err:
+        for error_message in getattr(err, "error_log"):
+            utils.logger.error(error_message)
+        raise
 
     return new_data
 
@@ -398,7 +405,7 @@ def commit_naptan_data(archive=None, list_files=None):
     query_local = db.session.query(models.Locality.code).all()
     if not query_area or not query_local:
         raise ValueError("NPTG tables are not populated; stop point data "
-                         "cannot be added without the required locality data."
+                         "cannot be added without the required locality data. "
                          "Populate the database with NPTG data first.")
 
     atco_codes = utils.get_atco_codes()

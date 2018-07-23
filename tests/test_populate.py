@@ -152,57 +152,6 @@ class ExtensionTests(unittest.TestCase):
                          "St James's Gate (Stop D)")
 
 
-class DayWeekTests(unittest.TestCase):
-    """ Testing the days_week extension function. """
-    ns = "{http://some_namespace/}"
-
-    def setUp(self):
-        self.node = et.Element(self.ns + "RegularDayType")
-        self.nodes = [self.node]
-        self.days = et.Element(self.ns + "DaysOfWeek")
-
-    def tearDown(self):
-        del self.node, self.nodes
-
-    def test_holidays(self):
-        et.SubElement(self.node, self.ns + "HolidaysOnly")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 0)
-
-    def test_full_week(self):
-        self.node.append(self.days)
-        et.SubElement(self.days, self.ns + "MondayToSunday")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 254)
-
-    def test_weekend(self):
-        self.node.append(self.days)
-        et.SubElement(self.days, self.ns + "Weekend")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 192)
-
-    def test_not_saturday(self):
-        self.node.append(self.days)
-        et.SubElement(self.days, self.ns + "Sunday")
-        et.SubElement(self.days, self.ns + "NotSaturday")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 190)
-
-    def test_not_sunday(self):
-        self.node.append(self.days)
-        et.SubElement(self.days, self.ns + "MondayToSaturday")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 126)
-
-    def test_mon_wed_fri(self):
-        self.node.append(self.days)
-        et.SubElement(self.days, self.ns + "Monday")
-        et.SubElement(self.days, self.ns + "Wednesday")
-        et.SubElement(self.days, self.ns + "Friday")
-
-        self.assertEqual(pop_utils.days_week(None, self.nodes), 42)
-
-
 class DurationTests(unittest.TestCase):
     """ Testing the duration converter """
     def test_one_second(self):

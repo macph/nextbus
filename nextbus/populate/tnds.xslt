@@ -30,68 +30,42 @@
   <xsl:template match="txc:TransXChange">
     <Data>
       <xsl:if test="boolean($services)">
-        <OperatorGroup>
-          <xsl:apply-templates select="$operators" mode="national"/>
-        </OperatorGroup>
-        <LocalOperatorGroup>
-          <xsl:apply-templates select="$operators" mode="local"/>
-        </LocalOperatorGroup>
-        <ServiceGroup>
-          <xsl:apply-templates select="$services"/>
-        </ServiceGroup>
-        <ServiceLineGroup>
-          <xsl:apply-templates select="$lines"/>
-        </ServiceLineGroup>
-        <JourneyPatternGroup>
-          <xsl:apply-templates select="$patterns"/>
-        </JourneyPatternGroup>
-        <JourneySectionsGroup>
-          <xsl:apply-templates select="$pattern_sections"/>
-        </JourneySectionsGroup>
-        <JourneySectionGroup>
-          <xsl:apply-templates select="$sections"/>
-        </JourneySectionGroup>
-        <JourneyLinkGroup>
-          <xsl:apply-templates select="$journey_links"/>
-        </JourneyLinkGroup>
-        <JourneyGroup>
-          <xsl:apply-templates select="$vehicle_journeys"/>
-        </JourneyGroup>
-        <OrganisationGroup>
-          <xsl:apply-templates select="$organisations"/>
-        </OrganisationGroup>
-        <OperatingDateGroup>
-          <xsl:apply-templates select="$organisations" mode="excluded_days"/>
-        </OperatingDateGroup>
-        <OperatingPeriodGroup>
-          <xsl:apply-templates select="$organisations" mode="operating_periods"/>
-        </OperatingPeriodGroup>
-        <OrganisationsGroup>
-          <xsl:apply-templates select="$vehicle_journeys" mode="organisations_served"/>
-        </OrganisationsGroup>
-        <SpecialPeriodGroup>
-          <xsl:apply-templates select="$vehicle_journeys" mode="special_periods"/>
-        </SpecialPeriodGroup>
-        <BankHolidaysGroup>
-          <xsl:apply-templates select="$vehicle_journeys" mode="bank_holidays"/>
-        </BankHolidaysGroup>
+        <xsl:apply-templates select="$operators" mode="national"/>
+        <xsl:apply-templates select="$operators" mode="local"/>
+        <xsl:apply-templates select="$services"/>
+        <xsl:apply-templates select="$lines"/>
+        <xsl:apply-templates select="$patterns"/>
+        <xsl:apply-templates select="$pattern_sections"/>
+        <xsl:apply-templates select="$sections"/>
+        <xsl:apply-templates select="$journey_links"/>
+        <xsl:apply-templates select="$vehicle_journeys"/>
+        <xsl:apply-templates select="$organisations"/>
+        <xsl:apply-templates select="$organisations" mode="excluded_days"/>
+        <xsl:apply-templates select="$organisations" mode="operating_periods"/>
+        <xsl:apply-templates select="$vehicle_journeys" mode="organisations_served"/>
+        <xsl:apply-templates select="$vehicle_journeys" mode="special_periods"/>
+        <xsl:apply-templates select="$vehicle_journeys" mode="bank_holidays"/>
       </xsl:if>
     </Data>
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="national">
-    <Operator>
-      <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
-    </Operator>
+    <xsl:if test="func:national_op_new(txc:NationalOperatorCode)">
+      <Operator>
+        <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
+      </Operator>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="local">
-    <LocalOperator>
-      <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
-      <region_ref><xsl:value-of select="$region"/></region_ref>
-      <code><xsl:value-of select="txc:OperatorCode"/></code>
-      <name><xsl:value-of select="txc:OperatorShortName"/></name>
-    </LocalOperator>
+    <xsl:if test="func:local_op_new(txc:OperatorCode, $region)">
+      <LocalOperator>
+        <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
+        <region_ref><xsl:value-of select="$region"/></region_ref>
+        <code><xsl:value-of select="txc:OperatorCode"/></code>
+        <name><xsl:value-of select="txc:OperatorShortName"/></name>
+      </LocalOperator>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="txc:Service">
@@ -187,7 +161,11 @@
           <xsl:otherwise><xsl:value-of select="concat($s_ref, '-', $jp_id)"/></xsl:otherwise>
         </xsl:choose>
       </section_ref>
-      <stop_start><xsl:value-of select="txc:From/txc:StopPointRef"/></stop_start>
+      <stop_start>
+        <xsl:if test="func:stop_exists(txc:From/txc:StopPointRef)">
+          <xsl:value-of select="txc:From/txc:StopPointRef"/>
+        </xsl:if>
+      </stop_start>
       <wait_start py_type="duration">
         <xsl:choose>
           <xsl:when test="txc:From/txc:WaitTime"><xsl:value-of select="txc:From/txc:WaitTime"/></xsl:when>
@@ -201,7 +179,11 @@
           <xsl:otherwise>1</xsl:otherwise>
         </xsl:choose>
       </stopping_start>
-      <stop_end><xsl:value-of select="txc:To/txc:StopPointRef"/></stop_end>
+      <stop_end>
+        <xsl:if test="func:stop_exists(txc:To/txc:StopPointRef)">
+          <xsl:value-of select="txc:To/txc:StopPointRef"/>
+        </xsl:if>
+      </stop_end>
       <wait_end py_type="duration">
         <xsl:choose>
           <xsl:when test="txc:To/txc:WaitTime"><xsl:value-of select="txc:To/txc:WaitTime"/></xsl:when>

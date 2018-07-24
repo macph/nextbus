@@ -52,6 +52,8 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             # experimentation
             url = URL_FCC
 
+        current_app.logger.info("Requesting live data for ATCO code %s"
+                                % atco_code)
         req = requests.get(url % atco_code, params=parameters)
         req.raise_for_status()
         try:
@@ -194,9 +196,7 @@ def get_nextbus_times(atco_code, **kwargs):
         "local_time": req_date.astimezone(GB_TZ).strftime("%H:%M"),
         "services": services.ordered_list()
     }
-    current_app.logger.debug(
-        "%d services for ATCO code %s:\n%r"
-        % (len(new_data["services"]), atco_code, repr(new_data))
-    )
+    current_app.logger.debug("%d services for ATCO code %s:\n%r" %
+                             (len(new_data["services"]), atco_code, new_data))
 
     return new_data

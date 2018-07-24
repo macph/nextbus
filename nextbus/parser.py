@@ -300,8 +300,8 @@ def create_tsquery_parser():
         try:
             output = expression.parseString(text)
         except pp.ParseException as err:
-            current_app.logger.error("Parser ran into an error with the "
-                                     "search query %r" % query, exc_info=1)
+            current_app.logger.error("Error with search query %r" % query,
+                                     exc_info=1)
             raise ValueError("Query %r cannot be parsed.") from err
 
         if not output:

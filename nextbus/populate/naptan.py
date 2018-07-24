@@ -183,22 +183,9 @@ def _setup_naptan_functions(list_area_codes=None, list_locality_codes=None):
 
     @utils.xslt_func
     @utils.ext_function_text
-    def add_area_code(_, stop_area_code):
-        """ Adds stop area code for checking later. """
-        area_codes.add(stop_area_code)
-        return True
-
-    @utils.xslt_func
-    @utils.ext_function_text
     def parse_ind(_, indicator):
         """ Shortens indicator for display. """
         return ind_parser(indicator)
-
-    @utils.xslt_func
-    @utils.ext_function_text
-    def has_stop_area(_, stop_area_ref):
-        """ Checks list of stop areas code to see if ref is valid. """
-        return stop_area_ref in area_codes
 
 
 def _remove_stop_areas():

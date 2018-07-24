@@ -2,10 +2,9 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:n="http://www.naptan.org.uk/"
-               xmlns:func="http://nextbus.org/functions" 
-               xmlns:exsl="http://exslt.org/common"
+               xmlns:func="http://nextbus.org/functions"
                xmlns:re="http://exslt.org/regular-expressions"
-               exclude-result-prefixes="func exsl re">
+               exclude-result-prefixes="func re">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode)] 
     [@Status='active'][n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]
@@ -13,6 +12,9 @@
   <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
     [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
     [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
+  <xsl:key name="key_stop_areas" match="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
+    [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
+    [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]/n:StopAreaCode" use="func:upper(.)"/>
 
   <xsl:template match="n:NaPTAN">
     <Data>
@@ -22,7 +24,6 @@
   </xsl:template>
 
   <xsl:template match="n:StopArea">
-    <xsl:variable name="add_stop" select="func:add_area_code(n:StopAreaCode)"/>
     <xsl:if test="func:in_admin_area(n:AdministrativeAreaRef)">
       <StopArea>
         <code><xsl:value-of select="func:upper(n:StopAreaCode)"/></code>
@@ -100,8 +101,8 @@
         <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
         <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
         <stop_area_ref>
-          <xsl:if test="func:has_stop_area(n:StopAreas/n:StopAreaRef)">
-            <xsl:value-of select="n:StopAreas/n:StopAreaRef"/>
+          <xsl:if test="boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
+            <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
           </xsl:if>
         </stop_area_ref>
         <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>

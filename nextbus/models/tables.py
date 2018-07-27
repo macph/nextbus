@@ -436,8 +436,7 @@ class LocalOperator(utils.BaseModel):
     )
     operator_ref = db.Column(
         db.Text,
-        db.ForeignKey("operator.code", ondelete="CASCADE"),
-        nullable=False
+        db.ForeignKey("operator.code", ondelete="CASCADE")
     )
     name = db.Column(db.Text, nullable=True)
 
@@ -451,8 +450,6 @@ class Service(utils.BaseModel):
     code = db.Column(db.Text, primary_key=True)
     origin = db.Column(db.Text, nullable=False)
     destination = db.Column(db.Text, nullable=False)
-    date_start = db.Column(db.Date, nullable=False)
-    date_end = db.Column(db.Date)
     local_operator_ref = db.Column(db.Text, nullable=False)
     region_ref = db.Column(db.VARCHAR(2), nullable=False)
     mode = db.Column(
@@ -466,7 +463,6 @@ class Service(utils.BaseModel):
         nullable=False
     )
     # add classification and availability?
-    modified = db.deferred(db.Column(db.DateTime))
 
     operator = db.relationship("Operator", secondary="local_operator",
                                uselist=False)
@@ -480,7 +476,6 @@ class Service(utils.BaseModel):
             ["local_operator.code", "local_operator.region_ref"],
             ondelete="CASCADE"
         ),
-        db.CheckConstraint("date_start <= date_end")
     )
 
 
@@ -488,7 +483,7 @@ class ServiceLine(utils.BaseModel):
     """ Line label for a service. """
     __tablename__ = "service_line"
 
-    id = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     name = db.Column(db.Text)
     service_ref = db.Column(
         db.Text,
@@ -507,7 +502,7 @@ class JourneyPattern(utils.BaseModel):
     """ Sequences of timing links. """
     __tablename__ = "journey_pattern"
 
-    id = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
@@ -519,7 +514,8 @@ class JourneyPattern(utils.BaseModel):
                 values_callable=types.enum_values),
         nullable=False
     )
-    modified = db.deferred(db.Column(db.DateTime))
+    date_start = db.Column(db.Date, nullable=False)
+    date_end = db.Column(db.Date)
 
     sections = db.relationship("JourneySection", secondary="journey_sections",
                                backref="patterns",
@@ -534,19 +530,23 @@ class JourneyPattern(utils.BaseModel):
         order_by="JourneySections.sequence, JourneyLink.sequence"
     )
 
+    __table_args__ = (
+        db.CheckConstraint("date_start <= date_end"),
+    )
+
 
 class JourneySections(utils.BaseModel):
     """ Sequences of journey sections for a pattern. """
     __tablename__ = "journey_sections"
 
     pattern_ref = db.Column(
-        db.Text,
+        db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
         primary_key=True,
         index=True
     )
     section_ref = db.Column(
-        db.Text,
+        db.Integer,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
         primary_key=True,
         index=True
@@ -562,7 +562,7 @@ class JourneySection(utils.BaseModel):
     """ Sequences of journey timing links. """
     __tablename__ = "journey_section"
 
-    id = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     links = db.relationship("JourneyLink", backref="section",
                             order_by="JourneyLink.sequence")
 
@@ -571,9 +571,9 @@ class JourneyLink(utils.BaseModel):
     """ Link between two stops with timing. """
     __tablename__ = "journey_link"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     section_ref = db.Column(
-        db.Text,
+        db.Integer,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
         nullable=False,
         index=True
@@ -612,8 +612,7 @@ class JourneyLink(utils.BaseModel):
     # Direction for associated RouteLink
     route_direction = db.Column(
         db.Enum(types.Direction, name="direction",
-                values_callable=types.enum_values),
-        nullable=False
+                values_callable=types.enum_values)
     )
     sequence = db.Column(db.Integer, index=True)
 
@@ -622,11 +621,39 @@ class JourneyLink(utils.BaseModel):
     )
 
 
+class JourneySpecificLink(utils.BaseModel):
+    """ Journey timing link for a specific journey. """
+    __tablename__ = "journey_specific_link"
+
+    id = db.Column(db.Integer, primary_key=True)
+    journey_ref = db.Column(
+        db.Integer,
+        db.ForeignKey("journey.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    link_ref = db.Column(
+        db.Integer,
+        db.ForeignKey("journey_link.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    wait_start = db.Column(db.Interval, nullable=True)
+    stopping_start = db.Column(db.Boolean, nullable=True)
+    wait_end = db.Column(db.Interval, nullable=True)
+    stopping_end = db.Column(db.Boolean, nullable=True)
+    run_time = db.Column(db.Interval, nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("journey_ref", "link_ref"),
+    )
+
+
 class Journey(utils.BaseModel):
     """ Individual vehicle journey for a service. """
     __tablename__ = "journey"
 
-    code = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
@@ -634,16 +661,26 @@ class Journey(utils.BaseModel):
         index=True
     )
     line_ref = db.Column(
-        db.Text,
+        db.Integer,
         db.ForeignKey("service_line.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
     pattern_ref = db.Column(
-        db.Text,
+        db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
         nullable=False,
         index=True
+    )
+    start_run = db.Column(
+        db.Integer,
+        db.ForeignKey("journey_link.id", ondelete="CASCADE"),
+        nullable=True
+    )
+    end_run = db.Column(
+        db.Integer,
+        db.ForeignKey("journey_link.id", ondelete="CASCADE"),
+        nullable=True
     )
     departure = db.Column(db.Time, nullable=False)
     # Add frequency?
@@ -681,8 +718,8 @@ class Organisations(utils.BaseModel):
         primary_key=True
     )
     journey_ref = db.Column(
-        db.Text,
-        db.ForeignKey("journey.code", ondelete="CASCADE"),
+        db.Integer,
+        db.ForeignKey("journey.id", ondelete="CASCADE"),
         primary_key=True
     )
     operational = db.Column(db.Boolean, nullable=False)
@@ -730,8 +767,8 @@ class SpecialPeriod(utils.BaseModel):
 
     id = db.Column(db.Integer, primary_key=True)
     journey_ref = db.Column(
-        db.Text,
-        db.ForeignKey("journey.code", ondelete="CASCADE"),
+        db.Integer,
+        db.ForeignKey("journey.id", ondelete="CASCADE"),
     )
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)
@@ -739,7 +776,6 @@ class SpecialPeriod(utils.BaseModel):
 
     __table_args__ = (
         db.CheckConstraint("date_start <= date_end"),
-        db.UniqueConstraint("journey_ref", "date_start", "date_end")
     )
 
 
@@ -765,8 +801,8 @@ class BankHolidays(utils.BaseModel):
         primary_key=True
     )
     journey_ref = db.Column(
-        db.Text,
-        db.ForeignKey("journey.code", ondelete="CASCADE"),
+        db.Integer,
+        db.ForeignKey("journey.id", ondelete="CASCADE"),
         primary_key=True
     )
     operational = db.Column(db.Boolean)

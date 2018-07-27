@@ -222,6 +222,7 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("JourneySections", models.JourneySections)
         tnds.add("JourneyLink", models.JourneyLink)
         tnds.add("Journey", models.Journey)
+        tnds.add("JourneySpecificLink", models.JourneySpecificLink)
         tnds.add("Organisation", models.Organisation, indices=("code",))
         tnds.add("OperatingDate", models.OperatingDate)
         tnds.add("OperatingPeriod", models.OperatingPeriod)

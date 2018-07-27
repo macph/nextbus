@@ -851,10 +851,77 @@
   <VehicleJourneys>
     <VehicleJourney>
       <OperatorRef>YTC</OperatorRef>
-      <VehicleJourneyCode>72099</VehicleJourneyCode>
+      <VehicleJourneyCode>72098</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
       <JourneyPatternRef>JPS-73</JourneyPatternRef>
+      <DepartureTime>12:19:00</DepartureTime>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80828</JourneyPatternTimingLinkRef>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80829</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+        <RunTime>PT0S</RunTime>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80830</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80831</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80832</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+        <RunTime>PT0S</RunTime>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80833</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+        <To>
+          <Activity>pass</Activity>
+        </To>
+      </VehicleJourneyTimingLink>
+      <VehicleJourneyTimingLink>
+        <JourneyPatternTimingLinkRef>JPS_YSCO120-73_80834</JourneyPatternTimingLinkRef>
+        <From>
+          <Activity>pass</Activity>
+        </From>
+      </VehicleJourneyTimingLink>
+    </VehicleJourney>
+    <VehicleJourney>
+      <OperatorRef>YTC</OperatorRef>
+      <VehicleJourneyCode>72099</VehicleJourneyCode>
+      <ServiceRef>YSCO120</ServiceRef>
+      <LineRef>0</LineRef>
+      <VehicleJourneyRef>72098</VehicleJourneyRef>
       <DepartureTime>14:19:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>

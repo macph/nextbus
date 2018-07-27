@@ -7,6 +7,7 @@
                exclude-result-prefixes="xsl func exsl re txc">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="region"/>
+  <xsl:param name="file"/>
 
   <xsl:param name="operators" select="txc:TransXChange/txc:Operators/txc:Operator"/>
   <xsl:param name="services" select="txc:TransXChange/txc:Services/txc:Service[txc:StandardService]
@@ -99,7 +100,7 @@
 
   <xsl:template match="txc:Line">
     <ServiceLine>
-      <id><xsl:value-of select="@id"/></id>
+      <id><xsl:value-of select="func:add_id(@id, $file, 'ServiceLine')"/></id>
       <name><xsl:value-of select="txc:LineName"/></name>
       <service_ref>
         <xsl:choose>
@@ -112,7 +113,7 @@
 
   <xsl:template match="txc:JourneyPattern">
     <JourneyPattern>
-      <id><xsl:value-of select="@id"/></id>
+      <id><xsl:value-of select="func:add_id(@id, $file, 'JourneyPattern')"/></id>
       <service_ref>
         <xsl:choose>
           <xsl:when test="starts-with(ancestor::txc:Service/txc:ServiceCode, $region)"><xsl:value-of select="ancestor::txc:Service/txc:ServiceCode"/></xsl:when>
@@ -135,22 +136,22 @@
 
   <xsl:template match="txc:JourneyPatternSection">
     <JourneySection>
-      <id><xsl:value-of select="@id"/></id>
+      <id><xsl:value-of select="func:add_id(@id, $file, 'JourneySection')"/></id>
     </JourneySection>
   </xsl:template>
 
   <xsl:template match="txc:JourneyPatternSectionRefs">
     <JourneySections>
-      <pattern_ref><xsl:value-of select="ancestor::txc:JourneyPattern/@id"/></pattern_ref>
-      <section_ref><xsl:value-of select="current()"/></section_ref>
+      <pattern_ref><xsl:value-of select="func:get_id(ancestor::txc:JourneyPattern/@id, $file, 'JourneyPattern')"/></pattern_ref>
+      <section_ref><xsl:value-of select="func:get_id(current(), $file, 'JourneySection')"/></section_ref>
       <sequence><xsl:value-of select="count(preceding-sibling::txc:JourneyPatternSectionRefs)"/></sequence>
     </JourneySections>
   </xsl:template>
 
   <xsl:template match="txc:JourneyPatternTimingLink">
     <JourneyLink>
-      <id><xsl:value-of select="@id"/></id>
-      <section_ref><xsl:value-of select="ancestor::txc:JourneyPatternSection/@id"/></section_ref>
+      <id><xsl:value-of select="func:add_id(@id, $file, 'JourneyLink')"/></id>
+      <section_ref><xsl:value-of select="func:get_id(ancestor::txc:JourneyPatternSection/@id, $file, 'JourneySection')"/></section_ref>
       <stop_start>
         <xsl:if test="func:stop_exists(txc:From/txc:StopPointRef)">
           <xsl:value-of select="txc:From/txc:StopPointRef"/>
@@ -200,32 +201,32 @@
     <xsl:variable name="vj_jp_op" select="key('key_patterns', key('key_journeys', txc:VehicleJourneyRef)/txc:JourneyPatternRef)/txc:OperatingProfile"/>
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <Journey>
-      <id><xsl:value-of select="txc:VehicleJourneyCode"/></id>
+      <id><xsl:value-of select="func:add_id(txc:VehicleJourneyCode, $file, 'Journey')"/></id>
       <service_ref>
         <xsl:choose>
           <xsl:when test="starts-with(txc:ServiceRef, $region)"><xsl:value-of select="txc:ServiceRef"/></xsl:when>
           <xsl:otherwise><xsl:value-of select="concat($region, '-', txc:ServiceRef)"/></xsl:otherwise>
         </xsl:choose>
       </service_ref>
-      <line_ref><xsl:value-of select="txc:LineRef"/></line_ref>
+      <line_ref><xsl:value-of select="func:get_id(txc:LineRef, $file, 'ServiceLine')"/></line_ref>
       <pattern_ref>
         <xsl:choose>
           <xsl:when test="txc:VehicleJourneyRef">
-            <xsl:value-of select="key('key_journeys', txc:VehicleJourneyRef)/txc:JourneyPatternRef"/>
+            <xsl:value-of select="func:get_id(key('key_journeys', txc:VehicleJourneyRef)/txc:JourneyPatternRef, $file, 'JourneyPattern')"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="txc:JourneyPatternRef"/>
+            <xsl:value-of select="func:get_id(txc:JourneyPatternRef, $file, 'JourneyPattern')"/>
           </xsl:otherwise>
         </xsl:choose>
       </pattern_ref>
       <start_run>
         <xsl:if test="txc:StartDeadRun/txc:ShortWorking">
-          <xsl:value-of select="txc:StartDeadRun/txc:ShortWorking/txc:JourneyPatternTimingLinkRef"/>
+          <xsl:value-of select="func:get_id(txc:StartDeadRun/txc:ShortWorking/txc:JourneyPatternTimingLinkRef, $file, 'JourneyLink')"/>
         </xsl:if>
       </start_run>
       <end_run>
         <xsl:if test="txc:EndDeadRun/txc:ShortWorking">
-          <xsl:value-of select="txc:EndDeadRun/txc:ShortWorking/txc:JourneyPatternTimingLinkRef"/>
+          <xsl:value-of select="func:get_id(txc:EndDeadRun/txc:ShortWorking/txc:JourneyPatternTimingLinkRef, $file, 'JourneyLink')"/>
         </xsl:if>
       </end_run>
       <departure><xsl:value-of select="txc:DepartureTime"/></departure>
@@ -261,8 +262,8 @@
   <xsl:template name="journey_specific_link">
     <xsl:param name="vj"/>
     <JourneySpecificLink>
-      <link_ref><xsl:value-of select="txc:JourneyPatternTimingLinkRef"/></link_ref>
-      <journey_ref><xsl:value-of select="$vj"/></journey_ref>
+      <link_ref><xsl:value-of select="func:get_id(txc:JourneyPatternTimingLinkRef, $file, 'JourneyLink')"/></link_ref>
+      <journey_ref><xsl:value-of select="func:get_id($vj, $file, 'Journey')"/></journey_ref>
       <wait_start py_type="duration"><xsl:value-of select="txc:From/txc:WaitTime"/></wait_start>
       <stopping_start py_type="bool">
         <xsl:if test="txc:From/txc:Activity">
@@ -352,7 +353,7 @@
     <xsl:param name="working"/>
     <Organisations>
       <org_ref><xsl:value-of select="concat($region, current())"/></org_ref>
-      <journey_ref><xsl:value-of select="ancestor::txc:VehicleJourney/txc:VehicleJourneyCode"/></journey_ref>
+      <journey_ref><xsl:value-of select="func:get_id(ancestor::txc:VehicleJourney/txc:VehicleJourneyCode, $file, 'Journey')"/></journey_ref>
       <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
       <working py_type="bool"><xsl:value-of select="$working"/></working>
     </Organisations>
@@ -439,7 +440,7 @@
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="special_periods">
-    <xsl:variable name="id" select="txc:VehicleJourneyCode"/>
+    <xsl:variable name="id" select="func:get_id(txc:VehicleJourneyCode, $file, 'Journey')"/>
     <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
     <xsl:variable name="vj_op" select="key('key_journeys', txc:VehicleJourneyRef)/txc:OperatingProfile"/>
     <xsl:variable name="vj_jp_op" select="key('key_patterns', key('key_journeys', txc:VehicleJourneyRef)/txc:JourneyPatternRef)/txc:OperatingProfile"/>
@@ -581,7 +582,7 @@
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="bank_holidays">
-    <xsl:variable name="id" select="txc:VehicleJourneyCode"/>
+    <xsl:variable name="id" select="func:get_id(txc:VehicleJourneyCode, $file, 'Journey')"/>
     <xsl:variable name="jp_op" select="key('key_patterns', txc:JourneyPatternRef)/txc:OperatingProfile"/>
     <xsl:variable name="vj_op" select="key('key_journeys', txc:VehicleJourneyRef)/txc:OperatingProfile"/>
     <xsl:variable name="vj_jp_op" select="key('key_patterns', key('key_journeys', txc:VehicleJourneyRef)/txc:JourneyPatternRef)/txc:OperatingProfile"/>

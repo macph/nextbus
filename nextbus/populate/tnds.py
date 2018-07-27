@@ -48,6 +48,134 @@ def download_tnds_files():
     return paths
 
 
+class IndexList(object):
+    """ Unique list using a dict with keys as the list and values its indices.
+    """
+    def __init__(self, iterable=None, initial=0):
+        self._map = {}
+        self._current = self._initial = initial
+        if iterable is not None:
+            for i in iterable:
+                self.add(i)
+
+    def __repr__(self):
+        items = ", ".join(repr(i) for i in self)
+        return "<UniqueList(%s, initial=%s)>" % (items, self._initial)
+
+    def __len__(self):
+        return len(self._map)
+
+    def __contains__(self, item):
+        return item in self._map
+
+    def __getitem__(self, index):
+        for k, j in self._map.items():
+            if index == j:
+                return k
+        else:
+            raise IndexError("Index out of range")
+
+    def __iter__(self):
+        return self._iter()
+
+    def _iter(self):
+        """ Generator function to be used for iter() """
+        for i in sorted(self._map.values()):
+            for k, j in self._map.items():
+                if i == j:
+                    yield k
+                    break
+
+    def add(self, item):
+        """ Adds item to list, returning its index. If item is already in list,
+            returns the existing item's index.
+        """
+        if item not in self._map:
+            self._map[item] = self._current
+            self._current += 1
+
+        return self._map[item]
+
+    def append(self, item):
+        """ Appends item to list. If item is already in list, an error is
+            raised.
+        """
+        if item not in self._map:
+            self._map[item] = self._current
+            self._current += 1
+        else:
+            raise KeyError("Item %r already in list." % item)
+
+    def get(self, item):
+        """ Gets index of an item or None if it does not exist. """
+        return self._map.get(item)
+
+
+class RowIds(object):
+    """ Assigns each row for journey patterns, sections and links an unique ID.
+
+        A service in the TNDS dataset has its own XML file or split up across
+        several files, with the associated journey patterns having unique IDs
+        within only these documents.
+    """
+    def __init__(self, check_existing=True):
+        self._id = {}
+        self.existing = check_existing
+
+    def _get_sequence(self, model_name):
+        """ Check database to find max value to start from or use 1. """
+        start = 1
+        if self.existing:
+            # Get maximum ID integer from table and start off from there
+            model = getattr(models, model_name)
+            query = db.session.query(db.func.max(model.id)).one()
+            if query[0] is not None:
+                start = query[0] + 1
+
+        return start
+
+    def add(self, id_, file_, name):
+        """ Adds file name + code/ID to list, returning an integer ID. """
+        if name not in self._id:
+            # Find the initial sequence and set up list
+            initial = self._get_sequence(name)
+            utils.logger.info("Setting sequence for %s to %d" %
+                              (name, initial))
+            self._id[name] = IndexList(initial=initial)
+
+        return self._id[name].add((file_, id_))
+
+    def get(self, id_, file_, name):
+        """ Gets integer ID for a file name and code/ID. """
+        return self._id[name].get((file_, id_)) if name in self._id else None
+
+
+def setup_tnds_id_functions(check_existing=True):
+    """ Sets up XSLT functions to access row IDs. """
+    ids = RowIds(check_existing=check_existing)
+
+    @utils.xslt_func
+    @utils.ext_function_text
+    def add_id(_, id_, file_, name):
+        """ Adds internal ID and gets new integer ID. """
+        return ids.add(id_, file_, name)
+
+    @utils.xslt_func
+    @utils.ext_function_text
+    def get_id(_, id_, file_, name):
+        """ Gets integer ID from existing internal ID. Raise error if doesn't
+            exist
+        """
+        integer = ids.get(id_, file_, name)
+        if not integer:
+            raise KeyError("ID %r does not exist for file %r and model %r." %
+                           (id_, file_, name))
+
+        return integer
+
+    return ids
+
+
 @utils.xslt_func
 def days_week(_, nodes=None):
     """ Gets days of week from a RegularDayType element.
@@ -57,6 +185,7 @@ def days_week(_, nodes=None):
     """
     week = 0
     mon, tues, wed, thurs, fri, sat, sun = range(1, 8)
+
     def set_days(first, last=None):
         """ Sets bits for an inclusive range of days. """
         nonlocal week
@@ -155,7 +284,7 @@ def weeks_month(_, nodes):
     return month if month > 0 else None
 
 
-def setup_tnds_xslt_functions():
+def setup_tnds_functions():
     """ Finds all existing operators and stop points in database, seting up
         XSLT functions compare with incoming operators and journey links.
     """
@@ -198,15 +327,15 @@ def _commit_each_tnds(transform, archive, region):
     """ Transforms each XML file and commit data to DB. """
     str_region = et.XSLT.strparam(region)
     tnds = utils.PopulateData()
-    setup_tnds_xslt_functions()
 
     for file_ in file_ops.iter_archive(archive):
-        utils.logger.info("Parsing file %r for region %r" %
-                          (file_.name, region))
+        utils.logger.info("Parsing file %r" % os.path.join(archive, file_.name))
         data = et.parse(file_)
+        file_name = et.XSLT.strparam(file_.name)
+
         try:
-            new_data = transform(data, region=str_region)
-        except (et.XSLTParseError, et.XSLTApplyError) as err:
+            new_data = transform(data, region=str_region, file=file_name)
+        except et.XSLTError as err:
             for error_message in getattr(err, "error_log"):
                 utils.logger.error(error_message)
             raise
@@ -215,7 +344,7 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("Operator", models.Operator, indices=("code",))
         tnds.add("LocalOperator", models.LocalOperator,
                  indices=("region_ref", "code"))
-        tnds.add("Service", models.Service)
+        tnds.add("Service", models.Service, indices=("code",))
         tnds.add("ServiceLine", models.ServiceLine)
         tnds.add("JourneyPattern", models.JourneyPattern)
         tnds.add("JourneySection", models.JourneySection)
@@ -251,5 +380,7 @@ def commit_tnds_data(archive=None, region=None):
         regions = {region: archive}
 
     transform = _get_tnds_transform()
+    setup_tnds_functions()
+    setup_tnds_id_functions()
     for region, archive in regions.items():
         _commit_each_tnds(transform, archive, region)

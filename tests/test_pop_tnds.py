@@ -7,7 +7,9 @@ import unittest
 import lxml.etree as et
 
 from nextbus.populate.utils import xslt_func
-from nextbus.populate.tnds import _get_tnds_transform, days_week
+from nextbus.populate.tnds import (
+    _get_tnds_transform, days_week, setup_tnds_id_functions
+)
 import utils
 
 
@@ -72,6 +74,8 @@ class TransformTests(utils.BaseXMLTests):
     def test_transform_tnds(self):
         transform = _get_tnds_transform()
         expected = et.parse(TNDS_OUT, parser=self.parser)
+        # Set up functions to assign IDs
+        setup_tnds_id_functions(check_existing=False)
 
         def always_true(_, *args):
             return True
@@ -82,7 +86,8 @@ class TransformTests(utils.BaseXMLTests):
         xslt_func["stop_exists"] = always_true
 
         try:
-            output = transform(et.parse(TNDS_RAW), region=et.XSLT.strparam("Y"))
+            output = transform(et.parse(TNDS_RAW), region=et.XSLT.strparam("Y"),
+                               file=et.XSLT.strparam("TNDS_raw.xml"))
         except (et.XSLTApplyError, et.XSLTParseError) as err:
             for msg in getattr(err, "error_log"):
                 print(msg)

@@ -12,49 +12,49 @@
     <code>YSCO120</code>
     <origin>Halfway</origin>
     <destination>Fulwood</destination>
-    <date_start>2018-01-28</date_start>
-    <date_end>2038-01-17</date_end>
     <local_operator_ref>YTC</local_operator_ref>
     <region_ref>Y</region_ref>
     <mode>bus</mode>
     <direction>outbound</direction>
-    <modified py_type="datetime">2018-03-19T10:08:00-00:00</modified>
   </Service>
   <ServiceLine>
-    <id>YSCO120-0</id>
+    <id>1</id>
     <name>120</name>
     <service_ref>YSCO120</service_ref>
   </ServiceLine>
   <JourneyPattern>
-    <id>YSCO120-JPS-73</id>
+    <id>1</id>
     <service_ref>YSCO120</service_ref>
     <direction>inbound</direction>
-    <modified py_type="datetime"/>
+    <date_start>2018-01-28</date_start>
+    <date_end>2038-01-17</date_end>
   </JourneyPattern>
   <JourneyPattern>
-    <id>JPS_YSCO120-77</id>
+    <id>2</id>
     <service_ref>YSCO120</service_ref>
     <direction>outbound</direction>
-    <modified py_type="datetime"/>
+    <date_start>2018-01-28</date_start>
+    <date_end>2038-01-17</date_end>
   </JourneyPattern>
+  <JourneySection>
+    <id>1</id>
+  </JourneySection>
+  <JourneySection>
+    <id>2</id>
+  </JourneySection>
   <JourneySections>
-    <pattern_ref>YSCO120-JPS-73</pattern_ref>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <pattern_ref>1</pattern_ref>
+    <section_ref>1</section_ref>
     <sequence>0</sequence>
   </JourneySections>
   <JourneySections>
-    <pattern_ref>JPS_YSCO120-77</pattern_ref>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <pattern_ref>2</pattern_ref>
+    <section_ref>2</section_ref>
     <sequence>0</sequence>
   </JourneySections>
-  <JourneySection>
-    <id>YSCO120-JPS-73</id>
-  </JourneySection>
-  <JourneySection>
-    <id>JPS_YSCO120-77</id>
-  </JourneySection>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>1</id>
+    <section_ref>1</section_ref>
     <stop_start>370021129</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>PTP</timing_start>
@@ -69,7 +69,8 @@
     <sequence>0</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>2</id>
+    <section_ref>1</section_ref>
     <stop_start>370021130</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -84,7 +85,8 @@
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>3</id>
+    <section_ref>1</section_ref>
     <stop_start>370021134</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -99,7 +101,8 @@
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>4</id>
+    <section_ref>1</section_ref>
     <stop_start>370021136</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -114,7 +117,8 @@
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>5</id>
+    <section_ref>1</section_ref>
     <stop_start>370021138</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -129,7 +133,8 @@
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>6</id>
+    <section_ref>1</section_ref>
     <stop_start>370020764</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -144,7 +149,8 @@
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>7</id>
+    <section_ref>1</section_ref>
     <stop_start>370020789</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -159,7 +165,8 @@
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>8</id>
+    <section_ref>1</section_ref>
     <stop_start>370020771</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -174,7 +181,8 @@
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>9</id>
+    <section_ref>1</section_ref>
     <stop_start>370020772</stop_start>
     <wait_start py_type="duration">PT60S</wait_start>
     <timing_start>PTP</timing_start>
@@ -189,7 +197,8 @@
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>10</id>
+    <section_ref>1</section_ref>
     <stop_start>370020376</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -204,7 +213,8 @@
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>11</id>
+    <section_ref>1</section_ref>
     <stop_start>370023677</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -219,7 +229,8 @@
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>12</id>
+    <section_ref>1</section_ref>
     <stop_start>370020361</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -234,7 +245,8 @@
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>13</id>
+    <section_ref>1</section_ref>
     <stop_start>370020362</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -249,7 +261,8 @@
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>14</id>
+    <section_ref>1</section_ref>
     <stop_start>370022796</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -264,7 +277,8 @@
     <sequence>13</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>15</id>
+    <section_ref>1</section_ref>
     <stop_start>370023176</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -279,7 +293,8 @@
     <sequence>14</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>16</id>
+    <section_ref>1</section_ref>
     <stop_start>370027392</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -294,7 +309,8 @@
     <sequence>15</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>17</id>
+    <section_ref>1</section_ref>
     <stop_start>370023715</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>PTP</timing_start>
@@ -309,7 +325,8 @@
     <sequence>16</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>18</id>
+    <section_ref>1</section_ref>
     <stop_start>370022816</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -324,7 +341,8 @@
     <sequence>17</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>YSCO120-JPS-73</section_ref>
+    <id>19</id>
+    <section_ref>1</section_ref>
     <stop_start>370022788</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -339,7 +357,8 @@
     <sequence>18</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>20</id>
+    <section_ref>2</section_ref>
     <stop_start>370022831</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>PTP</timing_start>
@@ -354,7 +373,8 @@
     <sequence>0</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>21</id>
+    <section_ref>2</section_ref>
     <stop_start>370022881</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -369,7 +389,8 @@
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>22</id>
+    <section_ref>2</section_ref>
     <stop_start>370023697</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -384,7 +405,8 @@
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>23</id>
+    <section_ref>2</section_ref>
     <stop_start>370020360</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -399,7 +421,8 @@
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>24</id>
+    <section_ref>2</section_ref>
     <stop_start>370020378</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -414,7 +437,8 @@
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>25</id>
+    <section_ref>2</section_ref>
     <stop_start>370020377</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -429,7 +453,8 @@
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>26</id>
+    <section_ref>2</section_ref>
     <stop_start>370020775</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>PTP</timing_start>
@@ -444,7 +469,8 @@
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>27</id>
+    <section_ref>2</section_ref>
     <stop_start>370020790</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -459,7 +485,8 @@
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>28</id>
+    <section_ref>2</section_ref>
     <stop_start>370020773</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -474,7 +501,8 @@
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>29</id>
+    <section_ref>2</section_ref>
     <stop_start>370020778</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -489,7 +517,8 @@
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>30</id>
+    <section_ref>2</section_ref>
     <stop_start>370021137</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -504,7 +533,8 @@
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>31</id>
+    <section_ref>2</section_ref>
     <stop_start>370021135</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -519,7 +549,8 @@
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>32</id>
+    <section_ref>2</section_ref>
     <stop_start>370021132</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -534,7 +565,8 @@
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
-    <section_ref>JPS_YSCO120-77</section_ref>
+    <id>33</id>
+    <section_ref>2</section_ref>
     <stop_start>370021131</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
     <timing_start>OTH</timing_start>
@@ -549,68 +581,219 @@
     <sequence>13</sequence>
   </JourneyLink>
   <Journey>
-    <code>YSCO120-72099</code>
+    <id>1</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>YSCO120-JPS-73</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>1</pattern_ref>
+    <start_run/>
+    <end_run/>
+    <departure>12:19:00</departure>
+    <days>126</days>
+    <weeks/>
+  </Journey>
+  <Journey>
+    <id>2</id>
+    <service_ref>YSCO120</service_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>1</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>14:19:00</departure>
     <days>126</days>
     <weeks/>
   </Journey>
   <Journey>
-    <code>YSCO120-72100</code>
+    <id>3</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>YSCO120-JPS-73</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>1</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>16:19:00</departure>
     <days>190</days>
     <weeks>5</weeks>
   </Journey>
   <Journey>
-    <code>YSCO120-72101</code>
+    <id>4</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>YSCO120-JPS-73</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>1</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>18:19:00</departure>
     <days>254</days>
     <weeks/>
   </Journey>
   <Journey>
-    <code>YSCO120-72102</code>
+    <id>5</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>YSCO120-JPS-73</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>1</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>18:19:00</departure>
     <days>0</days>
     <weeks/>
   </Journey>
   <Journey>
-    <code>YSCO120-72118</code>
+    <id>6</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>JPS_YSCO120-77</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>2</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>14:32:00</departure>
     <days>62</days>
     <weeks/>
   </Journey>
   <Journey>
-    <code>YSCO120-72119</code>
+    <id>7</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>JPS_YSCO120-77</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>2</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>16:32:00</departure>
     <days>254</days>
     <weeks/>
   </Journey>
   <Journey>
-    <code>YSCO120-72287</code>
+    <id>8</id>
     <service_ref>YSCO120</service_ref>
-    <line_ref>YSCO120-0</line_ref>
-    <pattern_ref>JPS_YSCO120-77</pattern_ref>
+    <line_ref>1</line_ref>
+    <pattern_ref>2</pattern_ref>
+    <start_run/>
+    <end_run/>
     <departure>16:32:00</departure>
     <days>0</days>
     <weeks/>
   </Journey>
+  <JourneySpecificLink>
+    <link_ref>3</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool"/>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>4</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration">PT0S</run_time>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>5</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>6</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>7</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration">PT0S</run_time>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>8</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>9</link_ref>
+    <journey_ref>1</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool"/>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>3</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool"/>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>4</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration">PT0S</run_time>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>5</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>6</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>7</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration">PT0S</run_time>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>8</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool">0</stopping_end>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
+  <JourneySpecificLink>
+    <link_ref>9</link_ref>
+    <journey_ref>2</journey_ref>
+    <wait_start py_type="duration"/>
+    <stopping_start py_type="bool">0</stopping_start>
+    <wait_end py_type="duration"/>
+    <stopping_end py_type="bool"/>
+    <run_time py_type="duration"/>
+  </JourneySpecificLink>
   <Organisation>
     <code>Y1</code>
   </Organisation>
@@ -661,246 +844,252 @@
   </OperatingPeriod>
   <Organisations>
     <org_ref>Y1</org_ref>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">1</operational>
     <working py_type="bool">1</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
     <working py_type="bool">0</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
     <working py_type="bool">0</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">0</operational>
     <working py_type="bool">1</working>
   </Organisations>
   <SpecialPeriod>
-    <journey_ref>YSCO120-72099</journey_ref>
+    <journey_ref>1</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>2</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>4</journey_ref>
+    <date_start>2018-04-03</date_start>
+    <date_end>2018-04-03</date_end>
+    <operational py_type="bool">0</operational>
+  </SpecialPeriod>
+  <SpecialPeriod>
+    <journey_ref>5</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">1</operational>
   </SpecialPeriod>
   <SpecialPeriod>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">1</operational>
   </SpecialPeriod>
   <BankHolidays>
     <name>NewYearsDay</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>GoodFriday</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>EasterMonday</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>MayDay</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>SpringBank</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>LateSummerBankHolidayNotScotland</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDay</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDay</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDayHoliday</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDayHoliday</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>NewYearsDayHoliday</name>
-    <journey_ref>YSCO120-72101</journey_ref>
+    <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>NewYearsDay</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>GoodFriday</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>EasterMonday</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>MayDay</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>SpringBank</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>LateSummerBankHolidayNotScotland</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDay</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDay</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDayHoliday</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDayHoliday</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>NewYearsDayHoliday</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasEve</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>NewYearsEve</name>
-    <journey_ref>YSCO120-72102</journey_ref>
+    <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDay</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDay</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>GoodFriday</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>NewYearsDay</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>LateSummerBankHolidayNotScotland</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>MayDay</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>EasterMonday</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>SpringBank</name>
-    <journey_ref>YSCO120-72119</journey_ref>
+    <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
     <name>EasterMonday</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>MayDay</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>SpringBank</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>LateSummerBankHolidayNotScotland</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>ChristmasDay</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
     <name>BoxingDay</name>
-    <journey_ref>YSCO120-72287</journey_ref>
+    <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
 </Data>

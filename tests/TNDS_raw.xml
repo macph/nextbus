@@ -360,7 +360,7 @@
           <TimingStatus>OTH</TimingStatus>
         </To>
         <RouteLinkRef>YSCO120_004_80826</RouteLinkRef>
-        <Direction>inbound</Direction>
+        <!-- Should inherit Direction from RouteLink or JourneyPattern -->
         <RunTime>PT60S</RunTime>
       </JourneyPatternTimingLink>
       <JourneyPatternTimingLink id="JPS_YSCO120-73_80827">
@@ -784,7 +784,7 @@
           <Activity>setDown</Activity>
         </To>
         <RouteLinkRef>YSCO120_006_80977</RouteLinkRef>
-        <Direction>outbound</Direction>
+        <!-- Should inherit Direction from RouteLink or JourneyPattern -->
         <RunTime>PT120S</RunTime>
       </JourneyPatternTimingLink>
     </JourneyPatternSection>
@@ -851,6 +851,7 @@
   <VehicleJourneys>
     <VehicleJourney>
       <OperatorRef>YTC</OperatorRef>
+      <!-- Should inherit OperatingProfile from JourneyPattern -->
       <VehicleJourneyCode>72098</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
@@ -918,11 +919,13 @@
     </VehicleJourney>
     <VehicleJourney>
       <OperatorRef>YTC</OperatorRef>
+      <!-- Should inherit OperatingProfile from JourneyPattern via VehicleJourney -->
       <VehicleJourneyCode>72099</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
       <VehicleJourneyRef>72098</VehicleJourneyRef>
       <DepartureTime>14:19:00</DepartureTime>
+      <!-- Should inherit VehicleJourneyTimingLinks from VehicleJourney -->
     </VehicleJourney>
     <VehicleJourney>
       <OperatorRef>YTC</OperatorRef>
@@ -1030,6 +1033,7 @@
     </VehicleJourney>
     <VehicleJourney>
       <OperatorRef>YTC</OperatorRef>
+      <!-- Should inherit OperatingProfile from Service via JourneyPattern  -->
       <VehicleJourneyCode>72118</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>

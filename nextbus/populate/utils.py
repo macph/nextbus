@@ -221,6 +221,20 @@ def capitalize(_, result):
     return " ".join(list_words)
 
 
+@xslt_func
+@ext_function_text
+def l_split(_, text, char):
+    """ Strips string to left of and including specified characters."""
+    return text.split(char)[0]
+
+
+@xslt_func
+@ext_function_text
+def r_split(_, text, char):
+    """ Strips string to left of and including specified characters."""
+    return text.split(char)[-1]
+
+
 def get_atco_codes():
     """ Helper function to get list of ATCO codes from config. """
     atco_codes = current_app.config.get("ATCO_CODES")

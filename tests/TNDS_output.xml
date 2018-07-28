@@ -14,8 +14,7 @@
     <destination>Fulwood</destination>
     <local_operator_ref>YTC</local_operator_ref>
     <region_ref>Y</region_ref>
-    <mode>bus</mode>
-    <direction>outbound</direction>
+    <mode>1</mode>
   </Service>
   <ServiceLine>
     <id>1</id>
@@ -25,14 +24,14 @@
   <JourneyPattern>
     <id>1</id>
     <service_ref>YSCO120</service_ref>
-    <direction>inbound</direction>
+    <direction py_type="bool">1</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>
   </JourneyPattern>
   <JourneyPattern>
     <id>2</id>
     <service_ref>YSCO120</service_ref>
-    <direction>outbound</direction>
+    <direction py_type="bool">0</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>
   </JourneyPattern>
@@ -57,15 +56,15 @@
     <section_ref>1</section_ref>
     <stop_start>370021129</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>PTP</timing_start>
+    <timing_start>1</timing_start>
+    <principal_start>1</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021130</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>0</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -73,15 +72,15 @@
     <section_ref>1</section_ref>
     <stop_start>370021130</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021134</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -89,15 +88,15 @@
     <section_ref>1</section_ref>
     <stop_start>370021134</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021136</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -105,15 +104,15 @@
     <section_ref>1</section_ref>
     <stop_start>370021136</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021138</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -121,15 +120,15 @@
     <section_ref>1</section_ref>
     <stop_start>370021138</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020764</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -137,15 +136,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020764</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020789</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -153,15 +152,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020789</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020771</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -169,15 +168,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020771</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020772</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>PTP</timing_end>
+    <timing_end>1</timing_end>
+    <principal_end>1</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -185,15 +184,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020772</stop_start>
     <wait_start py_type="duration">PT60S</wait_start>
-    <timing_start>PTP</timing_start>
+    <timing_start>1</timing_start>
+    <principal_start>1</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020376</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -201,15 +200,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020376</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370023677</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT180S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -217,15 +216,15 @@
     <section_ref>1</section_ref>
     <stop_start>370023677</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020361</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -233,15 +232,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020361</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020362</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -249,15 +248,15 @@
     <section_ref>1</section_ref>
     <stop_start>370020362</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370022796</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -265,15 +264,15 @@
     <section_ref>1</section_ref>
     <stop_start>370022796</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370023176</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>13</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -281,15 +280,15 @@
     <section_ref>1</section_ref>
     <stop_start>370023176</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370027392</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>14</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -297,15 +296,15 @@
     <section_ref>1</section_ref>
     <stop_start>370027392</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370023715</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>PTP</timing_end>
+    <timing_end>1</timing_end>
+    <principal_end>1</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT180S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>15</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -313,15 +312,15 @@
     <section_ref>1</section_ref>
     <stop_start>370023715</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>PTP</timing_start>
+    <timing_start>1</timing_start>
+    <principal_start>1</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370022816</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>16</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -329,15 +328,15 @@
     <section_ref>1</section_ref>
     <stop_start>370022816</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370022788</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>17</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -345,15 +344,15 @@
     <section_ref>1</section_ref>
     <stop_start>370022788</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370070005</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>PTP</timing_end>
+    <timing_end>1</timing_end>
+    <principal_end>1</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>inbound</direction>
-    <route_direction>inbound</route_direction>
     <sequence>18</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -361,15 +360,15 @@
     <section_ref>2</section_ref>
     <stop_start>370022831</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>PTP</timing_start>
+    <timing_start>1</timing_start>
+    <principal_start>1</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370022881</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>0</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -377,15 +376,15 @@
     <section_ref>2</section_ref>
     <stop_start>370022881</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370023697</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT180S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -393,15 +392,15 @@
     <section_ref>2</section_ref>
     <stop_start>370023697</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020360</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -409,15 +408,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020360</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020378</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">0</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -425,15 +424,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020378</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">0</stopping_start>
     <stop_end>370020377</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT180S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -441,15 +440,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020377</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020775</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>PTP</timing_end>
+    <timing_end>1</timing_end>
+    <principal_end>1</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT180S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -457,15 +456,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020775</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>PTP</timing_start>
+    <timing_start>1</timing_start>
+    <principal_start>1</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020790</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -473,15 +472,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020790</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020773</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -489,15 +488,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020773</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370020778</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -505,15 +504,15 @@
     <section_ref>2</section_ref>
     <stop_start>370020778</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021137</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -521,15 +520,15 @@
     <section_ref>2</section_ref>
     <stop_start>370021137</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021135</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT60S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -537,15 +536,15 @@
     <section_ref>2</section_ref>
     <stop_start>370021135</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021132</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -553,15 +552,15 @@
     <section_ref>2</section_ref>
     <stop_start>370021132</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021131</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>OTH</timing_end>
+    <timing_end>0</timing_end>
+    <principal_end>0</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT0S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
@@ -569,15 +568,15 @@
     <section_ref>2</section_ref>
     <stop_start>370021131</stop_start>
     <wait_start py_type="duration">PT0S</wait_start>
-    <timing_start>OTH</timing_start>
+    <timing_start>0</timing_start>
+    <principal_start>0</principal_start>
     <stopping_start py_type="bool">1</stopping_start>
     <stop_end>370021128</stop_end>
     <wait_end py_type="duration">PT0S</wait_end>
-    <timing_end>PTP</timing_end>
+    <timing_end>1</timing_end>
+    <principal_end>1</principal_end>
     <stopping_end py_type="bool">1</stopping_end>
     <run_time py_type="duration">PT120S</run_time>
-    <direction>outbound</direction>
-    <route_direction>outbound</route_direction>
     <sequence>13</sequence>
   </JourneyLink>
   <Journey>
@@ -903,192 +902,192 @@
     <operational py_type="bool">1</operational>
   </SpecialPeriod>
   <BankHolidays>
-    <name>NewYearsDay</name>
+    <holiday_ref>1</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>GoodFriday</name>
+    <holiday_ref>3</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>EasterMonday</name>
+    <holiday_ref>4</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>MayDay</name>
+    <holiday_ref>5</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>SpringBank</name>
+    <holiday_ref>6</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>LateSummerBankHolidayNotScotland</name>
+    <holiday_ref>7</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDay</name>
+    <holiday_ref>9</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDay</name>
+    <holiday_ref>10</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDayHoliday</name>
+    <holiday_ref>11</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDayHoliday</name>
+    <holiday_ref>12</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>NewYearsDayHoliday</name>
+    <holiday_ref>13</holiday_ref>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>NewYearsDay</name>
+    <holiday_ref>1</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>GoodFriday</name>
+    <holiday_ref>3</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>EasterMonday</name>
+    <holiday_ref>4</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>MayDay</name>
+    <holiday_ref>5</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>SpringBank</name>
+    <holiday_ref>6</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>LateSummerBankHolidayNotScotland</name>
+    <holiday_ref>7</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDay</name>
+    <holiday_ref>9</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDay</name>
+    <holiday_ref>10</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDayHoliday</name>
+    <holiday_ref>11</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDayHoliday</name>
+    <holiday_ref>12</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>NewYearsDayHoliday</name>
+    <holiday_ref>13</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasEve</name>
+    <holiday_ref>14</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>NewYearsEve</name>
+    <holiday_ref>15</holiday_ref>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDay</name>
+    <holiday_ref>9</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDay</name>
+    <holiday_ref>10</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>GoodFriday</name>
+    <holiday_ref>3</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>NewYearsDay</name>
+    <holiday_ref>1</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>LateSummerBankHolidayNotScotland</name>
+    <holiday_ref>7</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>MayDay</name>
+    <holiday_ref>5</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>EasterMonday</name>
+    <holiday_ref>4</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>SpringBank</name>
+    <holiday_ref>6</holiday_ref>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>EasterMonday</name>
+    <holiday_ref>4</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>MayDay</name>
+    <holiday_ref>5</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>SpringBank</name>
+    <holiday_ref>6</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>LateSummerBankHolidayNotScotland</name>
+    <holiday_ref>7</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>ChristmasDay</name>
+    <holiday_ref>9</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <name>BoxingDay</name>
+    <holiday_ref>10</holiday_ref>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>

@@ -22,6 +22,29 @@
 
   <xsl:param name="vehicle_journeys" select="txc:TransXChange/txc:VehicleJourneys/txc:VehicleJourney"/>
 
+  <xsl:param name="bank_holiday_ids">
+    <holiday id="1">NewYearsDay</holiday>
+    <holiday id="2">Jan2ndScotland</holiday>
+    <holiday id="3">GoodFriday</holiday>
+    <holiday id="4">EasterMonday</holiday>
+    <holiday id="5">MayDay</holiday>
+    <holiday id="6">SpringBank</holiday>
+    <holiday id="7">LateSummerBankHolidayNotScotland</holiday>
+    <holiday id="8">AugustBankHolidayScotland</holiday>
+    <holiday id="9">ChristmasDay</holiday>
+    <holiday id="10">BoxingDay</holiday>
+    <holiday id="11">ChristmasDayHoliday</holiday>
+    <holiday id="12">BoxingDayHoliday</holiday>
+    <holiday id="13">NewYearsDayHoliday</holiday>
+    <holiday id="14">ChristmasEve</holiday>
+    <holiday id="15">NewYearsEve</holiday>
+  </xsl:param>
+  <xsl:param name="mode_ids">
+    <mode id="1">bus</mode>
+    <mode id="2">metro</mode>
+    <mode id="3">tram</mode>
+  </xsl:param>
+
   <xsl:key name="key_operators" match="txc:TransXChange/txc:Operators/txc:Operator" use="@id"/>
   <xsl:key name="key_routes" match="txc:TransXChange/txc:Routes/txc:Route" use="@id"/>
   <xsl:key name="key_route_links" match="txc:TransXChange/txc:RouteSections/txc:RouteSection/txc:RouteLink" use="@id"/>
@@ -72,6 +95,12 @@
   </xsl:template>
 
   <xsl:template match="txc:Service">
+    <xsl:variable name="mode">
+      <xsl:choose>
+        <xsl:when test="boolean(txc:Mode = 'underground')">metro</xsl:when>
+        <xsl:otherwise><xsl:value-of select="txc:Mode"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <Service>
       <code>
         <xsl:choose>
@@ -83,25 +112,14 @@
       <destination><xsl:value-of select="txc:StandardService/txc:Destination"/></destination>
       <local_operator_ref><xsl:value-of select="key('key_operators', txc:RegisteredOperatorRef)/txc:OperatorCode"/></local_operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
-      <mode>
-        <xsl:choose>
-          <xsl:when test="boolean(txc:Mode = 'underground')">metro</xsl:when>
-          <xsl:otherwise><xsl:value-of select="txc:Mode"/></xsl:otherwise>
-        </xsl:choose>
-      </mode>
-      <direction>
-        <xsl:choose>
-          <xsl:when test="txc:Direction"><xsl:value-of select="txc:Direction"/></xsl:when>
-          <xsl:otherwise>outbound</xsl:otherwise>
-        </xsl:choose>
-      </direction>
+      <mode><xsl:value-of select="exsl:node-set($mode_ids)/mode[.=$mode]/@id"/></mode>
     </Service>
   </xsl:template>
 
   <xsl:template match="txc:Line">
     <ServiceLine>
       <id><xsl:value-of select="func:add_id(@id, $file, 'ServiceLine')"/></id>
-      <name><xsl:value-of select="txc:LineName"/></name>
+      <name><xsl:value-of select="func:l_split(txc:LineName, '|')"/></name>
       <service_ref>
         <xsl:choose>
           <xsl:when test="starts-with(ancestor::txc:Service/txc:ServiceCode, $region)"><xsl:value-of select="ancestor::txc:Service/txc:ServiceCode"/></xsl:when>
@@ -112,6 +130,21 @@
   </xsl:template>
 
   <xsl:template match="txc:JourneyPattern">
+    <xsl:variable name="direction">
+      <xsl:choose>
+        <xsl:when test="txc:Direction"><xsl:value-of select="txc:Direction"/></xsl:when>
+        <xsl:when test="boolean(key('key_routes', txc:RouteRef)/txc:Direction)"><xsl:value-of
+            select="key('key_routes', txc:RouteRef)/txc:Direction"/></xsl:when>
+        <xsl:when test="ancestor::txc:Service/txc:Direction"><xsl:value-of select="ancestor::txc:Service/txc:Direction"/></xsl:when>
+        <xsl:otherwise>outbound</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="service_direction">
+      <xsl:choose>
+        <xsl:when test="ancestor::txc:Service/txc:Direction[text()!='inboundAndOutbound']"><xsl:value-of select="ancestor::txc:Service/txc:Direction"/></xsl:when>
+        <xsl:otherwise>outbound</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <JourneyPattern>
       <id><xsl:value-of select="func:add_id(@id, $file, 'JourneyPattern')"/></id>
       <service_ref>
@@ -120,13 +153,10 @@
           <xsl:otherwise><xsl:value-of select="concat($region, '-', ancestor::txc:Service/txc:ServiceCode)"/></xsl:otherwise>
         </xsl:choose>
       </service_ref>
-      <direction>
+      <direction py_type="bool">
         <xsl:choose>
-          <xsl:when test="txc:Direction"><xsl:value-of select="txc:Direction"/></xsl:when>
-          <xsl:when test="boolean(key('key_routes', txc:RouteRef)/txc:Direction)"><xsl:value-of
-              select="key('key_routes', txc:RouteRef)/txc:Direction"/></xsl:when>
-          <xsl:when test="ancestor::txc:Service/txc:Direction"><xsl:value-of select="ancestor::txc:Service/txc:Direction"/></xsl:when>
-          <xsl:otherwise>outbound</xsl:otherwise>
+          <xsl:when test="boolean($direction=$service_direction)">0</xsl:when>
+          <xsl:otherwise>1</xsl:otherwise>
         </xsl:choose>
       </direction>
       <date_start><xsl:value-of select="ancestor::txc:Service/txc:OperatingPeriod/txc:StartDate"/></date_start>
@@ -148,10 +178,35 @@
     </JourneySections>
   </xsl:template>
 
+  <xsl:template name="stop_timing">
+    <xsl:param name="timing"/>
+    <xsl:param name="start_end"/>
+    <xsl:choose>
+      <xsl:when test="boolean($timing='PTP')">
+        <xsl:element name="timing_{$start_end}">1</xsl:element>
+        <xsl:element name="principal_{$start_end}">1</xsl:element>
+      </xsl:when>
+      <xsl:when test="boolean($timing='PPT')">
+        <xsl:element name="timing_{$start_end}">0</xsl:element>
+        <xsl:element name="principal_{$start_end}">1</xsl:element>
+      </xsl:when>
+      <xsl:when test="boolean($timing='TIP')">
+        <xsl:element name="timing_{$start_end}">1</xsl:element>
+        <xsl:element name="principal_{$start_end}">0</xsl:element>
+      </xsl:when>
+      <xsl:when test="boolean($timing='OTH')">
+        <xsl:element name="timing_{$start_end}">0</xsl:element>
+        <xsl:element name="principal_{$start_end}">0</xsl:element>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:template>
+
   <xsl:template match="txc:JourneyPatternTimingLink">
+    <xsl:variable name="journey_section" select="ancestor::txc:JourneyPatternSection/@id"/>
+    <xsl:variable name="route_dir" select="key('key_route_links', txc:RouteLinkRef)/txc:Direction"/>
     <JourneyLink>
       <id><xsl:value-of select="func:add_id(@id, $file, 'JourneyLink')"/></id>
-      <section_ref><xsl:value-of select="func:get_id(ancestor::txc:JourneyPatternSection/@id, $file, 'JourneySection')"/></section_ref>
+      <section_ref><xsl:value-of select="func:get_id($journey_section, $file, 'JourneySection')"/></section_ref>
       <stop_start>
         <xsl:if test="func:stop_exists(txc:From/txc:StopPointRef)">
           <xsl:value-of select="txc:From/txc:StopPointRef"/>
@@ -163,7 +218,10 @@
           <xsl:otherwise>PT0S</xsl:otherwise>
         </xsl:choose>
       </wait_start>
-      <timing_start><xsl:value-of select="txc:From/txc:TimingStatus"/></timing_start>
+      <xsl:call-template name="stop_timing">
+        <xsl:with-param name="timing"><xsl:value-of select="txc:From/txc:TimingStatus"/></xsl:with-param>
+        <xsl:with-param name="start_end">start</xsl:with-param>
+      </xsl:call-template>
       <stopping_start py_type="bool">
         <xsl:choose>
           <xsl:when test="txc:From[txc:Activity[.='pass']]">0</xsl:when>
@@ -181,7 +239,10 @@
           <xsl:otherwise>PT0S</xsl:otherwise>
         </xsl:choose>
       </wait_end>
-      <timing_end><xsl:value-of select="txc:To/txc:TimingStatus"/></timing_end>
+      <xsl:call-template name="stop_timing">
+        <xsl:with-param name="timing"><xsl:value-of select="txc:To/txc:TimingStatus"/></xsl:with-param>
+        <xsl:with-param name="start_end">end</xsl:with-param>
+      </xsl:call-template>
       <stopping_end py_type="bool">
         <xsl:choose>
           <xsl:when test="txc:To[txc:Activity[.='pass']]">0</xsl:when>
@@ -189,8 +250,6 @@
         </xsl:choose>
       </stopping_end>
       <run_time py_type="duration"><xsl:value-of select="txc:RunTime"/></run_time>
-      <direction><xsl:value-of select="txc:Direction"/></direction>
-      <route_direction><xsl:value-of select="key('key_route_links', txc:RouteLinkRef)/txc:Direction"/></route_direction>
       <sequence><xsl:value-of select="count(preceding-sibling::txc:JourneyPatternTimingLink)"/></sequence>
     </JourneyLink>
   </xsl:template>
@@ -547,7 +606,7 @@
           <holiday>NewYearsDayHoliday</holiday>
         </xsl:when>
         <xsl:otherwise>
-          <holiday/>
+          <holiday><xsl:value-of select="$holiday"/></holiday>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -558,13 +617,9 @@
       </xsl:choose>
     </xsl:variable>
     <xsl:for-each select="exsl:node-set($holidays)/holiday">
+      <xsl:variable name="name" select="text()"/>
       <BankHolidays>
-        <name>
-          <xsl:choose>
-            <xsl:when test="current()/text()"><xsl:value-of select="current()"/></xsl:when>
-            <xsl:otherwise><xsl:value-of select="$holiday"/></xsl:otherwise>
-          </xsl:choose>
-        </name>
+        <holiday_ref><xsl:value-of select="exsl:node-set($bank_holiday_ids)/holiday[.=$name]/@id"/></holiday_ref>
         <journey_ref><xsl:value-of select="$id"/></journey_ref>
         <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
       </BankHolidays>

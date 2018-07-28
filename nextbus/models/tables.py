@@ -4,10 +4,28 @@ Models for the nextbus database.
 from sqlalchemy.ext import hybrid
 
 from nextbus import db, location
-from nextbus.models import types, utils
+from nextbus.models import utils
 
 MIN_GROUPED = 72
 MAX_DIST = 500
+
+
+class ServiceMode(utils.BaseModel):
+    """ Lookup table for service modes, eg bus and tram. """
+    __tablename__ = "service_mode"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+
+class BankHoliday(utils.BaseModel):
+    """ Lookup table for bank holidays. """
+    __tablename__ = "bank_holiday"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+    dates = db.relationship("BankHolidayDate", backref="bank_holiday")
 
 
 class Region(utils.BaseModel):
@@ -15,7 +33,7 @@ class Region(utils.BaseModel):
     __tablename__ = "region"
 
     code = db.Column(db.VARCHAR(2), primary_key=True)
-    name = db.Column(db.Text, index=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, index=True)
     modified = db.deferred(db.Column(db.DateTime))
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
@@ -51,23 +69,28 @@ class AdminArea(utils.BaseModel):
     __tablename__ = "admin_area"
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
-    name = db.Column(db.Text, index=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, index=True)
     atco_code = db.deferred(db.Column(db.VARCHAR(3), unique=True, nullable=False))
-    region_ref = db.Column(db.VARCHAR(2),
-                           db.ForeignKey("region.code", ondelete="CASCADE"),
-                           index=True, nullable=False)
+    region_ref = db.Column(
+        db.VARCHAR(2),
+        db.ForeignKey("region.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
     is_live = db.deferred(db.Column(db.Boolean, default=True))
     modified = db.deferred(db.Column(db.DateTime))
 
-    districts = db.relationship("District", backref="admin_area", order_by="District.name")
-    localities = db.relationship("Locality", backref="admin_area", innerjoin=True,
-                                 order_by="Locality.name")
-    postcodes = db.relationship("Postcode", backref="admin_area", innerjoin=True,
-                                order_by="Postcode.text")
-    stop_points = db.relationship("StopPoint", backref="admin_area", innerjoin=True,
-                                  order_by="StopPoint.name, StopPoint.short_ind")
-    stop_areas = db.relationship("StopArea", backref="admin_area", innerjoin=True,
-                                 order_by="StopArea.name")
+    districts = db.relationship("District", backref="admin_area",
+                                order_by="District.name")
+    localities = db.relationship("Locality", backref="admin_area",
+                                 innerjoin=True, order_by="Locality.name")
+    postcodes = db.relationship("Postcode", backref="admin_area",
+                                innerjoin=True, order_by="Postcode.text")
+    stop_points = db.relationship(
+        "StopPoint", backref="admin_area", innerjoin=True,
+        order_by="StopPoint.name, StopPoint.short_ind"
+    )
+    stop_areas = db.relationship("StopArea", backref="admin_area",
+                                 innerjoin=True, order_by="StopArea.name")
 
     def __repr__(self):
         return "<AdminArea(%r)>" % self.code
@@ -90,14 +113,18 @@ class District(utils.BaseModel):
     __tablename__ = "district"
 
     code = db.Column(db.VARCHAR(3), primary_key=True)
-    name = db.Column(db.Text, index=True, nullable=False)
-    admin_area_ref = db.Column(db.VARCHAR(3),
-                               db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-                               index=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, index=True)
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
     modified = db.deferred(db.Column(db.DateTime))
 
-    localities = db.relationship("Locality", backref="district", order_by="Locality.name")
-    postcodes = db.relationship("Postcode", backref="district", order_by="Postcode.text")
+    localities = db.relationship("Locality", backref="district",
+                                 order_by="Locality.name")
+    postcodes = db.relationship("Postcode", backref="district",
+                                order_by="Postcode.text")
 
     def __repr__(self):
         return "<District(%r)>" % self.code
@@ -119,13 +146,14 @@ class Locality(utils.BaseModel):
     """ NPTG locality. """
     __tablename__ = "locality"
 
-    # TODO: Fix self-referential foreign key constraints deferring.
     code = db.Column(db.VARCHAR(8), primary_key=True)
-    name = db.Column(db.Text, index=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, index=True)
     parent_ref = db.deferred(db.Column(db.VARCHAR(8), index=True))
-    admin_area_ref = db.Column(db.VARCHAR(3),
-                               db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-                               index=True, nullable=False)
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
     district_ref = db.Column(db.VARCHAR(3),
                              db.ForeignKey("district.code", ondelete="CASCADE"),
                              index=True)
@@ -135,12 +163,12 @@ class Locality(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
-    stop_points = db.relationship("StopPoint", backref="locality", innerjoin=True,
-                                  order_by="StopPoint.name, StopPoint.short_ind")
+    stop_points = db.relationship(
+        "StopPoint", backref="locality", innerjoin=True,
+        order_by="StopPoint.name, StopPoint.short_ind"
+    )
     stop_areas = db.relationship("StopArea", backref="locality", innerjoin=True,
                                  order_by="StopArea.name")
-    # children = db.relationship("Locality", backref=db.backref("parent", remote_side=[code]),
-    #                            order_by="Locality.name")
 
     def __repr__(self):
         return "<Locality(%r)>" % self.code
@@ -198,13 +226,17 @@ class StopArea(utils.BaseModel):
     __tablename__ = "stop_area"
 
     code = db.Column(db.VARCHAR(12), primary_key=True)
-    name = db.Column(db.Text, index=True, nullable=False)
-    admin_area_ref = db.Column(db.VARCHAR(3),
-                               db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-                               index=True, nullable=False)
-    locality_ref = db.Column(db.VARCHAR(8),
-                             db.ForeignKey("locality.code", ondelete="CASCADE"),
-                             index=True)
+    name = db.Column(db.Text, nullable=False, index=True)
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    locality_ref = db.Column(
+        db.VARCHAR(8),
+        db.ForeignKey("locality.code", ondelete="CASCADE"),
+        index=True
+    )
     stop_area_type = db.Column(db.VARCHAR(4), nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
@@ -212,8 +244,10 @@ class StopArea(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
-    stop_points = db.relationship("StopPoint", backref="stop_area",
-                                  order_by="StopPoint.name, StopPoint.short_ind")
+    stop_points = db.relationship(
+        "StopPoint", backref="stop_area",
+        order_by="StopPoint.name, StopPoint.short_ind"
+    )
 
     def __repr__(self):
         return "<StopArea(%r)>" % self.code
@@ -238,21 +272,27 @@ class StopPoint(utils.BaseModel):
 
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
     naptan_code = db.Column(db.VARCHAR(9), index=True, unique=True, nullable=False)
-    name = db.Column(db.Text, index=True, nullable=False)
+    name = db.Column(db.Text, nullable=False, index=True)
     landmark = db.Column(db.Text)
     street = db.Column(db.Text)
     crossing = db.Column(db.Text)
     indicator = db.Column(db.Text, default="", nullable=False)
     short_ind = db.Column(db.Text, index=True, default="", nullable=False)
-    locality_ref = db.Column(db.VARCHAR(8),
-                             db.ForeignKey("locality.code", ondelete="CASCADE"),
-                             index=True, nullable=False)
-    admin_area_ref = db.Column(db.VARCHAR(3),
-                               db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-                               index=True, nullable=False)
-    stop_area_ref = db.Column(db.VARCHAR(12),
-                              db.ForeignKey("stop_area.code", ondelete="CASCADE"),
-                              index=True)
+    locality_ref = db.Column(
+        db.VARCHAR(8),
+        db.ForeignKey("locality.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    stop_area_ref = db.Column(
+        db.VARCHAR(12),
+        db.ForeignKey("stop_area.code", ondelete="CASCADE"),
+        index=True
+    )
     stop_type = db.Column(db.VARCHAR(3), nullable=False)
     bearing = db.Column(db.VARCHAR(2))
     latitude = db.Column(db.Float, nullable=False, index=True)
@@ -389,12 +429,16 @@ class Postcode(utils.BaseModel):
 
     index = db.Column(db.VARCHAR(7), primary_key=True)
     text = db.Column(db.VARCHAR(8), index=True, unique=True, nullable=False)
-    admin_area_ref = db.Column(db.VARCHAR(3),
-                               db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-                               index=True, nullable=False)
-    district_ref = db.Column(db.VARCHAR(3),
-                             db.ForeignKey("district.code", ondelete="CASCADE"),
-                             index=True)
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    district_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("district.code", ondelete="CASCADE"),
+        index=True
+    )
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     easting = db.deferred(db.Column(db.Integer, nullable=False))
@@ -432,11 +476,12 @@ class LocalOperator(utils.BaseModel):
     region_ref = db.Column(
         db.VARCHAR(2),
         db.ForeignKey("region.code", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True, index=True
     )
     operator_ref = db.Column(
         db.Text,
-        db.ForeignKey("operator.code", ondelete="CASCADE")
+        db.ForeignKey("operator.code", ondelete="CASCADE"),
+        index=True
     )
     name = db.Column(db.Text, nullable=True)
 
@@ -451,24 +496,13 @@ class Service(utils.BaseModel):
     origin = db.Column(db.Text, nullable=False)
     destination = db.Column(db.Text, nullable=False)
     local_operator_ref = db.Column(db.Text, nullable=False)
-    region_ref = db.Column(db.VARCHAR(2), nullable=False)
+    region_ref = db.Column(db.VARCHAR(2), nullable=False, index=True)
     mode = db.Column(
-        db.Enum(types.ServiceMode, name="service_mode",
-                values_callable=types.enum_values),
-        nullable=False
-    )
-    direction = db.Column(
-        db.Enum(types.Direction, name="direction",
-                values_callable=types.enum_values),
-        nullable=False
+        db.Integer,
+        db.ForeignKey("service_mode.id"),
+        nullable=False, index=True
     )
     # add classification and availability?
-
-    operator = db.relationship("Operator", secondary="local_operator",
-                               uselist=False)
-    lines = db.relationship("ServiceLine", backref="service",
-                            order_by="ServiceLine.name")
-    patterns = db.relationship("JourneyPattern", backref="service")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -476,7 +510,15 @@ class Service(utils.BaseModel):
             ["local_operator.code", "local_operator.region_ref"],
             ondelete="CASCADE"
         ),
+        db.Index("ix_service_local_operator_ref_region_ref",
+                 "local_operator_ref", "region_ref")
     )
+
+    operator = db.relationship("Operator", secondary="local_operator",
+                               uselist=False)
+    lines = db.relationship("ServiceLine", backref="service",
+                            order_by="ServiceLine.name")
+    patterns = db.relationship("JourneyPattern", backref="service")
 
 
 class ServiceLine(utils.BaseModel):
@@ -488,8 +530,7 @@ class ServiceLine(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
 
     journeys = db.relationship("Journey", backref="line")
@@ -506,16 +547,15 @@ class JourneyPattern(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
-    direction = db.Column(
-        db.Enum(types.Direction, name="direction",
-                values_callable=types.enum_values),
-        nullable=False
-    )
+    direction = db.Column(db.Boolean, nullable=False, index=True)
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date)
+
+    __table_args__ = (
+        db.CheckConstraint("date_start <= date_end"),
+    )
 
     sections = db.relationship("JourneySection", secondary="journey_sections",
                                backref="patterns",
@@ -530,10 +570,6 @@ class JourneyPattern(utils.BaseModel):
         order_by="JourneySections.sequence, JourneyLink.sequence"
     )
 
-    __table_args__ = (
-        db.CheckConstraint("date_start <= date_end"),
-    )
-
 
 class JourneySections(utils.BaseModel):
     """ Sequences of journey sections for a pattern. """
@@ -542,14 +578,12 @@ class JourneySections(utils.BaseModel):
     pattern_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True
+        primary_key=True, index=True
     )
     section_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
-        primary_key=True,
-        index=True
+        primary_key=True, index=True
     )
     sequence = db.Column(db.Integer, nullable=False, index=True)
 
@@ -568,52 +602,41 @@ class JourneySection(utils.BaseModel):
 
 
 class JourneyLink(utils.BaseModel):
-    """ Link between two stops with timing. """
+    """ Link between two stops with timings.
+
+        Each stop has the following fields:
+        - ATCO code for stop as foreign key
+        - Whether this is a timing info point (expected to be timetabled)
+        - Whether this is a principal point (services must stop here)
+        - Whether the bus stops or passes by
+    """
     __tablename__ = "journey_link"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     section_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_section.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     stop_start = db.Column(
         db.VARCHAR(12),
         db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
-        nullable=True,
-        index=True
+        nullable=True, index=True
     )
     wait_start = db.Column(db.Interval, nullable=False)
-    timing_start = db.Column(
-        db.Enum(types.StopTiming, name="stop_timing",
-                values_callable=types.enum_values),
-        nullable=False
-    )
+    timing_start = db.Column(db.Boolean, nullable=False)
+    principal_start = db.Column(db.Boolean, nullable=False)
     stopping_start = db.Column(db.Boolean, nullable=False)
     stop_end = db.Column(
         db.VARCHAR(12),
         db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
-        nullable=True,
-        index=True
+        nullable=True, index=True
     )
     wait_end = db.Column(db.Interval, nullable=False)
-    timing_end = db.Column(
-        db.Enum(types.StopTiming, name="stop_timing",
-                values_callable=types.enum_values),
-        nullable=False
-    )
+    timing_end = db.Column(db.Boolean, nullable=False)
+    principal_end = db.Column(db.Boolean, nullable=False)
     stopping_end = db.Column(db.Boolean, nullable=False)
     run_time = db.Column(db.Interval, nullable=False)
-    direction = db.Column(
-        db.Enum(types.Direction, name="direction",
-                values_callable=types.enum_values)
-    )
-    # Direction for associated RouteLink
-    route_direction = db.Column(
-        db.Enum(types.Direction, name="direction",
-                values_callable=types.enum_values)
-    )
     sequence = db.Column(db.Integer, index=True)
 
     __table_args__ = (
@@ -625,18 +648,16 @@ class JourneySpecificLink(utils.BaseModel):
     """ Journey timing link for a specific journey. """
     __tablename__ = "journey_specific_link"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     link_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_link.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     wait_start = db.Column(db.Interval, nullable=True)
     stopping_start = db.Column(db.Boolean, nullable=True)
@@ -657,30 +678,27 @@ class Journey(utils.BaseModel):
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     line_ref = db.Column(
         db.Integer,
         db.ForeignKey("service_line.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     pattern_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=False, index=True
     )
     start_run = db.Column(
         db.Integer,
         db.ForeignKey("journey_link.id", ondelete="CASCADE"),
-        nullable=True
+        nullable=True, index=True
     )
     end_run = db.Column(
         db.Integer,
         db.ForeignKey("journey_link.id", ondelete="CASCADE"),
-        nullable=True
+        nullable=True, index=True
     )
     departure = db.Column(db.Time, nullable=False)
     # Add frequency?
@@ -689,9 +707,13 @@ class Journey(utils.BaseModel):
                      nullable=False)
     weeks = db.Column(db.Integer, db.CheckConstraint("weeks < 32"))
 
+    holidays = db.relationship("BankHoliday", secondary="bank_holidays")
     holiday_dates = db.relationship(
-        "BankHolidayDate", secondary="bank_holidays",
-        secondaryjoin="BankHolidays.name == BankHolidayDate.name"
+        "BankHolidayDate",
+        secondary="join(BankHolidays, BankHoliday, "
+                  "BankHolidays.holiday_ref == BankHoliday.id)",
+        primaryjoin="Journey.id == BankHolidays.journey_ref",
+        secondaryjoin="BankHoliday.id == BankHolidayDate.holiday_ref"
     )
     special_days = db.relationship("SpecialPeriod", backref="journey")
 
@@ -715,12 +737,12 @@ class Organisations(utils.BaseModel):
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True, index=True
     )
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True, index=True
     )
     operational = db.Column(db.Boolean, nullable=False)
     working = db.Column(db.Boolean, nullable=False)
@@ -732,11 +754,11 @@ class OperatingDate(utils.BaseModel):
     """
     __tablename__ = "operating_date"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
-        nullable=False
+        nullable=False, index=True
     )
     date = db.Column(db.Date, nullable=False)
     working = db.Column(db.Boolean, nullable=False)
@@ -746,11 +768,11 @@ class OperatingPeriod(utils.BaseModel):
     """ List of operating periods. """
     __tablename__ = "operating_period"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
-        nullable=False
+        nullable=False, index=True
     )
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date, nullable=False)
@@ -765,10 +787,11 @@ class SpecialPeriod(utils.BaseModel):
     """ Special days specified by journeys. """
     __tablename__ = "special_period"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
+        index=True
     )
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)
@@ -783,10 +806,10 @@ class BankHolidayDate(utils.BaseModel):
     """ Bank holiday dates. """
     __tablename__ = "bank_holiday_date"
 
-    name = db.Column(
-        db.Enum(types.BankHoliday, name="bank_holiday",
-                values_callable=types.enum_values),
-        primary_key=True
+    holiday_ref = db.Column(
+        db.Integer,
+        db.ForeignKey("bank_holiday.id"),
+        primary_key=True, index=True
     )
     date = db.Column(db.Date, primary_key=True)
 
@@ -795,14 +818,14 @@ class BankHolidays(utils.BaseModel):
     """ Bank holidays associated with journeys """
     __tablename__ = "bank_holidays"
 
-    name = db.Column(
-        db.Enum(types.BankHoliday, name="bank_holiday",
-                values_callable=types.enum_values),
-        primary_key=True
+    holiday_ref = db.Column(
+        db.Integer,
+        db.ForeignKey("bank_holiday.id"),
+        primary_key=True, index=True
     )
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
-        primary_key=True
+        primary_key=True, index=True
     )
     operational = db.Column(db.Boolean)

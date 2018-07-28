@@ -1,7 +1,6 @@
 """
 Testing the database.
 """
-import collections
 import datetime
 import functools
 import os
@@ -140,9 +139,14 @@ class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
 
     @classmethod
     def create_tables(cls):
-        """ Creates tables in database from models """
+        """ Creates tables in database from models. Any errors during
+            create_all() are caught and tables dropped
+        """
         with cls.app.app_context():
-            db.create_all()
+            try:
+                db.create_all()
+            except:
+                db.drop_all()
 
     @classmethod
     def drop_tables(cls):

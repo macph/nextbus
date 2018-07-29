@@ -154,14 +154,12 @@ def setup_tnds_id_functions(check_existing=True):
     """ Sets up XSLT functions to access row IDs. """
     ids = RowIds(check_existing=check_existing)
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def add_id(_, id_, file_, name):
         """ Adds internal ID and gets new integer ID. """
         return ids.add(id_, file_, name)
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def get_id(_, id_, file_, name):
         """ Gets integer ID from existing internal ID. Raise error if doesn't
             exist
@@ -296,20 +294,17 @@ def setup_tnds_functions():
     set_local = set((c.code, c.region_ref) for c in query_local.all())
     set_stops = set(c.atco_code for c in query_stops.all())
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def national_op_new(_, code):
         """ Check if national operator does not exist.. """
         return code not in set_national
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def local_op_new(_, code, region_ref):
         """ Check if local operator does not exist. """
         return (code, region_ref) not in set_local
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def stop_exists(_, code):
         """ Check if stop point exists. """
         return code in set_stops

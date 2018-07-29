@@ -6,12 +6,17 @@ import io
 import unittest
 import datetime
 
-import dateutil.parser as dp
 import lxml.etree as et
 
 from nextbus import db, models
 import nextbus.populate.utils as pop_utils
 import utils
+
+
+@pop_utils.xslt_text_func
+def passthrough(_, *args):
+    """ Simple function to pass through all arguments """
+    return args
 
 
 class ElementDictTests(unittest.TestCase):
@@ -94,41 +99,57 @@ class ElementDictTests(unittest.TestCase):
 
 
 class ElementTextTests(unittest.TestCase):
-    """ Testing the ``_element_text`` decorator which passes XPath queries
+    """ Testing the ``xslt_text_func`` decorator which passes XPath queries
         in the form of lists of XML elements as text to the extension
         functions.
     """
-    @staticmethod
-    @pop_utils.ext_function_text
-    def passthrough(context, result, *args, **kwargs):
-        """ Simple function to pass through all arguments """
-        return context, result, args, kwargs
+
+    def test_function_registered(self):
+        self.assertEqual(pop_utils.xslt_func["passthrough"], passthrough)
+
+    def test_function_registered_new_name(self):
+        @pop_utils.xslt_text_func("new_pt")
+        def _passthrough(context, *args):
+            return passthrough(context, *args)
+
+        self.assertEqual(pop_utils.xslt_func["new_pt"], _passthrough)
 
     def test_decorator_one_element(self):
         result = [et.Element("name")]
         result[0].text = "text content"
-        output = self.passthrough(None, result)
-        self.assertEqual(output[1], "text content")
+        output = passthrough(None, result)
+        self.assertEqual(output[0], "text content")
 
     def test_decorator_one_string(self):
         result = ["text content"]
-        output = self.passthrough(None, result)
-        self.assertEqual(output[1], "text content")
+        output = passthrough(None, result)
+        self.assertEqual(output[0], "text content")
 
     def test_decorator_empty(self):
         result = []
-        output = self.passthrough(None, result)
-        self.assertEqual(output, None)
+        output = passthrough(None, result)
+        self.assertEqual(output, (None,))
 
-    def test_decorator_multiple(self):
+    def test_decorator_multiple_results(self):
         result = [et.Element("name"), "text content 2"]
         result[0].text = "text content 1"
         with self.assertRaises(ValueError):
-            self.passthrough(None, result)
+            passthrough(None, result)
+
+    def test_decorator_multiple_args(self):
+        result_1 = [et.Element("name")]
+        result_1[0].text = "text content 1"
+        result_2 = [et.Element("name")]
+        result_2[0].text = "text content 2"
+        result_3 = "text content 3"
+
+        output = passthrough(None, result_1, result_2, result_3)
+        self.assertEqual(output, ("text content 1", "text content 2",
+                                  "text content 3"))
 
 
 class ExtensionTests(unittest.TestCase):
-    """ Testing all methonds in the ``_ExtFunctions`` class. """
+    """ Testing all XSLT extension methods populate utilities module. """
     def setUp(self):
         self.result = [et.Element("name")]
 
@@ -153,12 +174,23 @@ class ExtensionTests(unittest.TestCase):
         self.assertEqual(pop_utils.capitalize(None, self.result),
                          "St James's Gate (Stop D)")
 
+    def test_ext_left_split(self):
+        self.result[0].text = "700|Amberline"
+        self.assertEqual(pop_utils.l_split(None, self.result, "|"),
+                         "700")
+
+    def test_ext_right_split(self):
+        self.result[0].text = "700|Amberline"
+        self.assertEqual(pop_utils.r_split(None, self.result, "|"),
+                         "Amberline")
+
 
 class DurationTests(unittest.TestCase):
     """ Testing the duration converter """
     def test_one_second(self):
         delta = pop_utils.duration_delta("PT1S")
         self.assertEqual(delta.total_seconds(), 1)
+
     def test_one_second_zero_padding(self):
         delta = pop_utils.duration_delta("PT01S")
         self.assertEqual(delta.total_seconds(), 1)
@@ -177,7 +209,6 @@ class DurationTests(unittest.TestCase):
 
     def test_days(self):
         delta = pop_utils.duration_delta("P6DT1H1M1S")
-        print(delta)
         self.assertEqual(delta.total_seconds(), 522061)
 
     def test_t_missing(self):

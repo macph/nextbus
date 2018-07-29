@@ -10,6 +10,7 @@ import logging
 import re
 import shutil
 import tempfile
+import types
 
 import dateutil.parser as dp
 from flask import current_app
@@ -44,7 +45,7 @@ def database_session():
         db.session.commit()
     except:
         db.session.rollback()
-        logger.error("An error occured during the transcation", exc_info=1)
+        logger.error("An error occurred during the transaction", exc_info=1)
         raise
     finally:
         db.session.remove()
@@ -152,66 +153,83 @@ def xml_as_dict(element, convert=True):
     return data
 
 
-def ext_function_text(func):
-    """ Converts XPath query result to a string by taking the text content from
-        the only element in list before passing it to the extension function.
-        If the XPath query returned nothing, the wrapped function will return
-        None.
-    """
-    @functools.wraps(func)
-    def ext_function_with_text(context, result, *args, **kwargs):
-        if len(result) == 1:
-            try:
-                text = result[0].text
-            except AttributeError:
-                text = str(result[0])
-            return func(context, text, *args, **kwargs)
-        elif len(result) > 1:
-            raise ValueError("XPath query returned multiple elements.")
-        else:
-            return None
-
-    return ext_function_with_text
-
-
 xslt_func = et.FunctionNamespace(NXB_EXT_URI)
 
 
-@xslt_func
-@ext_function_text
+def xslt_text_func(func, _name=None):
+    """ Registers a XSLT function with all arguments converted into text from
+        single elements.
+
+        If multiple elements are returned in an argument, ValueError is raised.
+
+        :param func: Function to be registered or name of registered function
+        :param _name: Internal parameter for registering function name
+    """
+    if not callable(func):
+        return lambda f: xslt_text_func(f, _name=func)
+
+    @functools.wraps(func)
+    def func_with_text(*args):
+        list_ = list(args)
+        is_method = isinstance(func, types.MethodType)
+        # If a method, pass through both self/cls and XSLT context
+        context = list_[:2] if is_method else list_[:1]
+        user_args = list_[2:] if is_method else list_[1:]
+
+        new = []
+        for result in user_args:
+            # Get single element from result list
+            try:
+                if isinstance(result, str) or result is None:
+                    element = result
+                elif len(result) == 0:
+                    element = None
+                elif len(result) == 1:
+                    element = result[0]
+                else:
+                    raise ValueError("XPath query returned multiple elements.")
+            except TypeError:
+                element = result
+
+            try:
+                text = element.text
+            except AttributeError:
+                text = str(element) if element is not None else None
+
+            new.append(text)
+
+        return func(*tuple(context), *tuple(new))
+
+    if _name is not None:
+        func_with_text.__name__ = _name
+
+    return xslt_func(func_with_text)
+
+
+@xslt_text_func
 def replace(_, result, original, substitute):
     """ Replace substrings within content. """
     return result.replace(original, substitute)
 
 
-@xslt_func
-@ext_function_text
-def upper(_, result):
+@xslt_text_func
+def upper(_, text):
     """ Convert all letters in content to uppercase. """
-    return result.upper()
+    return text.upper()
 
 
-@xslt_func
-@ext_function_text
-def lower(_, result):
+@xslt_text_func
+def lower(_, text):
     """ Convert all letters in content to lowercase. """
-    return result.lower()
+    return text.lower()
 
 
-@xslt_func
-@ext_function_text
-def remove_spaces(_, result):
-    """ Remove all spaces from content. """
-    return "".join(result.strip())
-
-
-@xslt_func
-@ext_function_text
-def capitalize(_, result):
+@xslt_text_func
+def capitalize(_, text):
     """ Capitalises every word in a string, include these enclosed within
         brackets and excluding apostrophes.
     """
-    list_words = result.lower().split()
+    list_words = text.lower().split()
     for _w, word in enumerate(list_words):
         for _c, char in enumerate(word):
             if char.isalpha():
@@ -221,15 +239,13 @@ def capitalize(_, result):
     return " ".join(list_words)
 
 
-@xslt_func
-@ext_function_text
+@xslt_text_func
 def l_split(_, text, char):
     """ Strips string to left of and including specified characters."""
     return text.split(char)[0]
 
 
-@xslt_func
-@ext_function_text
+@xslt_text_func
 def r_split(_, text, char):
     """ Strips string to left of and including specified characters."""
     return text.split(char)[-1]

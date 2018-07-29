@@ -169,20 +169,17 @@ def _setup_naptan_functions(list_area_codes=None, list_locality_codes=None):
     localities = list_locality_codes
     ind_parser = _create_ind_parser()
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def in_admin_area(_, admin_area_ref):
         """ Checks if stop area is in list of admin areas. """
         return areas is None or admin_area_ref in areas
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def in_locality(_, locality_ref):
         """ Checks if stop point is in list of localities. """
         return localities is None or locality_ref in localities
 
-    @utils.xslt_func
-    @utils.ext_function_text
+    @utils.xslt_text_func
     def parse_ind(_, indicator):
         """ Shortens indicator for display. """
         return ind_parser(indicator)

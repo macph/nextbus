@@ -7,6 +7,7 @@ import datetime
 import functools
 import itertools
 import logging
+import os
 import re
 import shutil
 import tempfile
@@ -15,6 +16,7 @@ import types
 import dateutil.parser as dp
 from flask import current_app
 import lxml.etree as et
+import psycopg2.sql as sql
 
 from nextbus import db, logger
 
@@ -379,7 +381,7 @@ class PopulateData(object):
             self.entries[model] = self._process_duplicates(model, warn)
 
     def commit(self, delete=False):
-        """ Commits all entries to database. """
+        """ Commits entries to database. All entries will be popped. """
         if not self.entries:
             raise ValueError("No data have been added yet.")
         self._check_duplicates(warn=True)
@@ -390,7 +392,7 @@ class DataCopy(object):
     """ Sets up an interface for copying data to DB. """
     SEP = "\t"
     NULL = r"\N"
-    LIMIT = 1000000
+    LIMIT = 500000
 
     def __init__(self):
         # Get metadata from existing database for server defaults
@@ -408,9 +410,14 @@ class DataCopy(object):
             if col.name in obj:
                 value = obj[col.name]
                 if value is not None:
-                    # Escape backslash characters and delimiters within values
-                    value = value.replace("\\", "\\\\")
-                    value = value.replace(self.SEP, "\\" + self.SEP)
+                    # Remove trailing/leading spaces and escape backslash
+                    # characters and delimiters within values
+                    value = (
+                        value.strip()
+                        .replace("\\", "\\\\")
+                        .replace("\n", "\\" + "\n")
+                        .replace(self.SEP, "\\" + self.SEP)
+                    )
                 else:
                     value = self.NULL
                 row.append(value)
@@ -423,7 +430,7 @@ class DataCopy(object):
 
         return row, columns
 
-    def write_copy_file(self, file_, table_name, data):
+    def _write_copy_file(self, file_, table_name, data):
         """ Writes data from list of dicts to a temporary file for import. """
         table = self.metadata.tables[table_name]
         columns = None
@@ -433,45 +440,56 @@ class DataCopy(object):
             if columns is None:
                 columns = cols
             elif cols != columns:
-                raise ValueError("Row have different columns %r for "
-                                 "table %r." % (cols, table_name))
+                raise ValueError("Row have different columns %r for table %r." %
+                                 (cols, table_name))
 
             file_.write(self.SEP.join(row) + "\n")
-
-        file_.seek(0)  # Rewind file
 
         return columns
 
     def _batch_copy(self, cursor, table_name, data):
-        """ Iterates over rows in batches. """
+        """ Iterates over rows in batches.
+
+            To save on memory, data is written to several files and closed
+            before each is copied to database.
+        """
         iter_rows = iter(data)
-        while True:
-            chunk = list(itertools.islice(iter_rows, self.LIMIT))
-            if not chunk:
-                break
+        temp_files = []
+        columns = None
+        try:
+            while True:
+                chunk = list(itertools.islice(iter_rows, self.LIMIT))
+                if not chunk:
+                    break
+                # Create a temporary file to store copy data
+                fd, path = tempfile.mkstemp()
+                with open(fd, "w") as file_:
+                    columns = self._write_copy_file(file_, table_name, chunk)
+                temp_files.append(path)
 
-            # Create a temporary file to store copy data
-            file_ = tempfile.TemporaryFile(mode="w+")
-            columns = self.write_copy_file(file_, table_name, chunk)
-
-            try:
-                cursor.copy_from(file_, table_name, sep=self.SEP,
-                                 null=self.NULL, columns=columns)
-            except:
-                # Save copy file for debugging and raise again
-                error_file = "temp/error_data"
-                logger.error("Error occurred with COPY; saving file to %r" %
-                             error_file)
-                logger.debug("Columns: %r" % columns)
-                with open(error_file, "w") as f:
-                    file_.seek(0)
-                    shutil.copyfileobj(file_, f)
-                raise
-            finally:
-                file_.close()
+            for path in temp_files:
+                file_ = open(path)
+                try:
+                    cursor.copy_from(file_, table_name, sep=self.SEP,
+                                     null=self.NULL, columns=columns)
+                except:
+                    # Save copy file for debugging and raise again
+                    error_file = "temp/error_data"
+                    logger.error("Error occurred with COPY; saving file to %r"
+                                 % error_file)
+                    logger.debug("Columns: %r" % columns)
+                    with open(error_file, "w") as f:
+                        file_.seek(0)
+                        shutil.copyfileobj(file_, f)
+                    raise
+                finally:
+                    file_.close()
+        finally:
+            for path in temp_files:
+                os.remove(path)
 
     def copy(self, dataset, delete=False):
-        """ Copies all data to the database.
+        """ Copies all data to the database, deleting data afterwards
 
             :param dataset: Dict with models as keys and lists of dicts as
             values. All dicts must have the same keys.
@@ -480,13 +498,14 @@ class DataCopy(object):
         connection = self.engine.raw_connection()
         try:
             with connection.cursor() as cursor:
-                for model, data in dataset.items():
+                for model in list(dataset):
                     table_name = model.__tablename__
                     if delete:
                         logger.info("Deleting old %r rows" % table_name)
-                        cursor.execute("TRUNCATE %s CASCADE;" % table_name)
+                        cursor.execute(sql.SQL("TRUNCATE %s CASCADE;" %
+                                               sql.Identifier(table_name)))
                     logger.info("Copying data to %r" % table_name)
-                    self._batch_copy(cursor, table_name, data)
+                    self._batch_copy(cursor, table_name, dataset.pop(model))
             connection.commit()
         except:
             connection.rollback()

@@ -297,12 +297,12 @@ def setup_tnds_functions():
     @utils.xslt_text_func
     def national_op_new(_, code):
         """ Check if national operator does not exist.. """
-        return code not in set_national
+        return bool(code) and code not in set_national
 
     @utils.xslt_text_func
     def local_op_new(_, code, region_ref):
         """ Check if local operator does not exist. """
-        return (code, region_ref) not in set_local
+        return all([code, region_ref, (code, region_ref) not in set_local])
 
     @utils.xslt_text_func
     def stop_exists(_, code):
@@ -342,8 +342,6 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("Service", models.Service, indices=("code",))
         tnds.add("ServiceLine", models.ServiceLine)
         tnds.add("JourneyPattern", models.JourneyPattern)
-        tnds.add("JourneySection", models.JourneySection)
-        tnds.add("JourneySections", models.JourneySections)
         tnds.add("JourneyLink", models.JourneyLink)
         tnds.add("Journey", models.Journey)
         tnds.add("JourneySpecificLink", models.JourneySpecificLink)

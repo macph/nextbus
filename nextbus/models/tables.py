@@ -327,12 +327,7 @@ class StopPoint(utils.BaseModel):
     )
     services = db.relationship(
         "Service",
-        secondary="join(JourneyLink, JourneySection, "
-                  "JourneySection.id == JourneyLink.section_ref)"
-                  ".join(JourneySections, "
-                  "JourneySections.section_ref == JourneySection.id)"
-                  ".join(JourneyPattern, "
-                  "JourneyPattern.id == JourneySections.pattern_ref)",
+        secondary="JourneyPattern",
         primaryjoin="or_(JourneyLink.stop_start == StopPoint.atco_code, "
                     "JourneyLink.stop_end == StopPoint.atco_code)",
         secondaryjoin="Service.code == JourneyPattern.service_ref"
@@ -493,16 +488,20 @@ class Service(utils.BaseModel):
     __tablename__ = "service"
 
     code = db.Column(db.Text, primary_key=True)
-    origin = db.Column(db.Text, nullable=False)
-    destination = db.Column(db.Text, nullable=False)
+    line = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=False)
     local_operator_ref = db.Column(db.Text, nullable=False)
     region_ref = db.Column(db.VARCHAR(2), nullable=False, index=True)
+    admin_area_ref = db.Column(
+        db.VARCHAR(3),
+        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
+        nullable=True, index=True
+    )
     mode = db.Column(
         db.Integer,
         db.ForeignKey("service_mode.id"),
         nullable=False, index=True
     )
-    # add classification and availability?
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -516,24 +515,7 @@ class Service(utils.BaseModel):
 
     operator = db.relationship("Operator", secondary="local_operator",
                                uselist=False)
-    lines = db.relationship("ServiceLine", backref="service",
-                            order_by="ServiceLine.name")
     patterns = db.relationship("JourneyPattern", backref="service")
-
-
-class ServiceLine(utils.BaseModel):
-    """ Line label for a service. """
-    __tablename__ = "service_line"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    name = db.Column(db.Text)
-    service_ref = db.Column(
-        db.Text,
-        db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False, index=True
-    )
-
-    journeys = db.relationship("Journey", backref="line")
 
 
 # Add JourneyPatternInterchange?
@@ -544,6 +526,8 @@ class JourneyPattern(utils.BaseModel):
     __tablename__ = "journey_pattern"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    origin = db.Column(db.Text, nullable=False)
+    destination = db.Column(db.Text, nullable=False)
     service_ref = db.Column(
         db.Text,
         db.ForeignKey("service.code", ondelete="CASCADE"),
@@ -557,47 +541,7 @@ class JourneyPattern(utils.BaseModel):
         db.CheckConstraint("date_start <= date_end"),
     )
 
-    sections = db.relationship("JourneySection", secondary="journey_sections",
-                               backref="patterns",
-                               order_by="JourneySections.sequence")
-    links = db.relationship(
-        "JourneyLink",
-        primaryjoin="JourneyPattern.id == JourneySections.pattern_ref",
-        secondary="join(JourneySections, JourneySection, "
-                  "JourneySections.section_ref == JourneySection.id)",
-        secondaryjoin="JourneySection.id == JourneyLink.section_ref",
-        backref="patterns",
-        order_by="JourneySections.sequence, JourneyLink.sequence"
-    )
-
-
-class JourneySections(utils.BaseModel):
-    """ Sequences of journey sections for a pattern. """
-    __tablename__ = "journey_sections"
-
-    pattern_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
-        primary_key=True, index=True
-    )
-    section_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("journey_section.id", ondelete="CASCADE"),
-        primary_key=True, index=True
-    )
-    sequence = db.Column(db.Integer, nullable=False, index=True)
-
-    __table_args__ = (
-        db.UniqueConstraint("pattern_ref", "sequence"),
-    )
-
-
-class JourneySection(utils.BaseModel):
-    """ Sequences of journey timing links. """
-    __tablename__ = "journey_section"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    links = db.relationship("JourneyLink", backref="section",
+    links = db.relationship("JourneyLink", backref="pattern",
                             order_by="JourneyLink.sequence")
 
 
@@ -613,9 +557,9 @@ class JourneyLink(utils.BaseModel):
     __tablename__ = "journey_link"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    section_ref = db.Column(
+    pattern_ref = db.Column(
         db.Integer,
-        db.ForeignKey("journey_section.id", ondelete="CASCADE"),
+        db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
     stop_start = db.Column(
@@ -640,7 +584,7 @@ class JourneyLink(utils.BaseModel):
     sequence = db.Column(db.Integer, index=True)
 
     __table_args__ = (
-        db.UniqueConstraint("section_ref", "sequence"),
+        db.UniqueConstraint("pattern_ref", "sequence"),
     )
 
 
@@ -680,11 +624,6 @@ class Journey(utils.BaseModel):
         db.ForeignKey("service.code", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    line_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("service_line.id", ondelete="CASCADE"),
-        nullable=False, index=True
-    )
     pattern_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
@@ -703,9 +642,9 @@ class Journey(utils.BaseModel):
     departure = db.Column(db.Time, nullable=False)
     # Add frequency?
     # Use bitwise operators for ISO day of week (1-7) and week of month (0-4)
-    days = db.Column(db.Integer, db.CheckConstraint("days < 256"),
+    days = db.Column(db.SmallInteger, db.CheckConstraint("days < 256"),
                      nullable=False)
-    weeks = db.Column(db.Integer, db.CheckConstraint("weeks < 32"))
+    weeks = db.Column(db.SmallInteger, db.CheckConstraint("weeks < 32"))
 
     holidays = db.relationship("BankHoliday", secondary="bank_holidays")
     holiday_dates = db.relationship(
@@ -791,7 +730,7 @@ class SpecialPeriod(utils.BaseModel):
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
-        index=True
+        nullable=False, index=True
     )
     date_start = db.Column(db.Date)
     date_end = db.Column(db.Date)

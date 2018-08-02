@@ -843,6 +843,7 @@
         </JourneyPattern>
         <JourneyPattern id="JPS_YSCO120-77">
           <Direction>outbound</Direction>
+          <JourneyPatternSectionRefs>JPS-73</JourneyPatternSectionRefs>
           <JourneyPatternSectionRefs>JPS_YSCO120-77</JourneyPatternSectionRefs>
         </JourneyPattern>
       </StandardService>

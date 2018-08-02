@@ -5,8 +5,9 @@ import functools
 
 from nextbus import db
 from nextbus.models import utils
-from nextbus.models.tables import (Region, AdminArea, District, Locality,
-                                   StopArea, StopPoint)
+from nextbus.models.tables import (
+    Region, AdminArea, District, Locality, StopArea, StopPoint, Service
+)
 
 
 def _select_fts_vectors():
@@ -83,8 +84,10 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column((District.name, "A"),
-                            (AdminArea.name, "B")).label("vector")
+            tsvector_column(
+                (District.name, "A"),
+                (AdminArea.name, "B")
+            ).label("vector")
         ])
         .select_from(
             District.__table__
@@ -113,9 +116,11 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column((Locality.name, "A"),
-                            (db.func.coalesce(District.name, ""), "B"),
-                            (AdminArea.name, "B")).label("vector")
+            tsvector_column(
+                (Locality.name, "A"),
+                (db.func.coalesce(District.name, ""), "B"),
+                (AdminArea.name, "B")
+            ).label("vector")
         ])
         .select_from(
             Locality.__table__
@@ -147,10 +152,12 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column((StopArea.name, "A"),
-                            (db.func.coalesce(Locality.name, ""), "C"),
-                            (db.func.coalesce(District.name, ""), "D"),
-                            (AdminArea.name, "D")).label("vector")
+            tsvector_column(
+                (StopArea.name, "A"),
+                (db.func.coalesce(Locality.name, ""), "C"),
+                (db.func.coalesce(District.name, ""), "D"),
+                (AdminArea.name, "D")
+            ).label("vector")
         ])
         .select_from(
             StopArea.__table__
@@ -174,11 +181,13 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column((StopPoint.name, "A"),
-                            (StopPoint.street, "B"),
-                            (Locality.name, "C"),
-                            (db.func.coalesce(District.name, ""), "D"),
-                            (AdminArea.name, "D")).label("vector")
+            tsvector_column(
+                (StopPoint.name, "A"),
+                (StopPoint.street, "B"),
+                (Locality.name, "C"),
+                (db.func.coalesce(District.name, ""), "D"),
+                (AdminArea.name, "D")
+            ).label("vector")
         ])
         .select_from(
             StopPoint.__table__
@@ -188,7 +197,34 @@ def _select_fts_vectors():
         )
     )
 
-    queries = (region, admin_area, district, locality, stop_area, stop_point)
+    services = (
+        db.select([
+            utils.table_name(Service).label("table_name"),
+            Service.code.label("code"),
+            Service.description.label("name"),
+            Service.line.label("short_ind"),
+            null.label("street"),
+            null.label("stop_type"),
+            null.label("stop_area_ref"),
+            null.label("locality_name"),
+            null.label("district_name"),
+            AdminArea.code.label("admin_area_ref"),
+            AdminArea.name.label("admin_area_name"),
+            tsvector_column(
+                (Service.line, "A"),
+                (Service.description, "A"),
+                (db.func.coalesce(AdminArea.name, ""), "B")
+            ).label("vector")
+        ])
+        .distinct()
+        .select_from(
+            Service.__table__
+            .outerjoin(AdminArea, Service.admin_area_ref == AdminArea.code)
+        )
+    )
+
+    queries = (region, admin_area, district, locality, stop_area, stop_point,
+               services)
 
     return db.union_all(*queries)
 

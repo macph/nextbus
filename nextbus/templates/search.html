@@ -70,7 +70,7 @@
     {% endif %}
     <div class="column-3">
         {% if f_groups %}
-        <ul class="tabs">
+        <ul class="tabs tabs--5">
             {{ group_tab(none, 'All results', 'group' not in request.args) }}
             {% for value, name in filters.group.choices %}
             {{ group_tab(value, name, request.args['group'] == value) }}
@@ -83,13 +83,13 @@
             {% if results.items|length > 0 %}
             {% call(item) f.print_list(results.items) %}
             {% if item.table_name == 'region' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
+            <a class="item item--place item--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
             {% elif item.table_name == 'admin_area' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
+            <a class="item item--place item--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
             {% elif item.table_name == 'district' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</span></a>
+            <a class="item item--place item--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</span></a>
             {% elif item.table_name == 'locality' %}
-            <a class="item item--place item--place--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</span></a>
+            <a class="item item--place item--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</span></a>
             {% elif item.table_name == 'stop_area' %}
             <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
@@ -111,6 +111,15 @@
                 {% else %}
                 <p>{{ place|join(', ') }}</p>
                 {% endif %}
+            </a>
+            {% elif item.table_name == 'service' %}
+            <a href="{{ url_for('page.service', service_code=item.code) }}" class="item item--service item--tall">
+              <div class="line">
+                  <div class="line__inner {{ 'area-%s'|format(item.admin_area_ref) if item.admin_area_ref }}">
+                      <span class="line__text">{{ item.short_ind }}</span>
+                  </div>
+              </div>
+              <div class="item__label">{{ truncate_description(item.name) }}</div>
             </a>
             {% endif %}
             {% endcall %}

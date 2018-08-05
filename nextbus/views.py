@@ -10,7 +10,7 @@ from flask.views import MethodView
 from requests import HTTPError
 from werkzeug.urls import url_encode
 
-from nextbus import db, forms, location, models, parser, search, tapi
+from nextbus import db, forms, graph, location, models, parser, search, tapi
 
 
 MIN_GROUPED = 72
@@ -116,6 +116,21 @@ def modify_query(**values):
             del args[attr]
 
     return request.path + "?" + url_encode(args)
+
+
+@page.app_template_global()
+def truncate_description(description):
+    """ Truncate longer descriptions such that only starting and ending
+        labels remain.
+    """
+    sep = " – "  # en dash
+    places = description.split(sep)
+    if len(places) > 3:
+        new_description = sep.join([places[0], places[-1]])
+    else:
+        new_description = description
+
+    return new_description
 
 
 @page.route("/")
@@ -429,7 +444,7 @@ def stop_naptan(naptan_code):
 
 
 @page.route("/stop/atco/<atco_code>")
-def stop_atco(atco_code=''):
+def stop_atco(atco_code=""):
     """ Shows stop with ATCO code. """
     if not atco_code:
         abort(404)
@@ -439,7 +454,8 @@ def stop_atco(atco_code=''):
         .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
                  db.joinedload(models.StopPoint.locality, innerjoin=True)
                  .joinedload(models.Locality.district),
-                 db.joinedload(models.StopPoint.stop_area))
+                 db.joinedload(models.StopPoint.stop_area),
+                 db.joinedload(models.StopPoint.services))
         .get(atco_code.upper())
     )
 
@@ -451,6 +467,41 @@ def stop_atco(atco_code=''):
                         code=301)
 
     return render_template("stop.html", stop=stop)
+
+
+@page.route("/service/<service_code>")
+def service(service_code):
+    line = (
+        models.Service.query
+        .options(db.joinedload(models.Service.local_operator, innerjoin=True),
+                 db.joinedload(models.Service.region, innerjoin=True),
+                 db.joinedload(models.Service.admin_area),
+                 db.joinedload(models.Service.patterns))
+        .get(service_code)
+    )
+
+    if service is None:
+        raise EntityNotFound("Service '%s' does not exist." % line)
+
+    # Check line patterns - is there more than 1 direction?
+    directions = {p.direction for p in line.patterns}
+    if directions == {True, False}:
+        reverse = request.args.get("reverse") == "true"
+        mirrored = True
+    else:
+        reverse = directions.pop()
+        mirrored = False
+
+    destinations = {
+        "origin": {p.origin for p in line.patterns if p.direction == reverse},
+        "destination": {p.destination for p in line.patterns
+                        if p.direction == reverse}
+    }
+
+    stops = graph.service_stops(line.code, reverse)
+
+    return render_template("service.html", service=line, dest=destinations,
+                           reverse=reverse, mirrored=mirrored, stops=stops)
 
 
 @page.route("/map/")

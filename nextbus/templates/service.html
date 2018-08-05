@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% import 'functions.html' as f %}
+
+{% block title %}{{ service.line }}: {{ service.description}}{% endblock %}
+
+{% block outer_header %}
+{{ f.add_search_bar() }}
+{% endblock %}
+
+{% block heading %}
+<nav>
+    <ul class="breadcrumbs breadcrumbs--trailing">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        <li><a href="{{ url_for('page.list_in_region', region_code=service.region.code) }}">{{ service.region.name }}</a></li>
+        {% if service.admin_area is not none %}
+        <li><a href="{{ url_for('page.list_in_area', area_code=service.admin_area.code) }}">{{ service.admin_area.name }}</a></li>
+        {% endif %}
+    </ul>
+</nav>
+<div class="heading-service">
+  <div class="line">
+    <div class="line__inner {{ 'area-%s'|format(service.admin_area.code) if service.admin_area }}">
+      <span class="line__text">{{ service.line }}</span>
+    </div>
+  </div>
+  <h1>{{ service.description }}</h1>
+</div>
+{% if service.local_operator %}
+<p>Operated by <strong>{{ service.local_operator.name }}</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="columns">
+    <div class="column-1">
+        <section class="card card--minor">
+            <a class="button" href=""><span>View on map</span></a>
+        </section>
+    </div>
+    <div class="column-3">
+        {% if mirrored %}
+        <ul class="tabs tabs--2">
+            {% if not reverse %}
+            <li><div class="tab tab--active"><span>Outbound</span></div></li>
+            <li><a class="tab" href="{{ modify_query(reverse='true') }}">Inbound</a></li>
+            {% else %}
+            <li><a class="tab" href="{{ modify_query(reverse='false') }}">Outbound</a></li>
+            <li><div class="tab tab--active"><span>Inbound</span></div></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        <section class="card">
+            <dl class="description-list">
+              <dt>From</dt>
+              <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
+              <dt>To</dt>
+              <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
+            </dl>
+            {% if stops|length > 0 %}
+            {% call(s) f.print_list(stops) %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s) }}
+                <div class="item__label">{{ s.name }}</div>
+            </a>
+            {% endcall %}
+            {% else %}
+            <p>No stops found.</p>
+            {% endif %}
+
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    resizeIndicator('indicator');
+</script>
+{% endblock %}

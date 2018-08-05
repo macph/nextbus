@@ -40,6 +40,23 @@
             </div>
             <div id="services"></div>
         </section>
+        <section class="card">
+            <h2>Services</h2>
+            {% if stop.services %}
+            {% call(s) f.print_list(stop.services) %}
+            <a href="{{ url_for('page.service', service_code=s.code) }}" class="item item--service">
+                <div class="line">
+                    <div class="line__inner {{ 'area-%s'|format(s.admin_area_ref) if s.admin_area_ref }}">
+                        <span class="line__text">{{ s.line }}</span>
+                    </div>
+                </div>
+                <div class="item__label">{{ truncate_description(s.description) }}</div>
+            </a>
+            {% endcall %}
+            {% else %}
+            <p>No services stop here.</p>
+            {% endif %}
+        </section>
     </div>
     <div class="column-1">
         <section class="card card--minor">

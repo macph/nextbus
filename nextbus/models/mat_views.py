@@ -279,7 +279,8 @@ class FTS(utils.MaterializedView):
     TYPES = {
         "area": ("Areas", [Region, AdminArea, District]),
         "place": ("Places", [Locality]),
-        "stop": ("Stops", [StopArea, StopPoint])
+        "stop": ("Stops", [StopArea, StopPoint]),
+        "line": ("Lines", [Service])
     }
     MINIMUM_AREA_RANK = 0.5
     MINIMUM_STOP_RANK = 0.25

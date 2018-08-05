@@ -71,8 +71,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
     from nextbus.populate import file_ops, utils
 
     errors = False
-    use_backup = False
-    options = {"g": False, "n": False, "p": False, "t": False, "m": False}
+    options = {o: False for o in "bgnptm"}
 
     if nptg_d and nptg_f:
         click.echo("Download (-g) and filepath (-G) options for NPTG data are "
@@ -109,14 +108,14 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
         click.echo("Default (-p) and filepath (-P) options for backing up "
                    "data are mutually exclusive.")
         errors = True
-    elif backup or backup_f:
-        use_backup = True
+    else:
+        options["b"] = backup or backup_f
 
     if errors:
         # Messages already printed; return to shell
         return
     elif any(options.values()):
-        if use_backup:
+        if options["b"]:
             # Carry out at least one option, back up beforehand if needed
             file_ops.backup_database(backup_f)
         if options["g"]:

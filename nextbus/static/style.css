@@ -86,6 +86,25 @@ p {
 }
 
 
+.description-list {
+  margin: 10px 0;
+  line-height: 1.5;
+  font-size: 1.6rem;
+}
+
+.description-list > dt {
+  float: left;
+  clear: left;
+  width: 48px;
+  margin-right: 10px;
+  text-align: right;
+}
+
+.description-list > dd {
+
+}
+
+
 /*
  * LINKS
  */
@@ -455,6 +474,32 @@ button:focus {
 }
 
 /*
+ *  SERVICE HEADING
+ */
+
+.heading-service {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 48px;
+  margin: 16px 0;
+}
+
+.heading-service > .line {
+  margin-right: 16px;
+  font-size: 1.4rem;
+}
+
+.heading-service > h1 {
+  flex: 1;
+  margin: 6px 0;
+}
+
+.heading-stop + p {
+  margin-top: -10px;
+}
+
+/*
  *  SEARCH FORM
  */
 
@@ -590,9 +635,20 @@ button:focus {
   list-style: none;
 }
 
-.tabs > li {
+.tabs--1 > li {
+  flex: 0 0 100%;
+}
+
+.tabs--2 > li {
+  flex: 0 0 50%;
+}
+
+.tabs--4 > li {
   flex: 0 0 25%;
-  display: block;
+}
+
+.tabs--5 > li {
+  flex: 0 0 20%;
 }
 
 .tab {
@@ -799,11 +855,12 @@ button:focus {
   line-height: 1em;
 }
 
-.item--place--tall {
+.item--tall {
   min-height: 42px;
 }
 
-.item--stop {
+.item--stop,
+.item--service{
   display: flex;
   align-items: center;
 }
@@ -834,7 +891,7 @@ button:focus {
 }
 
 /*
- *  LIST SERVICES
+ *  LIST LIVE SERVICES
  */
 
 .list-services {
@@ -844,8 +901,8 @@ button:focus {
     1fr
     minmax(54px, 0.30fr)
     minmax(54px, 0.35fr);
-  grid-gap: 5px 10px;
-  gap: 5px 10px;
+  grid-gap: 10px;
+  gap: 10px;
 
   display: -ms-grid;
   -ms-grid-columns:
@@ -859,7 +916,6 @@ button:focus {
 
 .service {
   display: flex;
-  min-height: 32px;
   align-items: center;
 }
 
@@ -960,6 +1016,41 @@ button:focus {
 
 .indicator__len4 {
     font-size: 1.3em;
+}
+
+/*
+ *  SERVICE LINE
+ */
+
+.line {
+  min-width: 4.8em;
+  flex: none;
+  display: flex;
+  justify-content: center;
+}
+
+.line__inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.5em 1em;
+  box-sizing: border-box;
+  max-width: 9.6em;
+  background: rgb(0, 33, 113);
+  color: white;
+}
+
+.line__text {
+  text-align: center;
+  line-height: 1.0em;
+  text-transform: capitalize;
+  word-wrap: break-word;
+  font-size: 1.8em;
+}
+
+.line__text--small {
+  font-size: 1.6em;
 }
 
 /*

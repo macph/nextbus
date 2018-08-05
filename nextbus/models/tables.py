@@ -38,6 +38,7 @@ class Region(utils.BaseModel):
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
                             order_by="AdminArea.name")
+    services = db.relationship("Service", backref="region", innerjoin=True)
 
     def __repr__(self):
         return "<Region(%r)>" % self.code
@@ -91,6 +92,7 @@ class AdminArea(utils.BaseModel):
     )
     stop_areas = db.relationship("StopArea", backref="admin_area",
                                  innerjoin=True, order_by="StopArea.name")
+    services = db.relationship("Service", backref="admin_area")
 
     def __repr__(self):
         return "<AdminArea(%r)>" % self.code
@@ -312,25 +314,16 @@ class StopPoint(utils.BaseModel):
         uselist=True,
         order_by="StopPoint.name, StopPoint.short_ind"
     )
-    journey_links = db.relationship(
+    patterns = db.relationship(
         "JourneyLink",
-        primaryjoin="or_(JourneyLink.stop_start == StopPoint.atco_code, "
-                    "JourneyLink.stop_end == StopPoint.atco_code)",
-        backref=db.backref("stops", uselist=True)
-    )
-    preceding_stops = db.relationship(
-        "StopPoint",
-        secondary="journey_link",
-        primaryjoin="JourneyLink.stop_end == StopPoint.atco_code",
-        secondaryjoin="StopPoint.atco_code == JourneyLink.stop_start",
-        backref="following_stops"
-    )
+        backref=db.backref("stops", uselist=True))
     services = db.relationship(
         "Service",
-        secondary="JourneyPattern",
-        primaryjoin="or_(JourneyLink.stop_start == StopPoint.atco_code, "
-                    "JourneyLink.stop_end == StopPoint.atco_code)",
-        secondaryjoin="Service.code == JourneyPattern.service_ref"
+        secondary="join(JourneyLink, JourneyPattern, "
+                  "JourneyLink.pattern_ref == JourneyPattern.id)",
+        primaryjoin="JourneyLink.stop_point_ref == StopPoint.atco_code",
+        secondaryjoin="Service.code == JourneyPattern.service_ref",
+        backref=db.backref("stops", uselist=True)
     )
 
     def __init__(self, *args, **kwargs):
@@ -491,7 +484,11 @@ class Service(utils.BaseModel):
     line = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=False)
     local_operator_ref = db.Column(db.Text, nullable=False)
-    region_ref = db.Column(db.VARCHAR(2), nullable=False, index=True)
+    region_ref = db.Column(
+        db.VARCHAR(2),
+        db.ForeignKey("region.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
     admin_area_ref = db.Column(
         db.VARCHAR(3),
         db.ForeignKey("admin_area.code", ondelete="CASCADE"),
@@ -513,8 +510,6 @@ class Service(utils.BaseModel):
                  "local_operator_ref", "region_ref")
     )
 
-    operator = db.relationship("Operator", secondary="local_operator",
-                               uselist=False)
     patterns = db.relationship("JourneyPattern", backref="service")
 
 
@@ -546,7 +541,7 @@ class JourneyPattern(utils.BaseModel):
 
 
 class JourneyLink(utils.BaseModel):
-    """ Link between two stops with timings.
+    """ Stop with timing and journey info..
 
         Each stop has the following fields:
         - ATCO code for stop as foreign key
@@ -562,29 +557,23 @@ class JourneyLink(utils.BaseModel):
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    stop_start = db.Column(
+    stop_point_ref = db.Column(
         db.VARCHAR(12),
         db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
         nullable=True, index=True
     )
-    wait_start = db.Column(db.Interval, nullable=False)
-    timing_start = db.Column(db.Boolean, nullable=False)
-    principal_start = db.Column(db.Boolean, nullable=False)
-    stopping_start = db.Column(db.Boolean, nullable=False)
-    stop_end = db.Column(
-        db.VARCHAR(12),
-        db.ForeignKey("stop_point.atco_code", ondelete="CASCADE"),
-        nullable=True, index=True
-    )
-    wait_end = db.Column(db.Interval, nullable=False)
-    timing_end = db.Column(db.Boolean, nullable=False)
-    principal_end = db.Column(db.Boolean, nullable=False)
-    stopping_end = db.Column(db.Boolean, nullable=False)
-    run_time = db.Column(db.Interval, nullable=False)
+    run_time = db.Column(db.Interval, nullable=True)
+    wait_arrive = db.Column(db.Interval, nullable=True)
+    wait_leave = db.Column(db.Interval, nullable=True)
+    timing_point = db.Column(db.Boolean, nullable=False)
+    principal_point = db.Column(db.Boolean, nullable=False)
+    stopping = db.Column(db.Boolean, nullable=False)
     sequence = db.Column(db.Integer, index=True)
 
     __table_args__ = (
         db.UniqueConstraint("pattern_ref", "sequence"),
+        db.CheckConstraint("run_time IS NOT NULL AND wait_arrive IS NOT NULL "
+                           "OR wait_leave IS NOT NULL")
     )
 
 
@@ -603,11 +592,10 @@ class JourneySpecificLink(utils.BaseModel):
         db.ForeignKey("journey_link.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    wait_start = db.Column(db.Interval, nullable=True)
-    stopping_start = db.Column(db.Boolean, nullable=True)
-    wait_end = db.Column(db.Interval, nullable=True)
-    stopping_end = db.Column(db.Boolean, nullable=True)
     run_time = db.Column(db.Interval, nullable=True)
+    wait_arrive = db.Column(db.Interval, nullable=True)
+    wait_leave = db.Column(db.Interval, nullable=True)
+    stopping = db.Column(db.Boolean, nullable=True)
 
     __table_args__ = (
         db.UniqueConstraint("journey_ref", "link_ref"),

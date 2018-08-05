@@ -7,9 +7,7 @@ import unittest
 import lxml.etree as et
 
 from nextbus.populate.utils import xslt_func
-from nextbus.populate.tnds import (
-    _get_tnds_transform, days_week, setup_tnds_id_functions
-)
+from nextbus.populate.tnds import _get_tnds_transform, days_week, RowIds
 import utils
 
 
@@ -75,7 +73,7 @@ class TransformTests(utils.BaseXMLTests):
         transform = _get_tnds_transform()
         expected = et.parse(TNDS_OUT, parser=self.parser)
         # Set up functions to assign IDs
-        setup_tnds_id_functions(check_existing=False)
+        RowIds(check_existing=False)
 
         def always_true(_, *args):
             return True
@@ -93,4 +91,4 @@ class TransformTests(utils.BaseXMLTests):
                 print(msg)
             raise
 
-        self.assertXMLElementsEqual(output.getroot(), expected.getroot())
+        self.assertXMLElementsEqual(expected.getroot(), output.getroot())

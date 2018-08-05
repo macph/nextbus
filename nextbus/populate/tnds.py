@@ -3,6 +3,7 @@ Populate bus route and timetable data from TNDS.
 """
 import ftplib
 import os
+import re
 
 from flask import current_app
 import lxml.etree as et
@@ -104,7 +105,7 @@ class IndexList(object):
             self._map[item] = self._current
             self._current += 1
         else:
-            raise KeyError("Item %r already in list." % item)
+            raise KeyError(item)
 
     def get(self, item):
         """ Gets index of an item or None if it does not exist. """
@@ -112,7 +113,8 @@ class IndexList(object):
 
 
 class RowIds(object):
-    """ Assigns each row for journey patterns, sections and links an unique ID.
+    """ Create XSLT functions to assign each row for journey patterns, sections
+        and links an unique ID.
 
         A service in the TNDS dataset has its own XML file or split up across
         several files, with the associated journey patterns having unique IDs
@@ -121,6 +123,9 @@ class RowIds(object):
     def __init__(self, check_existing=True):
         self._id = {}
         self.existing = check_existing
+
+        utils.xslt_text_func(self.add_id)
+        utils.xslt_text_func(self.get_id)
 
     def _get_sequence(self, model_name):
         """ Check database to find max value to start from or use 1. """
@@ -134,44 +139,58 @@ class RowIds(object):
 
         return start
 
-    def add(self, id_, file_, name):
+    def add_id(self, _, name, file_name, *ids):
         """ Adds file name + code/ID to list, returning an integer ID. """
         if name not in self._id:
             # Find the initial sequence and set up list
             initial = self._get_sequence(name)
             utils.logger.info("Setting sequence for %s to %d" %
                               (name, initial))
+
             self._id[name] = IndexList(initial=initial)
 
-        return self._id[name].add((file_, id_))
+        return self._id[name].add((file_name, *ids))
 
-    def get(self, id_, file_, name):
+    def get_id(self, _, name, file_name, *ids):
         """ Gets integer ID for a file name and code/ID. """
-        return self._id[name].get((file_, id_)) if name in self._id else None
+        if name in self._id and (file_name, *ids) in self._id[name]:
+            return self._id[name].get((file_name, *ids))
+        else:
+            print(self._id)
+            raise ValueError("ID %r does not exist for file %r and model %r." %
+                             (ids, file_name, name))
 
 
-def setup_tnds_id_functions(check_existing=True):
-    """ Sets up XSLT functions to access row IDs. """
-    ids = RowIds(check_existing=check_existing)
+@utils.xslt_text_func
+def format_description(_, text):
+    if text is not None and text.isupper():
+        text = utils.capitalize(None, text)
 
-    @utils.xslt_text_func
-    def add_id(_, id_, file_, name):
-        """ Adds internal ID and gets new integer ID. """
-        return ids.add(id_, file_, name)
+    places = text.split(" - ")
+    new_places = []
 
-    @utils.xslt_text_func
-    def get_id(_, id_, file_, name):
-        """ Gets integer ID from existing internal ID. Raise error if doesn't
-            exist
-        """
-        integer = ids.get(id_, file_, name)
-        if not integer:
-            raise KeyError("ID %r does not exist for file %r and model %r." %
-                           (id_, file_, name))
+    sep = re.compile(r"(.+\S),(\S.+)")
+    for p in places:
+        separated = sep.search(p)
+        new_places.append(separated.group(2) if separated else p)
 
-        return integer
+    return " – ".join(new_places)
 
-    return ids
+
+@utils.xslt_text_func
+def format_destination(_, text):
+    if text is not None and text.isupper():
+        text = utils.capitalize(None, text)
+
+    return text
+
+
+@utils.xslt_text_func
+def format_operator(_, text):
+    if text is not None and text.isupper():
+        text = utils.capitalize(None, text)
+
+    return text
 
 
 @utils.xslt_func
@@ -340,7 +359,6 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("LocalOperator", models.LocalOperator,
                  indices=("region_ref", "code"))
         tnds.add("Service", models.Service, indices=("code",))
-        tnds.add("ServiceLine", models.ServiceLine)
         tnds.add("JourneyPattern", models.JourneyPattern)
         tnds.add("JourneyLink", models.JourneyLink)
         tnds.add("Journey", models.Journey)
@@ -374,6 +392,6 @@ def commit_tnds_data(archive=None, region=None):
 
     transform = _get_tnds_transform()
     setup_tnds_functions()
-    setup_tnds_id_functions()
+    RowIds()
     for region, archive in regions.items():
         _commit_each_tnds(transform, archive, region)

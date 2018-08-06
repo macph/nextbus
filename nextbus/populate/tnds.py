@@ -312,6 +312,7 @@ def setup_tnds_functions():
     set_national = set(c.code for c in query_operators.all())
     set_local = set((c.code, c.region_ref) for c in query_local.all())
     set_stops = set(c.atco_code for c in query_stops.all())
+    set_not_exists = set()
 
     @utils.xslt_text_func
     def national_op_new(_, code):
@@ -326,7 +327,13 @@ def setup_tnds_functions():
     @utils.xslt_text_func
     def stop_exists(_, code):
         """ Check if stop point exists. """
-        return code in set_stops
+        nonlocal set_not_exists
+        exists = code in set_stops
+        if not exists and code not in set_not_exists:
+            set_not_exists.add(code)
+            utils.logger.warning("Stop code %r does not exist." % code)
+
+        return exists
 
 
 def _get_tnds_transform():

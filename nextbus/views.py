@@ -406,7 +406,9 @@ def stop_area(stop_area_code):
         models.StopArea.query
         .options(db.joinedload(models.StopArea.admin_area, innerjoin=True),
                  db.joinedload(models.StopArea.locality, innerjoin=True)
-                 .joinedload(models.Locality.district))
+                 .joinedload(models.Locality.district),
+                 db.joinedload(models.StopArea.stop_points)
+                 .joinedload(models.StopPoint.services))
         .get(stop_area_code.upper())
     )
 
@@ -417,7 +419,10 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
 
-    return render_template("stop_area.html", stop_area=area)
+    lines = {s: sorted(set(t.line for t in s.services))
+             for s in area.stop_points}
+
+    return render_template("stop_area.html", stop_area=area, lines=lines)
 
 
 @page.route("/stop/sms/<naptan_code>")

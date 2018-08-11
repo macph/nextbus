@@ -46,7 +46,7 @@
             {% call(s) f.print_list(stop.services) %}
             <a href="{{ url_for('page.service', service_code=s.code) }}" class="item item--service">
                 <div class="line">
-                    <div class="line__inner {{ 'area-%s'|format(s.admin_area_ref) if s.admin_area_ref }}">
+                    <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
                         <span class="line__text">{{ s.line }}</span>
                     </div>
                 </div>

@@ -36,13 +36,29 @@
             <h2>Stops</h2>
             {% if stop_area.stop_points|length > 0 %}
             {% call(s) f.print_list(stop_area.stop_points) %}
+            {% if lines[s] %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
+                <div class="item--stop">
+                    {{ f.print_stop_indicator(s) }}
+                    <div class="item__label">{{ s.name }}</div>
+                </div>
+                <p>
+                    {% for line in lines[s] %}
+                    <span class="line line--inline">
+                        <span class="line__inner {{ 'area-%s'|format(s.admin_area_ref) }}">
+                            <span class="line__text">{{ line }}</span>
+                        </span>
+                    </span>
+                    {% endfor %}
+                </p>
+            </a>
+            {% else %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
                 {{ f.print_stop_indicator(s) }}
                 <div class="item__label">{{ s.name }}</div>
             </a>
+            {% endif %}
             {% endcall %}
-            {% else %}
-            <p>No stops found.</p>
             {% endif %}
         </section>
     </div>

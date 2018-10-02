@@ -124,6 +124,7 @@ class RowIds(object):
         self._id = {}
         self.existing = check_existing
 
+        # Register XSLT functions
         utils.xslt_text_func(self.add_id)
         utils.xslt_text_func(self.get_id)
 
@@ -139,26 +140,24 @@ class RowIds(object):
 
         return start
 
-    def add_id(self, _, name, file_name, *ids):
-        """ Adds file name + code/ID to list, returning an integer ID. """
+    def add_id(self, _, name, *ids):
+        """ Adds IDs (eg file name, code) to list, returning an integer ID. """
         if name not in self._id:
             # Find the initial sequence and set up list
             initial = self._get_sequence(name)
-            utils.logger.info("Setting sequence for %s to %d" %
-                              (name, initial))
+            utils.logger.info("Setting sequence for %s to %d" % (name, initial))
 
             self._id[name] = IndexList(initial=initial)
 
-        return self._id[name].add((file_name, *ids))
+        return self._id[name].add(ids)
 
-    def get_id(self, _, name, file_name, *ids):
-        """ Gets integer ID for a file name and code/ID. """
-        if name in self._id and (file_name, *ids) in self._id[name]:
-            return self._id[name].get((file_name, *ids))
-        else:
-            print(self._id)
-            raise ValueError("ID %r does not exist for file %r and model %r." %
-                             (ids, file_name, name))
+    def get_id(self, _, name, *ids):
+        """ Gets integer ID for IDs (eg file name, code) """
+        if name not in self._id or ids not in self._id[name]:
+            raise ValueError("IDs %r does not exist for model %r." %
+                             (ids, name))
+
+        return self._id[name].get(ids)
 
 
 @utils.xslt_text_func
@@ -200,68 +199,37 @@ def days_week(_, nodes=None):
         Returned as an integer with Monday-Sunday corresponding to bits 1-7. If
         nodes is None Monday-Friday is returned as the default.
     """
-    week = 0
-    mon, tues, wed, thurs, fri, sat, sun = range(1, 8)
-
-    def set_days(first, last=None):
-        """ Sets bits for an inclusive range of days. """
-        nonlocal week
-        last_ = last if last is not None else first
-        for i in range(first, last_ + 1):
-            week |= 1 << i
+    days = {
+        "Monday": 2,
+        "Tuesday": 4,
+        "Wednesday": 8,
+        "Thursday": 16,
+        "Friday": 32,
+        "Saturday": 64,
+        "Sunday": 128,
+        "Weekend": 192,
+        "MondayToFriday": 62,
+        "MondayToSaturday": 126,
+        "NotSaturday": 190,
+        "MondayToSunday": 254
+    }
 
     try:
         element = nodes[0]
     except IndexError:
-        element = None
+        element = None  # No element returned
     except TypeError:
-        element = nodes
+        element = nodes  # Single element instead of a list
 
-    if element is None:
+    if element is not None:
+        week = 0
+        ns = {"txc": element.xpath("namespace-uri(.)")}
+        for d in element.xpath("txc:DaysOfWeek/*", namespaces=ns):
+            tag = et.QName(d).localname
+            week |= days.get(tag, 0)
+    else:
         # Default is Monday to Friday
-        set_days(mon, fri)
-        return week
-
-    ns = {"txc": element.xpath("namespace-uri(.)")}
-    xpath = et.XPathElementEvaluator(element, namespaces=ns)
-
-    if xpath("txc:DaysOfWeek[txc:MondayToSunday]"):
-        set_days(mon, sun)
-        return week
-
-    if xpath("txc:DaysOfWeek[txc:Weekend]"):
-        set_days(sat, sun)
-        return week
-
-    if xpath("txc:DaysOfWeek[txc:Sunday]"):
-        set_days(sun)
-
-    if xpath("txc:DaysOfWeek[txc:NotSaturday]"):
-        set_days(sun)
-        set_days(mon, fri)
-        return week
-
-    if xpath("txc:DaysOfWeek[txc:MondayToSaturday]"):
-        set_days(mon, sat)
-        return week
-
-    if xpath("txc:DaysOfWeek[txc:Saturday]"):
-        set_days(sat)
-
-    if xpath("txc:DaysOfWeek[txc:MondayToFriday]"):
-        set_days(mon, fri)
-        return week
-
-    if xpath("txc:DaysOfWeek[txc:Monday]"):
-        set_days(mon)
-    if xpath("txc:DaysOfWeek[txc:Tuesday]"):
-        set_days(tues)
-    if xpath("txc:DaysOfWeek[txc:Wednesday]"):
-        set_days(wed)
-    if xpath("txc:DaysOfWeek[txc:Thursday]"):
-        set_days(thurs)
-    if xpath("txc:DaysOfWeek[txc:Friday]"):
-        set_days(fri)
+        week = days["MondayToFriday"]
 
     return week
 
@@ -302,7 +270,7 @@ def weeks_month(_, nodes):
 
 
 def setup_tnds_functions():
-    """ Finds all existing operators and stop points in database, seting up
+    """ Finds all existing operators and stop points in database, setting up
         XSLT functions compare with incoming operators and journey links.
     """
     query_operators = db.session.query(models.Operator.code)

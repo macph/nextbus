@@ -6,7 +6,8 @@ import functools
 from nextbus import db
 from nextbus.models import utils
 from nextbus.models.tables import (
-    Region, AdminArea, District, Locality, StopArea, StopPoint, Service
+    Region, AdminArea, District, Locality, StopArea, StopPoint,
+    JourneyPattern, JourneyLink, Service
 )
 
 
@@ -197,7 +198,30 @@ def _select_fts_vectors():
         )
     )
 
-    services = (
+    area_names = (
+        db.select([
+            Service.code.label("code"),
+            db.func.string_agg(db.distinct(Locality.name),
+                               " ").label("localities"),
+            db.func.string_agg(db.distinct(db.func.coalesce(District.name, "")),
+                               " ").label("districts"),
+            db.func.string_agg(db.distinct(AdminArea.name),
+                               " ").label("admin_areas")
+        ])
+        .select_from(
+            Service.__table__
+            .join(JourneyPattern, Service.code == JourneyPattern.service_ref)
+            .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
+            .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
+            .join(Locality, StopPoint.locality_ref == Locality.code)
+            .outerjoin(District, Locality.district_ref == District.code)
+            .join(AdminArea, Locality.admin_area_ref == AdminArea.code)
+        )
+        .group_by(Service.code)
+        .alias("area_names")
+    )
+
+    service = (
         db.select([
             utils.table_name(Service).label("table_name"),
             Service.code.label("code"),
@@ -213,18 +237,21 @@ def _select_fts_vectors():
             tsvector_column(
                 (Service.line, "A"),
                 (Service.description, "A"),
-                (db.func.coalesce(AdminArea.name, ""), "B")
+                (db.func.string_agg(area_names.c.localities, " "), "C"),
+                (db.func.string_agg(area_names.c.districts, " "), "D"),
+                (db.func.string_agg(area_names.c.admin_areas, " "), "D")
             ).label("vector")
         ])
         .distinct()
         .select_from(
             Service.__table__
+            .join(area_names, area_names.c.code == Service.code)
             .outerjoin(AdminArea, Service.admin_area_ref == AdminArea.code)
         )
     )
 
     queries = (region, admin_area, district, locality, stop_area, stop_point,
-               services)
+               service)
 
     return db.union_all(*queries)
 

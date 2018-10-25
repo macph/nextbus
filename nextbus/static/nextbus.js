@@ -1,6 +1,6 @@
 /*
-Functions for list of stops.
-*/
+ * nextbus website functionality, copyright Ewan Macpherson 2017-18
+ */
 
 const INTERVAL = 60;
 const REFRESH = true;
@@ -72,7 +72,7 @@ function StarredStops(cookieSet, info) {
 
     this.get = function(callback) {
         self.r.onload = function() {
-            newData = JSON.parse(this.responseText);
+            let newData = JSON.parse(this.responseText);
             self.data = newData.stops;
             callback();
         }
@@ -186,8 +186,6 @@ function addSearchBarEvents() {
     });
   
     document.addEventListener('click', function(event) {
-        let bar = searchBar.contains(event.target);
-        let button = searchButton.contains(event.target);
         if (!searchBar.contains(event.target) &&
             !searchButton.contains(event.target) &&
             !barHidden) {
@@ -198,8 +196,8 @@ function addSearchBarEvents() {
 
 
 /**
- * Resizes text within boxes
- * @param {...*} var_args Class names as args to modify text in
+ * Resize text within boxes
+ * @param {...*} arguments Class names as args to modify text in
  */
 function resizeIndicator() {
     for (let i = 0; i < arguments.length; i++) {
@@ -243,7 +241,7 @@ function resizeIndicator() {
 
 /**
  * Reverts colours of indicators
- * @param {...*} var_args Class names as arguments to revert colours
+ * @param {...*} arguments Class names as arguments to revert colours
  */
 function revertColours() {
     for (let i = 0; i < arguments.length; i++) {
@@ -260,7 +258,7 @@ function revertColours() {
 }
 
 /**
- * Removes all subelements from an element
+ * Removes all sub-elements from an element
  * @param {HTMLElement} element Element to remove all children from
  */
 function removeSubElements(element) {
@@ -590,7 +588,7 @@ function addMap(token, mapElement, stops, callback) {
             id: 'mapbox.emerald',
             accessToken: token
         }
-    )
+    );
 
     let stopsGeo = new L.GeoJSON(stops, {
         pointToLayer: function(point, latLng) {
@@ -690,7 +688,7 @@ function TileCache(max) {
      */
     this.hash = function(coords) {
         return 0.5 * (coords.x + coords.y) * (coords.x + coords.y + 1) + coords.y;
-    }
+    };
 
     /**
      * Gets value from map by key and push to front if requested
@@ -708,7 +706,7 @@ function TileCache(max) {
             self._data.set(key, obj);
         }
         return obj.layer;
-    }
+    };
 
     /**
      * Adds coordinates and layer to map, keeping to maximum size
@@ -726,7 +724,7 @@ function TileCache(max) {
             })
             self._data.delete(first);
         }
-    }
+    };
 
     /**
      * Checks if coordinates exist in map
@@ -734,25 +732,25 @@ function TileCache(max) {
      */
     this.has = function(coords) {
         return self._data.has(self.hash(coords));
-    }
+    };
 
     /**
      * Returns array of coordinates within map
      */
     this.coords = function() {
         let array = [];
-        self._data.forEach(function(obj, key) {
+        self._data.forEach(function(obj) {
             array.push(obj.coords);
-        })
+        });
 
         return array;
-    }
+    };
 
     /**
      * Iterates over each entry in map, with function accepting layer and coordinates objects
      */
     this.forEach = function(func) {
-        self._data.forEach(function(obj, key) {
+        self._data.forEach(function(obj) {
             func(obj.layer, obj.coords);
         });
     }
@@ -780,6 +778,14 @@ function StopLayer(stopMap) {
     this.zCount = 0;
     this.isIE = detectIE();
     this.loadedStops = new TileCache(TILE_LIMIT);
+    self.layers = L.layerGroup();
+
+    /**
+     * Sets up layer group.
+     */
+    this.init = function() {
+        self.layers.addTo(self.stopMap.map);
+    };
 
     /**
      * Loads tile with stops - if it doesn't exist in cache, download data
@@ -789,7 +795,7 @@ function StopLayer(stopMap) {
         let layer = self.loadedStops.get(coords, true);
         if (typeof layer !== 'undefined') {
             if (layer !== null) {
-                layer.addTo(self.stopMap.map);
+                self.layers.addLayer(layer);
                 resizeIndicator('indicator-marker');
             }
             return;
@@ -798,18 +804,20 @@ function StopLayer(stopMap) {
         let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y;
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
+
         request.addEventListener('load', function() {
             let data = JSON.parse(this.responseText);
             if (data.features.length > 0) {
                 self.loadedStops.set(coords, self.createLayer(data));
-                self.loadedStops.get(coords).addTo(self.stopMap.map);
+                self.layers.addLayer(self.loadedStops.get(coords));
                 resizeIndicator('indicator-marker');
             } else {
                 self.loadedStops.set(coords, null);
             }
         });
+
         request.send();
-    }
+    };
 
     /**
      * Removes all tiles - but data stays in cache
@@ -817,33 +825,31 @@ function StopLayer(stopMap) {
      */
     this.removeTile = function(coords) {
         let layer = self.loadedStops.get(coords);
-        if (typeof layer !== 'undefined' && self.stopMap.map.hasLayer(layer)) {
-            self.stopMap.map.removeLayer(layer);
+        if (self.layers.hasLayer(layer)) {
+            self.layers.removeLayer(layer);
         }
-    }
+    };
 
     /**
      * Removes all tiles - but data stays in cache
      */
     this.removeAllTiles = function() {
-        self.stopMap.map.eachLayer(function(layer) {
-            if (!(layer instanceof L.TileLayer)) {
-                self.stopMap.map.removeLayer(layer);
-            }
+        self.layers.eachLayer(function(layer) {
+            self.layers.removeLayer(layer);
         });
-    }
+    };
 
     /**
      * Gets coordinates of all tiles visible current map at level TILE_ZOOM
      */
     this._getTileCoordinates = function() {
-        let pixelScale = self.stopMap.layer.getTileSize();
+        let pixelScale = self.stopMap.tileLayer.getTileSize();
         let bounds = self.stopMap.map.getBounds();
 
         let getTile = function(coords) {
             let absolute = self.stopMap.map.project(coords, TILE_ZOOM)
             return absolute.unscaleBy(pixelScale).floor();
-        }
+        };
         let northwest = getTile(bounds.getNorthWest());
         let southeast = getTile(bounds.getSouthEast());
 
@@ -855,7 +861,7 @@ function StopLayer(stopMap) {
         }
 
         return tileCoords;
-    }
+    };
 
     /**
      * Updates all stop point tiles, removing hidden tiles and adding new tiles
@@ -872,12 +878,12 @@ function StopLayer(stopMap) {
             if (index > -1) {
                 self.loadTile(coords);
                 tiles.splice(index, 1);
-            } else if (self.stopMap.map.hasLayer(layer)) {
-                self.stopMap.map.removeLayer(layer);
+            } else if (self.layers.hasLayer(layer)) {
+                self.layers.removeLayer(layer);
             }
         });
         tiles.forEach(self.loadTile);
-    }
+    };
 
     /**
      * Creates marker element to be used in map
@@ -905,7 +911,7 @@ function StopLayer(stopMap) {
         let innerHTML = '<div class="' + indClass + '">' + arrow + ind + '</div>';
 
         return innerHTML;
-    }
+    };
 
     /**
      * Creates GeoJSON layer of stops from list of stops
@@ -944,7 +950,77 @@ function StopLayer(stopMap) {
 
 
 /**
+ * Handles tram/bus route on map
+ * @constructor
+ * @param {Object} stopMap Parent stop map object
+ */
+function RouteLayer(stopMap) {
+    let self = this;
+    this.stopMap = stopMap;
+    this.layer = null;
+
+    /**
+     * Creates route layer to be put on map
+     * @param {Object} route MultiLineString GeoJSON object
+     */
+    this.createLayer = function(route) {
+        // TODO: Find colour for a specific style and use it for paths
+        let className = 'area-' + route.properties.adminAreaCode;
+
+        return new L.GeoJSON(route, {
+            style: function() {
+                return {className: className}
+            }
+        });
+    };
+
+    /**
+     * Queries route for service code and adds it to the map
+     * @param {String} serviceCode Service code for route
+     * @param {Boolean} direction Direction of service
+     * @param {Boolean} zoom Whether map will zoom to fit route after load
+     */
+    this.addRoute = function(serviceCode, direction, zoom) {
+        let url = ROUTE_URL + serviceCode;
+        if (typeof(direction) !== 'undefined') {
+            url += '?reverse=' + direction;
+        }
+        let request = new XMLHttpRequest;
+        request.open('GET', url, true);
+
+        request.addEventListener('load', function() {
+            if (self.layer !== null) {
+                self.removeRoute();
+            }
+            let data = JSON.parse(this.responseText);
+            self.layer = self.createLayer(data);
+            self.layer.addTo(self.stopMap.map);
+            // Rearrange layers with route behind markers and front of tiles
+            self.layer.bringToBack();
+            self.stopMap.tileLayer.bringToBack();
+            if (typeof(zoom) !== 'undefined' || zoom) {
+                self.stopMap.map.fitBounds(self.layer.getBounds());
+            }
+        });
+
+        request.send();
+    };
+
+    /**
+     * Removes route from map
+     */
+    this.removeRoute = function() {
+        if (self.layer !== null) {
+            self.stopMap.map.removeLayer(self.layer);
+            self.layer = null;
+        }
+    };
+}
+
+
+/**
  * Handles the stop panel
+ * @constructor
  * @param {Object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
  * @param {Boolean} cookieSet Whether the cookie has been set or not
@@ -983,7 +1059,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         });
 
         return self.activeStops.get(atcoCode);
-    }
+    };
 
     /**
      * Finds the current stop shown on panel, or null if no stops are actively looping
@@ -997,7 +1073,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         });
 
         return currentData;
-    }
+    };
 
     /**
      * Stops all loops
@@ -1009,7 +1085,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
                 data.stopLoop();
             }
         });
-    }
+    };
 
     /**
      * Sets panel depending on existence of point data and zoom level
@@ -1022,7 +1098,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
             self._setPanelMessage();
         }
         self.stopMap.setURL();
-    }
+    };
 
     /**
      * Clears all subelements from panel
@@ -1031,7 +1107,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         while (self.mapPanel.firstChild) {
             self.mapPanel.removeChild(self.mapPanel.firstChild);
         }
-    }
+    };
 
 
     /**
@@ -1051,7 +1127,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
         self.clearPanel();
         self.mapPanel.appendChild(heading);
-    }
+    };
 
 
     /**
@@ -1156,7 +1232,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         self.mapPanel.appendChild(stopInfo);
         self.mapPanel.appendChild(actions);
 
-        let activeStop = self.getStop(
+        self.getStop(
             point.properties.atcoCode,
             point.properties.adminAreaRef,
             'services',
@@ -1182,9 +1258,9 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
                 codeInList = self.starred.data.indexOf(point.properties.naptanCode) > -1;
             }
 
-            starred = document.createElement('button');
+            let starred = document.createElement('button');
             starred.className = 'button';
-            starredInner = document.createElement('span');
+            let starredInner = document.createElement('span');
             starred.appendChild(starredInner);
             if (!self.starred.set || !codeInList) {
                 starredInner.textContent = 'Add starred stop';
@@ -1216,7 +1292,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
     this.mapPanel = document.getElementById(mapPanel);
 
     this.map = null;
-    this.layer = L.tileLayer(
+    this.tileLayer = L.tileLayer(
         'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
         {
             minZoom: 9,
@@ -1224,10 +1300,11 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             id: 'mapbox.emerald',
             accessToken: mapToken
         }
-    )
+    );
 
     this.panel = new StopPanel(this, this.mapPanel, cookieSet);
     this.stops = new StopLayer(this);
+    this.route = new RouteLayer(this);
 
     /**
      * Starts up the map and adds map events
@@ -1268,7 +1345,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             }
             self.panel.setPanel(null);
         });
-    
+
         self.map.on('moveend', function() {
             self.setURL();
             self.stops.updateTiles();
@@ -1279,10 +1356,11 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             self.panel.setPanel(null);
         });
 
-        self.layer.addTo(self.map);
+        self.tileLayer.addTo(self.map);
+        self.stops.init();
         self.stops.updateTiles();
         self.panel.setPanel(point);
-    }
+    };
 
     /**
      * Sets page to new URL with current stop, coordinates and zoom
@@ -1295,5 +1373,5 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
 
         let newURL = MAP_URL + stop + center.lat + ',' + center.lng + ',' + zoom;
         history.replaceState(null, null, newURL);
-    }
+    };
 }

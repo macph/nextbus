@@ -304,6 +304,89 @@ def setup_tnds_functions():
         return exists
 
 
+def _delete_empty_services():
+    """ Delete services and associated operators if all stop point references
+        are null - eg when including a metro route where all stop points are
+        not in the existing database.
+    """
+    empty_patterns = (
+        db.session.query(models.JourneyLink.pattern_ref)
+        .group_by(models.JourneyLink.pattern_ref)
+        .having(db.func.bool_and(models.JourneyLink.stop_point_ref.is_(None)))
+        .subquery()
+    )
+    empty_services = ~(
+        db.session.query(models.JourneyPattern)
+        .filter(models.JourneyPattern.service_ref == models.Service.code)
+        .exists()
+    )
+    empty_local_operators = ~(
+        db.session.query(models.Service)
+        .filter(models.Service.region_ref == models.LocalOperator.region_ref,
+                models.Service.local_operator_ref == models.LocalOperator.code)
+        .exists()
+    )
+    empty_operators = ~(
+        db.session.query(models.LocalOperator)
+        .filter(models.LocalOperator.operator_ref == models.Operator.code)
+        .exists()
+    )
+    empty_organisations = ~(
+        db.session.query(models.Organisations)
+        .filter(models.Organisations.org_ref == models.Organisation.code)
+        .exists()
+    )
+
+    def delete(model, where):
+        table = model.__table__
+        db.session.execute(table.delete().where(where))
+
+    with utils.database_session():
+        utils.logger.info("Deleting services without stop point references")
+        delete(models.JourneyPattern,
+               models.JourneyPattern.id.in_(empty_patterns))
+        delete(models.Service, empty_services)
+        delete(models.LocalOperator, empty_local_operators)
+        delete(models.Operator, empty_operators)
+        delete(models.Organisation, empty_organisations)
+
+
+def _services_add_admin_areas():
+    """ Add administrative area code to each service.
+
+        The code is chosen as the mode of all admin areas associated with stops
+        on the route that are within the service region. For example, if a
+        service based in the South East has 40% stops in the SE and 60% in
+        London the admin area is picked from the mode of stops within the SE.
+    """
+    service_areas = (
+        db.session.query(models.Service.code.label("service"),
+                         models.AdminArea.code.label("admin_area"))
+        .select_from(models.Service)
+        .distinct()
+        .join(models.Service.patterns)
+        .join(models.JourneyPattern.links)
+        .join(models.JourneyLink.stop)
+        .join(models.StopPoint.admin_area)
+        .filter(models.Service.region_ref == models.AdminArea.region_ref)
+        .subquery()
+    )
+    set_sa = db.session.query(
+        service_areas.c.service.label("service"),
+        db.func.mode().within_group(service_areas.c.admin_area).label("mode")
+    ).group_by(service_areas.c.service).subquery()
+
+    with utils.database_session():
+        utils.logger.info("Appending admin area references to services")
+        service = models.Service.__table__
+        statement = (
+            service.update()
+            .values(admin_area_ref=set_sa.c.mode)
+            .where(service.c.code == set_sa.c.service)
+        )
+        db.session.execute(statement)
+
+
 def _get_tnds_transform():
     """ Uses XSLT to convert TNDS XML data into several separate datasets. """
     tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))

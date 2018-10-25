@@ -50,7 +50,7 @@ def _group_objects(list_, attr=None, key=None, default=None,
             value = getattr(item, attr) if attr is not None else item[key]
             letter = value[0].upper()
             if letter not in string.ascii_uppercase:
-                groups["0-9"].append(item)
+                groups["#"].append(item)
             else:
                 groups[letter].append(item)
     elif list_:
@@ -485,7 +485,7 @@ def service(service_code):
         .get(service_code)
     )
 
-    if service is None:
+    if line is None:
         raise EntityNotFound("Service '%s' does not exist." % line)
 
     # Check line patterns - is there more than 1 direction?
@@ -503,7 +503,7 @@ def service(service_code):
                         if p.direction == reverse}
     }
 
-    stops = graph.service_stops(line.code, reverse)
+    stops = graph.service_stop_list(line.code, reverse)
 
     return render_template("service.html", service=line, dest=destinations,
                            reverse=reverse, mirrored=mirrored, stops=stops)
@@ -513,10 +513,10 @@ def service(service_code):
 @page.route("/map/<lat_long_zoom:coords>")
 def show_map(coords=None):
     """ Shows map. """
-    if coords:
-        latitude, longitude, zoom = coords
     # Quick check to ensure coordinates are within range of Great Britain
-    if not coords or not location.check_bounds(latitude, longitude):
+    if coords and location.check_bounds(coords[0], coords[1]):
+        latitude, longitude, zoom = coords
+    else:
         # Centre of GB, min zoom
         latitude, longitude = location.GB_CENTRE
         zoom = 9
@@ -537,9 +537,9 @@ def show_map_with_stop(atco_code, coords=None):
         raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                              % atco_code)
 
-    if coords:
+    if coords and location.check_bounds(coords[0], coords[1]):
         latitude, longitude, zoom = coords
-    if not coords or not location.check_bounds(latitude, longitude):
+    else:
         latitude, longitude = None, None
         zoom = None
 
@@ -586,7 +586,7 @@ def stop_get_times(atco_code=None):
     return response
 
 
-@api.route("/tile", methods=["GET"])
+@api.route("/tile")
 def get_stops_tile():
     """ Gets list of stops within a tile. """
     args = [request.args.get(i) for i in ["x", "y"]]
@@ -599,6 +599,28 @@ def get_stops_tile():
     stops = models.StopPoint.within_box(box)
 
     return jsonify(_list_geojson(stops))
+
+
+@api.route("/route/<service_code>")
+def get_service_route(service_code):
+    """ Gets service route as a MultiLineString GeoJSON object. """
+    line = (
+        models.Service.query
+        .options(db.joinedload(models.Service.patterns))
+        .get(service_code)
+    )
+
+    if line is None:
+        return bad_request(404, "Service '%s' does not exist." % line)
+
+    # Check line patterns - is there more than 1 direction?
+    directions = {p.direction for p in line.patterns}
+    if directions == {True, False}:
+        reverse = request.args.get("reverse") == "true"
+    else:
+        reverse = directions.pop()
+
+    return jsonify(graph.service_route_json(line, reverse))
 
 
 class StarredStop(MethodView):

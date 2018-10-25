@@ -58,9 +58,16 @@
             </dl>
             {% if stops|length > 0 %}
             {% call(s) f.print_list(stops) %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s) }}
-                <div class="item__label">{{ s.name }}</div>
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
+                <div class="item--stop">
+                    {{ f.print_stop_indicator(s) }}
+                    <div class="item__label">{{ s.name }}</div>
+                </div>
+                {% if s.street and s.street != s.locality.name %}
+                <p>{{ s.street }}, {{ s.locality.name }}</p>
+                {% else %}
+                <p>{{ s.locality.name }}</p>
+                {% endif %}
             </a>
             {% endcall %}
             {% else %}

@@ -3,277 +3,467 @@ Draws a route graph for a service.
 """
 import collections
 import collections.abc as abc
-import reprlib
+import enum
 
 from nextbus import db, models
 
 
-class Vertex(collections.namedtuple("Vertex", "previous current next")):
-    """ Vertex in a DAG, with preceding, current and following node labels. """
+class Line(enum.Enum):
+    THROUGH, TERMINATE, CONTINUE = range(3)
+
+
+class Path(abc.Sequence, abc.Hashable):
+    """ Immutable path as sequence of vertices. """
+    def __init__(self, vertices):
+        self._v = tuple(vertices)
+
     def __repr__(self):
-        nodes = [self.previous, self.current, self.next]
-        return "<Vertex(%s)>" % ", ".join(map(reprlib.repr, nodes))
+        return "<Path(%r, cyclic=%s)>" % (self._v, self.cyclic)
 
-    def is_before(self, other):
-        return (self.current == other.previous and
-                self.next == other.current)
+    def __getitem__(self, index):
+        return self._v[index]
 
-    def is_after(self, other):
-        return (self.previous == other.current and
-                self.current == other.next)
-
-    def share_preceding(self, other):
-        return (self.previous == other.previous and
-                self.current == other.current)
-
-    def share_following(self, other):
-        return (self.current == other.current and
-                self.next == other.next)
-
-
-class Graph(abc.MutableSet):
-    """ DAG using Vertex objects. """
-    def __init__(self, vertices=()):
-        self._v = set(map(self._convert, vertices))
-
-    @reprlib.recursive_repr()
-    def __repr__(self):
-        return "<Graph(%s)>" % reprlib.repr(self._v)
-
-    def __contains__(self, item):
-        return item in self._v
-
-    def __iter__(self):
-        return iter(self._v)
+    def __contains__(self, vertex):
+        return vertex in self._v
 
     def __len__(self):
         return len(self._v)
 
-    @staticmethod
-    def _convert(vertex):
-        """ Converts tuples to Vertex objects.
+    def __hash__(self):
+        return hash(self._v)
+
+    @property
+    def cyclic(self):
+        return len(self._v) > 1 and self._v[0] == self._v[-1]
+
+    @property
+    def edges(self):
+        return [(self[i], self[i+1]) for i in range(len(self) - 1)]
+
+    def make_acyclic(self):
+        """ Create an acyclic path by removing the last vertex. """
+        return Path(self[:-1]) if self.cyclic else Path(self)
+
+    def prepend_with(self, vertex):
+        """ Returns this path but with an vertex appended. """
+        return Path([vertex] + list(self))
+
+    def append_with(self, vertex):
+        """ Returns this path but with an vertex prepended. """
+        return Path(list(self) + [vertex])
+
+    def split(self, edge):
+        """ Returns new paths split by cutting an edge.
+
+            If said edge is the first or last in the path the first or last
+            vertex respectively is removed, returning one path.
         """
-        if isinstance(vertex, Vertex):
-            new = vertex
+        edges = self.edges
+
+        try:
+            index = edges.index(edge)
+        except ValueError:
+            raise KeyError(edge)
+
+        if index == 0:
+            # Remove first vertex
+            return [Path(self[1:])]
+        elif index == len(edges) - 1:
+            # Remove last vertex
+            return [Path(self[:-1])]
         else:
-            try:
-                new = Vertex(*vertex)
-            except TypeError as err:
-                raise TypeError(
-                    "Graphs only accept Vertex objects or tuples of length 3 "
-                    "for preceding, current and following nodes."
-                ) from err
+            # Split into two paths
+            return [Path(self[:index+1]), Path(self[index+1:])]
 
-        if new.current is None:
-            raise ValueError("Vertex %r in a graph cannot have a null current "
-                             "value." % (new,))
 
-        return new
+def _extract_path(graph, u, queue, paths, sequence, forward=True):
+    """ Finds longest possible path starting or ending at specified vertex,
+        adding it to the list of paths and the sequence. The path is removed
+        from the graph afterwards.
+    """
+    cache = {}  # New cache as the graph will have been modified
+    new_paths = []
+    index = sequence.index(u)
+    i = index + 1 if forward else index
+    if u not in graph:
+        return False
 
-    def add(self, vertex):
-        self._v.add(self._convert(vertex))
+    for v in graph:
+        vertices = (u, v) if forward else (v, u)
+        path = graph.shortest_path(*vertices, cache)
+        if path is not None:
+            new_paths.append(path)
 
-    def update(self, vertices):
-        self._v.update(map(self._convert, vertices))
+    if not new_paths:
+        return False
 
-    def discard(self, vertex):
-        self._v.discard(vertex)
+    longest = max(new_paths, key=len)
+    graph.remove_path(longest)
+    paths.append(longest)
 
-    def preceding(self, vertex):
-        """ Find all vertices directly preceding this vertex. """
-        if vertex not in self:
-            raise KeyError(vertex)
+    longest_ac = longest.make_acyclic()
+    list_long = [v for v in longest_ac if v not in sequence]
+    # Modify existing sequence
+    sequence[i:] = list_long + sequence[i:]
+    queue.extendleft(longest_ac.edges)
 
-        return {v for v in self if v.is_before(vertex)}
+    return True
 
-    def following(self, vertex):
-        """ Find all vertices directly following this vertex. """
-        if vertex not in self:
-            raise KeyError(vertex)
 
-        return {v for v in self if v.is_after(vertex)}
+def _analyse_graph(graph):
+    """ Analyses a connected graph to find a set of distinct paths and a
+        topologically ordered sequence.
+    """
+    # Make a copy to modify
+    graph = graph.copy()
+    # Find any self-cycles and remove them
+    for e in graph.edges:
+        if e[0] == e[1]:
+            del graph[e]
+    # Start with the diameter of the graph
+    diameter = graph.diameter()
+    diameter_ac = diameter.make_acyclic()
+    if not diameter:
+        return [], []
 
+    # Remove diameter from graph and search the rest
+    graph.remove_path(diameter)
+    paths, sequence = [diameter], list(diameter_ac)
+    queue = collections.deque(diameter.edges)
+
+    while queue:
+        u, v = edge = queue.pop()
+        # Search paths both forwards and backwards
+        forward = _extract_path(graph, u, queue, paths, sequence, True)
+        backward = _extract_path(graph, v, queue, paths, sequence, False)
+        if forward or backward:
+            # Maybe another distinct path here - search again
+            queue.append(edge)
+
+    assert not len(graph)
+
+    return paths, sequence
+
+
+class Graph(abc.MutableMapping):
+    """ Directed graph.
+
+        Can be created from a list of edges as tuples of two vertex labels.
+    """
+    def __init__(self, pairs=None):
+        self._v = collections.defaultdict(set)
+        if pairs is not None:
+            for v1, v2 in pairs:
+                self._v[v1].add(v2)
+
+    def __repr__(self):
+        return "<Graph(%s)>" % set(self)
+
+    def __getitem__(self, v):
+        if v in self.heads:
+            return self._v[v]
+        elif v in self.tails:
+            return set()
+        else:
+            raise KeyError(v)
+
+    def __iter__(self):
+        return iter(self.vertices)
+
+    def __len__(self):
+        return len(self.vertices)
+
+    def __setitem__(self, v1, v2):
+        self._v[v1].add(v2)
+
+    def __delitem__(self, v):
+        try:
+            v1, v2 = v
+            self._v[v1].remove(v2)
+            if not self._v[v1]:
+                del self._v[v1]
+
+        except TypeError:
+            if v in self._v:
+                del self._v[v]
+            for u in self._v:
+                self._v[u].discard(v)
+
+    @property
+    def edges(self):
+        """ All edges in this graph as tuples of two vertices. """
+        return {(u, w) for u, v in self._v.items() for w in v}
+
+    @property
+    def heads(self):
+        return set(self._v)
+
+    @property
+    def tails(self):
+        """ All vertices at end of edges in this graph. """
+        return set.union(*self._v.values()) if self._v else set()
+
+    @property
     def sources(self):
-        """ All vertices without preceding vertices. """
-        return {v for v in self if v.previous is None}
+        """ All vertices at start of edges in this graph. """
+        return self.heads - self.tails
 
+    @property
     def sinks(self):
-        """ All vertices without following vertices. """
-        return {v for v in self if v.next is None}
+        """ All vertices without incoming edges. """
+        return self.tails - self.heads
+
+    @property
+    def vertices(self):
+        """ All vertices without outgoing edges. """
+        return self.heads | self.tails
+
+    def following(self, v):
+        """ All vertices at end of edges that start at specified vertex. """
+        if v in self._v:
+            return self._v[v]
+        elif v in self:
+            return set()
+        else:
+            raise KeyError(v)
+
+    def preceding(self, v):
+        """ All vertices at start of edges that end at specified vertex. """
+        if v not in self:
+            raise KeyError(v)
+
+        return {u for u in self._v if v in self._v[u]}
+
+    def incoming(self, v):
+        """ All incoming edges for specified vertex. """
+        if v not in self:
+            raise KeyError(v)
+
+        return {(u, v) for u in self.preceding(v)}
+
+    def outgoing(self, v):
+        """ All outgoing edges for specified vertex. """
+        if v in self._v:
+            return {(v, w) for w in self._v[v]}
+        elif v in self:
+            return set()
+        else:
+            raise KeyError(v)
+
+    def copy(self):
+        """ Makes a copy of the graph. """
+        return Graph(self.edges)
+
+    def add_edge(self, v1, v2):
+        """ Adds an edge to the graph. """
+        self._v[v1].add(v2)
+
+    def remove_edge(self, v1, v2):
+        """ Removes an edge. Equivalent to ``del graph[(v1, v2)]``. """
+        del self[(v1, v2)]
+
+    def add_path(self, path):
+        """ Adds a Path object or a sequence of edges to this graph. """
+        try:
+            edges = path.edges
+        except AttributeError:
+            edges = path
+
+        for v1, v2 in edges:
+            self._v[v1].add(v2)
+
+    def remove_path(self, path):
+        """ Removes all edges in Path or sequence of edges from this graph. """
+        try:
+            edges = path.edges
+        except AttributeError:
+            edges = path
+
+        for e in edges:
+            del self[e]
 
     def split(self):
-        """ Splits DAG into multiple disjoint graphs. """
-        visited = {}
+        """ Splits graph into a number of connected graphs. """
+        groups = {}
 
-        for i, u in enumerate(self):
-            if u in visited:
-                continue
-            visited[u] = i
-            visited_local = set()
-            to_search = collections.deque(self.following(u))
+        def update_group(index, new_index):
+            nonlocal groups
+            for f in groups:
+                if groups[f] == index:
+                    groups[f] = new_index
 
-            while to_search:
-                v = to_search.pop()
-                if v in visited_local:
-                    # Already found earlier in local tree; this is cyclic
-                    continue
-                visited_local.add(v)
-                if v in visited:
-                    # Set all vertices found in this path to new index
-                    for w, k in visited.items():
-                        if k == i:
-                            visited[w] = visited[v]
-                    i = visited[v]
-                else:
-                    visited[v] = i
-                visited_local.add(v)
-                to_search.extendleft(self.following(v))
+        for i, edge in enumerate(self.edges):
+            for e in groups:
+                if e[0] in edge or e[1] in edge:
+                    update_group(groups[e], i)
+            groups[edge] = i
 
-        assert len(visited) == len(self)
+        assert len(groups) == len(self.edges)
 
-        graphs = collections.defaultdict(Graph)
-        for v, i in visited.items():
-            graphs[i].add(v)
+        sets = collections.defaultdict(set)
+        for w, i in groups.items():
+            sets[i].add(w)
 
-        return list(graphs.values())
+        return [Graph(s) for s in sets.values()] if sets else [self.copy()]
 
-    def _extend_path(self, vertex, lines, visited, _path=None):
-        """ Helper function to create paths by iterating through graph. """
-        visited.add(vertex)
+    def shortest_path(self, v1, v2, cache=None, _walk=None):
+        """ Finds the shortest path between a pair of vertices in the graph
+            recursively.
 
-        if _path is not None and vertex in _path:
-            # Vertex already in path => Cyclic path
-            lines.append(_path)
-            return
-        elif _path is not None:
-            path = _path + [vertex]
-        elif _path is None and vertex.previous is not None:
-            # Start a new path and set first vertex's preceding node to None
-            new = Vertex(None, vertex.current, vertex.next)
-            if new in self:
-                # This vertex already exists, use that instead
-                return
-            path = [new]
-        else:
-            path = [vertex]
-
-        if vertex.next is None:
-            lines.append(path)
-            return
-
-        if vertex in {v for v in visited
-                      if v.share_following(vertex) and v != vertex}:
-            # Merging with another path. Discard current vertex and
-            # terminate previous vertex
-            path = path[:-1]
-            if not path:
-                return
-            last = path.pop(-1)
-            new = Vertex(last.previous, last.current, None)
-            path.append(new)
-            lines.append(path)
-            return
-
-        following = self.following(vertex)
-        if following - visited:
-            self._extend_path(following.pop(), lines, visited, path)
-        elif following:
-            lines.append(path)
-            return
-        else:
-            raise ValueError("Vertex %r has a non-null following node but "
-                             "no matching vertices were found." % (vertex,))
-        for v in following:
-            self._extend_path(v, lines, visited)
-
-    def lines(self):
-        """ Splits graph into several distinct paths.
-
-            :returns: List of current node values.
+            Invalid paths (eg disconnected vertices or internal cycles) return
+            None.
         """
-        lines = []
-        # Split into different graphs first
+        if v1 not in self:
+            raise KeyError(v1)
+        if v2 not in self:
+            raise KeyError(v2)
+
+        if cache is not None and (v1, v2) in cache:
+            return cache[(v1, v2)]
+
+        if v1 in self.sinks or v2 in self.sources:
+            if cache is not None:
+                cache[(v1, v2)] = None
+            return None
+
+        def _path_sort(p):
+            return (len(p), *iter(p))
+
+        # We only want to discard cycles within walks, so first vertex is not
+        # included
+        walk = _walk if _walk is not None else []
+
+        path = None
+        paths = []
+        for v in self.following(v1):
+            if v in walk:
+                # Cycled back to same vertex within walk - can't end so discard
+                break
+            if v == v1 == v2:
+                path = Path([v1])
+                break
+            if v == v2:
+                path = Path([v1, v2])
+                break
+
+            new_path = self.shortest_path(v, v2, cache, walk + [v])
+            if new_path is not None and not new_path.cyclic:
+                # Attach first vertex to start of path found
+                paths.append(new_path.prepend_with(v1))
+
+        if path is None and paths:
+            path = min(paths, key=_path_sort)
+
+        if cache is not None:
+            cache[(v1, v2)] = path
+
+        return path
+
+    def diameter(self):
+        """ Finds the longest path in this graph that is the shortest path
+            between a pair of vertices.
+
+            Longest paths are sorted by their vertices as to give a consistent
+            result.
+        """
+        paths = []
+        cache = {}
+
+        for u in self.heads:
+            for v in self.tails:
+                # Find all possible paths
+                new_path = self.shortest_path(u, v, cache)
+                if new_path is not None:
+                    paths.append(new_path)
+
+        if paths:
+            # Get all longest paths and pick first path after sorting
+            return min((p for p in paths if len(p) == max(map(len, paths))),
+                       key=lambda p: tuple(p))
+
+    def analyse(self):
+        """ Finds all distinct paths for this graph and the topological order
+            of vertices, starting with the diameter.
+        """
         graphs = self.split()
-        if len(graphs) > 1:
-            for g in graphs:
-                new_lines = g.lines()
-                if new_lines:
-                    lines.extend(new_lines)
-        else:
-            visited = set()
-            to_search = {u for u in self.sources() for v in self
-                         if not u.share_following(v)}
-            if not to_search:
-                # Graph is connected and cyclic; enough to pick a single vertex
-                to_search = list(self)[:1]
-            for u in to_search:
-                self._extend_path(u, lines, visited)
+        paths, sequence = [], []
+        # Start with the largest connected graph and analyse each
+        for g in sorted(graphs, key=len, reverse=True):
+            new_paths, new_sequence = _analyse_graph(g)
+            paths.extend(new_paths)
+            sequence.extend(new_sequence)
 
-            assert visited == set(self)
-            lines = [[v.current for v in l] for l in lines]
+        return paths, sequence
 
-        return lines
-
-    def verify(self):
-        """ Checks all vertices have the correct references and is not cyclic.
+    def paths(self):
+        """ List of distinct paths in this graph, starting with the diameter.
         """
-        visited = set()
+        return self.analyse()[0]
 
-        def search(vertex, _path=None):
-            """ Searches through tree for any invalid vertices. """
-            nonlocal visited
-
-            path = [vertex] if _path is None else _path + [vertex]
-            if path.count(vertex) > 1:
-                raise ValueError("Path %r is cyclic." % path)
-
-            if vertex in visited:
-                return
-            if vertex.previous is not None and not self.preceding(vertex):
-                raise ValueError("Preceding node of vertex %r is not a valid "
-                                 "reference." % (vertex,))
-            if vertex.next is not None and not self.following(vertex):
-                raise ValueError("Following node of vertex %r is not a valid "
-                                 "reference." % (vertex,))
-
-            visited.add(vertex)
-            for v in self.following(vertex):
-                search(v, path)
-
-        for u in self:
-            search(u)
-
-    def sort(self):
-        """ Returns a sorted list of vertices in topological order using Kahn's
-            algorithm.
+    def sequence(self):
+        """ Topological order of vertices in this graph, organised around the
+            diameter.
         """
-        vertices = []
-        not_visited = set(self)
-        sources = collections.deque(self.sources())
+        return self.analyse()[1]
 
-        while sources:
-            source = sources.pop()
-            vertices.append(source)
-            not_visited.remove(source)
-            for v in self.following(source):
-                if not self.preceding(v) - set(vertices):
-                    sources.append(v)
+    def draw(self, sequence=None):
+        """ Draws a diagram of the service. """
+        lines_before, lines_after = 0, 0  # Number of lines
+        columns = {}  # Record of lines and vertex status
 
-        if not_visited:
-            raise ValueError("Graph %r has at least one cycle." % self)
+        seq = self.sequence() if sequence is None else sequence
 
-        # Any vertices with null preceding or following nodes are excluded if
-        # they share other nodes with existing vertices
-        for u in vertices:
-            if (u.previous is None and
-                    len({v for v in self if v.share_following(u)}) > 1):
-                vertices.remove(u)
-                continue
-            if (u.next is None and
-                    len({v for v in self if v.share_preceding(u)}) > 1):
-                vertices.remove(u)
+        if len(seq) > len(set(seq)):
+            raise ValueError("Vertices in sequence %r are not unique")
 
-        return vertices
+        for i, v in enumerate(seq):
+            incoming, outgoing = self.preceding(v), self.following(v)
+            before, after = set(seq[:i]), set(seq[i+1:])
+
+            if not incoming:
+                # Vertex starts here
+                status_before = Line.TERMINATE
+            elif incoming - before:
+                # Possible cyclic path
+                status_before = Line.CONTINUE
+                incoming &= before
+            else:
+                status_before = Line.THROUGH
+
+            if not outgoing:
+                # Vertex terminates here
+                status_after = Line.TERMINATE
+            elif outgoing - after:
+                # Possible cyclic path
+                status_after = Line.CONTINUE
+                outgoing &= after
+            else:
+                status_after = Line.THROUGH
+
+            if v in columns:
+                col = columns[v][0]
+            else:
+                col = lines_before
+
+            lines_after += len(outgoing) - len(incoming)
+
+            diverges = [u for u in seq if u in outgoing]
+            for j, u in enumerate(reversed(diverges)):
+                if u in columns and columns[u][1] is not None:
+                    continue
+
+                new_col = col + j
+                if u in columns:
+                    new_col = min(new_col, columns[u][0])
+
+                columns[u] = (new_col, None, None, None, None)
+
+            columns[v] = (col, status_before, status_after,
+                          lines_before, lines_after)
+
+            lines_before = lines_after
+
+        return columns
 
 
 def _service_stops(code, direction=None, columns=None):
@@ -295,12 +485,16 @@ def _service_stops(code, direction=None, columns=None):
     if direction is not None:
         pairs = pairs.filter(models.JourneyPattern.direction == direction)
 
-    pairs = pairs.subquery()
-    stops = models.StopPoint.query
-    if columns is not None:
-        col = set(columns) | {"atco_code"}
-        stops = stops.options(db.load_only(*tuple(col)))
+    stops = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.locality))
+    )
 
+    if columns is not None:
+        cols = set(columns) | {"atco_code"}
+        stops = stops.options(db.load_only(*cols))
+
+    pairs = pairs.subquery()
     stops = (
         stops.distinct()
         .join(pairs, pairs.c.stop_point_ref == models.StopPoint.atco_code)
@@ -317,28 +511,34 @@ def _service_graph(code, direction=None):
     """
     stops = (
         db.session.query(
-            db.func.lag(models.JourneyLink.stop_point_ref)
-            .over(partition_by=models.JourneyPattern.id,
-                  order_by=models.JourneyLink.sequence)
-            .label("s0"),
-            models.JourneyLink.stop_point_ref.label("s1"),
-            db.func.lead(models.JourneyLink.stop_point_ref)
-            .over(partition_by=models.JourneyPattern.id,
-                  order_by=models.JourneyLink.sequence)
-            .label("s2")
+            models.JourneyPattern.id.label("pattern_id"),
+            models.JourneyLink.sequence.label("sequence"),
+            models.JourneyLink.stop_point_ref.label("stop_ref")
         )
         .select_from(models.JourneyPattern)
         .join(models.JourneyPattern.links)
-        .filter(models.JourneyPattern.service_ref == code)
+        .filter(models.JourneyPattern.service_ref == code,
+                models.JourneyLink.stop_point_ref.isnot(None))
     )
 
     if direction is not None:
         stops = stops.filter(models.JourneyPattern.direction == direction)
 
-    return Graph(stops.all())
+    stops = stops.subquery()
+    pairs = db.session.query(
+        stops.c.stop_ref.label("current"),
+        db.func.lead(stops.c.stop_ref)
+        .over(partition_by=stops.c.pattern_id, order_by=stops.c.sequence)
+        .label("next")
+    )
+
+    pairs = pairs.subquery()
+    query = db.session.query(pairs).filter(pairs.c.next.isnot(None))
+
+    return Graph(query.all())
 
 
-def service_stops(code, direction=None):
+def service_stop_list(code, direction=None):
     """ Queries all patterns for a service and creates list of stops sorted
         topologically.
 
@@ -350,24 +550,24 @@ def service_stops(code, direction=None):
         raise ValueError("No stops exist for service code %s" % code)
 
     graph = _service_graph(code, direction)
-    stops = [dict_stops[v.current] for v in graph.sort()]
+    stops = [dict_stops[v] for v in graph.sequence()]
 
     return stops
 
 
-def service_json(service, direction):
+def service_route_json(service, direction):
     """ Creates geometry JSON data for map. """
     dict_stops = _service_stops(service.code, direction,
                                 ["latitude", "longitude"])
     if not dict_stops:
         raise ValueError("No stops exist for service %r" % service.code)
 
-    def convert(vertex):
+    def coordinates(vertex):
         stop = dict_stops[vertex]
         return stop.longitude, stop.latitude
 
-    paths = _service_graph(service.code, direction).lines()
-    lines = [[convert(v) for v in p] for p in paths if len(p) > 1]
+    paths = _service_graph(service.code, direction).paths()
+    lines = [[coordinates(v) for v in p] for p in paths if len(p) > 1]
 
     geojson = {
         "type": "Feature",

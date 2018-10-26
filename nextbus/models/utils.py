@@ -5,7 +5,7 @@ SQLAlchemy materialized view code based on code from the following:
 http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
 https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
 """
-from sqlalchemy.ext import compiler
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
 
 from nextbus import db
@@ -42,7 +42,7 @@ class _DropMatView(DDLElement):
         self.name = name
 
 
-@compiler.compiles(_CreateMatView)
+@compiles(_CreateMatView)
 def _compile_create_mat_view(element, compiler_):
     statement = "CREATE MATERIALIZED VIEW %s AS %s WITH NO DATA"
     selectable = compiler_.sql_compiler.process(element.selectable,
@@ -51,12 +51,12 @@ def _compile_create_mat_view(element, compiler_):
     return statement % (element.name, selectable)
 
 
-@compiler.compiles(_DropMatView)
+@compiles(_DropMatView)
 def _compile_drop_mat_view(element, _):
     return "DROP MATERIALIZED VIEW IF EXISTS %s" % element.name
 
 
-def create_materialized_view(name, selectable, metadata=db.metadata):
+def create_mat_view(name, selectable, metadata=db.metadata):
     """ Creates a table based on the materialized view selectable and adds
         events for ``db.create_all()`` and ``db.drop_all()``.
 
@@ -96,8 +96,7 @@ class MaterializedView(BaseModel):
 
     @classmethod
     def refresh(cls, concurrently=False):
-        """ Refreshes materialized view. """
-        # Flushes the session first
+        """ Refreshes materialized view. Must be committed in a transaction. """
         db.session.flush()
         con = "CONCURRENTLY " if concurrently else ""
         db.session.execute("REFRESH MATERIALIZED VIEW " + con +

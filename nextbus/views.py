@@ -43,9 +43,9 @@ def _group_objects(list_, attr=None, key=None, default=None,
         raise AttributeError("Either an attribute or a key must be specified.")
 
     name = "A-Z" if default is None else default
+    groups = collections.defaultdict(list)
 
     if list_ and (minimum is None or len(list_) > minimum):
-        groups = collections.defaultdict(list)
         for item in list_:
             value = getattr(item, attr) if attr is not None else item[key]
             letter = value[0].upper()
@@ -54,9 +54,7 @@ def _group_objects(list_, attr=None, key=None, default=None,
             else:
                 groups[letter].append(item)
     elif list_:
-        groups = {name: list_}
-    else:
-        groups = {}
+        groups[name] = list_
 
     return groups
 
@@ -419,8 +417,7 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
 
-    lines = {s: sorted(set(t.line for t in s.services))
-             for s in area.stop_points}
+    lines = {s: s.service_lines() for s in area.stop_points}
 
     return render_template("stop_area.html", stop_area=area, lines=lines)
 

@@ -11,6 +11,66 @@ from nextbus.models.tables import (
 )
 
 
+def _select_natural_sort():
+    stop_ind = db.select([StopPoint.short_ind.label("string")])
+    service_line = db.select([Service.line.label("string")])
+    other_num = db.select([db.func.generate_series(0, 100).cast(db.Text)
+                           .label("string")])
+    num = db.union(stop_ind, service_line, other_num).alias("num")
+
+    regex = (
+        db.func.regexp_matches(num.c.string, "0*(\\d+)|(\D+)", "g")
+        .alias("r")
+    )
+    # Make a column alias with text array type
+    r = db.column("r", type_=db.ARRAY(db.Text, dimensions=1))
+
+    # If not numeric, convert to uppercase
+    r_upper = db.func.upper(r[2])
+    # Add number of digits to numbers so they are sorted naturally
+    # eg 4294967296 -> 10 digits -> 2 digits so is converted to 2104294967296
+    r_len = db.func.length(r[1]).cast(db.Text)
+    r_len_len = db.func.length(r_len).cast(db.Text)
+    r_concat = r_len.concat(r_len_len).concat(r[1])
+
+    index = db.func.coalesce(r_upper, r_concat)
+    index = db.func.convert_to(index, "SQL_ASCII")
+    index = db.func.string_agg(index, "\\x00")
+    index = db.func.coalesce(index, "")
+
+    select_index = db.select([index]).select_from(regex)
+
+    query = (
+        db.select([num.c.string.label("string"), select_index.label("index")])
+        .select_from(num)
+    )
+
+    # Set columns manually
+    query.c.string.primary_key = True
+    query.c.index.type = db.LargeBinary
+
+    return query
+
+
+def _tsvector_column(*columns):
+    """ Creates an expression for tsvector values with weights from a number of
+        columns.
+    """
+    vectors = []
+    for column, weight in columns:
+        tsvector = db.func.to_tsvector("english", column)
+        if weight in ["A", "B", "C", "D"]:
+            tsvector = db.func.setweight(tsvector, weight)
+        elif weight is not None:
+            raise ValueError("Each argument must be either a letter A-D "
+                             "or None.")
+
+        vectors.append(tsvector)
+
+    # 'col1.concat(col2)' in SQLAlchemy translates to col1 || col2 in SQL
+    return functools.reduce(lambda a, b: a.concat(b), vectors)
+
+
 def _select_fts_vectors():
     """ Helper function to create a query for the full text search materialized
         view.
@@ -19,24 +79,6 @@ def _select_fts_vectors():
         yet, though ORM models and attributes can still be used,
     """
     null = db.literal_column("NULL")
-
-    def tsvector_column(*columns):
-        """ Helper function to create an expression for tsvector values from a
-            number of columns.
-        """
-        vectors = []
-        for column, weight in columns:
-            tsvector = db.func.to_tsvector("english", column)
-            if weight in "ABCD" and len(weight) == 1:
-                tsvector = db.func.setweight(tsvector, weight)
-            elif weight is not None:
-                raise ValueError("Each argument must be either a letter A-D "
-                                 "or None.")
-
-            vectors.append(tsvector)
-
-        # 'col1.concat(col2)' in SQLAlchemy translates to col1 || col2 in SQL
-        return functools.reduce(lambda a, b: a.concat(b), vectors)
 
     region = (
         db.select([
@@ -51,7 +93,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             null.label("admin_area_ref"),
             null.label("admin_area_name"),
-            tsvector_column((Region.name, "A")).label("vector")
+            _tsvector_column((Region.name, "A")).label("vector")
         ])
     )
 
@@ -68,7 +110,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column((AdminArea.name, "A")).label("vector")
+            _tsvector_column((AdminArea.name, "A")).label("vector")
         ])
     )
 
@@ -85,7 +127,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column(
+            _tsvector_column(
                 (District.name, "A"),
                 (AdminArea.name, "B")
             ).label("vector")
@@ -117,7 +159,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column(
+            _tsvector_column(
                 (Locality.name, "A"),
                 (db.func.coalesce(District.name, ""), "B"),
                 (AdminArea.name, "B")
@@ -153,7 +195,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column(
+            _tsvector_column(
                 (StopArea.name, "A"),
                 (db.func.coalesce(Locality.name, ""), "C"),
                 (db.func.coalesce(District.name, ""), "D"),
@@ -182,7 +224,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column(
+            _tsvector_column(
                 (StopPoint.name, "A"),
                 (StopPoint.street, "B"),
                 (Locality.name, "C"),
@@ -198,6 +240,7 @@ def _select_fts_vectors():
         )
     )
 
+    # Concatenate locality, district and admin area names covered by services
     area_names = (
         db.select([
             Service.code.label("code"),
@@ -234,7 +277,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            tsvector_column(
+            _tsvector_column(
                 (Service.line, "A"),
                 (Service.description, "A"),
                 (db.func.string_agg(area_names.c.localities, " "), "C"),
@@ -254,6 +297,16 @@ def _select_fts_vectors():
                service)
 
     return db.union_all(*queries)
+
+
+class NaturalSort(utils.MaterializedView):
+    """ Sorts indicators and lines naturally via a join with this view. """
+    __table__ = utils.create_mat_view("natural_sort", _select_natural_sort())
+
+    __table_args__ = (
+        db.Index("ix_natural_sort_string", "string", unique=True),
+        db.Index("ix_natural_sort_index", "index")
+    )
 
 
 class FTS(utils.MaterializedView):
@@ -289,7 +342,7 @@ class FTS(utils.MaterializedView):
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
-    __table__ = utils.create_materialized_view("fts", _select_fts_vectors())
+    __table__ = utils.create_mat_view("fts", _select_fts_vectors())
     # Rank attribute left blank for search queries. See:
     # http://docs.sqlalchemy.org/en/latest/orm/mapped_sql_expr.html
     rank = db.query_expression()
@@ -400,8 +453,9 @@ class FTS(utils.MaterializedView):
             cls.query
             .options(db.with_expression(cls.rank, rank), db.defer(cls.vector))
             .outerjoin(stop_areas, stop_areas.c.code == cls.stop_area_ref)
+            .outerjoin(NaturalSort, cls.short_ind == NaturalSort.string)
             .filter(cls._match(string), stop_areas.c.code.is_(None))
-            .order_by(db.desc(rank), cls.name, cls.short_ind)
+            .order_by(db.desc(rank), cls.name, NaturalSort.index)
         )
         # Add filters for rank, types or admin area
         match = cls._apply_filters(match, types, admin_areas,

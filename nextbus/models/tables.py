@@ -9,6 +9,9 @@ from nextbus.models import utils
 MIN_GROUPED = 72
 MAX_DIST = 500
 
+# Can't load NaturalSort materialized view yet, so use alias here
+_ns = db.table("natural_sort", db.column("string"), db.column("index"))
+
 
 class ServiceMode(utils.BaseModel):
     """ Lookup table for service modes, eg bus and tram. """
@@ -88,7 +91,7 @@ class AdminArea(utils.BaseModel):
                                 innerjoin=True, order_by="Postcode.text")
     stop_points = db.relationship(
         "StopPoint", backref="admin_area", innerjoin=True,
-        order_by="StopPoint.name, StopPoint.short_ind"
+        order_by="StopPoint.name, StopPoint.ind_index"
     )
     stop_areas = db.relationship("StopArea", backref="admin_area",
                                  innerjoin=True, order_by="StopArea.name")
@@ -167,7 +170,7 @@ class Locality(utils.BaseModel):
 
     stop_points = db.relationship(
         "StopPoint", backref="locality", innerjoin=True,
-        order_by="StopPoint.name, StopPoint.short_ind"
+        order_by="StopPoint.name, StopPoint.ind_index"
     )
     stop_areas = db.relationship("StopArea", backref="locality", innerjoin=True,
                                  order_by="StopArea.name")
@@ -206,7 +209,7 @@ class Locality(utils.BaseModel):
                     utils.table_name(StopArea).label("table_name"),
                     StopArea.code.label("code"),
                     StopArea.name.label("name"),
-                    StopArea.stop_count.label("short_ind"), #pylint: disable=E1101
+                    StopArea.stop_count.label("short_ind"),
                     StopArea.admin_area_ref.label("admin_area_ref"),
                     StopArea.stop_area_type.label("stop_type"),
                     db.literal_column("NULL").label("stop_area_ref")
@@ -215,12 +218,17 @@ class Locality(utils.BaseModel):
                 .group_by(StopArea.code)
                 .filter(StopArea.locality_ref == self.code)
             )
-            query = stops_not_areas.union(stop_areas)
+            subquery = stops_not_areas.union(stop_areas).subquery()
+            query = (
+                db.session.query(subquery)
+                .join(_ns, _ns.c.string == subquery.c.short_ind)
+                .order_by(subquery.c.name, _ns.c.index)
+            )
 
         else:
-            query = stops
+            query = stops.order_by(StopPoint.name, StopPoint.ind_index)
 
-        return query.order_by("name", "short_ind").all()
+        return query.all()
 
 
 class StopArea(utils.BaseModel):
@@ -248,7 +256,7 @@ class StopArea(utils.BaseModel):
 
     stop_points = db.relationship(
         "StopPoint", backref="stop_area",
-        order_by="StopPoint.name, StopPoint.short_ind"
+        order_by="StopPoint.name, StopPoint.ind_index"
     )
 
     def __repr__(self):
@@ -303,6 +311,10 @@ class StopPoint(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
+    # Access to index for natural sort - only need it for ordering queries
+    ind_index = db.deferred(db.select([_ns.c.index])
+                            .where(_ns.c.string == short_ind))
+
     _join_other = db.and_(
         db.foreign(stop_area_ref).isnot(None),
         db.remote(stop_area_ref) == db.foreign(stop_area_ref),
@@ -312,7 +324,7 @@ class StopPoint(utils.BaseModel):
         "StopPoint",
         primaryjoin=_join_other,
         uselist=True,
-        order_by="StopPoint.name, StopPoint.short_ind"
+        order_by="StopPoint.name, StopPoint.ind_index"
     )
     patterns = db.relationship(
         "JourneyLink",
@@ -323,7 +335,8 @@ class StopPoint(utils.BaseModel):
                   "JourneyLink.pattern_ref == JourneyPattern.id)",
         primaryjoin="JourneyLink.stop_point_ref == StopPoint.atco_code",
         secondaryjoin="Service.code == JourneyPattern.service_ref",
-        backref=db.backref("stops", uselist=True)
+        backref=db.backref("stops", uselist=True),
+        order_by="Service.line_index, Service.description"
     )
 
     def __init__(self, *args, **kwargs):
@@ -409,6 +422,17 @@ class StopPoint(utils.BaseModel):
         }
 
         return geojson
+
+    def service_lines(self):
+        """ Gets an unique and ordered list of service lines at this stop point.
+        """
+        lines = []
+
+        for s in self.services:
+            if s.line not in lines:
+                lines.append(s.line)
+
+        return lines
 
 
 class Postcode(utils.BaseModel):
@@ -499,6 +523,10 @@ class Service(utils.BaseModel):
         db.ForeignKey("service_mode.id"),
         nullable=False, index=True
     )
+
+    # Access to index for natural sort
+    line_index = db.deferred(db.select([_ns.c.index])
+                             .where(_ns.c.string == line))
 
     __table_args__ = (
         db.ForeignKeyConstraint(

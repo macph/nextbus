@@ -13,6 +13,23 @@
 
 {% block content %}
 <div class="columns">
+    <div class="column-1 column--empty"></div>
+    <div class="column-3">
+        <section class="card">
+            <form class="search-form" action="{{ g.action }}" method="post" name="search">
+                {% set aria = {'aria-label': 'Find a bus stop'} %}
+                {{ g.form.hidden_tag() }}
+                {% if query is not none %}
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required, **aria) }}
+                {% else %}
+                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
+                {% endif %}
+                {{ g.form.submit_query(id='submit-form') }}
+            </form>
+        </section>
+    </div>
+</div>
+<div class="columns">
     <div class="column-1">
         <section class="card card--minor">
             <a class="button" href="{{ url_for('page.show_map', coords=(postcode.latitude, postcode.longitude, 16)) }}"><span>View on map</span></a>

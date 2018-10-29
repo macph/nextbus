@@ -75,6 +75,21 @@ def _list_geojson(list_stops):
     return geojson
 
 
+def _service_get_direction(line, args):
+    """ Checks directions for all patterns for a line and pick the right
+        direction.
+    """
+    directions = {p.direction for p in line.patterns}
+    if directions == {True, False}:
+        reverse = args.get("reverse") == "true"
+        mirrored = True
+    else:
+        reverse = directions.pop()
+        mirrored = False
+
+    return reverse, mirrored
+
+
 def _get_starred_stops():
     """ Get list of starred stops from session, querying and ordering them. """
     if "stops" not in session:
@@ -490,13 +505,7 @@ def service(service_code):
         raise EntityNotFound("Service '%s' does not exist." % line)
 
     # Check line patterns - is there more than 1 direction?
-    directions = {p.direction for p in line.patterns}
-    if directions == {True, False}:
-        reverse = request.args.get("reverse") == "true"
-        mirrored = True
-    else:
-        reverse = directions.pop()
-        mirrored = False
+    reverse, mirrored = _service_get_direction(line, request.args)
 
     destinations = {
         "origin": {p.origin for p in line.patterns if p.direction == reverse},
@@ -518,12 +527,10 @@ def show_map(coords=None):
     if coords and location.check_bounds(coords[0], coords[1]):
         latitude, longitude, zoom = coords
     else:
-        # Centre of GB, min zoom
-        latitude, longitude = location.GB_CENTRE
-        zoom = 9
+        latitude, longitude, zoom = None, None, None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=None)
+                           zoom=zoom, stop=None, service=None, reverse=None)
 
 
 @page.route("/map/stop/<atco_code>/")
@@ -541,11 +548,35 @@ def show_map_with_stop(atco_code, coords=None):
     if coords and location.check_bounds(coords[0], coords[1]):
         latitude, longitude, zoom = coords
     else:
-        latitude, longitude = None, None
-        zoom = None
+        latitude, longitude, zoom = None, None, None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=stop.to_geojson())
+                           zoom=zoom, stop=stop.to_geojson(), service=None,
+                           reverse=None)
+
+
+@page.route("/map/service/<service_code>/")
+@page.route("/map/service/<service_code>/<lat_long_zoom:coords>")
+def show_map_with_service(service_code, coords=None):
+    """ Shows map with a stop already selected. """
+    line = (
+        models.Service.query
+        .options(db.joinedload(models.Service.patterns))
+        .get(service_code)
+    )
+    if line is None:
+        raise EntityNotFound("Service '%s' does not exist." % line)
+
+    if coords and location.check_bounds(coords[0], coords[1]):
+        latitude, longitude, zoom = coords
+    else:
+        latitude, longitude, zoom = None, None, None
+
+    reverse, _ = _service_get_direction(line, request.args)
+
+    return render_template("map.html", latitude=latitude, longitude=longitude,
+                           zoom=zoom, stop=None, service=line.code,
+                           reverse=reverse)
 
 
 def bad_request(status, message):
@@ -604,10 +635,11 @@ def get_stops_tile():
 
 @api.route("/route/<service_code>")
 def get_service_route(service_code):
-    """ Gets service route as a MultiLineString GeoJSON object. """
+    """ Gets service data including a MultiLineString GeoJSON object. """
     line = (
         models.Service.query
-        .options(db.joinedload(models.Service.patterns))
+        .options(db.joinedload(models.Service.local_operator, innerjoin=True),
+                 db.joinedload(models.Service.patterns))
         .get(service_code)
     )
 
@@ -621,7 +653,7 @@ def get_service_route(service_code):
     else:
         reverse = directions.pop()
 
-    return jsonify(graph.service_route_json(line, reverse))
+    return jsonify(graph.service_json(line, reverse))
 
 
 class StarredStop(MethodView):

@@ -4,10 +4,17 @@
 
 const INTERVAL = 60;
 const REFRESH = true;
+
+const MAP_ZOOM_MIN = 8;
+const MAP_ZOOM_MAX = 18;
+const MAP_CENTRE_GB = [54.00366, -2.547855];
+const MAP_BOUNDS_NW = 0;
+const MAP_BOUNDS_SE = 0;
+
 const STOPS_VISIBLE = 16;
 const TILE_LIMIT = 64;
 const TILE_ZOOM = 15;
-const TIME_LIMIT = 60;
+
 
 /**
  * Sets up element to activate geolocation and direct to correct page
@@ -571,101 +578,6 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
 
 
 /**
- * Creates a map element using Leaflet.js and returns it.
- * @param {string} mapToken Map token for access to Mapbox's maps
- * @param {string} mapElement Empty div element to be used for map
- * @param {Object} stops Either a single stop or a list of stops in GeoJSON format
- * @param {function} callback Optional callback function when clicking on a marker
- */
-function addMap(token, mapElement, stops, callback) {
-    let layer = L.tileLayer(
-        'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-        {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
-                'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA' +
-                '</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox.emerald',
-            accessToken: token
-        }
-    );
-
-    let stopsGeo = new L.GeoJSON(stops, {
-        pointToLayer: function(point, latLng) {
-            let ind;
-            if (point.properties.indicator !== '') {
-                ind = '<span>' + point.properties.indicator + '</span>'
-            } else {
-                let src = (point.properties.stopType === 'PLT') ? TRAM_SVG : BUS_SVG;
-                let alt = (point.properties.stopType === 'PLT') ? 'Tram stop' : 'Bus stop';
-                ind = '<img src="' + src + '" width=28px alt="' + alt + '">'
-            }
-
-            let area = 'area-' + point.properties.adminAreaRef;
-
-            let bearing;
-            if (point.properties.bearing !== null) {
-                let arrow = 'indicator-marker__arrow--' + point.properties.bearing;
-                bearing = '<div class="indicator-marker__arrow ' + arrow + '"></div>'
-            } else {
-                bearing = '';
-            }
-
-            let innerHTML = '<div class="indicator indicator-marker ' + area + '">' +
-                bearing + ind + '</div>';
-
-            let icon = L.divIcon({
-                className: 'marker',
-                iconSize: null,
-                html: innerHTML
-            });
-            let marker = L.marker(
-                latLng,
-                {
-                    icon: icon,
-                    title: point.properties.title,
-                    alt: point.properties.indicator
-                }
-            );
-            // Move marker to front when mousing over
-            marker = marker.on('mouseover', function(event) {
-                this.setZIndexOffset(1000);
-            });
-            // Move marker to original z offset when mousing out
-            marker = marker.on('mouseout', function(event) {
-                this.setZIndexOffset(0);
-            });
-            // Add callback function to each marker with GeoJSON pointer object as argument
-            if (typeof callback !== 'undefined') {
-                marker = marker.on('click', function(event) {
-                    callback(point)
-                });
-            }
-
-            return marker;
-        }
-    });
-    let bounds = stopsGeo.getBounds();
-
-    let map = L.map(mapElement, {
-        center: bounds.getCenter(),
-        zoom: 18,
-        minZoom: 9,
-        maxBounds: L.latLngBounds(
-            L.latLng(49.5, -9.0),
-            L.latLng(61.0, 2.5)
-        )
-    });
-
-    layer.addTo(map);
-    stopsGeo.addTo(map);
-    map.fitBounds(bounds, {padding: [24, 24]});
-
-    return map;
-}
-
-
-/**
  * Stores tile layers in map such that keys are stored in order and dropped if the max limit is
  * exceeded
  * @constructor
@@ -993,7 +905,7 @@ function RouteLayer(stopMap) {
                 self.removeRoute();
             }
             let data = JSON.parse(this.responseText);
-            self.layer = self.createLayer(data);
+            self.layer = self.createLayer(data.paths);
             self.layer.addTo(self.stopMap.map);
             // Rearrange layers with route behind markers and front of tiles
             self.layer.bringToBack();
@@ -1200,29 +1112,30 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         infoHeading.textContent = 'Stop information';
         let smsCode = document.createElement('p');
         smsCode.innerHTML = 'SMS code <strong>' + point.properties.naptanCode+ '</strong>';
-        let stopLink = document.createElement('p');
-        let stopAnchor = document.createElement('a');
-        stopAnchor.href = STOP_URL + point.properties.atcoCode;
-        stopAnchor.textContent = point.properties.title;
-        stopLink.appendChild(stopAnchor);
         stopInfo.appendChild(infoHeading);
         stopInfo.appendChild(smsCode);
-        stopInfo.appendChild(stopLink);
 
         let actions = document.createElement('section');
         actions.className = 'card card--minor card--panel';
-        let goTo = document.createElement('button');
-        goTo.className = 'button';
-        let goToInner = document.createElement('span');
-        goToInner.textContent = 'Go to stop';
-        goTo.appendChild(goToInner);
-        goTo.onclick = function() {
-            goTo.blur();
+        let zoomTo = document.createElement('button');
+        zoomTo.className = 'button';
+        let zoomToInner = document.createElement('span');
+        zoomToInner.textContent = 'Zoom to stop';
+        zoomTo.appendChild(zoomToInner);
+        zoomTo.onclick = function() {
+            zoomTo.blur();
             self.stopMap.map.flyTo(
                 L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]), 18
             );
-        }
-        actions.appendChild(goTo);
+        };
+        let visitStop = document.createElement('a');
+        visitStop.className = 'button';
+        visitStop.href = STOP_URL + point.properties.atcoCode;
+        let visitStopInner = document.createElement('span');
+        visitStopInner.textContent = 'View stop page';
+        visitStop.appendChild(visitStopInner);
+        actions.appendChild(zoomTo);
+        actions.appendChild(visitStop);
 
 
         self.clearPanel();
@@ -1295,8 +1208,8 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
     this.tileLayer = L.tileLayer(
         'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
         {
-            minZoom: 9,
-            maxZoom: 18,
+            minZoom: MAP_ZOOM_MIN,
+            maxZoom: MAP_ZOOM_MAX,
             id: 'mapbox.emerald',
             accessToken: mapToken
         }
@@ -1314,25 +1227,27 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
      * @param {number} zoom Starts map at centre with zoom level if point not defined
      */
     this.init = function(point, latitude, longitude, zoom) {
-        let coords, zoomLevel;
+        let coords,
+            zoomLevel;
         if (latitude && longitude && zoom) {
             coords = L.latLng(latitude, longitude);
             zoomLevel = zoom;
         } else if (point !== null) {
             coords = L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]);
-            zoomLevel = 18;
+            zoomLevel = MAP_ZOOM_MAX;
         } else {
-            throw 'Arguments passed to StopMap.init() not valid';
+            coords = L.latLng(MAP_CENTRE_GB);
+            zoomLevel = MAP_ZOOM_MIN;
         }
 
         self.map = L.map(self.mapContainer.id, {
             zoom: zoomLevel,
             center: coords,
-            minZoom: 9,
-            maxZoom: 18,
+            minZoom: MAP_ZOOM_MIN,
+            maxZoom: MAP_ZOOM_MAX,
             maxBounds: L.latLngBounds(
-                L.latLng(49.5, -9.0),
-                L.latLng(61.0, 2.5)
+                L.latLng(MAP_BOUNDS_NW),
+                L.latLng(MAP_BOUNDS_SE)
             ),
             attributionControl: false
         });

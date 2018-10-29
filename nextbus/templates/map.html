@@ -54,20 +54,32 @@
 <script>
     let set = "{{ ('stops' in session)|tojson }}" === 'true';
 </script>
-{% if stop is not none and (latitude and longitude and zoom) %}
+{% if stop is not none and service is none and (latitude and longitude and zoom) %}
 <script>
     let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init({{ stop|tojson }}, {{ latitude }}, {{ longitude }}, {{ zoom }});
 </script>
-{% elif stop is not none %}
+{% elif stop is not none and service is none %}
 <script>
     let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init({{ stop|tojson }});
 </script>
-{% elif latitude and longitude and zoom %}
+{% elif stop is none and service is not none and (latitude and longitude and zoom) %}
 <script>
     let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init(null, {{ latitude }}, {{ longitude }}, {{ zoom }});
+    map.route.addRoute('{{ service }}', '{{ direction }}' === 'true', false);
+</script>
+{% elif stop is none and service is not none %}
+<script>
+    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
+    map.init(null, null, null, null);
+    map.route.addRoute('{{ service }}', '{{ direction }}' === 'true', true);
+</script>
+{% else %}
+<script>
+    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
+    map.init(null, {{ latitude|tojson }}, {{ longitude|tojson }}, {{ zoom|tojson }});
 </script>
 {% endif %}
 {% endblock %}

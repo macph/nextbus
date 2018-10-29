@@ -466,13 +466,11 @@ class Graph(abc.MutableMapping):
         return columns
 
 
-def _service_stops(code, direction=None, columns=None):
+def _service_stops(code, direction=None):
     """ Get dictionary of distinct stops for a service.
 
         :param code: Service code.
         :param direction: Groups journey patterns by direction.
-        :param columns: If not None, load specified columns (ATCO code always
-        selected regardless).
         :returns: Dictionary with ATCO codes as keys for stop point objects.
     """
     pairs = (
@@ -489,10 +487,6 @@ def _service_stops(code, direction=None, columns=None):
         models.StopPoint.query
         .options(db.joinedload(models.StopPoint.locality))
     )
-
-    if columns is not None:
-        cols = set(columns) | {"atco_code"}
-        stops = stops.options(db.load_only(*cols))
 
     pairs = pairs.subquery()
     stops = (
@@ -555,10 +549,9 @@ def service_stop_list(code, direction=None):
     return stops
 
 
-def service_route_json(service, direction):
+def service_json(service, direction):
     """ Creates geometry JSON data for map. """
-    dict_stops = _service_stops(service.code, direction,
-                                ["latitude", "longitude"])
+    dict_stops = _service_stops(service.code, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service %r" % service.code)
 
@@ -566,8 +559,13 @@ def service_route_json(service, direction):
         stop = dict_stops[vertex]
         return stop.longitude, stop.latitude
 
-    paths = _service_graph(service.code, direction).paths()
+    paths, sequence = _service_graph(service.code, direction).analyse()
+
+    # Serialise data
     lines = [[coordinates(v) for v in p] for p in paths if len(p) > 1]
+    route_data = [dict_stops[s].to_geojson() for s in sequence]
+    # Check if service has a mirror
+    mirrored = {p.direction for p in service.patterns} == {True, False}
 
     geojson = {
         "type": "Feature",
@@ -583,4 +581,15 @@ def service_route_json(service, direction):
         }
     }
 
-    return geojson
+    data = {
+        "service": service.code,
+        "line": service.line,
+        "description": service.description,
+        "direction": direction,
+        "operator": service.local_operator.name,
+        "mirrored": mirrored,
+        "sequence": route_data,
+        "paths": geojson
+    }
+
+    return data

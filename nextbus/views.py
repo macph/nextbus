@@ -2,6 +2,7 @@
 Views for the nextbus website.
 """
 import collections
+import re
 import string
 
 from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
@@ -14,6 +15,7 @@ from nextbus import db, forms, graph, location, models, parser, search, tapi
 
 
 MIN_GROUPED = 72
+REMOVE_BRACKETS = re.compile(r"\s*\([^)]*\)\s*")
 
 
 api = Blueprint("api", __name__, template_folder="templates", url_prefix="/api")
@@ -113,7 +115,7 @@ def modify_query(**values):
         elif attr in args:
             del args[attr]
 
-    return request.path + "?" + url_encode(args)
+    return request.path + "?" + url_encode(args) if args else request.path
 
 
 @page.app_template_global()
@@ -121,12 +123,14 @@ def truncate_description(description):
     """ Truncate longer descriptions such that only starting and ending
         labels remain.
     """
+    truncated = REMOVE_BRACKETS.sub("", description)
+
     sep = " – "  # en dash
-    places = description.split(sep)
+    places = truncated.split(sep)
     if len(places) > 3:
         new_description = sep.join([places[0], places[-1]])
     else:
-        new_description = description
+        new_description = truncated
 
     return new_description
 

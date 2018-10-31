@@ -12,10 +12,10 @@ class Line(enum.Enum):
     THROUGH, TERMINATE, CONTINUE = range(3)
 
 
-class Path(abc.Sequence, abc.Hashable):
+class Path(abc.MutableSequence):
     """ Immutable path as sequence of vertices. """
-    def __init__(self, vertices):
-        self._v = tuple(vertices)
+    def __init__(self, vertices=None):
+        self._v = list(vertices) if vertices is not None else []
 
     def __repr__(self):
         return "<Path(%r, cyclic=%s)>" % (self._v, self.cyclic)
@@ -29,12 +29,18 @@ class Path(abc.Sequence, abc.Hashable):
     def __len__(self):
         return len(self._v)
 
-    def __hash__(self):
-        return hash(self._v)
+    def __setitem__(self, index, value):
+        self._v[index] = value
+
+    def __delitem__(self, index):
+        del self._v[index]
+
+    def insert(self, index, value):
+        self._v.insert(index, value)
 
     @property
     def cyclic(self):
-        return len(self._v) > 1 and self._v[0] == self._v[-1]
+        return len(self) > 1 and self[0] == self[-1]
 
     @property
     def edges(self):
@@ -44,16 +50,20 @@ class Path(abc.Sequence, abc.Hashable):
         """ Create an acyclic path by removing the last vertex. """
         return Path(self[:-1]) if self.cyclic else Path(self)
 
+    def prepend(self, vertex):
+        """ Adds vertex to start of path. """
+        self.insert(0, vertex)
+
     def prepend_with(self, vertex):
-        """ Returns this path but with an vertex appended. """
+        """ Returns copy of this path but with an vertex appended. """
         return Path([vertex] + list(self))
 
     def append_with(self, vertex):
-        """ Returns this path but with an vertex prepended. """
+        """ Returns copy of this path but with an vertex prepended. """
         return Path(list(self) + [vertex])
 
     def split(self, edge):
-        """ Returns new paths split by cutting an edge.
+        """ Returns list of new paths split by cutting an edge.
 
             If said edge is the first or last in the path the first or last
             vertex respectively is removed, returning one path.
@@ -81,7 +91,6 @@ def _extract_path(graph, u, queue, paths, sequence, forward=True):
         adding it to the list of paths and the sequence. The path is removed
         from the graph afterwards.
     """
-    cache = {}  # New cache as the graph will have been modified
     new_paths = []
     index = sequence.index(u)
     i = index + 1 if forward else index
@@ -90,7 +99,7 @@ def _extract_path(graph, u, queue, paths, sequence, forward=True):
 
     for v in graph:
         vertices = (u, v) if forward else (v, u)
-        path = graph.shortest_path(*vertices, cache)
+        path = graph.shortest_path(*vertices)
         if path is not None:
             new_paths.append(path)
 
@@ -137,7 +146,7 @@ def _analyse_graph(graph):
         forward = _extract_path(graph, u, queue, paths, sequence, True)
         backward = _extract_path(graph, v, queue, paths, sequence, False)
         if forward or backward:
-            # Maybe another distinct path here - search again
+            # Maybe another distinct path here - return vertex to queue
             queue.append(edge)
 
     assert not len(graph)
@@ -300,13 +309,55 @@ class Graph(abc.MutableMapping):
 
         assert len(groups) == len(self.edges)
 
-        sets = collections.defaultdict(set)
-        for w, i in groups.items():
-            sets[i].add(w)
+        edges = collections.defaultdict(list)
+        for e, i in groups.items():
+            edges[i].append(e)
 
-        return [Graph(s) for s in sets.values()] if sets else [self.copy()]
+        return [Graph(s) for s in edges.values()] if edges else [self.copy()]
 
-    def shortest_path(self, v1, v2, cache=None, _walk=None):
+    def _search_paths(self, v, t=None):
+        """ Does a BFS to find shortest paths in graph starting at vertex `v`.
+
+            If target vertex `t` is None, all paths are searched and returned as
+            a dictionary of vertices with shortest paths. Otherwise, only the
+            shortest path starting at `v` and ending at `t` is returned.
+
+            Edges following vertices are sorted to give a consistent result.
+        """
+        paths = {}
+        queue = collections.deque()
+
+        # Add all immediately adjacent paths to queue
+        queue.extendleft(
+            Path([v, w]) for w in sorted(self.following(v))
+        )
+
+        while queue:
+            p = queue.pop()
+            u = p[-1]
+            if u in paths:
+                # A shorter path was already found
+                continue
+            paths[u] = p
+            if t is not None and u == t:
+                break
+            if u != v:
+                # Add all following paths to queue
+                queue.extendleft(
+                    p.append_with(w) for w in sorted(self.following(u))
+                )
+
+        # Find all vertices not covered by BFS
+        unseen = self.vertices - paths.keys()
+        if unseen:
+            paths.update({u: Path() for u in unseen})
+
+        if t is not None:
+            return {t: paths[t]}
+        else:
+            return paths
+
+    def shortest_path(self, v1, v2):
         """ Finds the shortest path between a pair of vertices in the graph
             recursively.
 
@@ -318,46 +369,9 @@ class Graph(abc.MutableMapping):
         if v2 not in self:
             raise KeyError(v2)
 
-        if cache is not None and (v1, v2) in cache:
-            return cache[(v1, v2)]
+        paths_from = self._search_paths(v1, v2)
 
-        if v1 in self.sinks or v2 in self.sources:
-            if cache is not None:
-                cache[(v1, v2)] = None
-            return None
-
-        def _path_sort(p):
-            return (len(p), *iter(p))
-
-        # We only want to discard cycles within walks, so first vertex is not
-        # included
-        walk = _walk if _walk is not None else []
-
-        path = None
-        paths = []
-        for v in self.following(v1):
-            if v in walk:
-                # Cycled back to same vertex within walk - can't end so discard
-                break
-            if v == v1 == v2:
-                path = Path([v1])
-                break
-            if v == v2:
-                path = Path([v1, v2])
-                break
-
-            new_path = self.shortest_path(v, v2, cache, walk + [v])
-            if new_path is not None and not new_path.cyclic:
-                # Attach first vertex to start of path found
-                paths.append(new_path.prepend_with(v1))
-
-        if path is None and paths:
-            path = min(paths, key=_path_sort)
-
-        if cache is not None:
-            cache[(v1, v2)] = path
-
-        return path
+        return paths_from[v2] if paths_from[v2] else None
 
     def diameter(self):
         """ Finds the longest path in this graph that is the shortest path
@@ -366,20 +380,12 @@ class Graph(abc.MutableMapping):
             Longest paths are sorted by their vertices as to give a consistent
             result.
         """
-        paths = []
-        cache = {}
+        longest_paths = []
 
-        for u in self.heads:
-            for v in self.tails:
-                # Find all possible paths
-                new_path = self.shortest_path(u, v, cache)
-                if new_path is not None:
-                    paths.append(new_path)
+        for v in sorted(self):
+            longest_paths.extend(self._search_paths(v).values())
 
-        if paths:
-            # Get all longest paths and pick first path after sorting
-            return min((p for p in paths if len(p) == max(map(len, paths))),
-                       key=lambda p: tuple(p))
+        return max(longest_paths, key=len)
 
     def analyse(self):
         """ Finds all distinct paths for this graph and the topological order
@@ -392,6 +398,9 @@ class Graph(abc.MutableMapping):
             new_paths, new_sequence = _analyse_graph(g)
             paths.extend(new_paths)
             sequence.extend(new_sequence)
+
+        assert len(sequence) == len(self)
+        assert set().union(*tuple(set(p.edges) for p in paths)) == self.edges
 
         return paths, sequence
 

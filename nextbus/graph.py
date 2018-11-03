@@ -29,6 +29,12 @@ class Path(abc.MutableSequence):
     def __len__(self):
         return len(self._v)
 
+    def __eq__(self, other):
+        return list(self) == list(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __setitem__(self, index, value):
         self._v[index] = value
 
@@ -86,34 +92,44 @@ class Path(abc.MutableSequence):
             return [Path(self[:index+1]), Path(self[index+1:])]
 
 
-def _extract_path(graph, u, queue, paths, sequence, forward=True):
+def _merge_path(graph, sequence, path, index):
+    """ Merges path into sequence, ensuring all new vertices follows the
+        existing ones in the adjacency list.
+    """
+    for v in path:
+        if v in sequence:
+            continue
+        # Check if any later vertices have this path and move index
+        after = [i for i, w in enumerate(sequence[index:], index)
+                 if v in graph.following(w)]
+        if after:
+            index = after[-1] + 1
+        sequence.insert(index, v)
+        index += 1
+
+
+def _extract_path(graph, g, u, queue, paths, sequence, forward=True):
     """ Finds longest possible path starting or ending at specified vertex,
         adding it to the list of paths and the sequence. The path is removed
         from the graph afterwards.
     """
-    new_paths = []
-    index = sequence.index(u)
-    i = index + 1 if forward else index
-    if u not in graph:
+    try:
+        new_paths = g.search_paths(u, forward).values()
+    except KeyError:
         return False
 
-    for v in graph:
-        vertices = (u, v) if forward else (v, u)
-        path = graph.shortest_path(*vertices)
-        if path is not None:
-            new_paths.append(path)
-
-    if not new_paths:
+    if not any(new_paths):
         return False
 
-    longest = max(new_paths, key=len)
-    graph.remove_path(longest)
+    longest = max(sorted(new_paths, key=tuple), key=len)
+
+    g.remove_path(longest)
     paths.append(longest)
 
     longest_ac = longest.make_acyclic()
-    list_long = [v for v in longest_ac if v not in sequence]
-    # Modify existing sequence
-    sequence[i:] = list_long + sequence[i:]
+    index = sequence.index(u)
+    _merge_path(graph, sequence, longest_ac, index + 1 if forward else index)
+
     queue.extendleft(longest_ac.edges)
 
     return True
@@ -123,50 +139,67 @@ def _analyse_graph(graph):
     """ Analyses a connected graph to find a set of distinct paths and a
         topologically ordered sequence.
     """
-    # Make a copy to modify
-    graph = graph.copy()
-    # Find any self-cycles and remove them
-    for e in graph.edges:
-        if e[0] == e[1]:
-            del graph[e]
+    # Make a copy without self-cycles to modify
+    g = graph.clean_copy()
+    g0 = g.copy()
     # Start with the diameter of the graph
-    diameter = graph.diameter()
-    diameter_ac = diameter.make_acyclic()
+    diameter = g.diameter()
     if not diameter:
-        return [], []
+        # The graph has no edges so return sorted list of isolated vertices
+        return [], sorted(g.isolated)
+    diameter_ac = diameter.make_acyclic()
 
     # Remove diameter from graph and search the rest
-    graph.remove_path(diameter)
+    g.remove_path(diameter)
     paths, sequence = [diameter], list(diameter_ac)
-    queue = collections.deque(diameter.edges)
+    queue = collections.deque(reversed(diameter.edges))
 
     while queue:
         u, v = edge = queue.pop()
         # Search paths both forwards and backwards
-        forward = _extract_path(graph, u, queue, paths, sequence, True)
-        backward = _extract_path(graph, v, queue, paths, sequence, False)
+        forward = _extract_path(g0, g, u, queue, paths, sequence, True)
+        backward = _extract_path(g0, g, v, queue, paths, sequence, False)
         if forward or backward:
             # Maybe another distinct path here - return vertex to queue
             queue.append(edge)
 
-    assert not len(graph)
-
     return paths, sequence
 
 
-class Graph(abc.MutableMapping):
+class Graph:
     """ Directed graph.
 
         Can be created from a list of edges as tuples of two vertex labels.
     """
-    def __init__(self, pairs=None):
+    def __init__(self, pairs=None, singles=None):
         self._v = collections.defaultdict(set)
         if pairs is not None:
             for v1, v2 in pairs:
-                self._v[v1].add(v2)
+                self[v1] = v2
+        if singles is not None:
+            for v in singles:
+                self.add_vertex(v)
 
     def __repr__(self):
-        return "<Graph(%s)>" % set(self)
+        return "<Graph(%s)>" % (repr(set(self)) if self else "")
+
+    def __iter__(self):
+        return iter(self.vertices)
+
+    def __len__(self):
+        return len(self.vertices)
+
+    def __contains__(self, v):
+        return v in self.vertices
+
+    def __eq__(self, other):
+        try:
+            return self.adj == other.adj
+        except AttributeError:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __getitem__(self, v):
         if v in self.heads:
@@ -176,41 +209,51 @@ class Graph(abc.MutableMapping):
         else:
             raise KeyError(v)
 
-    def __iter__(self):
-        return iter(self.vertices)
-
-    def __len__(self):
-        return len(self.vertices)
-
     def __setitem__(self, v1, v2):
-        self._v[v1].add(v2)
+        if v2 is not None:
+            self._v[v1].add(v2)
+            if v2 not in self._v:
+                self._v[v2] = set()
+        else:
+            self._v[v1] = set()
 
     def __delitem__(self, v):
-        try:
-            v1, v2 = v
-            self._v[v1].remove(v2)
-            if not self._v[v1]:
-                del self._v[v1]
+        if v in self._v:
+            del self._v[v]
+        else:
+            raise KeyError(v)
+        for u in self._v:
+            self._v[u].discard(v)
 
-        except TypeError:
-            if v in self._v:
-                del self._v[v]
-            for u in self._v:
-                self._v[u].discard(v)
+    @property
+    def adj(self):
+        """ Adjacency list for this graph as a dictionary of sets. """
+        return dict(self._v)
+
+    @property
+    def vertices(self):
+        """ All vertices in graph. """
+        return set(self._v.keys())
+
+    @property
+    def isolated(self):
+        """ All vertices without associated edges. """
+        return self.vertices - self.heads - self.tails
 
     @property
     def edges(self):
         """ All edges in this graph as tuples of two vertices. """
-        return {(u, w) for u, v in self._v.items() for w in v}
+        return {(u, v) for u, w in self._v.items() for v in w}
 
     @property
     def heads(self):
-        return set(self._v)
+        """ All vertices at head of edges in this graph. """
+        return {v for v, w in self._v.items() if w}
 
     @property
     def tails(self):
         """ All vertices at end of edges in this graph. """
-        return set.union(*self._v.values()) if self._v else set()
+        return set().union(*self._v.values())
 
     @property
     def sources(self):
@@ -222,19 +265,25 @@ class Graph(abc.MutableMapping):
         """ All vertices without incoming edges. """
         return self.tails - self.heads
 
-    @property
-    def vertices(self):
-        """ All vertices without outgoing edges. """
-        return self.heads | self.tails
+    def copy(self):
+        """ Makes a copy of the graph. """
+        return Graph(self.edges, singles=self.isolated)
+
+    def clean_copy(self):
+        """ Makes a copy of the graph with no self-edges. """
+        graph = self.copy()
+        for u, v in graph.edges:
+            if u == v:
+                graph.remove_edge(u, v)
+
+        return graph
 
     def following(self, v):
         """ All vertices at end of edges that start at specified vertex. """
-        if v in self._v:
-            return self._v[v]
-        elif v in self:
-            return set()
-        else:
+        if v not in self._v:
             raise KeyError(v)
+
+        return set(self._v[v])
 
     def preceding(self, v):
         """ All vertices at start of edges that end at specified vertex. """
@@ -252,24 +301,49 @@ class Graph(abc.MutableMapping):
 
     def outgoing(self, v):
         """ All outgoing edges for specified vertex. """
-        if v in self._v:
-            return {(v, w) for w in self._v[v]}
-        elif v in self:
-            return set()
-        else:
+        if v not in self._v:
             raise KeyError(v)
 
-    def copy(self):
-        """ Makes a copy of the graph. """
-        return Graph(self.edges)
+        return {(v, u) for u in self.following(v)}
+
+    def contains_vertex(self, vertex):
+        return vertex in self
+
+    def contains_edge(self, edge):
+        try:
+            u, v = edge
+        except TypeError as err:
+            raise TypeError("%r is not a tuple of two values" % edge) from err
+
+        return u in self._v and v in self._v[u]
+
+    def contains_path(self, path):
+        return all(self.contains_edge(e) for e in path.edges)
+
+    def add_vertex(self, v, following=None):
+        self[v] = following
+
+    def remove_vertex(self, v):
+        del self[v]
 
     def add_edge(self, v1, v2):
-        """ Adds an edge to the graph. """
-        self._v[v1].add(v2)
+        self[v1] = v2
 
-    def remove_edge(self, v1, v2):
-        """ Removes an edge. Equivalent to ``del graph[(v1, v2)]``. """
-        del self[(v1, v2)]
+    def remove_edge(self, v1, v2, delete=True):
+        """ Removes edge from graph. If delete is True, any orphaned vertices
+            are removed as well.
+        """
+        if v1 not in self._v:
+            raise KeyError(v1)
+        if v2 not in self._v[v1]:
+            raise KeyError(v2)
+
+        self._v[v1].discard(v2)
+
+        if delete and not self._v[v1] and v1 not in self.tails:
+            del self[v1]
+        if delete and not self._v[v2]:
+            del self[v2]
 
     def add_path(self, path):
         """ Adds a Path object or a sequence of edges to this graph. """
@@ -278,44 +352,66 @@ class Graph(abc.MutableMapping):
         except AttributeError:
             edges = path
 
-        for v1, v2 in edges:
-            self._v[v1].add(v2)
+        for e in edges:
+            try:
+                v1, v2 = e
+            except TypeError as err:
+                raise TypeError("%r is not a tuple of two values" % e)
+            self[v1] = v2
 
-    def remove_path(self, path):
-        """ Removes all edges in Path or sequence of edges from this graph. """
+    def remove_path(self, path, delete=True):
+        """ Removes all edges in Path or sequence of edges from this graph. If
+            delete is True, any orphaned vertices are removed as well.
+        """
         try:
             edges = path.edges
         except AttributeError:
             edges = path
 
         for e in edges:
-            del self[e]
+            if not self.contains_edge(e):
+                raise ValueError("Edge %r does not exist in graph %r" %
+                                 (e, self))
+
+        for v1, v2 in edges:
+            self.remove_edge(v1, v2, delete)
+
+    def update(self, adj):
+        """ Updates graph with an adjacency list in the form of a dictionary of
+            vertex heads with neighbouring nodes as iterables.
+        """
+        for u in dict(adj):
+            for v in adj[u]:
+                self[u] = v
+
+    def clear(self):
+        """ Clears all vertices and edges from graph. """
+        self._v.clear()
 
     def split(self):
         """ Splits graph into a number of connected graphs. """
-        groups = {}
+        edges = {}
 
-        def update_group(index, new_index):
-            nonlocal groups
-            for f in groups:
-                if groups[f] == index:
-                    groups[f] = new_index
-
-        for i, edge in enumerate(self.edges):
-            for e in groups:
+        for new, edge in enumerate(self.edges):
+            for e in edges:
                 if e[0] in edge or e[1] in edge:
-                    update_group(groups[e], i)
-            groups[edge] = i
+                    edges.update({f: new for f, index in edges.items()
+                                  if index == edges[e]})
+            edges[edge] = new
 
-        assert len(groups) == len(self.edges)
+        groups = collections.defaultdict(list)
+        for e, i in edges.items():
+            groups[i].append(e)
 
-        edges = collections.defaultdict(list)
-        for e, i in groups.items():
-            edges[i].append(e)
+        connected = [Graph(s) for s in groups.values()]
+        isolated = [Graph(singles=[v]) for v in self.isolated]
 
-        return [Graph(s) for s in edges.values()] if edges else [self.copy()]
+        if connected or isolated:
+            return connected + isolated
+        else:
+            return [Graph()]
 
-    def _search_paths(self, v, t=None):
+    def _search_paths(self, v, target=None):
         """ Does a BFS to find shortest paths in graph starting at vertex `v`.
 
             If target vertex `t` is None, all paths are searched and returned as
@@ -324,6 +420,11 @@ class Graph(abc.MutableMapping):
 
             Edges following vertices are sorted to give a consistent result.
         """
+        if v not in self:
+            raise KeyError(v)
+        if target is not None and target not in self:
+            raise KeyError(v)
+
         paths = {}
         queue = collections.deque()
 
@@ -339,7 +440,7 @@ class Graph(abc.MutableMapping):
                 # A shorter path was already found
                 continue
             paths[u] = p
-            if t is not None and u == t:
+            if target is not None and u == target:
                 break
             if u != v:
                 # Add all following paths to queue
@@ -348,14 +449,23 @@ class Graph(abc.MutableMapping):
                 )
 
         # Find all vertices not covered by BFS
-        unseen = self.vertices - paths.keys()
-        if unseen:
-            paths.update({u: Path() for u in unseen})
+        for u in self.vertices - paths.keys():
+            paths[u] = Path()
 
-        if t is not None:
-            return {t: paths[t]}
+        return paths if target is None else {target: paths[target]}
+
+    def search_paths(self, v, forward=True):
+        """ Does BFS on graph to find shortest paths from vertex v to all other
+            vertices (including itself), or vice versa if forward is False.
+
+            Edges following vertices are sorted to give a consistent result.
+        """
+        if forward:
+            paths = self._search_paths(v)
         else:
-            return paths
+            paths = {u: self._search_paths(u, v)[v] for u in self}
+
+        return paths
 
     def shortest_path(self, v1, v2):
         """ Finds the shortest path between a pair of vertices in the graph
@@ -383,24 +493,25 @@ class Graph(abc.MutableMapping):
         longest_paths = []
 
         for v in sorted(self):
-            longest_paths.extend(self._search_paths(v).values())
+            new_paths = self._search_paths(v)
+            longest_paths.extend(new_paths.values())
 
-        return max(longest_paths, key=len)
+        if longest_paths:
+            longest_paths.sort(key=tuple)
+            return max(longest_paths, key=len)
+        else:
+            return Path()
 
     def analyse(self):
         """ Finds all distinct paths for this graph and the topological order
             of vertices, starting with the diameter.
         """
-        graphs = self.split()
         paths, sequence = [], []
         # Start with the largest connected graph and analyse each
-        for g in sorted(graphs, key=len, reverse=True):
+        for g in sorted(self.split(), key=len, reverse=True):
             new_paths, new_sequence = _analyse_graph(g)
             paths.extend(new_paths)
             sequence.extend(new_sequence)
-
-        assert len(sequence) == len(self)
-        assert set().union(*tuple(set(p.edges) for p in paths)) == self.edges
 
         return paths, sequence
 
@@ -414,65 +525,6 @@ class Graph(abc.MutableMapping):
             diameter.
         """
         return self.analyse()[1]
-
-    def draw(self, sequence=None):
-        """ Draws a diagram of the service. """
-        lines_before, lines_after = 0, 0  # Number of lines
-        columns = {}  # Record of lines and vertex status
-
-        seq = self.sequence() if sequence is None else sequence
-
-        if len(seq) > len(set(seq)):
-            raise ValueError("Vertices in sequence %r are not unique")
-
-        for i, v in enumerate(seq):
-            incoming, outgoing = self.preceding(v), self.following(v)
-            before, after = set(seq[:i]), set(seq[i+1:])
-
-            if not incoming:
-                # Vertex starts here
-                status_before = Line.TERMINATE
-            elif incoming - before:
-                # Possible cyclic path
-                status_before = Line.CONTINUE
-                incoming &= before
-            else:
-                status_before = Line.THROUGH
-
-            if not outgoing:
-                # Vertex terminates here
-                status_after = Line.TERMINATE
-            elif outgoing - after:
-                # Possible cyclic path
-                status_after = Line.CONTINUE
-                outgoing &= after
-            else:
-                status_after = Line.THROUGH
-
-            if v in columns:
-                col = columns[v][0]
-            else:
-                col = lines_before
-
-            lines_after += len(outgoing) - len(incoming)
-
-            diverges = [u for u in seq if u in outgoing]
-            for j, u in enumerate(reversed(diverges)):
-                if u in columns and columns[u][1] is not None:
-                    continue
-
-                new_col = col + j
-                if u in columns:
-                    new_col = min(new_col, columns[u][0])
-
-                columns[u] = (new_col, None, None, None, None)
-
-            columns[v] = (col, status_before, status_after,
-                          lines_before, lines_after)
-
-            lines_before = lines_after
-
-        return columns
 
 
 def _service_stops(code, direction=None):
@@ -506,11 +558,12 @@ def _service_stops(code, direction=None):
     return {s.atco_code: s for s in stops.all()}
 
 
-def _service_graph(code, direction=None):
+def service_graph(code, direction):
     """ Get list of stops and their preceding and following stops for a service.
 
         :param code: Service code.
-        :param direction: Groups journey patterns by direction.
+        :param direction: Groups journey patterns by direction - False for
+        outbound and True for inbound.
     """
     stops = (
         db.session.query(
@@ -521,11 +574,9 @@ def _service_graph(code, direction=None):
         .select_from(models.JourneyPattern)
         .join(models.JourneyPattern.links)
         .filter(models.JourneyPattern.service_ref == code,
+                models.JourneyPattern.direction == direction,
                 models.JourneyLink.stop_point_ref.isnot(None))
     )
-
-    if direction is not None:
-        stops = stops.filter(models.JourneyPattern.direction == direction)
 
     stops = stops.subquery()
     pairs = db.session.query(
@@ -541,25 +592,31 @@ def _service_graph(code, direction=None):
     return Graph(query.all())
 
 
-def service_stop_list(code, direction=None):
+def service_stop_list(code, direction):
     """ Queries all patterns for a service and creates list of stops sorted
         topologically.
 
         :param code: Service code.
-        :param direction: Groups journey patterns by direction.
+        :param direction: Groups journey patterns by direction - False for
+        outbound and True for inbound.
     """
     dict_stops = _service_stops(code, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service code %s" % code)
 
-    graph = _service_graph(code, direction)
+    graph = service_graph(code, direction)
     stops = [dict_stops[v] for v in graph.sequence()]
 
     return stops
 
 
 def service_json(service, direction):
-    """ Creates geometry JSON data for map. """
+    """ Creates geometry JSON data for map.
+
+        :param service: Service instance.
+        :param direction: Groups journey patterns by direction - False for
+        outbound and True for inbound.
+    """
     dict_stops = _service_stops(service.code, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service %r" % service.code)
@@ -568,7 +625,7 @@ def service_json(service, direction):
         stop = dict_stops[vertex]
         return stop.longitude, stop.latitude
 
-    paths, sequence = _service_graph(service.code, direction).analyse()
+    paths, sequence = service_graph(service.code, direction).analyse()
 
     # Serialise data
     lines = [[coordinates(v) for v in p] for p in paths if len(p) > 1]

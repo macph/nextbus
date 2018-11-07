@@ -3,7 +3,7 @@ Testing the graph module for service diagrams.
 """
 import unittest
 
-from nextbus.graph import Path, Graph
+from nextbus.graph import Path, Graph, _GraphLayout
 
 
 class PathTests(unittest.TestCase):
@@ -77,20 +77,8 @@ class PathTests(unittest.TestCase):
             self.path.split((-1, 0))
 
 
-class GraphTests(unittest.TestCase):
-    """ Testing the Graph class. """
-    def assertResultsEqual(self, d1, d2):
-        """ Compare results for multiple graphs in the form of dictionaries
-            which are assumed to have the same keys.
-        """
-        if d1.keys() != d2.keys():
-            raise ValueError("Keys %r for the first dictionary are not equal "
-                             "to the second dictionary keys %r" %
-                             (d1.keys(), d2.keys()))
-        for k in d1:
-            with self.subTest(test=k):
-                self.assertEqual(d1[k], d2[k])
-
+class BaseGraphTests(unittest.TestCase):
+    """ Base class for testing graphs. """
     def setUp(self):
         # Empty
         self.empty = Graph()
@@ -109,6 +97,10 @@ class GraphTests(unittest.TestCase):
         # Path with a loop and a crossover
         self.cross = Graph([(0, 1), (1, 2), (1, 4), (1, 5), (2, 3), (3, 4),
                             (3, 5), (4, 6), (5, 6), (6, 7)])
+        # Complex with crossovers and dead end
+        self.complex = Graph([(0, 1), (1, 2), (1, 5), (1, 9), (2, 3), (3, 4),
+                              (3, 7), (4, 5), (4, 8), (5, 6), (5, 7), (7, 8),
+                              (8, 9), (9, 10)])
         # Path with a self-cycle
         self.self_cycle = Graph([(0, 1), (1, 2), (2, 2), (2, 3)])
         # Simple cycle
@@ -131,6 +123,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": self.merge,
             "path with loop": self.loop,
             "crossed paths": self.cross,
+            "complex graph": self.complex,
             "self cycle": self.self_cycle,
             "simple cycle": self.cycle,
             "starting cycle": self.cycle_start,
@@ -141,9 +134,24 @@ class GraphTests(unittest.TestCase):
     def tearDown(self):
         del self.graphs
         del (self.empty, self.single, self.simple, self.two_paths, self.merge,
-             self.loop, self.cross, self.self_cycle, self.cycle,
+             self.loop, self.cross, self.complex, self.self_cycle, self.cycle,
              self.cycle_start, self.cycle_end, self.two_cycles)
 
+    def assertResultsEqual(self, d1, d2):
+        """ Compare results for multiple graphs in the form of dictionaries
+            which are assumed to have the same keys.
+        """
+        if d1.keys() != d2.keys():
+            raise ValueError("Keys %r for the first dictionary are not equal "
+                             "to the second dictionary keys %r" %
+                             (d1.keys(), d2.keys()))
+        for k in d1:
+            with self.subTest(test=k):
+                self.assertEqual(d1[k], d2[k])
+
+
+class GraphTests(BaseGraphTests):
+    """ Testing the Graph class. """
     def test_graph_len(self):
         self.assertEqual(len(self.merge), 10)
 
@@ -178,6 +186,9 @@ class GraphTests(unittest.TestCase):
                                5: {6}, 6: {7}, 7: set()},
             "crossed paths": {0: {1}, 1: {2, 4, 5}, 2: {3}, 3: {4, 5}, 4: {6},
                               5: {6}, 6: {7}, 7: set()},
+            "complex graph": {0: {1}, 1: {9, 2, 5}, 2: {3}, 5: {6, 7}, 9: {10},
+                              3: {4, 7}, 4: {8, 5}, 7: {8}, 8: {9}, 6: set(),
+                              10: set()},
             "self cycle": {0: {1}, 1: {2}, 2: {2, 3}, 3: set()},
             "simple cycle": {0: {1}, 1: {2}, 2: {3}, 3: {0}},
             "starting cycle": {0: {1}, 1: {2}, 2: {3}, 3: {0, 4}, 4: {5},
@@ -199,6 +210,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": {0, 1, 2, 3, 4, 5, 6, 8},
             "path with loop": {0, 1, 2, 3, 4, 5, 6},
             "crossed paths": {0, 1, 2, 3, 4, 5, 6},
+            "complex graph": {0, 1, 2, 3, 4, 5, 7, 8, 9},
             "self cycle": {0, 1, 2},
             "simple cycle": {0, 1, 2, 3},
             "starting cycle": {0, 1, 2, 3, 4},
@@ -217,6 +229,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": {1, 2, 4, 5, 6, 7, 8, 9},
             "path with loop": {1, 2, 3, 4, 5, 6, 7},
             "crossed paths": {1, 2, 3, 4, 5, 6, 7},
+            "complex graph": {1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
             "self cycle": {1, 2, 3},
             "simple cycle": {0, 1, 2, 3},
             "starting cycle": {0, 1, 2, 3, 4, 5},
@@ -235,6 +248,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": {0, 3},
             "path with loop": {0},
             "crossed paths": {0},
+            "complex graph": {0},
             "self cycle": {0},
             "simple cycle": set(),
             "starting cycle": set(),
@@ -253,6 +267,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": {7, 9},
             "path with loop": {7},
             "crossed paths": {7},
+            "complex graph": {6, 10},
             "self cycle": {3},
             "simple cycle": set(),
             "starting cycle": {5},
@@ -274,6 +289,9 @@ class GraphTests(unittest.TestCase):
                                (5, 6), (6, 7)},
             "crossed paths": {(0, 1), (1, 2), (1, 4), (1, 5), (2, 3), (3, 4),
                               (3, 5), (4, 6), (5, 6), (6, 7)},
+            "complex graph": {(0, 1), (1, 2), (1, 5), (1, 9), (2, 3), (3, 4),
+                              (3, 7), (4, 5), (4, 8), (5, 6), (5, 7), (7, 8),
+                              (8, 9), (9, 10)},
             "self cycle": {(0, 1), (1, 2), (2, 2), (2, 3)},
             "simple cycle": {(0, 1), (1, 2), (2, 3), (3, 0)},
             "starting cycle": {(0, 1), (1, 2), (2, 3), (3, 0), (3, 4), (4, 5)},
@@ -294,6 +312,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
             "path with loop": {0, 1, 2, 3, 4, 5, 6, 7},
             "crossed paths": {0, 1, 2, 3, 4, 5, 6, 7},
+            "complex graph": {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
             "self cycle": {0, 1, 2, 3},
             "simple cycle": {0, 1, 2, 3},
             "starting cycle": {0, 1, 2, 3, 4, 5},
@@ -551,6 +570,19 @@ class GraphTests(unittest.TestCase):
                 6: Path([0, 1, 4, 6]),
                 7: Path([0, 1, 4, 6, 7])
             },
+            "complex graph": {
+                0: Path(),
+                1: Path([0, 1]),
+                2: Path([0, 1, 2]),
+                3: Path([0, 1, 2, 3]),
+                4: Path([0, 1, 2, 3, 4]),
+                5: Path([0, 1, 5]),
+                6: Path([0, 1, 5, 6]),
+                7: Path([0, 1, 5, 7]),
+                8: Path([0, 1, 5, 7, 8]),
+                9: Path([0, 1, 9]),
+                10: Path([0, 1, 9, 10])
+            },
             "self cycle": {
                 0: Path(),
                 1: Path([0, 1]),
@@ -609,6 +641,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": Path([0, 1, 2, 4, 5, 6, 8, 9]),
             "path with loop": Path([0, 1, 2, 5, 6, 7]),
             "crossed paths": Path([0, 1, 4, 6, 7]),
+            "complex graph": Path([2, 3, 4, 8, 9, 10]),
             "self cycle": Path([0, 1, 2, 3]),
             "simple cycle": Path([0, 1, 2, 3, 0]),
             "starting cycle": Path([0, 1, 2, 3, 4, 5]),
@@ -627,10 +660,13 @@ class GraphTests(unittest.TestCase):
             "simple": [Path([0, 1, 2, 3, 4])],
             "two paths": [Path([0, 1, 2, 3]), Path([10, 11, 12])],
             "merged paths": [Path([0, 1, 2, 4, 5, 6, 8, 9]), Path([3, 4]),
-                              Path([6, 7])],
+                             Path([6, 7])],
             "path with loop": [Path([0, 1, 2, 5, 6, 7]), Path([2, 3, 4, 5])],
             "crossed paths": [Path([0, 1, 4, 6, 7]), Path([1, 2, 3, 4]),
                               Path([1, 5, 6]), Path([3, 5])],
+            "complex graph": [Path([0, 1, 9]), Path([1, 2]), Path([1, 5]),
+                              Path([2, 3, 4, 8, 9, 10]), Path([3, 7]),
+                              Path([4, 5, 7, 8]), Path([5, 6])],
             "self cycle": [Path([0, 1, 2, 3])],
             "simple cycle": [Path([0, 1, 2, 3, 0])],
             "starting cycle": [Path([0, 1, 2, 3, 4, 5]), Path([3, 0])],
@@ -654,6 +690,7 @@ class GraphTests(unittest.TestCase):
             "merged paths": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
             "path with loop": [0, 1, 2, 3, 4, 5, 6, 7],
             "crossed paths": [0, 1, 2, 3, 5, 4, 6, 7],
+            "complex graph": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             "self cycle": [0, 1, 2, 3],
             "simple cycle": [0, 1, 2, 3],
             "starting cycle": [0, 1, 2, 3, 4, 5],
@@ -663,4 +700,227 @@ class GraphTests(unittest.TestCase):
         self.assertResultsEqual(
             {n: g.sequence() for n, g in self.graphs.items()},
             graph_seq
+        )
+
+
+class DrawGraphTests(BaseGraphTests):
+    """ Test the _GraphLayout class. """
+    def test_assign_columns(self):
+        graph_columns = {
+            "empty": {},
+            "single": {0: 0},
+            "simple": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
+            "two paths": {0: 0, 1: 0, 2: 0, 3: 0, 10: 0, 11: 0, 12: 0},
+            "merged paths": {0: 0, 1: 0, 2: 0, 3: 1, 4: 0, 5: 0, 6: 0, 7: 1,
+                             8: 0, 9: 0},
+            "path with loop": {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 0, 6: 0, 7: 0},
+            "crossed paths": {0: 0, 1: 0, 2: 1, 3: 1, 4: 0, 5: 1, 6: 0, 7: 0},
+            "complex graph": {0: 0, 1: 0, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1,
+                              8: 1, 9: 0, 10: 0},
+            "self cycle": {0: 0, 1: 0, 2: 0, 3: 0},
+            "simple cycle": {0: 0, 1: 0, 2: 0, 3: 0},
+            "starting cycle": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            "ending cycle": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            "crossed cycles": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 11: 0, 12: 0,
+                               13: 0, 14: 0, 15: 0}
+        }
+
+        result_columns = {}
+        for n, g in self.graphs.items():
+            gl = _GraphLayout(g)
+            gl._init()
+            for i, _ in enumerate(gl.seq):
+                gl._set_column(i)
+            result_columns[n] = dict(gl._col)
+
+        self.assertResultsEqual(result_columns, graph_columns)
+
+    def test_set_lines_start(self):
+        graph_lines = {
+            "empty": {},
+            "single": {0: [set()]},
+            "simple": {0: [{1}], 1: [{2}], 2: [{3}], 3: [{4}], 4: [set()]},
+            "two paths": {0: [{1}], 1: [{2}], 2: [{3}], 3: [set()], 10: [{11}],
+                          11: [{12}], 12: [set()]},
+            "merged paths": {0: [{1}], 1: [{2}], 2: [{4}], 3: [{4}, {4}],
+                             4: [{5}], 5: [{6}], 6: [{7, 8}], 7: [{8}, set()],
+                             8: [{9}], 9: [set()]},
+            "path with loop": {0: [{1}], 1: [{2}], 2: [{3, 5}], 3: [{5}, {4}],
+                               4: [{5}, {5}], 5: [{6}], 6: [{7}], 7: [set()]},
+            "crossed paths": {0: [{1}], 1: [{2, 4, 5}], 2: [{4, 5}, {3}],
+                              3: [{4, 5}, {4, 5}], 4: [{6}, {6}], 5: [{4}, {6}],
+                              6: [{7}], 7: [set()]},
+            "complex graph": {0: [{1}], 1: [{2, 5, 9}], 2: [{5, 9}, {3}],
+                              3: [{5, 9}, {4, 7}], 4: [{5, 9}, {5, 8}, {7}],
+                              5: [{9}, {6, 7}, {8}, {7}],
+                              6: [{9}, set(), {8}, {7}], 7: [{9}, {8}, {8}],
+                              8: [{9}, {9}], 9: [{10}], 10: [set()]},
+            "self cycle": {},
+            "simple cycle": {},
+            "starting cycle": {},
+            "ending cycle": {},
+            "crossed cycles": {}
+        }
+
+        result_lines = {}
+        for n, g in self.graphs.items():
+            gl = _GraphLayout(g)
+            gl._init()
+            for i, _ in enumerate(gl.seq):
+                gl._set_column(i)
+            for i, _ in enumerate(gl.seq):
+                gl._set_lines(i)
+            result_lines[n] = dict(gl._start)
+
+        self.assertResultsEqual(result_lines, graph_lines)
+
+    def test_set_lines_end(self):
+        graph_lines = {
+            "empty": {},
+            "single": {0: []},
+            "simple": {0: [{1}], 1: [{2}], 2: [{3}], 3: [{4}], 4: []},
+            "two paths": {0: [{1}], 1: [{2}], 2: [{3}], 3: [], 10: [{11}],
+                          11: [{12}], 12: []},
+            "merged paths": {0: [{1}], 1: [{2}], 2: [{4}], 3: [{4}],
+                             4: [{5}], 5: [{6}], 6: [{8}, {7}], 7: [{8}],
+                             8: [{9}], 9: []},
+            "path with loop": {0: [{1}], 1: [{2}], 2: [{5}, {3}], 3: [{5}, {4}],
+                               4: [{5}], 5: [{6}], 6: [{7}], 7: []},
+            "crossed paths": {0: [{1}], 1: [{4, 5}, {2}], 2: [{4, 5}, {3}],
+                              3: [{4}, {5}], 4: [{6}], 5: [{4}, {6}],
+                              6: [{7}], 7: []},
+            "complex graph": {0: [{1}], 1: [{5, 9}, {2}], 2: [{5, 9}, {3}],
+                              3: [{5, 9}, {4}, {7}], 4: [{9}, {5}, {8}, {7}],
+                              5: [{9}, {6}, {8}, {7}],
+                              6: [{9}, {7}, {8}], 7: [{9}, {8}], 8: [{9}],
+                              9: [{10}], 10: []},
+            "self cycle": {},
+            "simple cycle": {},
+            "starting cycle": {},
+            "ending cycle": {},
+            "crossed cycles": {}
+        }
+
+        result_lines = {}
+        for n, g in self.graphs.items():
+            gl = _GraphLayout(g)
+            gl._init()
+            for i, _ in enumerate(gl.seq):
+                gl._set_column(i)
+            for i, _ in enumerate(gl.seq):
+                gl._set_lines(i)
+            result_lines[n] = dict(gl._end)
+
+        self.assertResultsEqual(result_lines, graph_lines)
+
+    def test_graph_draw(self):
+        graph_layouts = {
+            "empty": [],
+            "single": [(0, 0, set())],
+            "simple": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(0, 0)}),
+                (3, 0, {(0, 0)}),
+                (4, 0, set()),
+            ],
+            "two paths": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(0, 0)}),
+                (3, 0, set()),
+                (10, 0, {(0, 0)}),
+                (11, 0, {(0, 0)}),
+                (12, 0, set()),
+            ],
+            "merged paths": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(0, 0)}),
+                (3, 1, {(0, 0), (1, 0)}),
+                (4, 0, {(0, 0)}),
+                (5, 0, {(0, 0)}),
+                (6, 0, {(0, 0), (0, 1)}),
+                (7, 1, {(0, 0)}),
+                (8, 0, {(0, 0)}),
+                (9, 0, set()),
+            ],
+            "path with loop": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(0, 0), (0, 1)}),
+                (3, 1, {(0, 0), (1, 1)}),
+                (4, 1, {(0, 0), (1, 0)}),
+                (5, 0, {(0, 0)}),
+                (6, 0, {(0, 0)}),
+                (7, 0, set()),
+            ],
+            "crossed paths": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0), (0, 1)}),
+                (2, 1, {(0, 0), (1, 1)}),
+                (3, 1, {(0, 0), (0, 1), (1, 0), (1, 1)}),
+                (5, 1, {(0, 0), (1, 1)}),
+                (4, 0, {(0, 0), (1, 0)}),
+                (6, 0, {(0, 0)}),
+                (7, 0, set()),
+            ],
+            "complex graph": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0), (0, 1)}),
+                (2, 1, {(0, 0), (1, 1)}),
+                (3, 1, {(0, 0), (1, 1), (1, 2)}),
+                (4, 1, {(0, 0), (0, 1), (1, 1), (1, 2), (2, 3)}),
+                (5, 1, {(0, 0), (1, 1), (1, 3), (2, 2), (3, 3)}),
+                (6, 1, {(0, 0), (2, 2), (3, 1)}),
+                (7, 1, {(0, 0), (1, 1), (2, 1)}),
+                (8, 1, {(0, 0), (1, 0)}),
+                (9, 0, {(0, 0)}),
+                (10, 0, set()),
+            ],
+            "self cycle": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(-1, 0), (0, -1), (0, 0)}),
+                (3, 0, set()),
+            ],
+            "simple cycle": [
+                (0, 0, {(-1, -1), (-1, 0), (0, 0)}),
+                (1, 0, {(-1, -1), (0, 0)}),
+                (2, 0, {(-1, -1), (0, 0)}),
+                (3, 0, {(0, -1)}),
+            ],
+            "starting cycle": [
+                (0, 0, {(-1, -1), (-1, 0), (0, 0)}),
+                (1, 0, {(-1, -1), (0, 0)}),
+                (2, 0, {(-1, -1), (0, 0)}),
+                (3, 0, {(0, -1), (0, 0)}),
+                (4, 0, {(0, 0)}),
+                (5, 0, set()),
+            ],
+            "ending cycle": [
+                (0, 0, {(0, 0)}),
+                (1, 0, {(0, 0)}),
+                (2, 0, {(-1, -1), (-1, 0), (0, 0)}),
+                (3, 0, {(-1, -1), (0, 0)}),
+                (4, 0, {(-1, -1), (0, 0)}),
+                (5, 0, {(0, -1)}),
+            ],
+            "crossed cycles": [
+                (3, 0, {(-1, -1), (-1, 0), (0, 0)}),
+                (4, 0, {(-1, -1), (0, 0)}),
+                (5, 0, {(-1, -1), (0, 0)}),
+                (1, 0, {(-1, -1), (0, 0)}),
+                (2, 0, {(-1, -1), (0, 0)}),
+                (0, 0, {(-2, -1), (-2, 0), (0, -1), (0, 0)}),
+                (13, 0, {(-1, -1), (0, 0)}),
+                (14, 0, {(-1, -1), (0, 0)}),
+                (15, 0, {(-1, -1), (0, 0)}),
+                (11, 0, {(-1, -1), (0, 0)}),
+                (12, 0, {(0, -1), (0, 0)}),
+            ]
+        }
+        self.assertResultsEqual(
+            {n: g.draw() for n, g in self.graphs.items()},
+            graph_layouts
         )

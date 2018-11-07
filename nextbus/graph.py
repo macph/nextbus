@@ -3,13 +3,9 @@ Draws a route graph for a service.
 """
 import collections
 import collections.abc as abc
-import enum
+import itertools
 
 from nextbus import db, models
-
-
-class Line(enum.Enum):
-    THROUGH, TERMINATE, CONTINUE = range(3)
 
 
 class Path(abc.MutableSequence):
@@ -180,6 +176,304 @@ def _analyse_graph(graph):
         stack.append((edge, forward))
 
     return paths, sequence
+
+
+def _draw_paths_row(start, end):
+    paths = set()
+    for x0, v0 in enumerate(start):
+        if v0 in end:
+            paths.add((x0, end.index(v0)))
+            continue
+        for x1, v1 in enumerate(end):
+            if v0 & v1:
+                paths.add((x0, x1))
+
+    return paths
+
+
+def _count_crossovers(start, end):
+    crossovers = 0
+    if not end:
+        return crossovers
+
+    paths = _draw_paths_row(start, end)
+    for (x0, x1), (x2, x3) in itertools.combinations(paths, 2):
+        try:
+            # Intersection of two lines - we assume both start at y = 0 and
+            # end at y = 1
+            intersection = (x2 - x0) / (x2 - x3 - x0 + x1)
+        except ZeroDivisionError:
+            continue
+        # Need to have intersection between y = 0 and y = 1
+        if 0 < intersection < 1:
+            crossovers += 1
+
+    return crossovers
+
+
+def _find_least_crossovers(s0, e0, s1, e1):
+    if e0 is None:
+        len_ = len(s1)
+    elif s1 is None:
+        len_ = len(e0)
+    else:
+        len_ = min(len(e0), len(s1))
+
+    if len_ < 2:
+        return
+
+    original = tuple(range(len_))
+    crossovers = {}
+    for p in itertools.permutations(original):
+        count = 0
+        if e0 is not None:
+            ei = [e0[i] for i in p]
+            count += _count_crossovers(s0, ei)
+        if s1 is not None:
+            si = [s1[i] for i in p]
+            count += _count_crossovers(si, e1)
+
+        crossovers[p] = count
+
+    min_co = min(crossovers.values())
+    least_co = {c for c, i in crossovers.items() if i == min_co}
+
+    if original in least_co:
+        # Original arrangement already has the least number of crossovers
+        return
+
+    def diff(t):
+        return sum(abs(i - j) for i, j in zip(original, t))
+
+    return min(least_co, key=diff)
+
+
+class _GraphLayout:
+    """ Helper class for drawing a graph. """
+
+    def __init__(self, graph, sequence=None):
+        self.g = graph
+        self.seq = sequence if sequence else self.g.sequence()
+
+        if len(self.seq) > len(set(self.seq)):
+            raise ValueError("Sequence %r has non-unique vertices" % self.seq)
+
+        self._width = None
+        self._col = None
+        self._next = None
+        self._start = None
+        self._end = None
+        self._paths = None
+
+    def _init(self):
+        self._width = 0
+        self._col = {}
+        self._next = {}
+        self._start = {}
+        self._end = {}
+        self._paths = {}
+
+    def _incoming(self, vertex):
+        index = self.seq.index(vertex)
+        return self.g.preceding(vertex) & set(self.seq[:index])
+
+    def _outgoing(self, vertex):
+        index = self.seq.index(vertex)
+        return self.g.following(vertex) & set(self.seq[index+1:])
+
+    def _set_next_columns(self, vertex, column):
+        columns = {}
+
+        diverges = [v for v in self.seq if v in self._outgoing(vertex)]
+        add_col = False
+        col_added = False
+        for u in diverges[::-1]:
+            # Add new column for extra vertices
+            if add_col and not col_added:
+                self._width += 1
+                col_added = True
+
+            new_col = column + 1 if add_col else column
+            # Put the vertex in the lower of columns set by earlier vertices
+            if u in self._col:
+                new_col = min(new_col, self._col[u])
+
+            columns[u] = new_col
+            # Create new column if diverging vertex takes up same column
+            if not add_col and new_col == column:
+                add_col = True
+
+        return columns
+
+    def _set_column(self, index):
+        vertex = self.seq[index]
+        if vertex in self._next:
+            del self._next[vertex]
+
+        column = self._col.get(vertex, self._width)
+        # Search for diverging vertices and set their columns
+        new_columns = self._set_next_columns(vertex, column)
+        self._col.update(new_columns)
+        self._next.update(new_columns)
+
+        # If this vertex terminates move vertices in higher columns
+        if not self._outgoing(vertex):
+            for v, c in self._next.items():
+                if c > column:
+                    self._col[v] = self._next[v] = c - 1
+
+        if not self._incoming(vertex):
+            self._width += 1
+        # If no other following vertices or all in lower columns reduce width
+        if not self._next or max(self._next.values()) < self._width - 1:
+            self._width -= 1
+
+        self._col[vertex] = column
+
+    def _first_in_column(self, column, start=0):
+        for v in self.seq[start:]:
+            if self._col[v] == column:
+                return v
+
+    def _rearrange_lines(self, lines, index):
+        if index >= len(self.seq) - 1:
+            return
+
+        next_v = self.seq[index + 1]
+        next_c = self._col[next_v]
+        # Move all references for next vertex to this column
+        if any(next_v in c for c in lines):
+            for vertices in lines:
+                vertices.discard(next_v)
+            # Add new column for lines if necessary
+            if next_c >= len(lines):
+                lines.append({next_v})
+            else:
+                lines[next_c].add(next_v)
+
+        if next_c < len(lines):
+            temp = set()
+            # Move all other references from this column
+            for v in lines[next_c] - {next_v}:
+                other_col = self._col[v]
+                if v != self._first_in_column(other_col, index):
+                    temp.add(v)
+                lines[next_c].remove(v)
+            if temp:
+                # Add new line to avoid the next vertex
+                lines.insert(next_c + 1, temp)
+
+    @staticmethod
+    def _remove_lines(lines):
+        single_lines = set()
+        seen = []
+        to_remove = []
+        # Find lines with only one vertex and mark duplicates for removal
+        for i, c in enumerate(lines):
+            if len(c) == 1:
+                single_lines |= c
+            if c not in seen:
+                seen.append(c)
+            else:
+                to_remove.append(i)
+
+        # Remove all duplicate lines that lead to a single vertex
+        for i in reversed(to_remove):
+            del lines[i]
+
+        # Remove vertices from lines that already exist in other lines
+        for c in lines:
+            if len(c) > 1:
+                c -= single_lines
+
+        # Clean up any empty columns
+        for i in reversed(range(len(lines))):
+            if not lines[i]:
+                del lines[i]
+
+    def _set_lines(self, index):
+        vertex = self.seq[index]
+        col = self._col[vertex]
+
+        # Set starting lines to lines at end of previous row
+        if index > 0:
+            previous_v = self.seq[index - 1]
+            lines_start = [set(c) for c in self._end[previous_v]]
+        else:
+            lines_start = []
+
+        # Remove current vertex
+        for c in lines_start:
+            c.discard(vertex)
+
+        # Add new columns if necessary
+        while col >= len(lines_start):
+            lines_start.append(set())
+
+        diverges = [v for v in self.seq if v in self._outgoing(vertex)]
+        for v in diverges:
+            lines_start[col].add(v)
+
+        # Clean up empty columns except for current vertex
+        lines_start = [c for i, c in enumerate(lines_start) if c or i == col]
+        lines_end = [set(c) for c in lines_start]
+
+        self._rearrange_lines(lines_end, index)
+        self._remove_lines(lines_end)
+
+        self._start[vertex] = lines_start
+        self._end[vertex] = lines_end
+
+    def _swap_lines_row(self, index):
+        len_seq = len(self.seq)
+        if len_seq == 1:
+            return
+
+        cur_v = self.seq[index]
+        prev_v = self.seq[index - 1]
+
+        start0 = self._start[prev_v] if index != 0 else None
+        end0 = self._end[prev_v] if index != 0 else None
+        start1 = self._start[cur_v] if index != len_seq - 1 else None
+        end1 = self._start[cur_v] if index != len_seq - 1 else None
+
+        best_match = _find_least_crossovers(start0, end0, start1, end1)
+        if best_match is None:
+            return
+
+        len_ = len(best_match)
+        self._end[prev_v] = [end0[i] for i in best_match] + end0[len_:]
+        self._start[cur_v] = [start1[i] for i in best_match] + start1[len_:]
+        if self._col[cur_v] < len_:
+            self._col[cur_v] = best_match[self._col[cur_v]]
+
+    def _draw_paths(self, index):
+        vertex = self.seq[index]
+        paths = _draw_paths_row(self._start[vertex], self._end[vertex])
+
+        self._paths[vertex] = paths
+
+    def draw(self):
+        self._init()
+        len_seq = len(self.seq)
+
+        for i in range(len_seq):
+            self._set_column(i)
+
+        for i in range(len_seq):
+            self._set_lines(i)
+
+        for i in range(len_seq):
+            self._swap_lines_row(i)
+
+        for i in range(len_seq):
+            self._draw_paths(i)
+
+        for v in self.seq:
+            print(v, self._col[v], self._start[v], self._end[v])
+        print()
+
+        return [(v, self._col[v], self._paths[v]) for v in self.seq]
 
 
 class Graph:
@@ -541,6 +835,16 @@ class Graph:
             diameter.
         """
         return self.analyse()[1]
+
+    def draw(self, sequence=None):
+        """ Lays out graph using sequence.
+
+            :param sequence: Use sequence to draw graph, If it is None the
+            sequence is generated instead..
+            :returns: List of dictionaries, ordered using sequence, with
+            vertex name, column and lines before/after.
+        """
+        return _GraphLayout(self, sequence).draw()
 
 
 def _service_stops(code, direction=None):

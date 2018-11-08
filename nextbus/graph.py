@@ -92,47 +92,37 @@ class Path(abc.MutableSequence):
             return [Path(self[:index+1]), Path(self[index+1:])]
 
 
-def _merge_path(graph, sequence, path, index):
+def _merge_forward(graph, sequence, path, index):
     """ Merges path into sequence, ensuring all new vertices follows the
         existing ones in the adjacency list.
     """
+    i = index
     for v in path:
         if v in sequence:
             continue
         # Check if any later vertices have this path and move index
-        after = [i for i, w in enumerate(sequence[index:], index)
+        after = [j for j, w in enumerate(sequence[i:], i)
                  if v in graph.following(w)]
         if after:
-            index = after[-1] + 1
-        sequence.insert(index, v)
-        index += 1
+            i = after[-1] + 1
+        sequence.insert(i, v)
+        i += 1
 
 
-def _extract_path(graph, g, u, queue, paths, sequence, forward=True):
-    """ Finds longest possible path starting or ending at specified vertex,
-        adding it to the list of paths and the sequence. The path is removed
-        from the graph afterwards.
+def _merge_backward(graph, sequence, path, index):
+    """ Merges path into sequence, ensuring all new vertices precedes the
+        existing ones in the adjacency list.
     """
-    try:
-        new_paths = g.search_paths(u, forward).values()
-    except KeyError:
-        return False
-
-    if not any(new_paths):
-        return False
-
-    longest = max(sorted(new_paths, key=tuple), key=len)
-
-    g.remove_path(longest)
-    paths.append(longest)
-
-    longest_ac = longest.make_acyclic()
-    index = sequence.index(u)
-    _merge_path(graph, sequence, longest_ac, index + 1 if forward else index)
-
-    queue.extendleft(longest_ac.edges)
-
-    return True
+    i = index
+    for v in path[::-1]:
+        if v in sequence:
+            continue
+        # Check if any previous vertices have this path and move index
+        after = [i - j for j, w in enumerate(sequence[i::-1])
+                 if v in graph.preceding(w)]
+        if after:
+            i = after[-1]
+        sequence.insert(i, v)
 
 
 def _analyse_graph(graph):
@@ -152,16 +142,42 @@ def _analyse_graph(graph):
     # Remove diameter from graph and search the rest
     g.remove_path(diameter)
     paths, sequence = [diameter], list(diameter_ac)
-    queue = collections.deque(reversed(diameter.edges))
 
-    while queue:
-        u, v = edge = queue.pop()
-        # Search paths both forwards and backwards
-        forward = _extract_path(g0, g, u, queue, paths, sequence, True)
-        backward = _extract_path(g0, g, v, queue, paths, sequence, False)
-        if forward or backward:
-            # Maybe another distinct path here - return vertex to queue
-            queue.append(edge)
+    stack = collections.deque()
+    # Search paths both forwards and backwards
+    # All diverging branches are searched backwards and vice versa
+    stack.extend((e, False) for e in reversed(diameter.edges))
+    stack.extend((e, True) for e in diameter.edges)
+
+    while stack:
+        edge, forward = stack.pop()
+        vertex = edge[0] if forward else edge[1]
+
+        try:
+            new_paths = g.search_paths(vertex, forward).values()
+        except KeyError:
+            continue
+        if not any(new_paths):
+            continue
+
+        # Add paths to list
+        longest = max(sorted(new_paths, key=tuple), key=len)
+        g.remove_path(longest)
+        paths.append(longest)
+
+        # Merge paths into sequence
+        longest_ac = longest.make_acyclic()
+        index = sequence.index(vertex)
+        if forward:
+            _merge_forward(g0, sequence, longest_ac, index)
+        else:
+            _merge_backward(g0, sequence, longest_ac, index)
+
+        # Add new paths to stack for searching
+        stack.extendleft((e, False) for e in reversed(longest_ac.edges))
+        stack.extendleft((e, True) for e in longest_ac.edges)
+        # Maybe another distinct path here - return vertex to queue
+        stack.append((edge, forward))
 
     return paths, sequence
 

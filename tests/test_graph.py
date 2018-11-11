@@ -3,7 +3,7 @@ Testing the graph module for service diagrams.
 """
 import unittest
 
-from nextbus.graph import Path, Graph, _Layout, _set_column, _set_lines
+from nextbus.graph import Path, Graph, _Layout, _set_lines, draw_graph
 
 
 class PathTests(unittest.TestCase):
@@ -705,35 +705,6 @@ class GraphTests(BaseGraphTests):
 
 class DrawGraphTests(BaseGraphTests):
     """ Test the _GraphLayout class. """
-    def test_assign_columns(self):
-        graph_columns = {
-            "empty": {},
-            "single": {0: 0},
-            "simple": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0},
-            "two paths": {0: 0, 1: 0, 2: 0, 3: 0, 10: 0, 11: 0, 12: 0},
-            "merged paths": {0: 0, 1: 0, 2: 0, 3: 1, 4: 0, 5: 0, 6: 0, 7: 1,
-                             8: 0, 9: 0},
-            "path with loop": {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 0, 6: 0, 7: 0},
-            "crossed paths": {0: 0, 1: 0, 2: 1, 3: 1, 4: 0, 5: 1, 6: 0, 7: 0},
-            "complex graph": {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 1, 6: 2, 7: 1,
-                              8: 1, 9: 0, 10: 0},
-            "self cycle": {0: 0, 1: 0, 2: 0, 3: 0},
-            "simple cycle": {0: 0, 1: 0, 2: 0, 3: 0},
-            "starting cycle": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
-            "ending cycle": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
-            "crossed cycles": {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 11: 0, 12: 0,
-                               13: 0, 14: 0, 15: 0}
-        }
-
-        result_columns = {}
-        for n, g in self.graphs.items():
-            gl = _Layout(g)
-            for i, _ in enumerate(gl.seq):
-                _set_column(gl, i)
-            result_columns[n] = dict(gl.col)
-
-        self.assertResultsEqual(result_columns, graph_columns)
-
     def test_set_lines_start(self):
         graph_lines = {
             "empty": {},
@@ -750,9 +721,9 @@ class DrawGraphTests(BaseGraphTests):
                               3: [{4, 5}, {4, 5}], 4: [{6}, {6}], 5: [{4}, {6}],
                               6: [{7}], 7: [set()]},
             "complex graph": {0: [{1}], 1: [{2, 5, 9}], 2: [{5, 9}, {3}],
-                              3: [{5, 9}, {4, 7}], 4: [{5, 9}, {5, 8}, {7}],
-                              5: [{9}, {6, 7}, {8}, {7}],
-                              6: [{9}, set(), {8}, {7}], 7: [{9}, {8}, {8}],
+                              3: [{5, 9}, {4, 7}], 4: [{5, 9}, {7}, {5, 8}],
+                              5: [{9}, {7}, {8}, {6, 7}],
+                              6: [{9}, {7}, {8}, set()], 7: [{9}, {8}, {8}],
                               8: [{9}, {9}], 9: [{10}], 10: [set()]},
             "self cycle": {},
             "simple cycle": {},
@@ -764,10 +735,7 @@ class DrawGraphTests(BaseGraphTests):
         result_lines = {}
         for n, g in self.graphs.items():
             gl = _Layout(g)
-            for i, _ in enumerate(gl.seq):
-                _set_column(gl, i)
-            for i, _ in enumerate(gl.seq):
-                _set_lines(gl, i)
+            _set_lines(gl)
             result_lines[n] = dict(gl.start)
 
         self.assertResultsEqual(result_lines, graph_lines)
@@ -777,20 +745,20 @@ class DrawGraphTests(BaseGraphTests):
             "empty": {},
             "single": {0: []},
             "simple": {0: [{1}], 1: [{2}], 2: [{3}], 3: [{4}], 4: []},
-            "two paths": {0: [{1}], 1: [{2}], 2: [{3}], 3: [], 10: [{11}],
+            "two paths": {0: [{1}], 1: [{2}], 2: [{3}], 3: [{10}], 10: [{11}],
                           11: [{12}], 12: []},
-            "merged paths": {0: [{1}], 1: [{2}], 2: [{4}], 3: [{4}],
+            "merged paths": {0: [{1}], 1: [{2}], 2: [{4}, {3}], 3: [{4}],
                              4: [{5}], 5: [{6}], 6: [{8}, {7}], 7: [{8}],
                              8: [{9}], 9: []},
             "path with loop": {0: [{1}], 1: [{2}], 2: [{5}, {3}], 3: [{5}, {4}],
                                4: [{5}], 5: [{6}], 6: [{7}], 7: []},
             "crossed paths": {0: [{1}], 1: [{4, 5}, {2}], 2: [{4, 5}, {3}],
-                              3: [{4}, {5}], 4: [{6}], 5: [{4}, {6}],
+                              3: [{4}, {5}], 4: [{6}], 5: [{6}, {4}],
                               6: [{7}], 7: []},
             "complex graph": {0: [{1}], 1: [{5, 9}, {2}], 2: [{5, 9}, {3}],
-                              3: [{5, 9}, {4}, {7}], 4: [{9}, {5}, {8}, {7}],
-                              5: [{9}, {6}, {8}, {7}],
-                              6: [{9}, {7}, {8}], 7: [{9}, {8}], 8: [{9}],
+                              3: [{5, 9}, {7}, {4}], 4: [{9}, {7}, {8}, {5}],
+                              5: [{9}, {7}, {8}, {6}],
+                              6: [{9}, {8}, {7}], 7: [{9}, {8}], 8: [{9}],
                               9: [{10}], 10: []},
             "self cycle": {},
             "simple cycle": {},
@@ -802,10 +770,7 @@ class DrawGraphTests(BaseGraphTests):
         result_lines = {}
         for n, g in self.graphs.items():
             gl = _Layout(g)
-            for i, _ in enumerate(gl.seq):
-                _set_column(gl, i)
-            for i, _ in enumerate(gl.seq):
-                _set_lines(gl, i)
+            _set_lines(gl)
             result_lines[n] = dict(gl.end)
 
         self.assertResultsEqual(result_lines, graph_lines)
@@ -867,9 +832,9 @@ class DrawGraphTests(BaseGraphTests):
                 (1, 0, {(0, 0), (0, 1)}),
                 (2, 1, {(0, 0), (1, 1)}),
                 (3, 1, {(0, 0), (1, 1), (1, 2)}),
-                (4, 2, {(0, 0), (0, 1), (1, 2), (2, 1), (2, 3)}),
-                (5, 1, {(0, 0), (1, 1), (1, 2), (2, 2), (3, 3)}),
-                (6, 1, {(0, 0), (2, 1), (3, 2)}),
+                (4, 2, {(0, 0), (0, 2), (1, 1), (2, 2), (2, 3)}),
+                (5, 2, {(0, 0), (1, 1), (2, 1), (2, 2), (3, 3)}),
+                (6, 2, {(0, 0), (1, 1), (3, 2)}),
                 (7, 1, {(0, 0), (1, 1), (2, 1)}),
                 (8, 1, {(0, 0), (1, 0)}),
                 (9, 0, {(0, 0)}),
@@ -918,6 +883,6 @@ class DrawGraphTests(BaseGraphTests):
             ]
         }
         self.assertResultsEqual(
-            {n: g.draw() for n, g in self.graphs.items()},
+            {n: draw_graph(g) for n, g in self.graphs.items()},
             graph_layouts
         )

@@ -3,7 +3,7 @@ Testing the graph module for service diagrams.
 """
 import unittest
 
-from nextbus.graph import Path, Graph, _GraphLayout
+from nextbus.graph import Path, Graph, _Layout, _set_column, _set_lines
 
 
 class PathTests(unittest.TestCase):
@@ -715,7 +715,7 @@ class DrawGraphTests(BaseGraphTests):
                              8: 0, 9: 0},
             "path with loop": {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 0, 6: 0, 7: 0},
             "crossed paths": {0: 0, 1: 0, 2: 1, 3: 1, 4: 0, 5: 1, 6: 0, 7: 0},
-            "complex graph": {0: 0, 1: 0, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1,
+            "complex graph": {0: 0, 1: 0, 2: 1, 3: 1, 4: 2, 5: 1, 6: 2, 7: 1,
                               8: 1, 9: 0, 10: 0},
             "self cycle": {0: 0, 1: 0, 2: 0, 3: 0},
             "simple cycle": {0: 0, 1: 0, 2: 0, 3: 0},
@@ -727,11 +727,10 @@ class DrawGraphTests(BaseGraphTests):
 
         result_columns = {}
         for n, g in self.graphs.items():
-            gl = _GraphLayout(g)
-            gl._init()
+            gl = _Layout(g)
             for i, _ in enumerate(gl.seq):
-                gl._set_column(i)
-            result_columns[n] = dict(gl._col)
+                _set_column(gl, i)
+            result_columns[n] = dict(gl.col)
 
         self.assertResultsEqual(result_columns, graph_columns)
 
@@ -764,13 +763,12 @@ class DrawGraphTests(BaseGraphTests):
 
         result_lines = {}
         for n, g in self.graphs.items():
-            gl = _GraphLayout(g)
-            gl._init()
+            gl = _Layout(g)
             for i, _ in enumerate(gl.seq):
-                gl._set_column(i)
+                _set_column(gl, i)
             for i, _ in enumerate(gl.seq):
-                gl._set_lines(i)
-            result_lines[n] = dict(gl._start)
+                _set_lines(gl, i)
+            result_lines[n] = dict(gl.start)
 
         self.assertResultsEqual(result_lines, graph_lines)
 
@@ -803,13 +801,12 @@ class DrawGraphTests(BaseGraphTests):
 
         result_lines = {}
         for n, g in self.graphs.items():
-            gl = _GraphLayout(g)
-            gl._init()
+            gl = _Layout(g)
             for i, _ in enumerate(gl.seq):
-                gl._set_column(i)
+                _set_column(gl, i)
             for i, _ in enumerate(gl.seq):
-                gl._set_lines(i)
-            result_lines[n] = dict(gl._end)
+                _set_lines(gl, i)
+            result_lines[n] = dict(gl.end)
 
         self.assertResultsEqual(result_lines, graph_lines)
 
@@ -870,9 +867,9 @@ class DrawGraphTests(BaseGraphTests):
                 (1, 0, {(0, 0), (0, 1)}),
                 (2, 1, {(0, 0), (1, 1)}),
                 (3, 1, {(0, 0), (1, 1), (1, 2)}),
-                (4, 1, {(0, 0), (0, 1), (1, 1), (1, 2), (2, 3)}),
-                (5, 1, {(0, 0), (1, 1), (1, 3), (2, 2), (3, 3)}),
-                (6, 1, {(0, 0), (2, 2), (3, 1)}),
+                (4, 2, {(0, 0), (0, 1), (1, 2), (2, 1), (2, 3)}),
+                (5, 1, {(0, 0), (1, 1), (1, 2), (2, 2), (3, 3)}),
+                (6, 1, {(0, 0), (2, 1), (3, 2)}),
                 (7, 1, {(0, 0), (1, 1), (2, 1)}),
                 (8, 1, {(0, 0), (1, 0)}),
                 (9, 0, {(0, 0)}),

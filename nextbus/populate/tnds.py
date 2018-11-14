@@ -165,7 +165,8 @@ def format_description(_, text):
     if text is not None and text.isupper():
         text = utils.capitalize(None, text)
 
-    places = text.split(" - ")
+    places = " ".join(text.split())
+    places = places.split(" - ")
     new_places = []
 
     sep = re.compile(r"(.+\S),(\S.+)")
@@ -200,18 +201,18 @@ def days_week(_, nodes=None):
         nodes is None Monday-Friday is returned as the default.
     """
     days = {
-        "Monday": 2,
-        "Tuesday": 4,
-        "Wednesday": 8,
-        "Thursday": 16,
-        "Friday": 32,
-        "Saturday": 64,
-        "Sunday": 128,
-        "Weekend": 192,
-        "MondayToFriday": 62,
-        "MondayToSaturday": 126,
-        "NotSaturday": 190,
-        "MondayToSunday": 254
+        "Monday":           0b00000010,
+        "Tuesday":          0b00000100,
+        "Wednesday":        0b00001000,
+        "Thursday":         0b00010000,
+        "Friday":           0b00100000,
+        "Saturday":         0b01000000,
+        "Sunday":           0b10000000,
+        "Weekend":          0b11000000,
+        "MondayToFriday":   0b00111110,
+        "MondayToSaturday": 0b01111110,
+        "NotSaturday":      0b10111110,
+        "MondayToSunday":   0b11111110
     }
 
     try:
@@ -242,11 +243,11 @@ def weeks_month(_, nodes):
         0-4. If no weeks are found, None is returned.
     """
     weeks = {
-        "first": 0,
-        "second": 1,
-        "third": 2,
-        "fourth": 3,
-        "fifth": 4,
+        "first":  0b00001,
+        "second": 0b00010,
+        "third":  0b00100,
+        "fourth": 0b01000,
+        "fifth":  0b10000,
     }
 
     try:
@@ -261,12 +262,58 @@ def weeks_month(_, nodes):
     month = 0
     for w in element.xpath("//txc:WeekNumber", namespaces=ns):
         try:
-            number = int(w.text) - 1
+            num = 1 << (int(w.text) - 1)
         except (TypeError, ValueError):
-            number = weeks[w.text.lower()]
-        month |= 1 << number
+            num = weeks[w.text.lower()]
+        month |= num
 
     return month if month > 0 else None
+
+
+@utils.xslt_func
+def bank_holidays(_, nodes):
+    """ Gets bank holidays from a DaysOfOperation or DaysOfNonOperation
+        element within a BankHolidayOperation element for a Journey.
+    """
+    holidays = {
+        "AllBankHolidays":                  0b1111111111111110,
+        "AllHolidaysExceptChristmas":       0b0000000111111110,
+        "NewYearsDay":                      0b0000000000000010,
+        "Jan2ndScotland":                   0b0000000000000100,
+        "GoodFriday":                       0b0000000000001000,
+        "HolidayMondays":                   0b0000000111110000,
+        "EasterMonday":                     0b0000000000010000,
+        "MayDay":                           0b0000000000100000,
+        "SpringBank":                       0b0000000001000000,
+        "LateSummerBankHolidayNotScotland": 0b0000000010000000,
+        "AugustBankHolidayScotland":        0b0000000100000000,
+        "Christmas":                        0b0000011000000000,
+        "ChristmasDay":                     0b0000001000000000,
+        "BoxingDay":                        0b0000010000000000,
+        "DisplacementHolidays":             0b0011100000000000,
+        "ChristmasDayHoliday":              0b0000100000000000,
+        "BoxingDayHoliday":                 0b0001000000000000,
+        "NewYearsDayHoliday":               0b0010000000000000,
+        "EarlyRunOffDays":                  0b1100000000000000,
+        "ChristmasEve":                     0b0100000000000000,
+        "NewYearsEve":                      0b1000000000000000
+    }
+
+    try:
+        element = nodes[0]
+    except IndexError:
+        element = None  # No element returned
+    except TypeError:
+        element = nodes  # Single element instead of a list
+
+    hols = 0
+    if element is not None:
+        ns = {"txc": element.xpath("namespace-uri(.)")}
+        for d in element.xpath("./*", namespaces=ns):
+            tag = et.QName(d).localname
+            hols |= holidays.get(tag, 0)
+
+    return hols
 
 
 def setup_tnds_functions():
@@ -312,7 +359,7 @@ def _delete_empty_services():
     empty_patterns = (
         db.session.query(models.JourneyLink.pattern_ref)
         .group_by(models.JourneyLink.pattern_ref)
-        .having(db.func.bool_and(models.JourneyLink.stop_point_ref.is_(None)))
+        .having(models.JourneyLink.stop_point_ref.is_(None))
         .subquery()
     )
     empty_services = ~(
@@ -431,12 +478,13 @@ def _commit_each_tnds(transform, archive, region):
     tnds.commit(delete=False)
 
 
-def commit_tnds_data(archive=None, region=None):
+def commit_tnds_data(archive=None, region=None, delete=True):
     """ Commits TNDS data to database.
 
         :param archive: Path to a zipped archive with TNDS XML documents. If
         None, they will be downloaded.
         :param region: Region code for archive file.
+        :param delete: Truncate all data from TNDS tables before populating.
     """
     if archive is None:
         # Download required files and get region code from each filename
@@ -448,8 +496,21 @@ def commit_tnds_data(archive=None, region=None):
         # Use archive and associated region code
         regions = {region: archive}
 
+    if delete:
+        # Remove data from associated tables beforehand
+        with utils.database_connection() as cursor:
+            utils.truncate_tables(cursor, [
+                models.Operator, models.LocalOperator, models.Service,
+                models.JourneyPattern, models.JourneyLink, models.Journey,
+                models.JourneySpecificLink, models.Organisation,
+                models.OperatingDate, models.OperatingPeriod,
+                models.Organisations, models.SpecialPeriod, models.BankHolidays
+            ])
+
     transform = _get_tnds_transform()
     setup_tnds_functions()
     RowIds()
     for region, archive in regions.items():
         _commit_each_tnds(transform, archive, region)
+
+    _delete_empty_services()

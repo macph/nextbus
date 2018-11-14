@@ -541,9 +541,6 @@ class Service(utils.BaseModel):
     patterns = db.relationship("JourneyPattern", backref="service")
 
 
-# Add JourneyPatternInterchange?
-
-
 class JourneyPattern(utils.BaseModel):
     """ Sequences of timing links. """
     __tablename__ = "journey_pattern"
@@ -635,11 +632,6 @@ class Journey(utils.BaseModel):
     __tablename__ = "journey"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    service_ref = db.Column(
-        db.Text,
-        db.ForeignKey("service.code", ondelete="CASCADE"),
-        nullable=False, index=True
-    )
     pattern_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey_pattern.id", ondelete="CASCADE"),
@@ -662,13 +654,20 @@ class Journey(utils.BaseModel):
                      nullable=False)
     weeks = db.Column(db.SmallInteger, db.CheckConstraint("weeks < 32"))
 
-    holidays = db.relationship("BankHoliday", secondary="bank_holidays")
+    holidays = db.relationship(
+        "BankHoliday", secondary="bank_holidays",
+        secondaryjoin="BankHolidays.holidays"
+                      ".op('&')(literal(1).op('<<')(BankHoliday.id)) > 0",
+        viewonly=True
+    )
     holiday_dates = db.relationship(
         "BankHolidayDate",
         secondary="join(BankHolidays, BankHoliday, "
-                  "BankHolidays.holiday_ref == BankHoliday.id)",
+                  "BankHolidays.holidays"
+                  ".op('&')(literal(1).op('<<')(BankHoliday.id)) > 0)",
         primaryjoin="Journey.id == BankHolidays.journey_ref",
-        secondaryjoin="BankHoliday.id == BankHolidayDate.holiday_ref"
+        secondaryjoin="BankHoliday.id == BankHolidayDate.holiday_ref",
+        viewonly=True
     )
     special_days = db.relationship("SpecialPeriod", backref="journey")
 
@@ -773,11 +772,8 @@ class BankHolidays(utils.BaseModel):
     """ Bank holidays associated with journeys """
     __tablename__ = "bank_holidays"
 
-    holiday_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("bank_holiday.id"),
-        primary_key=True, index=True
-    )
+    holidays = db.Column(db.Integer, index=True, primary_key=True,
+                         autoincrement=False)
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),

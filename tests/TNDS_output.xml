@@ -684,7 +684,6 @@
   </JourneyLink>
   <Journey>
     <id>1</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>1</pattern_ref>
     <start_run/>
     <end_run/>
@@ -694,7 +693,6 @@
   </Journey>
   <Journey>
     <id>2</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>1</pattern_ref>
     <start_run/>
     <end_run/>
@@ -704,7 +702,6 @@
   </Journey>
   <Journey>
     <id>3</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>1</pattern_ref>
     <start_run/>
     <end_run/>
@@ -714,7 +711,6 @@
   </Journey>
   <Journey>
     <id>4</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>1</pattern_ref>
     <start_run/>
     <end_run/>
@@ -724,7 +720,6 @@
   </Journey>
   <Journey>
     <id>5</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>1</pattern_ref>
     <start_run/>
     <end_run/>
@@ -734,7 +729,6 @@
   </Journey>
   <Journey>
     <id>6</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>2</pattern_ref>
     <start_run/>
     <end_run/>
@@ -744,7 +738,6 @@
   </Journey>
   <Journey>
     <id>7</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>2</pattern_ref>
     <start_run/>
     <end_run/>
@@ -754,7 +747,6 @@
   </Journey>
   <Journey>
     <id>8</id>
-    <service_ref>YSCO120</service_ref>
     <pattern_ref>2</pattern_ref>
     <start_run/>
     <end_run/>
@@ -967,192 +959,22 @@
     <operational py_type="bool">1</operational>
   </SpecialPeriod>
   <BankHolidays>
-    <holiday_ref>1</holiday_ref>
+    <holidays>65534</holidays>
     <journey_ref>4</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <holiday_ref>3</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>4</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>5</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>6</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>7</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>9</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>10</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>11</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>12</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>13</holiday_ref>
-    <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>1</holiday_ref>
+    <holidays>65534</holidays>
     <journey_ref>5</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>
   <BankHolidays>
-    <holiday_ref>3</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>4</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>5</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>6</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>7</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>9</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>10</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>11</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>12</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>13</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>14</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>15</holiday_ref>
-    <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>9</holiday_ref>
+    <holidays>1786</holidays>
     <journey_ref>7</journey_ref>
     <operational py_type="bool">0</operational>
   </BankHolidays>
   <BankHolidays>
-    <holiday_ref>10</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>3</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>1</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>7</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>5</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>4</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>6</holiday_ref>
-    <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>4</holiday_ref>
-    <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>5</holiday_ref>
-    <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>6</holiday_ref>
-    <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>7</holiday_ref>
-    <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>9</holiday_ref>
-    <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holiday_ref>10</holiday_ref>
+    <holidays>2032</holidays>
     <journey_ref>8</journey_ref>
     <operational py_type="bool">1</operational>
   </BankHolidays>

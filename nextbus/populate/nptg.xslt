@@ -53,7 +53,7 @@
     <Locality>
       <code><xsl:value-of select="f:upper(n:NptgLocalityCode)"/></code>
       <name><xsl:value-of select="n:Descriptor/n:LocalityName"/></name>
-      <parent_ref><xsl:value-of select="f:upper(n:ParentNptgLocalityRef)"/></parent_ref>
+      <parent_ref><xsl:if test="n:ParentNptgLocalityRef"><xsl:value-of select="f:upper(n:ParentNptgLocalityRef)"/></xsl:if></parent_ref>
       <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <district_ref>
         <xsl:choose>

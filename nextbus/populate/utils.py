@@ -53,6 +53,25 @@ def database_session():
         db.session.remove()
 
 
+@contextlib.contextmanager
+def database_connection():
+    """ Opens a connection to database and commits changes within
+        context, returning a cursor. Changes are rolled back and exceptions
+        raised if any errors are encountered.
+    """
+    connection = db.engine.raw_connection()
+    try:
+        with connection.cursor() as cursor:
+            yield cursor
+        connection.commit()
+    except:
+        connection.rollback()
+        logger.error("An error occurred during the transaction", exc_info=1)
+        raise
+    finally:
+        connection.close()
+
+
 def duration_delta(duration, ignore=False):
     """ Converts a time duration from XML data to a timedelta object.
 
@@ -388,6 +407,22 @@ class PopulateData(object):
         self.cd.copy(self.entries, delete=delete)
 
 
+def truncate_tables(cursor, tables):
+    table_names = []
+    for t in tables:
+        try:
+            table_names.append(t.__tablename__)
+        except AttributeError:
+            table_names.append(t)
+
+    for name in table_names:
+        logger.info("Deleting old %r rows" % name)
+        cursor.execute(
+            sql.SQL("TRUNCATE {} CASCADE;")
+                .format(sql.Identifier(name))
+        )
+
+
 class DataCopy(object):
     """ Sets up an interface for copying data to DB. """
     SEP = "\t"
@@ -495,20 +530,10 @@ class DataCopy(object):
             values. All dicts must have the same keys.
             :param delete: Truncates existing data.
         """
-        connection = self.engine.raw_connection()
-        try:
-            with connection.cursor() as cursor:
-                for model in list(dataset):
-                    table_name = model.__tablename__
-                    if delete:
-                        logger.info("Deleting old %r rows" % table_name)
-                        cursor.execute(sql.SQL("TRUNCATE %s CASCADE;" %
-                                               sql.Identifier(table_name)))
-                    logger.info("Copying data to %r" % table_name)
-                    self._batch_copy(cursor, table_name, dataset.pop(model))
-            connection.commit()
-        except:
-            connection.rollback()
-            raise
-        finally:
-            connection.close()
+        with database_connection() as cursor:
+            for model in list(dataset):
+                table_name = model.__tablename__
+                if delete:
+                    truncate_tables(cursor, [table_name])
+                logger.info("Copying data to %r" % table_name)
+                self._batch_copy(cursor, table_name, dataset.pop(model))

@@ -280,14 +280,6 @@
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <Journey>
       <id><xsl:value-of select="func:add_id('Journey', $file, txc:VehicleJourneyCode)"/></id>
-      <service_ref>
-        <xsl:choose>
-          <xsl:when test="starts-with(key('key_services', txc:ServiceRef)/txc:PrivateCode, $region)"><xsl:value-of select="key('key_services', txc:ServiceRef)/txc:PrivateCode"/></xsl:when>
-          <xsl:when test="key('key_services', txc:ServiceRef)/txc:PrivateCode"><xsl:value-of select="concat($region, '-', key('key_services', txc:ServiceRef)/txc:PrivateCode)"/></xsl:when>
-          <xsl:when test="starts-with(txc:ServiceRef, $region)"><xsl:value-of select="txc:ServiceRef"/></xsl:when>
-          <xsl:otherwise><xsl:value-of select="concat($region, '-', txc:ServiceRef)"/></xsl:otherwise>
-        </xsl:choose>
-      </service_ref>
       <pattern_ref><xsl:value-of select="func:get_id('JourneyPattern', $file, $jp_id)"/></pattern_ref>
       <start_run>
         <xsl:if test="txc:StartDeadRun/txc:ShortWorking">
@@ -549,100 +541,21 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template name="bank_holiday_group">
-    <xsl:param name="id">0</xsl:param>
-    <xsl:variable name="holiday" select="local-name()"/>
-    <xsl:variable name="holidays">
-      <xsl:choose>
-        <xsl:when test="boolean($holiday = 'AllBankHolidays')">
-          <holiday>NewYearsDay</holiday>
-          <xsl:if test="boolean($region = 'S')">
-            <holiday>Jan2ndScotland</holiday>
-          </xsl:if>
-          <holiday>GoodFriday</holiday>
-          <holiday>EasterMonday</holiday>
-          <holiday>MayDay</holiday>
-          <holiday>SpringBank</holiday>
-          <xsl:if test="boolean($region = 'S')">
-            <holiday>AugustBankHolidayScotland</holiday>
-          </xsl:if>
-          <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerBankHolidayNotScotland</holiday>
-          </xsl:if>
-          <holiday>ChristmasDay</holiday>
-          <holiday>BoxingDay</holiday>
-          <holiday>ChristmasDayHoliday</holiday>
-          <holiday>BoxingDayHoliday</holiday>
-          <holiday>NewYearsDayHoliday</holiday>
-        </xsl:when>
-        <xsl:when test="boolean($holiday = 'EarlyRunOff')">
-          <holiday>ChristmasEve</holiday>
-          <holiday>NewYearsEve</holiday>
-        </xsl:when>
-        <xsl:when test="boolean($holiday = 'AllHolidaysExceptChristmas')">
-          <holiday>NewYearsDay</holiday>
-          <xsl:if test="boolean($region = 'S')">
-            <holiday>Jan2ndScotland</holiday>
-          </xsl:if>
-          <holiday>GoodFriday</holiday>
-          <holiday>EasterMonday</holiday>
-          <holiday>MayDay</holiday>
-          <holiday>SpringBank</holiday>
-          <xsl:if test="boolean($region = 'S')">
-            <holiday>AugustBankHolidayScotland</holiday>
-          </xsl:if>
-          <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerBankHolidayNotScotland</holiday>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="boolean($holiday = 'HolidayMondays')">
-          <holiday>EasterMonday</holiday>
-          <holiday>MayDay</holiday>
-          <holiday>SpringBank</holiday>
-          <xsl:if test="boolean($region = 'S')">
-            <holiday>AugustBankHolidayScotland</holiday>
-          </xsl:if>
-          <xsl:if test="boolean($region != 'S')">
-            <holiday>LateSummerBankHolidayNotScotland</holiday>
-          </xsl:if>
-        </xsl:when>
-        <xsl:when test="boolean($holiday = 'Christmas')">
-          <holiday>ChristmasDay</holiday>
-          <holiday>BoxingDay</holiday>
-        </xsl:when>
-        <xsl:when test="boolean($holiday = 'DisplacementHolidays')">
-          <holiday>ChristmasDayHoliday</holiday>
-          <holiday>BoxingDayHoliday</holiday>
-          <holiday>NewYearsDayHoliday</holiday>
-        </xsl:when>
-        <xsl:otherwise>
-          <holiday><xsl:value-of select="$holiday"/></holiday>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:variable name="operational">
-      <xsl:choose>
-        <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
-        <xsl:otherwise>0</xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
-    <xsl:for-each select="exsl:node-set($holidays)/holiday">
-      <xsl:variable name="name" select="text()"/>
-      <BankHolidays>
-        <holiday_ref><xsl:value-of select="exsl:node-set($bank_holiday_ids)/holiday[.=$name]/@id"/></holiday_ref>
-        <journey_ref><xsl:value-of select="$id"/></journey_ref>
-        <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
-      </BankHolidays>
-    </xsl:for-each>
-  </xsl:template>
-
-  <xsl:template name="sequence_bank_holidays">
+  <xsl:template name="bank_holidays">
     <xsl:param name="id"/>
     <xsl:param name="refs"/>
     <xsl:for-each select="$refs">
-      <xsl:call-template name="bank_holiday_group">
-        <xsl:with-param name="id" select="$id"/>
-      </xsl:call-template>
+      <xsl:variable name="operational">
+        <xsl:choose>
+          <xsl:when test="txc:DaysOfOperation">1</xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <BankHolidays>
+        <holidays><xsl:value-of select="func:bank_holidays(./*)"/></holidays>
+        <journey_ref><xsl:value-of select="$id"/></journey_ref>
+        <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
+      </BankHolidays>
     </xsl:for-each>
   </xsl:template>
 
@@ -654,33 +567,33 @@
     <xsl:variable name="s_op" select="key('key_services', txc:ServiceRef)/txc:OperatingProfile"/>
     <xsl:choose>
       <xsl:when test="txc:OperatingProfile">
-        <xsl:call-template name="sequence_bank_holidays">
+        <xsl:call-template name="bank_holidays">
           <xsl:with-param name="id" select="$id"/>
-          <xsl:with-param name="refs" select="txc:OperatingProfile/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="refs" select="txc:OperatingProfile/txc:BankHolidayOperation"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$jp_op">
-        <xsl:call-template name="sequence_bank_holidays">
+        <xsl:call-template name="bank_holidays">
           <xsl:with-param name="id" select="$id"/>
-          <xsl:with-param name="refs" select="$jp_op/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="refs" select="$jp_op/txc:BankHolidayOperation"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$vj_op">
-        <xsl:call-template name="sequence_bank_holidays">
+        <xsl:call-template name="bank_holidays">
           <xsl:with-param name="id" select="$id"/>
-          <xsl:with-param name="refs" select="$vj_op/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="refs" select="$vj_op/txc:BankHolidayOperation"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$vj_jp_op">
-        <xsl:call-template name="sequence_bank_holidays">
+        <xsl:call-template name="bank_holidays">
           <xsl:with-param name="id" select="$id"/>
-          <xsl:with-param name="refs" select="$vj_jp_op/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="refs" select="$vj_jp_op/txc:BankHolidayOperation"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$s_op">
-        <xsl:call-template name="sequence_bank_holidays">
+        <xsl:call-template name="bank_holidays">
           <xsl:with-param name="id" select="$id"/>
-          <xsl:with-param name="refs" select="$s_op/txc:BankHolidayOperation/*/*"/>
+          <xsl:with-param name="refs" select="$s_op/txc:BankHolidayOperation"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:otherwise/>

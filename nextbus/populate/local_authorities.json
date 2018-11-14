@@ -469,7 +469,7 @@
         "district_code": null
     },
     {
-        "la_name": "Shepway",
+        "la_name": "Folkestone and Hythe",
         "la_code": "E07000112",
         "admin_area_code": "086",
         "atco_area_code": "240",
@@ -1401,7 +1401,7 @@
     },
     {
         "la_name": "Fife",
-        "la_code": "S12000015",
+        "la_code": "S12000047",
         "admin_area_code": "126",
         "atco_area_code": "650",
         "district_code": null
@@ -1744,7 +1744,7 @@
     },
     {
         "la_name": "Perth and Kinross",
-        "la_code": "S12000024",
+        "la_code": "S12000048",
         "admin_area_code": "135",
         "atco_area_code": "648",
         "district_code": null

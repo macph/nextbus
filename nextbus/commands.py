@@ -54,6 +54,7 @@ def cli():
               type=(click.Path(exists=True), str),
               help="Add TNDS services data from specified zip file with XML "
               "files and a region code.")
+@click.option("--no-delete-tnds", "tnds_nd", is_flag=True)
 @click.option("--modify", "-m", "modify_d", is_flag=True,
               help="Modify values in existing data with modify.xml.")
 @click.option("--backup", "-b", "backup", is_flag=True,
@@ -63,7 +64,7 @@ def cli():
               "file before populating database.")
 @click.pass_context
 def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
-             tnds_f, modify_d, backup, backup_f):
+             tnds_f, tnds_nd, modify_d, backup, backup_f):
     """ Calls the populate functions for filling the static database with data.
     """
     from flask import current_app
@@ -125,7 +126,9 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
         if options["p"]:
             populate.commit_nspl_data(file_=nspl_f)
         if options["t"]:
-            populate.commit_tnds_data(archive=tnds_f[0], region=tnds_f[1])
+            delete_tnds = not tnds_nd
+            populate.commit_tnds_data(archive=tnds_f[0], region=tnds_f[1],
+                                      delete=delete_tnds)
         if options["m"]:
             populate.modify_data()
         # Update view after population

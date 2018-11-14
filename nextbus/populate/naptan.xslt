@@ -101,7 +101,7 @@
         <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
         <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
         <stop_area_ref>
-          <xsl:if test="boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
+          <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
             <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
           </xsl:if>
         </stop_area_ref>

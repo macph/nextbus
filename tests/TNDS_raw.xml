@@ -1022,7 +1022,7 @@
             <AllHolidaysExceptChristmas />
             <Christmas />
             <DisplacementHolidays />
-            <EarlyRunOff />
+            <EarlyRunOffDays />
           </DaysOfOperation>
         </BankHolidayOperation>
       </OperatingProfile>

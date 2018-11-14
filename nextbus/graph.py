@@ -196,6 +196,8 @@ class _Layout:
         self.col = {v: 0 for v in self.seq}
         self.start = {}
         self.end = {}
+        self.cycles = {}
+        self.next_cycles = {}
         self.paths = {}
 
     def _select(self, vertex=None, index=None):
@@ -208,19 +210,33 @@ class _Layout:
 
         return v, i
 
-    def incoming(self, vertex, cyclic=False):
+    def incoming(self, vertex, direct=True, cyclic=False):
         preceding = self.g.preceding(vertex)
         index = self.seq.index(vertex)
         before = set(self.seq[:index])
 
-        return preceding & before if not cyclic else preceding - before
+        if direct and cyclic:
+            return preceding
+        elif direct:
+            return preceding & before
+        elif cyclic:
+            return preceding - before
+        else:
+            return set()
 
-    def outgoing(self, vertex, cyclic=False):
+    def outgoing(self, vertex, direct=True, cyclic=False):
         following = self.g.following(vertex)
         index = self.seq.index(vertex)
         after = set(self.seq[index + 1:])
 
-        return following & after if not cyclic else following - after
+        if direct and cyclic:
+            return following
+        elif direct:
+            return following & after
+        elif cyclic:
+            return following - after
+        else:
+            return set()
 
     def previous_vertex(self, vertex):
         index = self.seq.index(vertex)
@@ -314,6 +330,71 @@ def _remove_lines(lines):
             del lines[i]
 
 
+def _add_outgoing_cycles(layout, start, end, vertex):
+    if vertex not in {u[0] for u in layout.cycles.values()}:
+        return
+
+    column = layout.col[vertex]
+    # Add lines for cycles
+    for c in sorted(layout.cycles.keys()):
+        u, v = layout.cycles[c]
+        if vertex != u:
+            continue
+        while c > len(end):
+            end.append(set())
+
+        start[column].add(v)
+        end.insert(c, {v})
+
+
+def _add_incoming_cycles(layout, start, end, vertex):
+    next_v = layout.next_vertex(vertex)
+    if next_v is None:
+        return
+
+    cycles = layout.incoming(next_v, direct=False, cyclic=True)
+    if not cycles:
+        return
+
+    next_c = layout.col[next_v] = end.index({next_v})
+    while next_c >= len(start):
+        start.append(set())
+
+    column = next_c
+    new_column = layout.col[vertex]
+    # Order from furthest away to nearest
+    incoming = [v for v in reversed(layout.seq) if v in cycles]
+    for v in incoming:
+        if v == next_v:
+            # Don't want self-cycles
+            continue
+        if column in layout.cycles:
+            column += 1
+            while column > len(start):
+                start.append(set())
+
+        layout.cycles[column] = (v, next_v)
+        # Insert new column for incoming cycle and track original vertex
+        start.insert(column, {next_v})
+        if new_column >= column:
+            new_column += 1
+        column += 1
+
+    # Modify original vertex column and its lines
+    original = layout.col[vertex]
+    if new_column > original:
+        index = layout.seq.index(vertex)
+        if index < 1:
+            return
+        previous_v = layout.seq[index - 1]
+
+        layout.end[previous_v][original:] = (
+            [set()] * (new_column - original)
+            + layout.end[previous_v][original:]
+        )
+        layout.col[vertex] = new_column
+
+
 def _set_next_column(layout, lines, vertex):
     """ Sets the column of the next vertex based on the ending lines for this
         row.
@@ -326,30 +407,50 @@ def _set_next_column(layout, lines, vertex):
 
 def _set_lines(layout):
     """ Set all lines and moving vertices into the correct columns. """
+    if not layout.seq:
+        return
+
+    first_v = layout.seq[0]
+    cycles = layout.incoming(first_v, direct=False, cyclic=True)
+    if cycles:
+        ordered = [v for v in reversed(layout.seq) if v in cycles]
+        # Add new row for cycle before first vertex
+        layout.seq.insert(0, None)
+        layout.col[None] = 0
+        layout.start[None] = [{first_v}] * len(cycles)
+        layout.end[None] = [{first_v}]
+        layout.cycles.update({c: (v, first_v) for c, v in enumerate(ordered)})
+
     lines_end = None
     for v in layout.seq:
+        if v is None:
+            continue
+
+        col = layout.col[v]
         # Set starting lines to lines at end of previous row
         if lines_end is not None:
             lines_start = [set(c) for c in lines_end]
         else:
             lines_start = []
 
-        col = layout.col[v]
-        # Remove current vertex and add new columns
+        # Remove current vertex, any outgoing cycles and add new columns
+        to_remove = {u[1] for u in layout.cycles.values()} | {v}
         for c in lines_start:
-            c.discard(v)
+            c -= to_remove
         while col >= len(lines_start):
             lines_start.append(set())
 
-        # Add all outgoing vertices to current column
+        # Add all outgoing vertices to current column except self
         lines_start[col] |= layout.outgoing(v)
 
         # Clean up empty columns except for current vertex
-        lines_start = [c for i, c in enumerate(lines_start) if c or i == col]
+        lines_start = [c for i, c in enumerate(lines_start) if c or i <= col]
         lines_end = [set(c) for c in lines_start]
 
         _rearrange_lines(layout, lines_end, v)
         _remove_lines(lines_end)
+        _add_outgoing_cycles(layout, lines_start, lines_end, v)
+        _add_incoming_cycles(layout, lines_start, lines_end, v)
         _set_next_column(layout, lines_end, v)
 
         layout.start[v] = lines_start
@@ -368,7 +469,7 @@ def _draw_paths_row(start, end):
             paths.add((x0, end.index(v0)))
             continue
         for x1, v1 in enumerate(end):
-            if v0 >= v1:
+            if v1 and v0 >= v1:
                 paths.add((x0, x1))
 
     return paths
@@ -564,10 +665,19 @@ def draw_graph(graph, sequence=None):
     gl = _Layout(graph, sequence)
 
     _set_lines(gl)
-    _order_lines(gl)
+    # _order_lines(gl)
     _draw_paths(gl)
 
-    return [(v, gl.col[v], gl.paths[v]) for v in gl.seq]
+    data = [(v, gl.col[v], sorted(gl.paths[v])) for v in gl.seq]
+
+    print(graph.adj)
+    print(gl.cycles)
+    for v in gl.seq:
+        print("%s %s %r -> %r" % (v, gl.col[v], gl.start[v], gl.end[v]))
+    print(data)
+    print()
+
+    return data
 
 
 class Graph:

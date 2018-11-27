@@ -268,12 +268,34 @@ class StopArea(utils.BaseModel):
         return len(self.stop_points)
 
     @stop_count.expression
-    def stop_count(cls): # pylint: disable=E0213
+    def stop_count(cls):
         """ ORM expression finding the number of associated stop points.
             Requires an inner join with stop points and grouped by stop area
             code.
         """
         return db.cast(db.func.count(cls.code), db.Text)
+
+    def get_stops_lines(self):
+        """ Queries all stops associated with a stop area, sorted naturally, and
+            a list of services for every stop, also sorted naturally.
+        """
+        subquery_lines = (
+            db.session.query(Service.line)
+            .join(Service.patterns)
+            .join(JourneyPattern.links)
+            .filter(JourneyLink.stop_point_ref == StopPoint.atco_code)
+            .group_by(Service.line)
+            .order_by(Service.line_index)
+        ).as_scalar()
+
+        query_stops = (
+            db.session.query(StopPoint, db.func.array(subquery_lines))
+            .select_from(StopPoint)
+            .filter(StopPoint.stop_area_ref == self.code)
+            .order_by(StopPoint.name, StopPoint.ind_index)
+        )
+
+        return query_stops.all()
 
 
 class StopPoint(utils.BaseModel):
@@ -423,16 +445,24 @@ class StopPoint(utils.BaseModel):
 
         return geojson
 
-    def service_lines(self):
-        """ Gets an unique and ordered list of service lines at this stop point.
+    def get_services(self):
+        """ Queries all services at this stop, returning a list including the
+            directions of these services.
         """
-        lines = []
+        query_services = (
+            db.session.query(
+                Service,
+                db.func.array_agg(JourneyPattern.direction.distinct()
+                                  .label("directions"))
+            )
+            .join(Service.patterns)
+            .join(JourneyPattern.links)
+            .filter(JourneyLink.stop_point_ref == self.atco_code)
+            .group_by(Service.code)
+            .order_by(Service.line_index, Service.description)
+        )
 
-        for s in self.services:
-            if s.line not in lines:
-                lines.append(s.line)
-
-        return lines
+        return query_services.all()
 
 
 class Postcode(utils.BaseModel):
@@ -539,6 +569,20 @@ class Service(utils.BaseModel):
     )
 
     patterns = db.relationship("JourneyPattern", backref="service")
+
+    def has_mirror(self, selected=None):
+        """ Checks directions for all patterns for a service and return the
+            right one.
+        """
+        set_dir = {p.direction for p in self.patterns}
+        if set_dir == {True, False}:
+            reverse = bool(selected) if selected is not None else False
+            has_mirror = True
+        else:
+            reverse = set_dir.pop()
+            has_mirror = False
+
+        return reverse, has_mirror
 
 
 class JourneyPattern(utils.BaseModel):

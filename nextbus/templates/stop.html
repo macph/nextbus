@@ -42,15 +42,15 @@
         </section>
         <section class="card">
             <h2>Services</h2>
-            {% if stop.services %}
-            {% call(s) f.print_list(stop.services) %}
-            <a href="{{ url_for('page.service', service_code=s.code) }}" class="item item--service">
+            {% if services %}
+            {% call(s) f.print_list(services) %}
+            <a href="{{ url_for('page.service', service_code=s[0].code, reverse='false' if false in s[1] else ('true' if true in s[1] else 'false')) }}" class="item item--service">
                 <div class="line">
                     <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
-                        <span class="line__text">{{ s.line }}</span>
+                        <span class="line__text">{{ s[0].line }}</span>
                     </div>
                 </div>
-                <div class="item__label">{{ truncate_description(s.description) }}</div>
+                <div class="item__label">{{ truncate_description(s[0].description) }}</div>
             </a>
             {% endcall %}
             {% else %}

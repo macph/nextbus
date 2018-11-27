@@ -75,21 +75,6 @@ def _list_geojson(list_stops):
     return geojson
 
 
-def _service_get_direction(line, args):
-    """ Checks directions for all patterns for a line and pick the right
-        direction.
-    """
-    directions = {p.direction for p in line.patterns}
-    if directions == {True, False}:
-        reverse = args.get("reverse") == "true"
-        mirrored = True
-    else:
-        reverse = directions.pop()
-        mirrored = False
-
-    return reverse, mirrored
-
-
 def _get_starred_stops():
     """ Get list of starred stops from session, querying and ordering them. """
     if "stops" not in session:
@@ -423,9 +408,7 @@ def stop_area(stop_area_code):
         models.StopArea.query
         .options(db.joinedload(models.StopArea.admin_area, innerjoin=True),
                  db.joinedload(models.StopArea.locality, innerjoin=True)
-                 .joinedload(models.Locality.district),
-                 db.joinedload(models.StopArea.stop_points)
-                 .joinedload(models.StopPoint.services))
+                 .joinedload(models.Locality.district))
         .get(stop_area_code.upper())
     )
 
@@ -436,14 +419,13 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=301)
 
-    lines = {s: s.service_lines() for s in area.stop_points}
-
-    return render_template("stop_area.html", stop_area=area, lines=lines)
+    return render_template("stop_area.html", stop_area=area,
+                           stops=area.get_stops_lines())
 
 
 @page.route("/stop/sms/<naptan_code>")
 def stop_naptan(naptan_code):
-    """ Shows stop with NaPTAN code. """
+    """ Shows stop with NaPTAN (SMS) code. """
     stop = (
         models.StopPoint.query
         .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
@@ -461,7 +443,7 @@ def stop_naptan(naptan_code):
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop)
+    return render_template("stop.html", stop=stop, services=stop.get_services())
 
 
 @page.route("/stop/atco/<atco_code>")
@@ -475,8 +457,7 @@ def stop_atco(atco_code=""):
         .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
                  db.joinedload(models.StopPoint.locality, innerjoin=True)
                  .joinedload(models.Locality.district),
-                 db.joinedload(models.StopPoint.stop_area),
-                 db.joinedload(models.StopPoint.services))
+                 db.joinedload(models.StopPoint.stop_area))
         .get(atco_code.upper())
     )
 
@@ -487,7 +468,7 @@ def stop_atco(atco_code=""):
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=301)
 
-    return render_template("stop.html", stop=stop)
+    return render_template("stop.html", stop=stop, services=stop.get_services())
 
 
 @page.route("/service/<service_code>")
@@ -505,7 +486,7 @@ def service(service_code):
         raise EntityNotFound("Service '%s' does not exist." % line)
 
     # Check line patterns - is there more than 1 direction?
-    reverse, mirrored = _service_get_direction(line, request.args)
+    reverse, mirrored = line.has_mirror(request.args.get("reverse") == "true")
 
     destinations = {
         "origin": {p.origin for p in line.patterns if p.direction == reverse},
@@ -572,7 +553,7 @@ def show_map_with_service(service_code, coords=None):
     else:
         latitude, longitude, zoom = None, None, None
 
-    reverse, _ = _service_get_direction(line, request.args)
+    reverse, _ = line.has_mirror(request.args.get("reverse") == "true")
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
                            zoom=zoom, stop=None, service=line.code,

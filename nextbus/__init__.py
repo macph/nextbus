@@ -55,8 +55,9 @@ def create_app(config_obj=None, config_file=None):
     from nextbus.converters import add_converters
     add_converters(app)
 
-    from nextbus.views import api, page
-    app.register_blueprint(api)
+    from nextbus.views import page
+    from nextbus.resources import api
     app.register_blueprint(page)
+    app.register_blueprint(api)
 
     return app

@@ -4,7 +4,7 @@ Tests for views.
 import copy
 
 from nextbus import models
-from nextbus.views import _list_geojson
+from nextbus.resources import _list_geojson
 import utils
 
 

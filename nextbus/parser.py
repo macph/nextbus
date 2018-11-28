@@ -78,6 +78,8 @@ class ParseResult(object):
             :param defined: If True, return only defined terms.
             :returns: A string to be used in search query.
         """
+        if not self.result:
+            return None
         if defined and not self.check_tree():
             raise SearchNotDefined(self.query)
         try:
@@ -93,6 +95,8 @@ class ParseResult(object):
             is defined however because only items with term 'Downing' will
             match.
         """
+        if not self.result:
+            return False
         try:
             return self.data.defined()
         except AttributeError:
@@ -303,9 +307,6 @@ def create_tsquery_parser():
             current_app.logger.error("Error with search query %r" % query,
                                      exc_info=1)
             raise ValueError("Query %r cannot be parsed.") from err
-
-        if not output:
-            raise ValueError("Query %r contained no valid words.")
 
         return ParseResult(query, output)
 

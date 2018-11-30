@@ -113,7 +113,7 @@
                 {% endif %}
             </a>
             {% elif item.table_name == 'service' %}
-            <a href="{{ url_for('page.service', service_code=item.code) }}" class="item item--service item--tall">
+            <a href="{{ url_for('page.service', service_id=item.code) }}" class="item item--service item--tall">
               <div class="line">
                   <div class="line__inner {{ 'area-%s'|format(item.admin_area_ref) if item.admin_area_ref }}">
                       <span class="line__text">{{ item.short_ind }}</span>

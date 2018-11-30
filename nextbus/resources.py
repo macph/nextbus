@@ -79,18 +79,18 @@ def get_stops_tile():
     return jsonify(_list_geojson(stops))
 
 
-@api.route("/route/<service_code>")
-def get_service_route(service_code):
+@api.route("/route/<service_id>")
+def get_service_route(service_id):
     """ Gets service data including a MultiLineString GeoJSON object. """
     line = (
         models.Service.query
         .options(db.joinedload(models.Service.local_operator, innerjoin=True),
                  db.joinedload(models.Service.patterns))
-        .get(service_code)
+        .get(service_id)
     )
 
     if line is None:
-        return bad_request(404, "Service '%s' does not exist." % line)
+        return bad_request(404, "Service '%s' does not exist." % service_id)
 
     # Check line patterns - is there more than 1 direction?
     directions = {p.direction for p in line.patterns}

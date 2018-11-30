@@ -49,7 +49,7 @@
     const STOP_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
     const TILE_URL = "{{ url_for('api.get_stops_tile') }}";
     const STARRED_URL = "{{ url_for('api.starred') }}";
-    const ROUTE_URL = "{{ url_for('api.get_service_route', service_code='') }}";
+    const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
 </script>
 <script>
     let set = "{{ ('stops' in session)|tojson }}" === 'true';

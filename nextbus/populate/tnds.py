@@ -364,13 +364,15 @@ def _delete_empty_services():
     )
     empty_services = ~(
         db.session.query(models.JourneyPattern)
-        .filter(models.JourneyPattern.service_ref == models.Service.code)
+        .filter(models.JourneyPattern.service_ref == models.Service.id)
         .exists()
     )
     empty_local_operators = ~(
-        db.session.query(models.Service)
-        .filter(models.Service.region_ref == models.LocalOperator.region_ref,
-                models.Service.local_operator_ref == models.LocalOperator.code)
+        db.session.query(models.JourneyPattern)
+        .filter(models.JourneyPattern.region_ref
+                == models.LocalOperator.region_ref,
+                models.JourneyPattern.local_operator_ref
+                == models.LocalOperator.code)
         .exists()
     )
     empty_operators = ~(
@@ -407,7 +409,7 @@ def _services_add_admin_areas():
         London the admin area is picked from the mode of stops within the SE.
     """
     service_areas = (
-        db.session.query(models.Service.code.label("service"),
+        db.session.query(models.Service.id.label("service"),
                          models.AdminArea.code.label("admin_area"))
         .select_from(models.Service)
         .distinct()
@@ -463,7 +465,7 @@ def _commit_each_tnds(transform, archive, region):
         tnds.add("Operator", models.Operator, indices=("code",))
         tnds.add("LocalOperator", models.LocalOperator,
                  indices=("region_ref", "code"))
-        tnds.add("Service", models.Service, indices=("code",))
+        tnds.add("Service", models.Service, indices=("id",))
         tnds.add("JourneyPattern", models.JourneyPattern)
         tnds.add("JourneyLink", models.JourneyLink)
         tnds.add("Journey", models.Journey)
@@ -513,4 +515,4 @@ def commit_tnds_data(archive=None, region=None, delete=True):
     for region, archive in regions.items():
         _commit_each_tnds(transform, archive, region)
 
-    _delete_empty_services()
+    # _delete_empty_services()

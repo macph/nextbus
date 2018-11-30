@@ -451,19 +451,19 @@ def stop_atco(atco_code=""):
     return render_template("stop.html", stop=stop, services=stop.get_services())
 
 
-@page.route("/service/<service_code>")
-def service(service_code):
+@page.route("/service/<service_id>")
+def service(service_id):
     line = (
         models.Service.query
         .options(db.joinedload(models.Service.local_operator, innerjoin=True),
                  db.joinedload(models.Service.region, innerjoin=True),
                  db.joinedload(models.Service.admin_area),
                  db.joinedload(models.Service.patterns))
-        .get(service_code)
+        .get(service_id)
     )
 
     if line is None:
-        raise EntityNotFound("Service '%s' does not exist." % line)
+        raise EntityNotFound("Service '%s' does not exist." % service_id)
 
     # Check line patterns - is there more than 1 direction?
     reverse, mirrored = line.has_mirror(request.args.get("reverse") == "true")
@@ -474,7 +474,7 @@ def service(service_code):
                         if p.direction == reverse}
     }
 
-    stops = graph.service_stop_list(line.code, reverse)
+    stops = graph.service_stop_list(line.id, reverse)
 
     return render_template("service.html", service=line, dest=destinations,
                            reverse=reverse, mirrored=mirrored, stops=stops)
@@ -516,17 +516,17 @@ def show_map_with_stop(atco_code, coords=None):
                            reverse=None)
 
 
-@page.route("/map/service/<service_code>/")
-@page.route("/map/service/<service_code>/<lat_long_zoom:coords>")
-def show_map_with_service(service_code, coords=None):
+@page.route("/map/service/<service_id>/")
+@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
+def show_map_with_service(service_id, coords=None):
     """ Shows map with a stop already selected. """
     line = (
         models.Service.query
         .options(db.joinedload(models.Service.patterns))
-        .get(service_code)
+        .get(service_id)
     )
     if line is None:
-        raise EntityNotFound("Service '%s' does not exist." % line)
+        raise EntityNotFound("Service '%s' does not exist." % service_id)
 
     if coords and location.check_bounds(coords[0], coords[1]):
         latitude, longitude, zoom = coords
@@ -536,7 +536,7 @@ def show_map_with_service(service_code, coords=None):
     reverse, _ = line.has_mirror(request.args.get("reverse") == "true")
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=None, service=line.code,
+                           zoom=zoom, stop=None, service=line.id,
                            reverse=reverse)
 
 

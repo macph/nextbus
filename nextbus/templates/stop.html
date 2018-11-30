@@ -44,7 +44,7 @@
             <h2>Services</h2>
             {% if services %}
             {% call(s) f.print_list(services) %}
-            <a href="{{ url_for('page.service', service_code=s[0].code, reverse='false' if false in s[1] else ('true' if true in s[1] else 'false')) }}" class="item item--service">
+            <a href="{{ url_for('page.service', service_id=s[0].id, reverse='false' if false in s[1] else ('true' if true in s[1] else 'false')) }}" class="item item--service">
                 <div class="line">
                     <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
                         <span class="line__text">{{ s[0].line }}</span>

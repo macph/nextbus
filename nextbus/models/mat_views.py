@@ -7,7 +7,7 @@ from nextbus import db
 from nextbus.models import utils
 from nextbus.models.tables import (
     Region, AdminArea, District, Locality, StopArea, StopPoint,
-    JourneyPattern, JourneyLink, Service
+    JourneyPattern, JourneyLink, Service, LocalOperator
 )
 
 
@@ -240,10 +240,10 @@ def _select_fts_vectors():
         )
     )
 
-    # Concatenate locality, district and admin area names covered by services
+    # Concatenate operator, locality, district and admin area names covered
     area_names = (
         db.select([
-            Service.code.label("code"),
+            Service.id.label("id"),
             db.func.string_agg(db.distinct(Locality.name),
                                " ").label("localities"),
             db.func.string_agg(db.distinct(db.func.coalesce(District.name, "")),
@@ -253,21 +253,39 @@ def _select_fts_vectors():
         ])
         .select_from(
             Service.__table__
-            .join(JourneyPattern, Service.code == JourneyPattern.service_ref)
+            .join(JourneyPattern, Service.id == JourneyPattern.service_ref)
             .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
             .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
             .join(Locality, StopPoint.locality_ref == Locality.code)
             .outerjoin(District, Locality.district_ref == District.code)
             .join(AdminArea, Locality.admin_area_ref == AdminArea.code)
         )
-        .group_by(Service.code)
+        .group_by(Service.id)
         .alias("area_names")
+    )
+
+    operator_names = (
+        db.select([
+            Service.id.label("id"),
+            db.func.string_agg(db.distinct(LocalOperator.name),
+                               " ").label("operators")
+        ])
+        .select_from(
+            Service.__table__
+            .join(JourneyPattern, JourneyPattern.service_ref == Service.id)
+            .join(LocalOperator, db.func.and_(
+                      LocalOperator.code == JourneyPattern.local_operator_ref,
+                      LocalOperator.region_ref == JourneyPattern.region_ref
+                  ))
+        )
+        .group_by(Service.id)
+        .alias("operator_names")
     )
 
     service = (
         db.select([
             utils.table_name(Service).label("table_name"),
-            Service.code.label("code"),
+            Service.id.label("code"),
             Service.description.label("name"),
             Service.line.label("short_ind"),
             null.label("street"),
@@ -275,21 +293,22 @@ def _select_fts_vectors():
             null.label("stop_area_ref"),
             null.label("locality_name"),
             null.label("district_name"),
-            AdminArea.code.label("admin_area_ref"),
-            AdminArea.name.label("admin_area_name"),
+            null.label("admin_area_ref"),
+            null.label("admin_area_name"),
             _tsvector_column(
                 (Service.line, "A"),
                 (Service.description, "A"),
-                (db.func.string_agg(area_names.c.localities, " "), "C"),
-                (db.func.string_agg(area_names.c.districts, " "), "D"),
-                (db.func.string_agg(area_names.c.admin_areas, " "), "D")
+                (operator_names.c.operators, "B"),
+                (area_names.c.localities, "C"),
+                (area_names.c.districts, "D"),
+                (area_names.c.admin_areas, "D")
             ).label("vector")
         ])
         .distinct()
         .select_from(
             Service.__table__
-            .join(area_names, area_names.c.code == Service.code)
-            .outerjoin(AdminArea, Service.admin_area_ref == AdminArea.code)
+            .join(area_names, area_names.c.id == Service.id)
+            .join(operator_names, operator_names.c.id == Service.id)
         )
     )
 

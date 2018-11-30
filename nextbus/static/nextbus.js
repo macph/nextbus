@@ -887,13 +887,13 @@ function RouteLayer(stopMap) {
     };
 
     /**
-     * Queries route for service code and adds it to the map
-     * @param {String} serviceCode Service code for route
+     * Queries route for service ID and adds it to the map
+     * @param {String} serviceId Service ID for route
      * @param {Boolean} direction Direction of service
      * @param {Boolean} zoom Whether map will zoom to fit route after load
      */
-    this.addRoute = function(serviceCode, direction, zoom) {
-        let url = ROUTE_URL + serviceCode;
+    this.addRoute = function(serviceId, direction, zoom) {
+        let url = ROUTE_URL + serviceId;
         if (typeof(direction) !== 'undefined') {
             url += '?reverse=' + direction;
         }

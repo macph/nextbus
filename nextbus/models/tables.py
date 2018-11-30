@@ -28,7 +28,8 @@ class BankHoliday(utils.BaseModel):
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     name = db.Column(db.Text, nullable=False, unique=True)
 
-    dates = db.relationship("BankHolidayDate", backref="bank_holiday")
+    dates = db.relationship("BankHolidayDate", backref="bank_holiday",
+                            innerjoin=True)
 
 
 class Region(utils.BaseModel):
@@ -41,7 +42,6 @@ class Region(utils.BaseModel):
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
                             order_by="AdminArea.name")
-    services = db.relationship("Service", backref="region", innerjoin=True)
 
     def __repr__(self):
         return "<Region(%r)>" % self.code
@@ -95,7 +95,6 @@ class AdminArea(utils.BaseModel):
     )
     stop_areas = db.relationship("StopArea", backref="admin_area",
                                  innerjoin=True, order_by="StopArea.name")
-    services = db.relationship("Service", backref="admin_area")
 
     def __repr__(self):
         return "<AdminArea(%r)>" % self.code
@@ -169,10 +168,10 @@ class Locality(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     stop_points = db.relationship(
-        "StopPoint", backref="locality", innerjoin=True,
+        "StopPoint", backref="locality",
         order_by="StopPoint.name, StopPoint.ind_index"
     )
-    stop_areas = db.relationship("StopArea", backref="locality", innerjoin=True,
+    stop_areas = db.relationship("StopArea", backref="locality",
                                  order_by="StopArea.name")
 
     def __repr__(self):
@@ -356,7 +355,7 @@ class StopPoint(utils.BaseModel):
         secondary="join(JourneyLink, JourneyPattern, "
                   "JourneyLink.pattern_ref == JourneyPattern.id)",
         primaryjoin="JourneyLink.stop_point_ref == StopPoint.atco_code",
-        secondaryjoin="Service.code == JourneyPattern.service_ref",
+        secondaryjoin="Service.id == JourneyPattern.service_ref",
         backref=db.backref("stops", uselist=True),
         order_by="Service.line_index, Service.description"
     )
@@ -458,7 +457,7 @@ class StopPoint(utils.BaseModel):
             .join(Service.patterns)
             .join(JourneyPattern.links)
             .filter(JourneyLink.stop_point_ref == self.atco_code)
-            .group_by(Service.code)
+            .group_by(Service.id)
             .order_by(Service.line_index, Service.description)
         )
 
@@ -504,10 +503,10 @@ class Operator(utils.BaseModel):
     __tablename__ = "operator"
 
     code = db.Column(db.Text, primary_key=True)
+    name = db.Column(db.Text, nullable=True)
 
-    local_codes = db.relationship("LocalOperator",
-                                  order_by="LocalOperator.code",
-                                  backref="operator")
+    local_codes = db.relationship("LocalOperator", backref="operator",
+                                  innerjoin=True, order_by="LocalOperator.code")
 
 
 class LocalOperator(utils.BaseModel):
@@ -527,27 +526,17 @@ class LocalOperator(utils.BaseModel):
     )
     name = db.Column(db.Text, nullable=True)
 
-    services = db.relationship("Service", backref="local_operator")
+    patterns = db.relationship("JourneyPattern", backref="local_operator")
 
 
 class Service(utils.BaseModel):
     """ Service group. """
     __tablename__ = "service"
 
-    code = db.Column(db.Text, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    code = db.Column(db.Text)
     line = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=False)
-    local_operator_ref = db.Column(db.Text, nullable=False)
-    region_ref = db.Column(
-        db.VARCHAR(2),
-        db.ForeignKey("region.code", ondelete="CASCADE"),
-        nullable=False, index=True
-    )
-    admin_area_ref = db.Column(
-        db.VARCHAR(3),
-        db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-        nullable=True, index=True
-    )
     mode = db.Column(
         db.Integer,
         db.ForeignKey("service_mode.id"),
@@ -558,21 +547,16 @@ class Service(utils.BaseModel):
     line_index = db.deferred(db.select([_ns.c.index])
                              .where(_ns.c.string == line))
 
-    __table_args__ = (
-        db.ForeignKeyConstraint(
-            ["local_operator_ref", "region_ref"],
-            ["local_operator.code", "local_operator.region_ref"],
-            ondelete="CASCADE"
-        ),
-        db.Index("ix_service_local_operator_ref_region_ref",
-                 "local_operator_ref", "region_ref")
-    )
-
-    patterns = db.relationship("JourneyPattern", backref="service")
+    patterns = db.relationship("JourneyPattern", backref="service",
+                               innerjoin=True)
 
     def has_mirror(self, selected=None):
         """ Checks directions for all patterns for a service and return the
             right one.
+
+            :param selected: Direction initially selected.
+            :returns: New direction based on initial direction or new one if
+            no mirror exists, and boolean indicating a mirror exists.
         """
         set_dir = {p.direction for p in self.patterns}
         if set_dir == {True, False}:
@@ -592,20 +576,31 @@ class JourneyPattern(utils.BaseModel):
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     origin = db.Column(db.Text, nullable=False)
     destination = db.Column(db.Text, nullable=False)
+
     service_ref = db.Column(
-        db.Text,
-        db.ForeignKey("service.code", ondelete="CASCADE"),
+        db.Integer,
+        db.ForeignKey("service.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
+    local_operator_ref = db.Column(db.Text, nullable=False, index=True)
+    region_ref = db.Column(db.VARCHAR(2), nullable=False, index=True)
+
     direction = db.Column(db.Boolean, nullable=False, index=True)
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date)
 
     __table_args__ = (
         db.CheckConstraint("date_start <= date_end"),
+        db.ForeignKeyConstraint(
+            ["local_operator_ref", "region_ref"],
+            ["local_operator.code", "local_operator.region_ref"],
+            ondelete="CASCADE"
+        ),
+        db.Index("ix_journey_pattern_local_operator_ref_region_ref",
+                 "local_operator_ref", "region_ref")
     )
 
-    links = db.relationship("JourneyLink", backref="pattern",
+    links = db.relationship("JourneyLink", backref="pattern", innerjoin=True,
                             order_by="JourneyLink.sequence")
 
 

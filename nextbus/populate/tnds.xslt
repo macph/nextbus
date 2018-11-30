@@ -74,6 +74,7 @@
     <xsl:if test="func:national_op_new(txc:NationalOperatorCode)">
       <Operator>
         <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
+        <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
       </Operator>
     </xsl:if>
   </xsl:template>
@@ -98,18 +99,15 @@
       </xsl:choose>
     </xsl:variable>
     <Service>
+      <id><xsl:value-of select="func:add_id('Service', $file)"/></id>
       <code>
         <xsl:choose>
-          <xsl:when test="starts-with(txc:PrivateCode, $region)"><xsl:value-of select="txc:PrivateCode"/></xsl:when>
-          <xsl:when test="txc:PrivateCode"><xsl:value-of select="concat($region, '-', txc:PrivateCode)"/></xsl:when>
-          <xsl:when test="starts-with(txc:ServiceCode, $region)"><xsl:value-of select="txc:ServiceCode"/></xsl:when>
-          <xsl:otherwise><xsl:value-of select="concat($region, '-', txc:ServiceCode)"/></xsl:otherwise>
+          <xsl:when test="txc:PrivateCode"><xsl:value-of select="txc:PrivateCode"/></xsl:when>
+          <xsl:otherwise><xsl:value-of select="txc:ServiceCode"/></xsl:otherwise>
         </xsl:choose>
       </code>
       <line><xsl:value-of select="func:l_split(txc:Lines/txc:Line[1]/txc:LineName, '|')"/></line>
       <description><xsl:value-of select="func:format_description(txc:Description)"/></description>
-      <local_operator_ref><xsl:value-of select="key('key_operators', txc:RegisteredOperatorRef)/txc:OperatorCode"/></local_operator_ref>
-      <region_ref><xsl:value-of select="$region"/></region_ref>
       <mode><xsl:value-of select="exsl:node-set($mode_ids)/mode[.=$mode]/@id"/></mode>
     </Service>
   </xsl:template>
@@ -142,14 +140,9 @@
           <destination><xsl:value-of select="func:format_destination(ancestor::txc:Service/txc:StandardService/txc:Origin)"/></destination>
         </xsl:otherwise>
       </xsl:choose>
-      <service_ref>
-        <xsl:choose>
-          <xsl:when test="starts-with(ancestor::txc:Service/txc:PrivateCode, $region)"><xsl:value-of select="ancestor::txc:Service/txc:PrivateCode"/></xsl:when>
-          <xsl:when test="ancestor::txc:Service/txc:PrivateCode"><xsl:value-of select="concat($region, '-', ancestor::txc:Service/txc:PrivateCode)"/></xsl:when>
-          <xsl:when test="starts-with(ancestor::txc:Service/txc:ServiceCode, $region)"><xsl:value-of select="ancestor::txc:Service/txc:ServiceCode"/></xsl:when>
-          <xsl:otherwise><xsl:value-of select="concat($region, '-', ancestor::txc:Service/txc:ServiceCode)"/></xsl:otherwise>
-        </xsl:choose>
-      </service_ref>
+      <service_ref><xsl:value-of select="func:get_id('Service', $file)"/></service_ref>
+      <local_operator_ref><xsl:value-of select="key('key_operators', ancestor::txc:Service/txc:RegisteredOperatorRef)/txc:OperatorCode"/></local_operator_ref>
+      <region_ref><xsl:value-of select="$region"/></region_ref>
       <direction py_type="bool">
         <xsl:choose>
           <xsl:when test="boolean($direction=$service_direction)">0</xsl:when>

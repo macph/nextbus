@@ -1,6 +1,7 @@
 <Data>
   <Operator>
     <code>SYRK</code>
+    <name>Stagecoach Yorkshire</name>
   </Operator>
   <LocalOperator>
     <operator_ref>SYRK</operator_ref>
@@ -9,18 +10,19 @@
     <name>Stagecoach Yorkshire</name>
   </LocalOperator>
   <Service>
+    <id>1</id>
     <code>YSCO120</code>
     <line>120</line>
     <description>Halfway – Fulwood</description>
-    <local_operator_ref>YTC</local_operator_ref>
-    <region_ref>Y</region_ref>
     <mode>1</mode>
   </Service>
   <JourneyPattern>
     <id>1</id>
     <origin>Fulwood</origin>
     <destination>Halfway</destination>
-    <service_ref>YSCO120</service_ref>
+    <service_ref>1</service_ref>
+    <local_operator_ref>YTC</local_operator_ref>
+    <region_ref>Y</region_ref>
     <direction py_type="bool">1</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>
@@ -29,7 +31,9 @@
     <id>2</id>
     <origin>Halfway</origin>
     <destination>Fulwood</destination>
-    <service_ref>YSCO120</service_ref>
+    <service_ref>1</service_ref>
+    <local_operator_ref>YTC</local_operator_ref>
+    <region_ref>Y</region_ref>
     <direction py_type="bool">0</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>

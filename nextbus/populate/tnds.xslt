@@ -71,7 +71,7 @@
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="national">
-    <xsl:if test="func:national_op_new(txc:NationalOperatorCode)">
+    <xsl:if test="txc:NationalOperatorCode">
       <Operator>
         <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
         <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
@@ -80,14 +80,12 @@
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="local">
-    <xsl:if test="func:local_op_new(txc:OperatorCode, $region)">
-      <LocalOperator>
-        <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
-        <region_ref><xsl:value-of select="$region"/></region_ref>
-        <code><xsl:value-of select="txc:OperatorCode"/></code>
-        <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
-      </LocalOperator>
-    </xsl:if>
+    <LocalOperator>
+      <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
+      <region_ref><xsl:value-of select="$region"/></region_ref>
+      <code><xsl:value-of select="txc:OperatorCode"/></code>
+      <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
+    </LocalOperator>
   </xsl:template>
 
   <xsl:template match="txc:Service">
@@ -107,7 +105,11 @@
         </xsl:choose>
       </code>
       <line><xsl:value-of select="func:l_split(txc:Lines/txc:Line[1]/txc:LineName, '|')"/></line>
-      <description><xsl:value-of select="func:format_description(txc:Description)"/></description>
+      <description>
+        <xsl:if test="txc:Description">
+          <xsl:value-of select="func:format_description(txc:Description)"/>
+        </xsl:if>
+      </description>
       <mode><xsl:value-of select="exsl:node-set($mode_ids)/mode[.=$mode]/@id"/></mode>
     </Service>
   </xsl:template>

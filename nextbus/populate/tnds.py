@@ -15,6 +15,7 @@ from nextbus.populate import file_ops, utils
 
 TNDS_URL = r"ftp.tnds.basemap.co.uk"
 TNDS_XSLT = r"nextbus/populate/tnds.xslt"
+TNDS_ROLLOVER = 100000
 
 
 def download_tnds_files():
@@ -27,17 +28,20 @@ def download_tnds_files():
                          "Traveline website for more details.")
 
     # Get all region codes to iterate over - not GB
-    query_regions = (db.session.query(models.Region.code)
-                     .filter(models.Region.code != "GB"))
-    list_regions = [r[0] for r in query_regions.all()]
-    if not list_regions:
+    query_regions = db.engine.execute(
+        db.select([models.Region.code])
+        .where(models.Region.code != "GB")
+    )
+    regions = [r[0] for r in query_regions]
+
+    if not regions:
         raise ValueError("NPTG data not populated yet.")
 
     paths = {}
     utils.logger.info("Opening FTP connection to %r with credentials" %
                       TNDS_URL)
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
-        for region in list_regions:
+        for region in regions:
             file_name = region + ".zip"
             file_path = os.path.join(ROOT_DIR, "temp", file_name)
             utils.logger.info("Downloading file %r from %r" %
@@ -134,9 +138,10 @@ class RowIds(object):
         if self.existing:
             # Get maximum ID integer from table and start off from there
             model = getattr(models, model_name)
-            query = db.session.query(db.func.max(model.id)).one()
-            if query[0] is not None:
-                start = query[0] + 1
+            query = db.select([db.func.max(model.id)])
+            max_ = db.engine.execute(query).scalar()
+
+            start = max_ + 1 if max_ is not None else start
 
         return start
 
@@ -162,7 +167,7 @@ class RowIds(object):
 
 @utils.xslt_text_func
 def format_description(_, text):
-    if text is not None and text.isupper():
+    if text.isupper():
         text = utils.capitalize(None, text)
 
     places = " ".join(text.split())
@@ -320,24 +325,9 @@ def setup_tnds_functions():
     """ Finds all existing operators and stop points in database, setting up
         XSLT functions compare with incoming operators and journey links.
     """
-    query_operators = db.session.query(models.Operator.code)
-    query_local = db.session.query(models.LocalOperator.code,
-                                   models.LocalOperator.region_ref)
-    query_stops = db.session.query(models.StopPoint.atco_code)
-    set_national = set(c.code for c in query_operators.all())
-    set_local = set((c.code, c.region_ref) for c in query_local.all())
-    set_stops = set(c.atco_code for c in query_stops.all())
+    query_stops = db.engine.execute(db.select([models.StopPoint.atco_code]))
+    set_stops = set(c.atco_code for c in query_stops)
     set_not_exists = set()
-
-    @utils.xslt_text_func
-    def national_op_new(_, code):
-        """ Check if national operator does not exist.. """
-        return bool(code) and code not in set_national
-
-    @utils.xslt_text_func
-    def local_op_new(_, code, region_ref):
-        """ Check if local operator does not exist. """
-        return all([code, region_ref, (code, region_ref) not in set_local])
 
     @utils.xslt_text_func
     def stop_exists(_, code):
@@ -356,11 +346,11 @@ def _delete_empty_services():
         are null - eg when including a metro route where all stop points are
         not in the existing database.
     """
-    empty_patterns = (
-        db.session.query(models.JourneyLink.pattern_ref)
-        .group_by(models.JourneyLink.pattern_ref)
-        .having(models.JourneyLink.stop_point_ref.is_(None))
-        .subquery()
+    empty_patterns = ~(
+        db.session.query(models.JourneyLink)
+        .filter(models.JourneyLink.pattern_ref == models.JourneyPattern.id,
+                models.JourneyLink.stop_point_ref.isnot(None))
+        .exists()
     )
     empty_services = ~(
         db.session.query(models.JourneyPattern)
@@ -392,8 +382,8 @@ def _delete_empty_services():
 
     with utils.database_session():
         utils.logger.info("Deleting services without stop point references")
-        delete(models.JourneyPattern,
-               models.JourneyPattern.id.in_(empty_patterns))
+        # All associated journey links will be deleted too
+        delete(models.JourneyPattern, empty_patterns)
         delete(models.Service, empty_services)
         delete(models.LocalOperator, empty_local_operators)
         delete(models.Operator, empty_operators)
@@ -436,6 +426,20 @@ def _services_add_admin_areas():
         db.session.execute(statement)
 
 
+def _merge_services():
+    """ Merge all services if they share the same line and at least half of
+        stops within their journey patterns.
+    """
+    pass
+
+
+def _fill_description():
+    """ Find all services without descriptions and replace with localities
+        served using the graph diameter.
+    """
+    pass
+
+
 def _get_tnds_transform():
     """ Uses XSLT to convert TNDS XML data into several separate datasets. """
     tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))
@@ -444,15 +448,17 @@ def _get_tnds_transform():
     return transform
 
 
-def _commit_each_tnds(transform, archive, region):
+def _commit_tnds_region(transform, archive, region, delete=False,
+                        rollover=TNDS_ROLLOVER):
     """ Transforms each XML file and commit data to DB. """
-    str_region = et.XSLT.strparam(region)
     tnds = utils.PopulateData()
+    str_region = transform.strparam(region)
 
-    for file_ in file_ops.iter_archive(archive):
+    del_ = delete
+    for i, file_ in enumerate(file_ops.iter_archive(archive)):
         utils.logger.info("Parsing file %r" % os.path.join(archive, file_.name))
         data = et.parse(file_)
-        file_name = et.XSLT.strparam(file_.name)
+        file_name = transform.strparam(file_.name)
 
         try:
             new_data = transform(data, region=str_region, file=file_name)
@@ -461,58 +467,50 @@ def _commit_each_tnds(transform, archive, region):
                 utils.logger.error(error_message)
             raise
 
-        tnds.set_data(new_data)
-        tnds.add("Operator", models.Operator, indices=("code",))
-        tnds.add("LocalOperator", models.LocalOperator,
-                 indices=("region_ref", "code"))
-        tnds.add("Service", models.Service, indices=("id",))
+        tnds.set_input(new_data)
+        tnds.add("Operator", models.Operator)
+        tnds.add("LocalOperator", models.LocalOperator)
+        tnds.add("Service", models.Service)
         tnds.add("JourneyPattern", models.JourneyPattern)
         tnds.add("JourneyLink", models.JourneyLink)
         tnds.add("Journey", models.Journey)
         tnds.add("JourneySpecificLink", models.JourneySpecificLink)
-        tnds.add("Organisation", models.Organisation, indices=("code",))
+        tnds.add("Organisation", models.Organisation)
         tnds.add("OperatingDate", models.OperatingDate)
         tnds.add("OperatingPeriod", models.OperatingPeriod)
         tnds.add("Organisations", models.Organisations)
         tnds.add("SpecialPeriod", models.SpecialPeriod)
         tnds.add("BankHolidays", models.BankHolidays)
 
-    tnds.commit(delete=False)
+        if tnds.total() > rollover:
+            tnds.commit(delete=del_, clear=True)
+            del_ = False
+
+    # Commit rest of entries
+    tnds.commit(delete=del_)
 
 
-def commit_tnds_data(archive=None, region=None, delete=True):
+def commit_tnds_data(archives=None, delete=True):
     """ Commits TNDS data to database.
 
-        :param archive: Path to a zipped archive with TNDS XML documents. If
-        None, they will be downloaded.
-        :param region: Region code for archive file.
+        :param archives: Dictionary of regions and paths to zipped archives
+        with TNDS XML documents. If None, they will be downloaded.
         :param delete: Truncate all data from TNDS tables before populating.
     """
-    if archive is None:
+    if archives is None:
         # Download required files and get region code from each filename
-        regions = download_tnds_files()
-    elif region is None:
-        raise TypeError("A region code must be specified for archive %s."
-                        % archive)
+        data = download_tnds_files()
     else:
-        # Use archive and associated region code
-        regions = {region: archive}
-
-    if delete:
-        # Remove data from associated tables beforehand
-        with utils.database_connection() as cursor:
-            utils.truncate_tables(cursor, [
-                models.Operator, models.LocalOperator, models.Service,
-                models.JourneyPattern, models.JourneyLink, models.Journey,
-                models.JourneySpecificLink, models.Organisation,
-                models.OperatingDate, models.OperatingPeriod,
-                models.Organisations, models.SpecialPeriod, models.BankHolidays
-            ])
+        # Use archives and associated region codes
+        data = archives
 
     transform = _get_tnds_transform()
     setup_tnds_functions()
-    RowIds()
-    for region, archive in regions.items():
-        _commit_each_tnds(transform, archive, region)
+    RowIds(not delete)
+
+    del_ = delete
+    for region, archive in data.items():
+        _commit_tnds_region(transform, archive, region, delete=del_)
+        del_ = False
 
     # _delete_empty_services()

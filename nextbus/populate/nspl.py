@@ -75,9 +75,10 @@ def _get_dict_local_auth(atco_codes=None):
         everything
         :returns: Dict with local authority codes as keys
     """
+    with open(os.path.join(ROOT_DIR, LA_JSON), "r") as file_:
+        la_data = json.load(file_)
+
     local_auth = {}
-    with open(os.path.join(ROOT_DIR, LA_JSON), "r") as laf:
-        la_data = json.load(laf)
     for row in la_data:
         if not atco_codes or int(row["atco_area_code"]) in atco_codes:
             local_auth[row.pop("la_code")] = row
@@ -114,17 +115,22 @@ def commit_nspl_data(file_=None):
     for row in data:
         local_authority = local_auth[row["local_authority_code"]]
         postcodes.append({
-            "index":                "".join(row["postcode_3"].split()),
-            "text":                 row["postcode_3"],
-            "admin_area_ref":       local_authority["admin_area_code"],
-            "district_ref":         local_authority["district_code"],
-            "easting":              row["easting"],
-            "northing":             row["northing"],
-            "longitude":            row["longitude"],
-            "latitude":             row["latitude"]
+            "index":            "".join(row["postcode_3"].split()),
+            "text":             row["postcode_3"],
+            "admin_area_ref":   local_authority["admin_area_code"],
+            "district_ref":     local_authority["district_code"],
+            "easting":          row["easting"],
+            "northing":         row["northing"],
+            "longitude":        row["longitude"],
+            "latitude":         row["latitude"]
         })
 
-    utils.DataCopy().copy({models.Postcode: postcodes}, delete=True)
+    dc = utils.DataCopy()
+    table = models.Postcode.__table__
+
+    with utils.database_connection() as connection:
+        utils.truncate(connection, table)
+        dc.copy(connection, table, postcodes)
 
     if downloaded_file is not None:
         utils.logger.info("New file %r downloaded; can be deleted" %

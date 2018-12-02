@@ -79,8 +79,6 @@ class TransformTests(utils.BaseXMLTests):
             return True
 
         # Replicate functions which check for existing stops and operators
-        xslt_func["national_op_new"] = always_true
-        xslt_func["local_op_new"] = always_true
         xslt_func["stop_exists"] = always_true
 
         try:

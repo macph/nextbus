@@ -10,4 +10,4 @@ from nextbus.models.tables import (
     JourneySpecificLink, OperatingDate, OperatingPeriod, Organisation,
     Organisations, SpecialPeriod, BankHolidayDate, BankHolidays
 )
-from nextbus.models.mat_views import FTS
+from nextbus.models.mat_views import FTS, NaturalSort

@@ -385,8 +385,8 @@ def commit_naptan_data(archive=None, list_files=None):
         :param list_files: List of file paths for NaPTAN XML files.
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
-    query_area = db.session.query(models.AdminArea.code).all()
-    query_local = db.session.query(models.Locality.code).all()
+    query_area = db.engine.execute(db.select([models.AdminArea.code]))
+    query_local = db.engine.execute(db.select([models.Locality.code]))
     if not query_area or not query_local:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data. "
@@ -397,7 +397,7 @@ def commit_naptan_data(archive=None, list_files=None):
     area_codes = set(a.code for a in query_area) if atco_codes else None
 
     # Use full list of ATCO codes for downloading NaPTAN data
-    query_atco = db.session.query(models.AdminArea.atco_code).all()
+    query_atco = db.engine.execute(db.select([models.AdminArea.atco_code]))
     all_atco_codes = set(a.atco_code for a in query_atco)
 
     downloaded = None
@@ -414,13 +414,14 @@ def commit_naptan_data(archive=None, list_files=None):
     # Go through data and create objects for committing to database
     _setup_naptan_functions(area_codes, local_codes)
     naptan = utils.PopulateData()
+
     for file_ in iter_files:
         file_name = file_.name if hasattr(file_, "name") else file_
         utils.logger.info("Parsing file %r" % file_name)
         new_data = _get_naptan_data(file_)
-        naptan.set_data(new_data)
+        naptan.set_input(new_data)
         naptan.add("StopArea", models.StopArea)
-        naptan.add("StopPoint", models.StopPoint, indices=("naptan_code",))
+        naptan.add("StopPoint", models.StopPoint)
 
     naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas

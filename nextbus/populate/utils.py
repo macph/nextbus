@@ -16,7 +16,8 @@ import types
 import dateutil.parser as dp
 from flask import current_app
 import lxml.etree as et
-import psycopg2.sql as sql
+import psycopg2.sql
+from sqlalchemy.dialects import postgresql
 
 from nextbus import db, logger
 
@@ -55,21 +56,16 @@ def database_session():
 
 @contextlib.contextmanager
 def database_connection():
-    """ Opens a connection to database and commits changes within
-        context, returning a cursor. Changes are rolled back and exceptions
-        raised if any errors are encountered.
+    """ Opens a connection to database and commits changes within context.
+        Changes are rolled back and exceptions raised if any errors are
+        encountered.
     """
-    connection = db.engine.raw_connection()
     try:
-        with connection.cursor() as cursor:
-            yield cursor
-        connection.commit()
+        with db.engine.begin() as connection:
+            yield connection
     except:
-        connection.rollback()
         logger.error("An error occurred during the transaction", exc_info=1)
         raise
-    finally:
-        connection.close()
 
 
 def duration_delta(duration, ignore=False):
@@ -292,148 +288,137 @@ def get_atco_codes():
     return codes
 
 
-class PopulateData(object):
-    """ Collects a list of database entries from XML data and populate database.
-    """
-    def __init__(self, xml_data=None):
-        self.data = None
-        if xml_data is not None:
-            self.set_data(xml_data)
+class PopulateData:
+    def __init__(self):
+        self.input = None
         self.entries = collections.OrderedDict()
-        self.conflicts = {}
-        self.cd = DataCopy()
 
-    def set_data(self, xml_data):
-        """ Sets the source XML data to a new ElementTree object. """
+        self.metadata = db.MetaData()
+        self.metadata.reflect(db.engine)
+        self.dc = DataCopy(self.metadata)
+
+    def total(self):
+        return sum(len(e) for e in self.entries.values())
+
+    def set_input(self, xml_data):
+        """ Sets source data to a XML file or ElementTree object.
+
+            :param xml_data: `ElementTree` object, a file-like object or a path
+            pointing to a XML file.
+        """
         try:
-            self.data = et.parse(xml_data)
+            self.input = et.parse(xml_data)
         except TypeError:
-            self.data = xml_data
+            self.input = xml_data
 
-    def add(self, xpath_query, model, indices=None):
+    def add(self, xpath_query, model):
         """ Iterates through a list of elements, creating a list of dicts.
 
-            :param xpath_query: XPath query to retrieve list of elements
-            :param model: Database model
-            :param indices: Sequence of string or Column objects, which should
-            be unique, for checking duplicates
+            :param xpath_query: XPath query to retrieve list of elements.
+            :param model: Database model.
         """
-        if self.data is None:
-            raise ValueError("No source XML data has been set.")
+        if self.input is None:
+            raise ValueError("No source XML data has been set yet.")
+
         # Find all elements matching query
-        list_elements = self.data.xpath(xpath_query)
-
-        if indices is not None:
-            self.conflicts[model] = indices
-
-        if self.entries.get(model) is None:
-            self.entries[model] = []
-        new_entries = self.entries[model]
-
+        list_elements = self.input.xpath(xpath_query)
         if not list_elements:
             return
-        # Create list for model and iterate over all elements
-        for element in list_elements:
-            new_entries.append(xml_as_dict(element, convert=False))
 
-    def _process_duplicates(self, model, warn):
-        """ Iterates through all entries for a model, removing duplicates.
+        new_entries = self.entries.setdefault(model, list())
+        new_entries.extend(xml_as_dict(e, False) for e in list_elements)
 
-            If a 'modified' column exists, it is used to find the most recent
-            version, otherwise duplicates are checked on their contents and
-            raising a ValueError if they differ.
-
-            :param warn: Logs a warning for conflicting entries that are not
-            equal, with extra entries discarded. If False, an error is raised.
+    def _new_temp_table(self, table):
+        """ Creates a temporary table based on an existing table, excluding any
+            columns with autoincrement, and set it to drop on commit.
         """
-        indices = self.conflicts[model]
-        removed = 0
-        found = {}
-        for entry in self.entries[model]:
-            try:
-                i = tuple(entry[j] for j in indices)
-            except KeyError as err:
-                raise KeyError("Field names %r does not exist for model %s"
-                               % (indices, model.__name__)) from err
+        # Find a suitable temporary table name
+        num = 0
+        temp_name = "%s_%d" % (table.name, num)
+        while temp_name in self.metadata.tables:
+            num += 1
+            temp_name = "%s_%d" % (table.name, num)
 
-            current = entry.get("modified")
-            if i not in found:
-                found[i] = entry
-            elif current is not None:
-                if dp.parse(current) > dp.parse(found[i]["modified"]):
-                    found[i] = entry
-                else:
-                    removed += 1
-            elif entry != found[i]:
-                if warn:
-                    logger.warn(
-                        "Entries %r and %r for model %s do not match" %
-                        (entry, found[i], model.__name__)
-                    )
-                else:
-                    # Not comparing on last modified dates but values do
-                    # not match - no way to tell which to pick. Raise error
-                    raise ValueError(
-                        "Entries %r and %r do not match. Without last modified "
-                        "dates they cannot be picked." % (entry, found[i])
-                    )
-            else:
-                removed += 1
+        new_columns = [db.Column(c.name, c.type, autoincrement=False)
+                       for c in table.columns if not c.autoincrement]
 
-        if removed > 0:
-            logger.info("%d duplicate %s objects removed" %
-                        (removed, model.__name__))
-
-        return list(found.values())
-
-    def _check_duplicates(self, warn=False):
-        """ Does a Python-side check of duplicates before executing INSERT
-            statements.
-
-            INSERT ON CONFLICT DO UPDATE statements work better with single
-            tuples of values, but we are using multi-valued inserts here.
-
-            :param warn: Logs a warning for conflicting entries that are not
-            equal, with extra entries discarded. If False, an error is raised.
-        """
-        for model in self.conflicts:
-            self.entries[model] = self._process_duplicates(model, warn)
-
-    def commit(self, delete=False):
-        """ Commits entries to database. All entries will be popped. """
-        if not self.entries:
-            raise ValueError("No data have been added yet.")
-        self._check_duplicates(warn=True)
-        self.cd.copy(self.entries, delete=delete)
-
-
-def truncate_tables(cursor, tables):
-    table_names = []
-    for t in tables:
-        try:
-            table_names.append(t.__tablename__)
-        except AttributeError:
-            table_names.append(t)
-
-    for name in table_names:
-        logger.info("Deleting old %r rows" % name)
-        cursor.execute(
-            sql.SQL("TRUNCATE {} CASCADE;")
-                .format(sql.Identifier(name))
+        return db.Table(
+            temp_name,
+            self.metadata,
+            *new_columns,
+            prefixes=["TEMPORARY"],
+            postgresql_on_commit="DROP"
         )
+
+    def _commit(self, connection, model, delete=False):
+        """ Copies from entries for a model using a temporary table. """
+        if not self.entries[model]:
+            return
+
+        table = self.metadata.tables[model.__tablename__]
+        temp_table = self._new_temp_table(table)
+        temp_table.create(connection)
+
+        # Add entries to temporary table using COPY
+        self.dc.copy(connection, temp_table, self.entries[model])
+
+        if delete:
+            truncate(connection, table)
+
+        insert_main = (
+            postgresql.insert(table)
+            .from_select([c.name for c in temp_table.columns],
+                         db.select([temp_table]))
+            .on_conflict_do_nothing()
+        )
+
+        logger.info("Inserting all data from temporary table %r for model %s" %
+                    (temp_table.name, model.__name__))
+        connection.execute(insert_main)
+
+        self.metadata.remove(temp_table)
+
+    def commit(self, delete=False, clear=False):
+        """ Copies data from XML data which has been added.
+            :param delete: Delete old data from models before copying.
+            :param clear: Delete all entries after committing.
+        """
+        with database_connection() as conn:
+            for m in self.entries:
+                self._commit(conn, m, delete)
+        if clear:
+            self.entries.clear()
+
+
+def truncate(connection, table, cascade=True):
+    """ Deletes data from a table using `TRUNCATE`.
+
+        :param connection: SQLAlchemy engine connection.
+        :param table: SQLAlchemy `Table` object.
+        :param cascade: Truncate other tables with foreign keys to this table.
+    """
+    str_truncate = "TRUNCATE {} CASCADE;" if cascade else "TRUNCATE {};"
+    table_name = psycopg2.sql.Identifier(table.name)
+    statement = psycopg2.sql.SQL(str_truncate).format(table_name)
+
+    with connection.connection.cursor() as cursor:
+        logger.info("Deleting all rows from %r" % table.name)
+        cursor.execute(statement)
 
 
 class DataCopy(object):
-    """ Sets up an interface for copying data to DB. """
+    """ Sets up an interface for copying data to PostgreSQL DB. """
     SEP = "\t"
     NULL = r"\N"
     LIMIT = 500000
 
-    def __init__(self):
+    def __init__(self, metadata=None):
         # Get metadata from existing database for server defaults
-        self.engine = db.session.get_bind()
-        self.metadata = db.MetaData()
-        self.metadata.reflect(bind=self.engine)
+        if metadata is not None:
+            self.metadata = metadata
+        else:
+            self.metadata = db.MetaData()
+            self.metadata.reflect(bind=db.engine)
 
     def _parse_row(self, table, obj):
         """ Parses each object, excluding columns that have server defaults (eg
@@ -459,14 +444,15 @@ class DataCopy(object):
                 columns.append(col.name)
             elif not col.nullable and col.server_default is None:
                 raise ValueError(
-                    "Non-nullable column %r:%r does not have a default value; "
-                    "can't use data %r" % (table.name, col.name, obj)
+                    "Non-nullable column %r for table %r does not have a "
+                    "default value; can't use row %r without this column." %
+                    (table.name, col.name, obj)
                 )
 
         return row, columns
 
     def _write_copy_file(self, file_, table_name, data):
-        """ Writes data from list of dicts to a temporary file for import. """
+        """ Writes data from list of dicts to a file for import. """
         table = self.metadata.tables[table_name]
         columns = None
         for obj in data:
@@ -475,22 +461,21 @@ class DataCopy(object):
             if columns is None:
                 columns = cols
             elif cols != columns:
-                raise ValueError("Row have different columns %r for table %r." %
-                                 (cols, table_name))
+                raise ValueError(
+                    "Columns %r for this row in table %r differ from columns "
+                    "%r for other rows." % (cols, table_name, columns)
+                )
 
             file_.write(self.SEP.join(row) + "\n")
 
         return columns
 
-    def _batch_copy(self, cursor, table_name, data):
-        """ Iterates over rows in batches.
-
-            To save on memory, data is written to several files and closed
-            before each is copied to database.
-        """
+    def _create_copy_files(self, table_name, data):
+        """ Splits data into chunks with `LIMIT` and saves them to files. """
         iter_rows = iter(data)
         temp_files = []
         columns = None
+
         try:
             while True:
                 chunk = list(itertools.islice(iter_rows, self.LIMIT))
@@ -501,39 +486,48 @@ class DataCopy(object):
                 with open(fd, "w") as file_:
                     columns = self._write_copy_file(file_, table_name, chunk)
                 temp_files.append(path)
-
+        except:
             for path in temp_files:
-                file_ = open(path)
-                try:
-                    cursor.copy_from(file_, table_name, sep=self.SEP,
-                                     null=self.NULL, columns=columns)
-                except:
-                    # Save copy file for debugging and raise again
-                    error_file = "temp/error_data"
-                    logger.error("Error occurred with COPY; saving file to %r"
-                                 % error_file)
-                    logger.debug("Columns: %r" % columns)
-                    with open(error_file, "w") as f:
-                        file_.seek(0)
-                        shutil.copyfileobj(file_, f)
-                    raise
-                finally:
-                    file_.close()
+                os.remove(path)
+            raise
+
+        return columns, temp_files
+
+    def _copy_from_file(self, cursor, table_name, columns, path):
+        """ Opens file and copies it to the DB using `COPY FROM`. If any errors
+            occur the offending file is saved to `temp/error_data`.
+        """
+        with open(path) as file_:
+            try:
+                cursor.copy_from(file_, table_name, sep=self.SEP,
+                                 null=self.NULL, columns=columns)
+            except:
+                # Save copy file for debugging and raise again
+                error_file = "temp/error_data"
+                logger.error("Error occurred with COPY; saving file to "
+                             "%r" % error_file)
+                logger.debug("Columns: %r" % columns)
+                with open(error_file, "w") as f:
+                    file_.seek(0)
+                    shutil.copyfileobj(file_, f)
+                raise
+
+    def copy(self, connection, table, data):
+        """ Copies all data to the database, deleting data afterwards
+
+            :param table: SQLAlchemy `Table` object.
+            :param data: List of dictionaries with table columns as keys. All
+            dictionaries must have the same keys.
+            :param connection: SQLAlchemy engine connection.
+        """
+        logger.info("Copying %d row%s to %r" %
+                    (len(data), "" if len(data) == 1 else "s", table.name))
+        columns, temp_files = self._create_copy_files(table.name, data)
+
+        try:
+            with connection.connection.cursor() as cursor:
+                for path in temp_files:
+                    self._copy_from_file(cursor, table.name, columns, path)
         finally:
             for path in temp_files:
                 os.remove(path)
-
-    def copy(self, dataset, delete=False):
-        """ Copies all data to the database, deleting data afterwards
-
-            :param dataset: Dict with models as keys and lists of dicts as
-            values. All dicts must have the same keys.
-            :param delete: Truncates existing data.
-        """
-        with database_connection() as cursor:
-            for model in list(dataset):
-                table_name = model.__tablename__
-                if delete:
-                    truncate_tables(cursor, [table_name])
-                logger.info("Copying data to %r" % table_name)
-                self._batch_copy(cursor, table_name, dataset.pop(model))

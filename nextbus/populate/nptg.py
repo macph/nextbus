@@ -137,7 +137,7 @@ def commit_nptg_data(archive=None, list_files=None):
         file_name = file_.name if hasattr(file_, "name") else file_
         utils.logger.info("Parsing file %r" % file_name)
         new_data = _get_nptg_data(file_, atco_codes)
-        nptg.set_data(new_data)
+        nptg.set_input(new_data)
         nptg.add("Region", models.Region)
         nptg.add("AdminArea", models.AdminArea)
         nptg.add("District", models.District)

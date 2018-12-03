@@ -1051,10 +1051,10 @@ class Graph:
         return draw_graph(self, sequence)
 
 
-def _service_stops(id, direction=None):
+def _service_stops(service_id, direction=None):
     """ Get dictionary of distinct stops for a service.
 
-        :param id: Service ID.
+        :param service_id: Service ID.
         :param direction: Groups journey patterns by direction.
         :returns: Dictionary with ATCO codes as keys for stop point objects.
     """
@@ -1062,7 +1062,7 @@ def _service_stops(id, direction=None):
         db.session.query(models.JourneyLink.stop_point_ref,
                          models.JourneyPattern.direction)
         .join(models.JourneyPattern.links)
-        .filter(models.JourneyPattern.service_ref == id)
+        .filter(models.JourneyPattern.service_ref == service_id)
     )
 
     if direction is not None:
@@ -1082,10 +1082,10 @@ def _service_stops(id, direction=None):
     return {s.atco_code: s for s in stops.all()}
 
 
-def service_graph(id, direction):
+def service_graph(service_id, direction):
     """ Get list of stops and their preceding and following stops for a service.
 
-        :param id: Service ID.
+        :param service_id: Service ID.
         :param direction: Groups journey patterns by direction - False for
         outbound and True for inbound.
     """
@@ -1097,7 +1097,7 @@ def service_graph(id, direction):
         )
         .select_from(models.JourneyPattern)
         .join(models.JourneyPattern.links)
-        .filter(models.JourneyPattern.service_ref == id,
+        .filter(models.JourneyPattern.service_ref == service_id,
                 models.JourneyPattern.direction == direction,
                 models.JourneyLink.stop_point_ref.isnot(None))
     )
@@ -1116,36 +1116,53 @@ def service_graph(id, direction):
     return Graph(query.all())
 
 
-def service_stop_list(id, direction):
+def service_stop_list(service_id, direction):
     """ Queries all patterns for a service and creates list of stops sorted
         topologically.
 
-        :param id: Service ID.
+        :param service_id: Service ID.
         :param direction: Groups journey patterns by direction - False for
         outbound and True for inbound.
     """
-    dict_stops = _service_stops(id, direction)
+    dict_stops = _service_stops(service_id, direction)
     if not dict_stops:
-        raise ValueError("No stops exist for service ID %s" % id)
+        raise ValueError("No stops exist for service ID %s" % service_id)
 
-    graph = service_graph(id, direction)
+    graph = service_graph(service_id, direction)
     stops = [dict_stops[v] for v in graph.sequence()]
 
     return stops
 
 
-def service_json(service, direction):
+def service_json(service_id, reverse):
     """ Creates geometry JSON data for map.
 
-        :param service: Service instance.
-        :param direction: Groups journey patterns by direction - False for
+        :param service_id: Service ID.
+        :param reverse: Groups journey patterns by direction - False for
         outbound and True for inbound.
     """
+    service = (
+        models.Service.query
+        .join(models.Service.patterns)
+        .join(models.JourneyPattern.local_operator)
+        .options(db.contains_eager(models.Service.local_operators),
+                 db.contains_eager(models.Service.patterns))
+        .filter(models.Service.id == service_id)
+        .one_or_none()
+    )
+
+    if service is None:
+        return None
+
+    # Check line patterns - is there more than 1 direction?
+    direction, mirrored = service.has_mirror(reverse)
+
     dict_stops = _service_stops(service.id, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service %r" % service.id)
 
-    paths, sequence = service_graph(service.id, direction).analyse()
+    graph = service_graph(service.id, direction)
+    paths, sequence = graph.analyse()
 
     def coordinates(vertex):
         stop = dict_stops[vertex]
@@ -1154,8 +1171,6 @@ def service_json(service, direction):
     # Serialise data
     lines = [[coordinates(v) for v in p] for p in paths if len(p) > 1]
     route_data = [dict_stops[s].to_geojson() for s in sequence]
-    # Check if service has a mirror
-    mirrored = {p.direction for p in service.patterns} == {True, False}
 
     geojson = {
         "type": "Feature",
@@ -1176,7 +1191,7 @@ def service_json(service, direction):
         "line": service.line,
         "description": service.description,
         "direction": direction,
-        "operator": service.local_operator.name,
+        "operator": [o.name for o in service.local_operators],
         "mirrored": mirrored,
         "sequence": route_data,
         "paths": geojson

@@ -11,10 +11,6 @@
 <nav>
     <ul class="breadcrumbs breadcrumbs--trailing">
         <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        <li><a href="{{ url_for('page.list_in_region', region_code=service.region.code) }}">{{ service.region.name }}</a></li>
-        {% if service.admin_area is not none %}
-        <li><a href="{{ url_for('page.list_in_area', area_code=service.admin_area.code) }}">{{ service.admin_area.name }}</a></li>
-        {% endif %}
     </ul>
 </nav>
 <div class="heading-service">
@@ -25,8 +21,9 @@
   </div>
   <h1>{{ service.description }}</h1>
 </div>
-{% if service.local_operator %}
-<p>Operated by <strong>{{ service.local_operator.name }}</strong></p>
+{% if service.local_operators|length > 0 %}
+{% set next = joiner() %}
+<p>Operated by {% for o in service.local_operators %}{{ next() }}<strong>{{ o.name }}</strong>{% endfor %}</p>
 {% endif %}
 {% endblock %}
 

@@ -455,11 +455,12 @@ def stop_atco(atco_code=""):
 def service(service_id):
     line = (
         models.Service.query
-        .options(db.joinedload(models.Service.local_operator, innerjoin=True),
-                 db.joinedload(models.Service.region, innerjoin=True),
-                 db.joinedload(models.Service.admin_area),
-                 db.joinedload(models.Service.patterns))
-        .get(service_id)
+        .join(models.Service.patterns)
+        .join(models.JourneyPattern.local_operator)
+        .options(db.contains_eager(models.Service.local_operators),
+                 db.contains_eager(models.Service.patterns))
+        .filter(models.Service.id == service_id)
+        .one_or_none()
     )
 
     if line is None:

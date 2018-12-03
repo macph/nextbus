@@ -549,6 +549,8 @@ class Service(utils.BaseModel):
 
     patterns = db.relationship("JourneyPattern", backref="service",
                                innerjoin=True)
+    local_operators = db.relationship("LocalOperator", backref="services",
+                                      secondary="journey_pattern")
 
     def has_mirror(self, selected=None):
         """ Checks directions for all patterns for a service and return the

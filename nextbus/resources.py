@@ -82,24 +82,12 @@ def get_stops_tile():
 @api.route("/route/<service_id>")
 def get_service_route(service_id):
     """ Gets service data including a MultiLineString GeoJSON object. """
-    line = (
-        models.Service.query
-        .options(db.joinedload(models.Service.local_operator, innerjoin=True),
-                 db.joinedload(models.Service.patterns))
-        .get(service_id)
-    )
+    data = graph.service_json(service_id, request.args.get("reverse") == "true")
 
-    if line is None:
+    if data is None:
         return bad_request(404, "Service '%s' does not exist." % service_id)
-
-    # Check line patterns - is there more than 1 direction?
-    directions = {p.direction for p in line.patterns}
-    if directions == {True, False}:
-        reverse = request.args.get("reverse") == "true"
     else:
-        reverse = directions.pop()
-
-    return jsonify(graph.service_json(line, reverse))
+        return jsonify(data)
 
 
 class StarredStop(MethodView):

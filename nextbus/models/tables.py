@@ -536,7 +536,7 @@ class Service(utils.BaseModel):
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     code = db.Column(db.Text)
     line = db.Column(db.Text, nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text, nullable=True)
     mode = db.Column(
         db.Integer,
         db.ForeignKey("service_mode.id"),
@@ -647,7 +647,7 @@ class JourneySpecificLink(utils.BaseModel):
     """ Journey timing link for a specific journey. """
     __tablename__ = "journey_specific_link"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),
@@ -749,7 +749,7 @@ class OperatingDate(utils.BaseModel):
     """
     __tablename__ = "operating_date"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
@@ -763,7 +763,7 @@ class OperatingPeriod(utils.BaseModel):
     """ List of operating periods. """
     __tablename__ = "operating_period"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     org_ref = db.Column(
         db.Text,
         db.ForeignKey("organisation.code", ondelete="CASCADE"),
@@ -782,7 +782,7 @@ class SpecialPeriod(utils.BaseModel):
     """ Special days specified by journeys. """
     __tablename__ = "special_period"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     journey_ref = db.Column(
         db.Integer,
         db.ForeignKey("journey.id", ondelete="CASCADE"),

@@ -50,11 +50,13 @@ def cli():
               help="Add NSPL postcode data from specified JSON file.")
 @click.option("--tnds", "-t", "tnds_d", is_flag=True,
               help="Download TNDS data and add to database.")
-@click.option("--tnds-path", "-T", "tnds_f", default=(None, None),
-              type=(click.Path(exists=True), str), multiple=True,
+@click.option("--tnds-path", "-T", "tnds_f", default=(), nargs=2,
+              type=click.Tuple([click.Path(exists=True), str]), multiple=True,
               help="Add TNDS services data from specified zip file with XML "
               "files and a region code.")
-@click.option("--no-delete-tnds", "tnds_nd", is_flag=True)
+@click.option("--no-delete-tnds", "tnds_nd", is_flag=True,
+              help="Don't delete existing TNDS data (eg when adding other "
+              "regions).")
 @click.option("--modify", "-m", "modify_d", is_flag=True,
               help="Modify values in existing data with modify.xml.")
 @click.option("--backup", "-b", "backup", is_flag=True,
@@ -62,9 +64,14 @@ def cli():
 @click.option("--backup-path", "-B", "backup_f", default=None,
               type=click.Path(), help="Back up database to a specified dump "
               "file before populating database.")
+@click.option("--restore", "-r", "restore", is_flag=True,
+              help="Restore database before populating database.")
+@click.option("--restore-path", "-R", "restore_f", default=None,
+              type=click.Path(), help="Restore database from a specified dump "
+              "file before populating database.")
 @click.pass_context
 def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
-             tnds_f, tnds_nd, modify_d, backup, backup_f):
+             tnds_f, tnds_nd, modify_d, backup, backup_f, restore, restore_f):
     """ Calls the populate functions for filling the static database with data.
     """
     from flask import current_app
@@ -72,7 +79,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
     from nextbus.populate import file_ops, utils
 
     errors = False
-    options = {o: False for o in "bgnptm"}
+    options = {o: False for o in "brgnptm"}
 
     nptg_file = None
     naptan_file = None
@@ -105,18 +112,30 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
     if tnds_d and tnds_f and tnds_f[0][0]:
         click.echo("Download (-t) and filepath (-T) options for TNDS data are "
                    "mutually exclusive.")
+        errors = True
     else:
         options["t"] = tnds_d or tnds_f
         tnds_files = dict((t[1], t[0]) for t in tnds_f)
 
     options["m"] = modify_d
 
+    if (backup or backup_f) and (restore or restore_f):
+        click.echo("Can't backup and restore database at the same time!")
+        errors = True
+
     if backup and backup_f:
-        click.echo("Default (-p) and filepath (-P) options for backing up "
+        click.echo("Default (-b) and filepath (-B) options for backing up "
                    "data are mutually exclusive.")
         errors = True
     else:
         options["b"] = backup or backup_f
+
+    if restore and restore_f:
+        click.echo("Default (-r) and filepath (-R) options for restoring "
+                   "data are mutually exclusive.")
+        errors = True
+    else:
+        options["r"] = restore or restore_f
 
     if errors:
         # Messages already printed; return to shell
@@ -125,6 +144,9 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
         if options["b"]:
             # Carry out at least one option, back up beforehand if needed
             file_ops.backup_database(backup_f)
+        if options["r"]:
+            # Carry out at least one option, back up beforehand if needed
+            file_ops.restore_database(backup_f)
         if options["g"]:
             populate.commit_nptg_data(archive=nptg_file)
         if options["n"]:

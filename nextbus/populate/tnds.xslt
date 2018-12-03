@@ -322,6 +322,7 @@
     <xsl:variable name="jl" select="key('key_links', txc:JourneyPatternTimingLinkRef)"/>
     <xsl:variable name="vhjl_before" select="preceding-sibling::txc:VehicleJourneyTimingLink[1]"/>
     <JourneySpecificLink>
+      <id><xsl:value-of select="func:add_id('JourneySpecificLink')"/></id>
       <link_ref><xsl:value-of select="func:get_id('JourneyLink', $file, $jp_id, txc:JourneyPatternTimingLinkRef, 'e')"/></link_ref>
       <journey_ref><xsl:value-of select="func:get_id('Journey', $file, $vj_code)"/></journey_ref>
       <run_time py_type="duration"><xsl:value-of select="txc:RunTime"/></run_time>
@@ -371,6 +372,7 @@
   <xsl:template match="txc:ServicedOrganisation" mode="excluded_days">
     <xsl:for-each select="//txc:DateExclusion">
       <OperatingDate>
+        <id><xsl:value-of select="func:add_id('OperatingDate')"/></id>
         <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
         <date><xsl:value-of select="current()"/></date>
         <working py_type="bool">
@@ -386,6 +388,7 @@
   <xsl:template match="txc:ServicedOrganisation" mode="operating_periods">
     <xsl:for-each select=".//txc:DateRange">
       <OperatingPeriod>
+        <id><xsl:value-of select="func:add_id('OperatingPeriod')"/></id>
         <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
         <date_start><xsl:value-of select="txc:StartDate"/></date_start>
         <date_end>
@@ -473,6 +476,7 @@
   <xsl:template name="special_days">
     <xsl:param name="id"/>
     <SpecialPeriod>
+      <id><xsl:value-of select="func:add_id('SpecialPeriod')"/></id>
       <journey_ref><xsl:value-of select="$id"/></journey_ref>
       <date_start><xsl:value-of select="txc:StartDate"/></date_start>
       <date_end><xsl:value-of select="txc:EndDate"/></date_end>

@@ -65,7 +65,7 @@ class IndexList(object):
 
     def __repr__(self):
         items = ", ".join(repr(i) for i in self)
-        return "<UniqueList(%s, initial=%s)>" % (items, self._initial)
+        return "<IndexList(%s, initial=%s)>" % (items, self._initial)
 
     def __len__(self):
         return len(self._map)
@@ -81,38 +81,31 @@ class IndexList(object):
             raise IndexError("Index out of range")
 
     def __iter__(self):
-        return self._iter()
+        return iter(sorted(self._map, key=self._map.get))
 
-    def _iter(self):
-        """ Generator function to be used for iter() """
-        for i in sorted(self._map.values()):
-            for k, j in self._map.items():
-                if i == j:
-                    yield k
-                    break
+    def add(self, item=None):
+        """ Adds item to list, returning its index.
 
-    def add(self, item):
-        """ Adds item to list, returning its index. If item is already in list,
-            returns the existing item's index.
+            :param item: Item being added. If it is None, the index is
+            incremented but the list won't be expanded.
+            :returns: Index of item.
         """
-        if item not in self._map:
-            self._map[item] = self._current
+        if item is None:
+            new = self._current
             self._current += 1
-
-        return self._map[item]
-
-    def append(self, item):
-        """ Appends item to list. If item is already in list, an error is
-            raised.
-        """
-        if item not in self._map:
-            self._map[item] = self._current
+        elif item not in self._map:
+            new = self._map[item] = self._current
             self._current += 1
         else:
-            raise KeyError(item)
+            new = self._map[item]
+
+        return new
 
     def get(self, item):
         """ Gets index of an item or None if it does not exist. """
+        if item is None:
+            raise ValueError("'None' not accepted as key.")
+
         return self._map.get(item)
 
 
@@ -154,7 +147,11 @@ class RowIds(object):
 
             self._id[name] = IndexList(initial=initial)
 
-        return self._id[name].add(ids)
+        new_id = self._id[name].add(ids if ids else None)
+        utils.logger.debug("Added ID %d for %r and identifiers %r" %
+                           (new_id, name, ids))
+
+        return new_id
 
     def get_id(self, _, name, *ids):
         """ Gets integer ID for IDs (eg file name, code) """
@@ -162,7 +159,11 @@ class RowIds(object):
             raise ValueError("IDs %r does not exist for model %r." %
                              (ids, name))
 
-        return self._id[name].get(ids)
+        got_id = self._id[name].get(ids)
+        utils.logger.debug("Retrieved ID %d for %r and identifiers %r" %
+                           (got_id, name, ids))
+
+        return got_id
 
 
 @utils.xslt_text_func
@@ -322,8 +323,7 @@ def bank_holidays(_, nodes):
 
 
 def setup_tnds_functions():
-    """ Finds all existing operators and stop points in database, setting up
-        XSLT functions compare with incoming operators and journey links.
+    """ Finds all existing stop points in database, setting up XSLT functions.
     """
     query_stops = db.engine.execute(db.select([models.StopPoint.atco_code]))
     set_stops = set(c.atco_code for c in query_stops)
@@ -506,7 +506,7 @@ def commit_tnds_data(archives=None, delete=True):
 
     transform = _get_tnds_transform()
     setup_tnds_functions()
-    RowIds(not delete)
+    RowIds(check_existing=not delete)
 
     del_ = delete
     for region, archive in data.items():

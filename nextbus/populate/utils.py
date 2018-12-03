@@ -68,6 +68,14 @@ def database_connection():
         raise
 
 
+def reflect_metadata():
+    """ Retrieves metadata from the DB. """
+    metadata = db.MetaData()
+    metadata.reflect(db.engine)
+
+    return metadata
+
+
 def duration_delta(duration, ignore=False):
     """ Converts a time duration from XML data to a timedelta object.
 
@@ -293,8 +301,7 @@ class PopulateData:
         self.input = None
         self.entries = collections.OrderedDict()
 
-        self.metadata = db.MetaData()
-        self.metadata.reflect(db.engine)
+        self.metadata = reflect_metadata()
         self.dc = DataCopy(self.metadata)
 
     def total(self):
@@ -417,8 +424,7 @@ class DataCopy(object):
         if metadata is not None:
             self.metadata = metadata
         else:
-            self.metadata = db.MetaData()
-            self.metadata.reflect(bind=db.engine)
+            self.metadata = reflect_metadata()
 
     def _parse_row(self, table, obj):
         """ Parses each object, excluding columns that have server defaults (eg

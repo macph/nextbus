@@ -759,6 +759,7 @@
     <weeks/>
   </Journey>
   <JourneySpecificLink>
+    <id>1</id>
     <link_ref>5</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration">PT0S</run_time>
@@ -767,6 +768,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>2</id>
     <link_ref>6</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration"/>
@@ -775,6 +777,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>3</id>
     <link_ref>7</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration"/>
@@ -783,6 +786,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>4</id>
     <link_ref>8</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration">PT0S</run_time>
@@ -791,6 +795,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>5</id>
     <link_ref>9</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration"/>
@@ -799,6 +804,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>6</id>
     <link_ref>10</link_ref>
     <journey_ref>1</journey_ref>
     <run_time py_type="duration"/>
@@ -807,6 +813,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>7</id>
     <link_ref>5</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration">PT0S</run_time>
@@ -815,6 +822,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>8</id>
     <link_ref>6</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration"/>
@@ -823,6 +831,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>9</id>
     <link_ref>7</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration"/>
@@ -831,6 +840,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>10</id>
     <link_ref>8</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration">PT0S</run_time>
@@ -839,6 +849,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>11</id>
     <link_ref>9</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration"/>
@@ -847,6 +858,7 @@
     <stopping py_type="bool">0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
+    <id>12</id>
     <link_ref>10</link_ref>
     <journey_ref>2</journey_ref>
     <run_time py_type="duration"/>
@@ -858,45 +870,53 @@
     <code>Y1</code>
   </Organisation>
   <OperatingDate>
+    <id>1</id>
     <org_ref>Y1</org_ref>
     <date>2018-02-26</date>
     <working py_type="bool">0</working>
   </OperatingDate>
   <OperatingDate>
+    <id>2</id>
     <org_ref>Y1</org_ref>
     <date>2018-04-16</date>
     <working py_type="bool">1</working>
   </OperatingDate>
   <OperatingDate>
+    <id>3</id>
     <org_ref>Y1</org_ref>
     <date>2018-07-13</date>
     <working py_type="bool">1</working>
   </OperatingDate>
   <OperatingPeriod>
+    <id>1</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-01-08</date_start>
     <date_end>2018-02-09</date_end>
     <working py_type="bool">1</working>
   </OperatingPeriod>
   <OperatingPeriod>
+    <id>2</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-02-19</date_start>
     <date_end>2018-03-23</date_end>
     <working py_type="bool">1</working>
   </OperatingPeriod>
   <OperatingPeriod>
+    <id>3</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-04-09</date_start>
     <date_end>2018-05-04</date_end>
     <working py_type="bool">0</working>
   </OperatingPeriod>
   <OperatingPeriod>
+    <id>4</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-05-08</date_start>
     <date_end>2018-05-25</date_end>
     <working py_type="bool">0</working>
   </OperatingPeriod>
   <OperatingPeriod>
+    <id>5</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-06-04</date_start>
     <date_end>2018-07-23</date_end>
@@ -927,36 +947,42 @@
     <working py_type="bool">1</working>
   </Organisations>
   <SpecialPeriod>
+    <id>1</id>
     <journey_ref>1</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
+    <id>2</id>
     <journey_ref>2</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
+    <id>3</id>
     <journey_ref>4</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
+    <id>4</id>
     <journey_ref>5</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">1</operational>
   </SpecialPeriod>
   <SpecialPeriod>
+    <id>5</id>
     <journey_ref>7</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
     <operational py_type="bool">0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
+    <id>6</id>
     <journey_ref>8</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>

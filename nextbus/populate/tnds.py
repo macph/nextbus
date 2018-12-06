@@ -376,61 +376,237 @@ def _delete_empty_services():
         .exists()
     )
 
-    def delete(model, where):
-        table = model.__table__
-        db.session.execute(table.delete().where(where))
+    def delete(connection, model, where):
+        result = connection.execute(model.__table__.delete().where(where))
+        return result.rowcount
 
-    with utils.database_session():
-        utils.logger.info("Deleting services without stop point references")
-        # All associated journey links will be deleted too
-        delete(models.JourneyPattern, empty_patterns)
-        delete(models.Service, empty_services)
-        delete(models.LocalOperator, empty_local_operators)
-        delete(models.Operator, empty_operators)
-        delete(models.Organisation, empty_organisations)
+    def plural(i): return "s" if i != 1 else ""
+
+    with utils.database_connection() as conn:
+        # All associated journey links and journeys will be deleted too
+        patterns = delete(conn, models.JourneyPattern, empty_patterns)
+        utils.logger.info("%d journey pattern%s without stop point references "
+                          "deleted" % (patterns, plural(patterns)))
+
+        services = delete(conn, models.Service, empty_services)
+        utils.logger.info("%d service%s without journey patterns deleted" %
+                          (services, plural(services)))
+
+        local_ops = delete(conn, models.LocalOperator, empty_local_operators)
+        utils.logger.info("%d local operator%s without services deleted" %
+                          (local_ops, plural(local_ops)))
+
+        nat_ops = delete(conn, models.Operator, empty_operators)
+        utils.logger.info("%d operator%s without local operators deleted" %
+                          (nat_ops, plural(nat_ops)))
+
+        org = delete(conn, models.Organisation, empty_organisations)
+        utils.logger.info("%d organisation%s without journeys deleted" %
+                          (org, plural(org)))
 
 
-def _services_add_admin_areas():
-    """ Add administrative area code to each service.
-
-        The code is chosen as the mode of all admin areas associated with stops
-        on the route that are within the service region. For example, if a
-        service based in the South East has 40% stops in the SE and 60% in
-        London the admin area is picked from the mode of stops within the SE.
+def _compare_arrays(array0, array1):
+    """ Returns expression comparing two arrays by dividing the length of the
+        intersected arrays with the least of the two array lengths.
     """
-    service_areas = (
-        db.session.query(models.Service.id.label("service"),
-                         models.AdminArea.code.label("admin_area"))
-        .select_from(models.Service)
-        .distinct()
-        .join(models.Service.patterns)
-        .join(models.JourneyPattern.links)
-        .join(models.JourneyLink.stop)
-        .join(models.StopPoint.admin_area)
-        .filter(models.Service.region_ref == models.AdminArea.region_ref)
-        .subquery()
-    )
-    set_sa = db.session.query(
-        service_areas.c.service.label("service"),
-        db.func.mode().within_group(service_areas.c.admin_area).label("mode")
-    ).group_by(service_areas.c.service).subquery()
+    length0 = db.func.cardinality(array0)
+    length1 = db.func.cardinality(array1)
 
-    with utils.database_session():
-        utils.logger.info("Appending admin area references to services")
-        service = models.Service.__table__
-        statement = (
-            service.update()
-            .values(admin_area_ref=set_sa.c.mode)
-            .where(service.c.code == set_sa.c.service)
-        )
-        db.session.execute(statement)
+    # Correlation and labelling prevents the interior terms appearing in FROM
+    # clause - see https://stackoverflow.com/questions/40366275
+    intersect = db.func.array(
+        db.select([db.func.unnest(array0)]).correlate(array0.table)
+        .intersect(db.select([db.func.unnest(array1)]).correlate(array1.table))
+        .label("matched")
+    )
+    compare = (
+        db.cast(db.func.cardinality(intersect), db.Float) /
+        db.func.least(length0, length1)
+    )
+
+    # Avoid division by zero by testing cardinality of both arrays
+    return db.case([(db.and_(length0 > 0, length1 > 0), compare)], else_=0)
+
+
+def _array_agg(col):
+    """ Expression for aggregated array with distinct and non-null values. """
+    return db.func.array_remove(db.func.array_agg(db.distinct(col)), None)
 
 
 def _merge_services():
     """ Merge all services if they share the same line and at least half of
         stops within their journey patterns.
     """
-    pass
+    service = models.Service.__table__
+    pattern = models.JourneyPattern.__table__
+    link = models.JourneyLink.__table__
+
+    # Create temporary table to hold all services and their associated stops
+    stops = db.Table(
+        "service_stops",
+        db.Column("id", db.Integer),
+        db.Column("line", db.Text),
+        db.Column("stops", db.ARRAY(db.Text, dimensions=1)),
+        db.Column("outbound", db.ARRAY(db.Text, dimensions=1)),
+        db.Column("inbound", db.ARRAY(db.Text, dimensions=1)),
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+
+    insert_stops = stops.insert().from_select(
+        ["id", "line", "stops", "outbound", "inbound"],
+        db.select([
+            service.c.id,
+            service.c.line,
+            _array_agg(link.c.stop_point_ref),
+            _array_agg(db.case([(pattern.c.direction, link.c.stop_point_ref)],
+                               else_=None)),
+            _array_agg(db.case([(~pattern.c.direction, link.c.stop_point_ref)],
+                               else_=None)),
+        ])
+        .select_from(service
+                     .join(pattern, pattern.c.service_ref == service.c.id)
+                     .join(link, link.c.pattern_ref == pattern.c.id))
+        .group_by(service.c.id)
+    )
+
+    # Using table of services and stops, find intersecting stops for every pair
+    # of services. Then filter pairs of services whose stops make up more than
+    # half of intersecting stops they share.
+    pairs = db.Table(
+        "service_pairs",
+        db.Column("id0", db.Integer),
+        db.Column("id1", db.Integer),
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+
+    s0, s1 = stops.alias("s0"), stops.alias("s1")
+    insert_pairs = pairs.insert().from_select(
+        ["id0", "id1"],
+        db.select([s0.c.id, s1.c.id])
+        .select_from(s0)
+        .select_from(s1)
+        .where(db.and_(s0.c.line == s1.c.line, s0.c.id < s1.c.id,
+                       _compare_arrays(s0.c.stops, s1.c.stops) > 0.5))
+    )
+
+    # Using a recursive CTE, find all original services and other services which
+    # share more than half their stops.
+    duplicates = db.Table(
+        "service_duplicates",
+        db.Column("original", db.Integer),
+        db.Column("other", db.Integer),
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+
+    pairs_alias = pairs.alias("sp0")
+    other_ids = db.exists(
+        db.select([1])
+        .select_from(pairs_alias)
+        .where(pairs.c.id0 == pairs_alias.c.id1)
+    )
+    merge = (
+        db.select([pairs.c.id0.label("original"), pairs.c.id1.label("next")])
+        .select_from(pairs)
+        .where(~other_ids)
+        .cte("service_merge", recursive=True)
+    )
+    merge = merge.union_all(
+        db.select([merge.c.original, pairs.c.id1.label("next")])
+        .select_from(pairs.join(merge, pairs.c.id0 == merge.c.next))
+    )
+
+    insert_duplicates = duplicates.insert().from_select(
+        ["original", "other"],
+        db.select([merge.c.original, merge.c.next]).distinct()
+        .select_from(merge)
+    )
+
+    # Use more CTEs to find stops for each duplicate service, filtered by
+    # direction, we can flip journey pattern directions while merging them
+    # such that all journey patterns have roughly the same sequence of stops.
+    dup_directions = db.Table(
+        "service_duplicate_directions",
+        db.Column("original", db.Integer),
+        db.Column("other", db.Integer),
+        db.Column("swap", db.Boolean),
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+
+    directions = (
+        db.select([
+            duplicates.c.original,
+            duplicates.c.other,
+            _compare_arrays(s0.c.outbound, s1.c.outbound).label("intersect_0"),
+            _compare_arrays(s0.c.inbound, s1.c.inbound).label("intersect_1"),
+            _compare_arrays(s0.c.outbound, s1.c.inbound).label("intersect_2"),
+            _compare_arrays(s0.c.inbound, s1.c.outbound).label("intersect_3")
+        ])
+        .select_from(
+            duplicates
+            .join(s0, duplicates.c.original == s0.c.id)
+            .join(s1, duplicates.c.other == s1.c.id)
+        )
+        .cte("service_pairs_directions")
+    )
+
+    insert_dup_directions = dup_directions.insert().from_select(
+        ["original", "other", "swap"],
+        db.select([
+            directions.c.original,
+            directions.c.other,
+            db.or_(db.and_(directions.c.intersect_2 > directions.c.intersect_0,
+                           directions.c.intersect_2 > 0.5),
+                   db.and_(directions.c.intersect_3 > directions.c.intersect_1,
+                           directions.c.intersect_3 > 0.5))
+        ])
+        .select_from(directions)
+    )
+
+    # Update all patterns' service refs to the original services
+    update_patterns = (
+        pattern.update()
+        .values(
+            service_ref=dup_directions.c.original,
+            direction=db.case([(dup_directions.c.swap, ~pattern.c.direction)],
+                              else_=pattern.c.direction)
+        )
+        .where(pattern.c.service_ref == dup_directions.c.other)
+    )
+
+    # Delete all other services
+    other_ids = db.select([dup_directions.c.other])
+    delete_services = service.delete().where(service.c.id.in_(other_ids))
+
+    def plural(i): return "s" if i != 1 else ""
+
+    # Do everything within a transaction - temp tables will be dropped on commit
+    with utils.database_connection() as conn:
+        utils.logger.info("Finding all services sharing line labels and stops")
+        stops.create(conn)
+        conn.execute(insert_stops)
+
+        pairs.create(conn)
+        conn.execute(insert_pairs)
+
+        duplicates.create(conn)
+        conn.execute(insert_duplicates)
+
+        dup_directions.create(conn)
+        conn.execute(insert_dup_directions)
+
+        update_result = conn.execute(update_patterns)
+        num_updated = update_result.rowcount
+        utils.logger.info("%d journey pattern%s updated to new service refs" %
+                          (num_updated, plural(num_updated)))
+
+        del_result = conn.execute(delete_services)
+        num_deleted = del_result.rowcount
+        utils.logger.info("%d duplicate service%s deleted" %
+                          (num_deleted, plural(num_deleted)))
 
 
 def _fill_description():
@@ -513,4 +689,5 @@ def commit_tnds_data(archives=None, delete=True):
         _commit_tnds_region(transform, archive, region, delete=del_)
         del_ = False
 
-    # _delete_empty_services()
+    _delete_empty_services()
+    _merge_services()

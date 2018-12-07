@@ -11,6 +11,10 @@ from nextbus import db, models
 ORDER_ITERATIONS = 6
 
 
+# TODO: Check service 3477-outbound: 4200F047400 appears before 4200F182601
+# TODO: Service 180 still doesn't work - problem with the cycles?
+
+
 class Path(abc.MutableSequence):
     """ Immutable path as sequence of vertices. """
     def __init__(self, vertices=None):
@@ -181,7 +185,117 @@ def _analyse_graph(graph):
     return paths, sequence
 
 
-# TODO: Add support for cyclic paths - use negative numbers or separate dicts
+class _Row:
+    """ Helper class to hold data for each row in a layout. """
+    def __init__(self, layout, vertex, column=None, start=None,
+                 end=None, cycles_start=None, cycles_end=None):
+        if vertex not in layout.seq:
+            raise ValueError("Vertex %r not in sequence %r." %
+                             (vertex, layout.seq))
+
+        self.layout = layout
+        self.vertex = vertex
+        self.column = column if column is not None else 0
+        self.start = start if start is not None else []
+        self.end = end if end is not None else []
+        self.cycles_start = cycles_start if cycles_start is not None else {}
+        self.cycles_end = cycles_end if cycles_end is not None else {}
+
+    def __repr__(self):
+        return "<_Row(%r, %r)>" % (self.vertex, self.column)
+
+    def copy(self, new_layout=None):
+        return self.__class__(
+            layout=new_layout if new_layout is not None else self.layout,
+            vertex=self.vertex,
+            column=self.column,
+            start=[set(c) for c in self.start],
+            end=[set(c) for c in self.end],
+            cycles_start={c: tuple(p) for c, p in self.cycles_start.items()},
+            cycles_end={c: tuple(p) for c, p in self.cycles_end.items()}
+        )
+
+    @property
+    def index(self):
+        return self.layout.seq.index(self.vertex)
+
+    def offset(self, steps):
+        new_index = self.index + steps
+        if new_index < 0 or new_index >= len(self.layout.seq):
+            raise ValueError("Index %r (from %r) is outside layout sequence"
+                             "range." % self.index)
+
+        return self.layout.rows[self.layout.seq[new_index]]
+
+    @property
+    def previous(self):
+        if self.index > 0:
+            return self.offset(-1)
+
+    @property
+    def next_(self):
+        if self.index < len(self.layout.seq) - 1:
+            return self.offset(1)
+
+    @property
+    def incoming_lines(self):
+        previous_row = self.previous
+        if previous_row is not None:
+            return previous_row.end
+
+    @incoming_lines.setter
+    def incoming_lines(self, new):
+        previous_row = self.previous
+        if previous_row is not None:
+            previous_row.end = new
+        else:
+            raise AttributeError("No previous row exists for %r." % self)
+
+    @property
+    def outgoing_lines(self):
+        return self.start if self.next_ is not None else None
+
+    @outgoing_lines.setter
+    def outgoing_lines(self, new):
+        if self.next_ is None:
+            raise AttributeError("No succeeding row exists for %r." % self)
+        self.start = new
+
+    def rearrange(self, new_order):
+        incoming, outgoing = self.incoming_lines, self.outgoing_lines
+
+        if incoming is None and outgoing is None:
+            return
+
+        len_order = len(new_order)
+        len_incoming = len(incoming) if incoming is not None else len(outgoing)
+        len_outgoing = len(outgoing) if outgoing is not None else len(incoming)
+
+        if len_incoming != len_outgoing:
+            raise ValueError("Incoming lines %r and outgoing lines %r do not "
+                             "have the same columns." % (incoming, outgoing))
+
+        if len_order != len_incoming:
+            raise ValueError("New order %r not the same length as incoming "
+                             "lines %r or outgoing lines %r for row %r" %
+                             (new_order, incoming, outgoing, self))
+
+        if new_order == list(range(len_incoming)):
+            # Same order already; leave as is
+            return
+
+        if outgoing is not None:
+            self.outgoing_lines = [outgoing[i] for i in new_order]
+
+        if incoming is not None:
+            self.incoming_lines = [incoming[i] for i in new_order]
+
+        self.cycles_start = {new_order.index(c): p for c, p
+                             in self.cycles_start.items()}
+        self.cycles_end = {new_order.index(c): p for c, p
+                           in self.cycles_end.items()}
+
+        self.column = new_order.index(self.column)
 
 
 class _Layout:
@@ -193,123 +307,95 @@ class _Layout:
         if len(self.seq) > len(set(self.seq)):
             raise ValueError("Sequence %r has non-unique vertices" % self.seq)
 
-        self.col = {v: 0 for v in self.seq}
-        self.start = {}
-        self.end = {}
-        self.cycles = {}
-        self.next_cycles = {}
+        self.rows = {v: _Row(self, v) for v in self.seq}
+        self.cycles = set()
         self.paths = {}
 
-    def _select(self, vertex=None, index=None):
-        if vertex is not None:
-            v, i = vertex, self.seq.index(vertex)
-        elif index is not None:
-            v, i = self.seq[index], index
+    def _adjacent(self, vertex, direct, cyclic, forward):
+        index = self.seq.index(vertex)
+        if forward:
+            adjacent = self.g.following(vertex)
+            sequence = set(self.seq[index + 1:])
         else:
-            raise ValueError("Either a vertex or an index must be specified.")
+            adjacent = self.g.preceding(vertex)
+            sequence = set(self.seq[:index])
 
-        return v, i
+        if direct and cyclic:
+            return adjacent
+        elif direct:
+            return adjacent & sequence
+        elif cyclic:
+            return adjacent - sequence
+        else:
+            return set()
 
     def incoming(self, vertex, direct=True, cyclic=False):
-        preceding = self.g.preceding(vertex)
-        index = self.seq.index(vertex)
-        before = set(self.seq[:index])
-
-        if direct and cyclic:
-            return preceding
-        elif direct:
-            return preceding & before
-        elif cyclic:
-            return preceding - before
-        else:
-            return set()
+        return self._adjacent(vertex, direct, cyclic, False)
 
     def outgoing(self, vertex, direct=True, cyclic=False):
-        following = self.g.following(vertex)
-        index = self.seq.index(vertex)
-        after = set(self.seq[index + 1:])
-
-        if direct and cyclic:
-            return following
-        elif direct:
-            return following & after
-        elif cyclic:
-            return following - after
-        else:
-            return set()
-
-    def previous_vertex(self, vertex):
-        index = self.seq.index(vertex)
-        return self.seq[index - 1] if index > 0 else None
-
-    def next_vertex(self, vertex):
-        index = self.seq.index(vertex)
-        return self.seq[index + 1] if index < len(self.seq) - 1 else None
+        return self._adjacent(vertex, direct, cyclic, True)
 
     def copy(self):
         """ Makes a copy of the layout for modification. """
         layout = _Layout(self.g, self.seq)
-
-        layout.col = {v: self.col[v] for v in self.seq}
-        if self.start:
-            layout.start = {v: [set(c) for c in self.start[v]]
-                            for v in self.seq}
-        if self.end:
-            layout.end = {v: [set(c) for c in self.end[v]]
-                          for v in self.seq}
-        if self.paths:
-            layout.paths = {v: [set(c) for c in self.paths[v]]
-                            for v in self.seq}
+        layout.rows = {v: self.rows[v].copy(layout) for v in self.seq}
+        layout.cycles = {tuple(c) for c in self.cycles}
+        layout.paths = {v: set(tuple(p) for p in self.paths[v])
+                        for v in layout.paths}
 
         return layout
 
 
-def _rearrange_lines(layout, lines, vertex):
+def _rearrange_lines(row):
     """ Move around lines such that only one line has the next vertex, with
         all others avoiding that vertex.
     """
-    col = layout.col[vertex]
-    next_v = layout.next_vertex(vertex)
-
-    if next_v is None:
+    next_row = row.next_
+    if next_row is None:
         return
 
-    while col >= len(lines):
-        lines.append(set())
+    while row.column >= len(row.end):
+        row.end.append(set())
 
-    if any(next_v in c for c in lines):
+    if any(next_row.vertex in c for c in row.end):
+        if {next_row.vertex} in row.end:
+            # Column dedicated to next vertex already exists; use it
+            next_col = row.end.index({next_row.vertex})
+        else:
+            next_col = row.column
         # Move all references for next vertex to this column
-        for vertices in lines:
-            vertices.discard(next_v)
-        lines[col].add(next_v)
+        for vertices in row.end:
+            vertices.discard(next_row.vertex)
+        row.end[next_col].add(next_row.vertex)
     else:
         # New vertex; add column to lines
-        lines.append({next_v})
+        row.end.append({next_row.vertex})
 
     temp = set()
     # Move all other references from this column
-    for v in lines[col] - {next_v}:
+    for v in row.end[row.column] - {next_row.vertex}:
         temp.add(v)
-        lines[col].remove(v)
+        row.end[row.column].remove(v)
+
     if temp:
         # Add new line to left of the next vertex
-        lines.insert(col, temp)
+        row.end.insert(row.column, temp)
 
 
-def _remove_lines(lines):
+def _remove_lines(row):
     """ Remove all lines that are empty or duplicates of other lines in this
         row.
 
         If lines with single vertices exist, these vertices are removed from
         all other lines.
     """
-    single_lines = set()
+    single = set()
     seen = []
     to_remove = []
     # Find lines with only one vertex and mark duplicates for removal
-    for i, c in enumerate(lines):
+    for i, c in enumerate(row.end):
         if len(c) == 1:
-            single_lines |= c
+            single |= c
         if c not in seen:
             seen.append(c)
         else:
@@ -317,92 +403,120 @@ def _remove_lines(lines):
 
     # Remove all duplicate lines that lead to a single vertex
     for i in reversed(to_remove):
-        del lines[i]
+        del row.end[i]
 
     # Remove vertices from lines that already exist in other single lines
-    for c in lines:
+    for c in row.end:
         if len(c) > 1:
-            c -= single_lines
+            c -= single
 
     # Clean up any empty columns
-    for i in reversed(range(len(lines))):
-        if not lines[i]:
-            del lines[i]
+    for i in reversed(range(len(row.end))):
+        if not row.end[i]:
+            del row.end[i]
 
 
-def _add_outgoing_cycles(layout, start, end, vertex):
-    if vertex not in {u[0] for u in layout.cycles.values()}:
+def _add_outgoing_cycles(row):
+    """ Add paths for cycles starting at this vertex. """
+    if row.vertex not in [p[0] for p in row.layout.cycles]:
         return
 
-    column = layout.col[vertex]
+    c = column = row.column
     # Add lines for cycles
-    for c in sorted(layout.cycles.keys()):
-        u, v = layout.cycles[c]
-        if vertex != u:
+    for u, v in row.layout.cycles:
+        if row.vertex != u:
             continue
-        while c > len(end):
-            end.append(set())
 
-        start[column].add(v)
-        end.insert(c, {v})
+        row.start[column].add(v)
+        row.end.insert(c, {v})
+        row.cycles_start[c] = (u, v)
+        c += 1
 
 
-def _add_incoming_cycles(layout, start, end, vertex):
-    next_v = layout.next_vertex(vertex)
-    if next_v is None:
+def _add_incoming_cycles_next(row):
+    """ Add paths for cycles ending at the next vertex. They do not necessarily
+        stay on the same columns as outgoing paths.
+    """
+    next_row = row.next_
+    if next_row is None:
         return
 
-    cycles = layout.incoming(next_v, direct=False, cyclic=True)
+    cycles = row.layout.incoming(next_row.vertex, direct=False, cyclic=True)
     if not cycles:
         return
 
-    next_c = layout.col[next_v] = end.index({next_v})
-    while next_c >= len(start):
-        start.append(set())
+    # Column for vertex in next row should have been set already
+    while next_row.column > len(row.start):
+        row.start.append(set())
 
-    column = next_c
-    new_column = layout.col[vertex]
+    column = next_row.column
+    new_column = row.column
     # Order from furthest away to nearest
-    incoming = [v for v in reversed(layout.seq) if v in cycles]
+    incoming = [v for v in reversed(row.layout.seq) if v in cycles]
     for v in incoming:
-        if v == next_v:
+        if v == next_row.vertex:
             # Don't want self-cycles
             continue
-        if column in layout.cycles:
-            column += 1
-            while column > len(start):
-                start.append(set())
-
-        layout.cycles[column] = (v, next_v)
         # Insert new column for incoming cycle and track original vertex
-        start.insert(column, {next_v})
+        new_cycle = (v, next_row.vertex)
+        row.layout.cycles.add(new_cycle)
+        row.cycles_end[column] = new_cycle
+        row.start.insert(column, {next_row.vertex})
         if new_column >= column:
             new_column += 1
         column += 1
 
     # Modify original vertex column and its lines
-    original = layout.col[vertex]
-    if new_column > original:
-        index = layout.seq.index(vertex)
-        if index < 1:
-            return
-        previous_v = layout.seq[index - 1]
-
-        layout.end[previous_v][original:] = (
-            [set()] * (new_column - original)
-            + layout.end[previous_v][original:]
-        )
-        layout.col[vertex] = new_column
+    if new_column > row.column:
+        incoming = row.incoming_lines
+        if incoming is not None:
+            incoming[row.column:] = ([set()] * (new_column - row.column)
+                                     + incoming[row.column:])
+        row.column = new_column
 
 
-def _set_next_column(layout, lines, vertex):
+def _set_next_column(row):
     """ Sets the column of the next vertex based on the ending lines for this
         row.
     """
-    next_v = layout.next_vertex(vertex)
-    # Set column for next vertex using lines
-    if next_v is not None:
-        layout.col[next_v] = lines.index({next_v})
+    next_row = row.next_
+    if next_row is None:
+        # Last in sequence; don't need to set next vertex
+        return
+
+    found = [c for c in row.end if next_row.vertex in c]
+    if not found:
+        raise ValueError("Vertex %r for next row not in lines %r." %
+                         (next_row.vertex, row.end))
+    elif len(found) > 2:
+        raise ValueError("Next vertex %r is found in multiple columns for "
+                         "lines %r." % (next_row.vertex, row.end))
+    elif len(found[0]) > 1:
+        raise ValueError("Multiple vertices found in lines %r for column where "
+                         "next vertex %r is supposed to be." %
+                         (row.end, next_row.vertex))
+
+    next_row.column = row.end.index({next_row.vertex})
+
+
+def _pad_columns(row):
+    """ Add empty columns to either start of this row or end of last row such
+        that they have the same number of columns.
+    """
+    incoming, outgoing = row.incoming_lines, row.outgoing_lines
+
+    if incoming is None or outgoing is None:
+        # Start or end of line; don't need to pad them
+        return
+
+    while len(incoming) < len(outgoing):
+        incoming.append(set())
+
+    while len(incoming) > len(outgoing):
+        outgoing.append(set())
+
+    while not incoming[-1] and not outgoing[-1]:
+        del incoming[-1], outgoing[-1]
 
 
 def _set_lines(layout):
@@ -412,49 +526,46 @@ def _set_lines(layout):
 
     first_v = layout.seq[0]
     cycles = layout.incoming(first_v, direct=False, cyclic=True)
+
     if cycles:
-        ordered = [v for v in reversed(layout.seq) if v in cycles]
+        pairs = [(v, first_v) for v in reversed(layout.seq) if v in cycles]
         # Add new row for cycle before first vertex
         layout.seq.insert(0, None)
-        layout.col[None] = 0
-        layout.start[None] = [{first_v}] * len(cycles)
-        layout.end[None] = [{first_v}]
-        layout.cycles.update({c: (v, first_v) for c, v in enumerate(ordered)})
+        layout.cycles |= set(pairs)
+        layout.rows[None] = _Row(
+            layout, None,
+            start=[{first_v}] * len(cycles),
+            end=[{first_v}],
+            cycles_end={c: p for c, p in enumerate(pairs)}
+        )
 
-    lines_end = None
     for v in layout.seq:
         if v is None:
             continue
 
-        col = layout.col[v]
-        # Set starting lines to lines at end of previous row
-        if lines_end is not None:
-            lines_start = [set(c) for c in lines_end]
+        row = layout.rows[v]
+        # Set starting lines to previous row or a single empty column
+        if row.previous is not None:
+            row.start = [set(c) for c in row.incoming_lines]
         else:
-            lines_start = []
+            row.start = [set()]
 
         # Remove current vertex, any outgoing cycles and add new columns
-        to_remove = {u[1] for u in layout.cycles.values()} | {v}
-        for c in lines_start:
+        to_remove = {p[1] for p in layout.cycles} | {v}
+        for c in row.start:
             c -= to_remove
-        while col >= len(lines_start):
-            lines_start.append(set())
 
         # Add all outgoing vertices to current column except self
-        lines_start[col] |= layout.outgoing(v)
+        row.start[row.column] |= layout.outgoing(v)
 
-        # Clean up empty columns except for current vertex
-        lines_start = [c for i, c in enumerate(lines_start) if c or i <= col]
-        lines_end = [set(c) for c in lines_start]
+        row.end = [set(c) for c in row.start]
 
-        _rearrange_lines(layout, lines_end, v)
-        _remove_lines(lines_end)
-        _add_outgoing_cycles(layout, lines_start, lines_end, v)
-        _add_incoming_cycles(layout, lines_start, lines_end, v)
-        _set_next_column(layout, lines_end, v)
-
-        layout.start[v] = lines_start
-        layout.end[v] = lines_end
+        _rearrange_lines(row)
+        _remove_lines(row)
+        _add_outgoing_cycles(row)
+        _set_next_column(row)
+        _add_incoming_cycles_next(row)
+        _pad_columns(row)
 
 
 def _draw_paths_row(start, end):
@@ -482,15 +593,14 @@ def _count_crossings(start, end):
         and ending vertices' positions are non-zero and of opposite signs.
     """
     paths = _draw_paths_row(start, end)
-    pairs = itertools.combinations(paths, 2)
 
-    return sum(1 for (a, b), (c, d) in pairs if (a - c) * (b - d) < 0)
+    return sum(1 for (a, b), (c, d) in itertools.combinations(paths, 2)
+               if (a - c) * (b - d) < 0)
 
 
 def _count_all_crossings(layout):
     """ Counts all crossings within the layout. """
-    return sum(_count_crossings(layout.start[v], layout.end[v])
-               for v in layout.seq)
+    return sum(_count_crossings(r.start, r.end) for r in layout.rows.values())
 
 
 def _median(collection):
@@ -507,23 +617,18 @@ def _median(collection):
         return (ordered[middle - 1] + ordered[middle]) / 2
 
 
-def _median_order(start, end, forward=True):
+def _median_order(row, forward=True):
     """ Sets order of a row by using the median of the positions of adjacent
         lines for each line.
     """
     median = {}
-    paths = _draw_paths_row(start, end)
+    paths = _draw_paths_row(row.start, row.end)
 
-    if forward:
-        len_ = len(end)
-        for i in range(len_):
-            previous_columns = {p[0] for p in paths if p[1] == i}
-            median[i] = _median(previous_columns)
-    else:
-        len_ = len(start)
-        for i in range(len_):
-            next_columns = {p[1] for p in paths if p[0] == i}
-            median[i] = _median(next_columns)
+    len_ = len(row.end) if forward else len(row.start)
+    i, j = (0, 1) if forward else (1, 0)
+
+    for c in range(len_):
+        median[c] = _median([p[i] for p in paths if p[j] == c])
 
     # Vertices are left in place if they have no adjacent vertices
     moved = iter(sorted(i for i in range(len_) if median[i] >= 0))
@@ -533,15 +638,15 @@ def _median_order(start, end, forward=True):
         return ordered
 
 
-def _transpose_order(start, end, forward=True):
+def _transpose_order(row, forward=True):
     """ Swaps lines within a row to see if the number of crossings improve. """
-    len_ = len(end) if forward else len(start)
+    len_ = len(row.end) if forward else len(row.start)
 
     if len_ < 2:
         return
 
     order = list(range(len_))
-    crossings = _count_crossings(start, end)
+    crossings = _count_crossings(row.start, row.end)
 
     improved = True
     while improved:
@@ -549,48 +654,27 @@ def _transpose_order(start, end, forward=True):
         for i in range(len_ - 1):
             new_order = order[:i] + [order[i + 1], order[i]] + order[i + 2:]
             if forward:
-                temp = [set(end[j]) for j in new_order]
-                new_crossings = _count_crossings(start, temp)
+                temp = [set(row.end[j]) for j in new_order]
+                new_crossings = _count_crossings(row.start, temp)
             else:
-                temp = [set(start[j]) for j in new_order]
-                new_crossings = _count_crossings(temp, end)
+                temp = [set(row.start[j]) for j in new_order]
+                new_crossings = _count_crossings(temp, row.end)
 
             if new_crossings < crossings:
                 order = new_order
                 crossings = new_crossings
                 improved = True
 
-    return order
+    if order != list(range(len_)):
+        return order
 
 
-def _set_new_order(layout, index, new):
-    """ Sets the next row to the new order.
-
-        If the index is negative, the first row will be modified instead.
+def _set_new_order(row, forward, new_order):
+    """ Set row (or next row if working in forward direction) using new order.
     """
-    if index >= len(layout.seq) - 1:
-        return
-
-    len_ = len(new)
-
-    if index >= 0:
-        v = layout.seq[index]
-        end = layout.end[v]
-        next_v = layout.seq[index + 1]
-        next_s = layout.start[next_v]
-    else:
-        v = None
-        end = None
-        next_v = layout.seq[0]
-        next_s = layout.start[next_v]
-
-    if v is not None:
-        layout.end[v] = [end[i] for i in new] + end[len_:]
-
-    layout.start[next_v] = [next_s[i] for i in new] + next_s[len_:]
-
-    if layout.col[next_v] < len_:
-        layout.col[next_v] = new.index(layout.col[next_v])
+    set_row = row.next_ if forward else row
+    if set_row is not None:
+        set_row.rearrange(new_order)
 
 
 def _order_lines(layout):
@@ -599,17 +683,14 @@ def _order_lines(layout):
         Heuristics based on the dot algorithm are used where over a number of
         iterations the graph is transversed forwards and backwards.
 
-        The layout is set to the new layout if the number of crossings is
-        reduced.
+        Rows are set to the new orderings if the number of crossings is reduced.
     """
     # Make copies of current columns and lines to modify
     nl = layout.copy()
-
     crossings = _count_all_crossings(nl)
-    enum_seq = list(enumerate(layout.seq))
+    enum_seq = list(enumerate(nl.seq))
 
-    def iter_seq(f):
-        return iter(enum_seq) if f else reversed(enum_seq)
+    def iter_seq(f): return iter(enum_seq) if f else reversed(enum_seq)
 
     for i in range(ORDER_ITERATIONS):
         # Set line orderings with medians
@@ -617,30 +698,65 @@ def _order_lines(layout):
         forward = i % 2 == 0
 
         for j, v in iter_seq(forward):
-            medians = _median_order(nl.start[v], nl.end[v], forward)
-            if medians is not None:
-                k = j if forward else j - 1
-                _set_new_order(nl, k, medians)
+            row = nl.rows[v]
+            after_median = _median_order(row, forward)
+            if after_median is not None:
+                _set_new_order(row, forward, after_median)
 
         for j, v in iter_seq(forward):
-            transpose = _transpose_order(nl.start[v], nl.end[v], forward)
-            if transpose is not None:
-                k = j if forward else j - 1
-                _set_new_order(nl, k, transpose)
+            row = nl.rows[v]
+            after_transpose = _transpose_order(row, forward)
+            if after_transpose is not None:
+                _set_new_order(row, forward, after_transpose)
 
         # If crossings have been improved, copy them back into original data
         new_crossings = _count_all_crossings(nl)
         if new_crossings < crossings:
-            rl = nl.copy()
-            layout.start = rl.start
-            layout.end = rl.end
-            layout.col = rl.col
+            layout.rows = {v: r.copy(layout) for v, r in nl.rows.items()}
+            crossings = new_crossings
+
+
+def _classify_paths(layout, paths, row):
+    """ Define each path as cyclic or not, and attach the vertex they follow
+        back to.
+    """
+    new_paths = set()
+    set_paths = set(paths)
+
+    next_row = row.next_
+
+    def find_key(dict_, v):
+        key = next((k for k in dict_ if dict_[k] == v), None)
+        if key is None:
+            raise ValueError("Dict %r does not have value %r" % (dict_, v))
+
+        return key
+
+    for u, w in layout.cycles:
+        if row.vertex == u:
+            # Start of cycle here
+            path = row.column, find_key(row.cycles_start, (u, w))
+            set_paths.remove(path)
+            new_paths.add((*path, -1, w))
+        if next_row is not None and next_row.vertex == w:
+            # End of cycle here
+            path = find_key(row.cycles_end, (u, w)), next_row.column
+            set_paths.remove(path)
+            new_paths.add((*path, 1, u))
+
+    # Set remainder of paths
+    for p in set_paths:
+        new_paths.add((*p, 0, None))
+
+    return new_paths
 
 
 def _draw_paths(layout):
     """ Draws all paths and adds to layout. """
     for v in layout.seq:
-        layout.paths[v] = _draw_paths_row(layout.start[v], layout.end[v])
+        row = layout.rows[v]
+        paths = _draw_paths_row(row.start, row.end)
+        layout.paths[v] = _classify_paths(layout, paths, row)
 
 
 def draw_graph(graph, sequence=None):
@@ -665,17 +781,10 @@ def draw_graph(graph, sequence=None):
     gl = _Layout(graph, sequence)
 
     _set_lines(gl)
-    # _order_lines(gl)
+    _order_lines(gl)
     _draw_paths(gl)
 
-    data = [(v, gl.col[v], sorted(gl.paths[v])) for v in gl.seq]
-
-    print(graph.adj)
-    print(gl.cycles)
-    for v in gl.seq:
-        print("%s %s %r -> %r" % (v, gl.col[v], gl.start[v], gl.end[v]))
-    print(data)
-    print()
+    data = [(v, gl.rows[v].column, sorted(gl.paths[v])) for v in gl.seq]
 
     return data
 

@@ -19,13 +19,13 @@ class PathTests(unittest.TestCase):
         p0 = Path([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         p1 = Path()
         p1._v = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        self.assertEqual(self.path, p0)
-        self.assertEqual(self.path, p1)
+        self.assertEqual(p0, self.path)
+        self.assertEqual(p1, self.path)
 
     def test_graph_edges(self):
         edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8),
                  (8, 9)]
-        self.assertEqual(self.path.edges, edges)
+        self.assertEqual(edges, self.path.edges)
 
     def test_graph_not_cyclic(self):
         self.assertFalse(self.path.cyclic)
@@ -34,43 +34,43 @@ class PathTests(unittest.TestCase):
         self.assertTrue(self.cycle.cyclic)
 
     def test_graph_make_not_cyclic(self):
-        self.assertEqual(self.path.make_acyclic(), self.path)
+        self.assertEqual(self.path, self.path.make_acyclic())
 
     def test_graph_make_cyclic(self):
-        self.assertEqual(self.cycle.make_acyclic(), self.path)
+        self.assertEqual(self.path, self.cycle.make_acyclic())
 
     def test_graph_prepend(self):
         self.path.prepend(-1)
-        self.assertTrue(self.path._v, list(range(-1, 10)))
+        self.assertEqual(list(range(-1, 10)), self.path._v)
 
     def test_graph_append(self):
         self.path.append(10)
-        self.assertTrue(self.path._v, list(range(1, 11)))
+        self.assertEqual(list(range(11)), self.path._v)
 
     def test_graph_prepend_with(self):
         p1 = self.path.prepend_with(-1)
-        self.assertTrue(p1._v, list(range(-1, 10)))
+        self.assertEqual(list(range(-1, 10)), p1._v)
 
     def test_graph_append_with(self):
         p1 = self.path.append_with(10)
-        self.assertTrue(p1._v, list(range(1, 11)))
+        self.assertEqual(list(range(11)), p1._v)
 
     def test_graph_empty(self):
         path = Path()
-        self.assertEqual(len(path), 0)
-        self.assertEqual(path.cyclic, False)
-        self.assertEqual(path.edges, [])
-        self.assertEqual(path.make_acyclic(), path)
+        self.assertEqual(0, len(path))
+        self.assertEqual(False, path.cyclic)
+        self.assertEqual([], path.edges)
+        self.assertEqual(path, path.make_acyclic())
 
     def test_graph_split_left(self):
-        self.assertEqual(self.path.split((0, 1)), [Path(range(1, 10))])
+        self.assertEqual([Path(range(1, 10))], self.path.split((0, 1)))
 
     def test_graph_split_right(self):
-        self.assertEqual(self.path.split((8, 9)), [Path(range(9))])
+        self.assertEqual([Path(range(9))], self.path.split((8, 9)))
 
     def test_graph_split_middle(self):
-        self.assertEqual(self.path.split((4, 5)),
-                         [Path(range(5)), Path(range(5, 10))])
+        self.assertEqual([Path(range(5)), Path(range(5, 10))],
+                         self.path.split((4, 5)))
 
     def test_graph_wrong_edge(self):
         with self.assertRaises(KeyError):
@@ -153,7 +153,7 @@ class BaseGraphTests(unittest.TestCase):
 class GraphTests(BaseGraphTests):
     """ Testing the Graph class. """
     def test_graph_len(self):
-        self.assertEqual(len(self.merge), 10)
+        self.assertEqual(10, len(self.merge))
 
     def test_graph_contains(self):
         self.assertTrue(0 in self.merge)
@@ -198,8 +198,8 @@ class GraphTests(BaseGraphTests):
                                5: {1}, 11: {12}, 12: {0}, 13: {14}, 14: {15},
                                15: {11}}
         }
-        self.assertResultsEqual({n: g.adj for n, g in self.graphs.items()},
-                                adjacency_lists)
+        self.assertResultsEqual(adjacency_lists,
+                                {n: g.adj for n, g in self.graphs.items()})
 
     def test_graph_heads(self):
         graph_heads = {
@@ -217,8 +217,8 @@ class GraphTests(BaseGraphTests):
             "ending cycle": {0, 1, 2, 3, 4, 5},
             "crossed cycles": {0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15}
         }
-        self.assertResultsEqual({n: g.heads for n, g in self.graphs.items()},
-                                graph_heads)
+        self.assertResultsEqual(graph_heads,
+                                {n: g.heads for n, g in self.graphs.items()})
 
     def test_graph_tails(self):
         graph_tails = {
@@ -236,8 +236,8 @@ class GraphTests(BaseGraphTests):
             "ending cycle": {1, 2, 3, 4, 5},
             "crossed cycles": {0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15}
         }
-        self.assertResultsEqual({n: g.tails for n, g in self.graphs.items()},
-                                graph_tails)
+        self.assertResultsEqual(graph_tails,
+                                {n: g.tails for n, g in self.graphs.items()})
 
     def test_graph_sources(self):
         graph_sources = {
@@ -255,8 +255,8 @@ class GraphTests(BaseGraphTests):
             "ending cycle": {0},
             "crossed cycles": set()
         }
-        self.assertResultsEqual({n: g.sources for n, g in self.graphs.items()},
-                                graph_sources)
+        self.assertResultsEqual(graph_sources,
+                                {n: g.sources for n, g in self.graphs.items()})
 
     def test_graph_sinks(self):
         graph_sinks = {
@@ -274,8 +274,8 @@ class GraphTests(BaseGraphTests):
             "ending cycle": set(),
             "crossed cycles": set()
         }
-        self.assertResultsEqual({n: g.sinks for n, g in self.graphs.items()},
-                                graph_sinks)
+        self.assertResultsEqual(graph_sinks,
+                                {n: g.sinks for n, g in self.graphs.items()})
 
     def test_graph_edges(self):
         graph_edges = {
@@ -300,8 +300,8 @@ class GraphTests(BaseGraphTests):
                                (11, 12), (12, 0), (0, 13), (13, 14), (14, 15),
                                (15, 11)}
         }
-        self.assertResultsEqual({n: g.edges for n, g in self.graphs.items()},
-                                graph_edges)
+        self.assertResultsEqual(graph_edges,
+                                {n: g.edges for n, g in self.graphs.items()})
 
     def test_graph_vertices(self):
         graph_vertices = {
@@ -319,8 +319,8 @@ class GraphTests(BaseGraphTests):
             "ending cycle": {0, 1, 2, 3, 4, 5},
             "crossed cycles": {0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15}
         }
-        self.assertResultsEqual({n: g.vertices for n, g in self.graphs.items()},
-                                graph_vertices)
+        self.assertResultsEqual(graph_vertices,
+                                {n: g.vertices for n, g in self.graphs.items()})
 
     def test_graph_isolated_vertices(self):
         graph_isolated_vertices = {
@@ -333,7 +333,7 @@ class GraphTests(BaseGraphTests):
             "single": self.single.isolated,
             "simple": self.simple.isolated
         }
-        self.assertResultsEqual(result, graph_isolated_vertices)
+        self.assertResultsEqual(graph_isolated_vertices, result)
 
     def test_graph_preceding(self):
         result = {
@@ -348,7 +348,7 @@ class GraphTests(BaseGraphTests):
             "diverges": {5},
             "end": {8}
         }
-        self.assertResultsEqual(result, expected)
+        self.assertResultsEqual(expected, result)
 
     def test_graph_following(self):
         result = {
@@ -363,7 +363,7 @@ class GraphTests(BaseGraphTests):
             "diverges": {7, 8},
             "end": set()
         }
-        self.assertResultsEqual(result, expected)
+        self.assertResultsEqual(expected, result)
 
     def test_graph_incoming(self):
         result = {
@@ -378,7 +378,7 @@ class GraphTests(BaseGraphTests):
             "diverges": {(5, 6)},
             "end": {(8, 9)}
         }
-        self.assertResultsEqual(result, expected)
+        self.assertResultsEqual(expected, result)
 
     def test_graph_outgoing(self):
         result = {
@@ -393,7 +393,7 @@ class GraphTests(BaseGraphTests):
             "diverges": {(6, 7), (6, 8)},
             "end": set()
         }
-        self.assertResultsEqual(result, expected)
+        self.assertResultsEqual(expected, result)
 
     def test_graph_preceding_not_exists(self):
         with self.assertRaises(KeyError):
@@ -628,8 +628,8 @@ class GraphTests(BaseGraphTests):
 
         del self.graphs["empty"]  # Don't need empty graph for this
         self.assertResultsEqual(
-            {n: g.search_paths(0) for n, g in self.graphs.items()},
-            expected_paths
+            expected_paths,
+            {n: g.search_paths(0) for n, g in self.graphs.items()}
         )
 
     def test_graph_diameter(self):
@@ -649,8 +649,8 @@ class GraphTests(BaseGraphTests):
             "crossed cycles": Path([3, 4, 5, 1, 2, 0, 13, 14, 15, 11, 12]),
         }
         self.assertResultsEqual(
-            {n: g.diameter() for n, g in self.graphs.items()},
-            graph_diameters
+            graph_diameters,
+            {n: g.diameter() for n, g in self.graphs.items()}
         )
 
     def test_graph_paths(self):
@@ -662,11 +662,11 @@ class GraphTests(BaseGraphTests):
             "merged paths": [Path([0, 1, 2, 4, 5, 6, 8, 9]), Path([3, 4]),
                              Path([6, 7])],
             "path with loop": [Path([0, 1, 2, 5, 6, 7]), Path([2, 3, 4, 5])],
-            "crossed paths": [Path([0, 1, 4, 6, 7]), Path([1, 2, 3, 4]),
-                              Path([1, 5, 6]), Path([3, 5])],
-            "complex graph": [Path([0, 1, 9]), Path([1, 2]), Path([1, 5]),
+            "crossed paths": [Path([0, 1, 4, 6, 7]), Path([1, 2]), Path([1, 5]),
+                              Path([2, 3, 5, 6]), Path([3, 4])],
+            "complex graph": [Path([0, 1, 9]), Path([1, 2]), Path([1, 5, 7, 8]),
                               Path([2, 3, 4, 8, 9, 10]), Path([3, 7]),
-                              Path([4, 5, 7, 8]), Path([5, 6])],
+                              Path([4, 5, 6])],
             "self cycle": [Path([0, 1, 2, 3])],
             "simple cycle": [Path([0, 1, 2, 3, 0])],
             "starting cycle": [Path([0, 1, 2, 3, 4, 5]), Path([3, 0])],
@@ -676,9 +676,8 @@ class GraphTests(BaseGraphTests):
                                Path([12, 0])],
         }
         self.assertResultsEqual(
-            {n: sorted(g.paths(), key=tuple) for n, g in
-             self.graphs.items()},
-            graph_paths
+            graph_paths,
+            {n: sorted(g.paths(), key=tuple) for n, g in self.graphs.items()}
         )
 
     def test_graph_sequence(self):
@@ -689,7 +688,7 @@ class GraphTests(BaseGraphTests):
             "two paths": [0, 1, 2, 3, 10, 11, 12],
             "merged paths": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
             "path with loop": [0, 1, 2, 3, 4, 5, 6, 7],
-            "crossed paths": [0, 1, 2, 3, 5, 4, 6, 7],
+            "crossed paths": [0, 1, 2, 3, 4, 5, 6, 7],
             "complex graph": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             "self cycle": [0, 1, 2, 3],
             "simple cycle": [0, 1, 2, 3],
@@ -698,8 +697,8 @@ class GraphTests(BaseGraphTests):
             "crossed cycles": [3, 4, 5, 1, 2, 0, 13, 14, 15, 11, 12],
         }
         self.assertResultsEqual(
-            {n: g.sequence() for n, g in self.graphs.items()},
-            graph_seq
+            graph_seq,
+            {n: g.sequence() for n, g in self.graphs.items()}
         )
 
 
@@ -761,9 +760,9 @@ class DrawGraphTests(BaseGraphTests):
                 (0, 0, [{1}], [{1}], {}, {}),
                 (1, 0, [{2, 4, 5}], [{4, 5}, {2}], {}, {}),
                 (2, 1, [{4, 5}, {3}], [{4, 5}, {3}], {}, {}),
-                (3, 1, [{4, 5}, {4, 5}], [{4}, {5}], {}, {}),
-                (5, 1, [{4}, {6}], [{4}, {6}], {}, {}),
-                (4, 0, [{6}, {6}], [{6}], {}, {}),
+                (3, 1, [{4, 5}, {4, 5}], [{5}, {4}], {}, {}),
+                (4, 1, [{5}, {6}], [{5}, {6}], {}, {}),
+                (5, 0, [{6}, {6}], [{6}], {}, {}),
                 (6, 0, [{7}], [{7}], {}, {}),
                 (7, 0, [set()], [], {}, {})
             ],
@@ -832,7 +831,7 @@ class DrawGraphTests(BaseGraphTests):
             _set_lines(gl)
             result_rows[n] = _tuple_rows(gl)
 
-        self.assertResultsEqual(result_rows, layout_rows)
+        self.assertResultsEqual(layout_rows, result_rows)
 
     def test_cycles(self):
         graph_cycles = {
@@ -857,7 +856,7 @@ class DrawGraphTests(BaseGraphTests):
             _set_lines(gl)
             result_cycles[n] = gl.cycles
 
-        self.assertResultsEqual(result_cycles, graph_cycles)
+        self.assertResultsEqual(graph_cycles, result_cycles)
 
     def test_graph_draw(self):
         graph_layouts = {
@@ -907,8 +906,8 @@ class DrawGraphTests(BaseGraphTests):
                 (2, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
                 (3, 1, [(0, 0, 0, None), (0, 1, 0, None), (1, 0, 0, None),
                         (1, 1, 0, None)]),
-                (5, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-                (4, 0, [(0, 0, 0, None), (1, 0, 0, None)]),
+                (4, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
+                (5, 0, [(0, 0, 0, None), (1, 0, 0, None)]),
                 (6, 0, [(0, 0, 0, None)]),
                 (7, 0, []),
             ],
@@ -973,6 +972,6 @@ class DrawGraphTests(BaseGraphTests):
             ]
         }
         self.assertResultsEqual(
-            {n: draw_graph(g) for n, g in self.graphs.items()},
-            graph_layouts
+            graph_layouts,
+            {n: draw_graph(g) for n, g in self.graphs.items()}
         )

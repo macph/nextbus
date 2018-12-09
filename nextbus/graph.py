@@ -11,7 +11,6 @@ from nextbus import db, models
 ORDER_ITERATIONS = 6
 
 
-# TODO: Check service 3477-outbound: 4200F047400 appears before 4200F182601
 # TODO: Service 180 still doesn't work - problem with the cycles?
 
 
@@ -128,6 +127,45 @@ def _merge_backward(graph, sequence, path, index):
         sequence.insert(i, v)
 
 
+def _count_cycles(graph, sequence):
+    """ Counts number of cycles in a sequence by checking the preceding nodes
+        for every vertex in order.
+    """
+    cycles = set()
+    indices = {v: i for i, v in enumerate(sequence)}
+    for v in sequence:
+        cycles |= {(u, v) for u in graph.preceding(v)
+                   if indices[u] > indices[v]}
+
+    return cycles
+
+
+def _rearrange_cycles(graph, sequence):
+    """ Find all cycles which may include vertices in the wrong order and
+        move them around.
+    """
+    real_cycles = set()
+    cycles = _count_cycles(graph, sequence)
+    while cycles:
+        u, v = cycle = cycles.pop()
+        paths = graph.search_paths(v)
+        if paths[u]:
+            # Path for v -> u exists so u -> v is cyclic
+            real_cycles.add(cycle)
+            continue
+        # u -> v is not cyclic; can assume that this is in the wrong order
+        cutoff = sequence.index(u) + 1
+        tree = {v} | {w for p in paths.values() for w in p}
+        sequence[:cutoff] = (
+            [w for w in sequence[:cutoff] if w not in tree] +
+            [w for w in sequence[:cutoff] if w in tree]
+        )
+        cycles = _count_cycles(graph, sequence)
+        if cycle in cycles:
+            raise ValueError("Cycle %r still in set for graph %r" %
+                             (cycle, graph))
+
+
 def _analyse_graph(graph):
     """ Analyses a connected graph to find a set of distinct paths and a
         topologically ordered sequence.
@@ -149,8 +187,8 @@ def _analyse_graph(graph):
     stack = collections.deque()
     # Search paths both forwards and backwards
     # All diverging branches are searched backwards and vice versa
-    stack.extend((e, False) for e in reversed(diameter.edges))
-    stack.extend((e, True) for e in diameter.edges)
+    stack.extend((e, True) for e in reversed(diameter.edges))
+    stack.extend((e, False) for e in diameter.edges)
 
     while stack:
         edge, forward = stack.pop()
@@ -177,10 +215,14 @@ def _analyse_graph(graph):
             _merge_backward(g0, sequence, longest_ac, index)
 
         # Add new paths to stack for searching
-        stack.extendleft((e, False) for e in reversed(longest_ac.edges))
-        stack.extendleft((e, True) for e in longest_ac.edges)
+        stack.extendleft((e, True) for e in reversed(longest_ac.edges))
+        stack.extendleft((e, False) for e in longest_ac.edges)
         # Maybe another distinct path here - return vertex to queue
         stack.append((edge, forward))
+
+    assert not g.vertices, "vertices %r still in graph" % g.vertices
+
+    _rearrange_cycles(g0, sequence)
 
     return paths, sequence
 

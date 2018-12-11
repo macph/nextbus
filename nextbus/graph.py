@@ -192,12 +192,11 @@ def _analyse_graph(graph):
     stack = collections.deque()
     # Search paths both forwards and backwards
     # All diverging branches are searched backwards and vice versa
-    stack.extend((e, True) for e in reversed(diameter.edges))
-    stack.extend((e, False) for e in diameter.edges)
+    stack.extend((v, True) for v in reversed(diameter))
+    stack.extend((v, False) for v in diameter)
 
     while stack:
-        edge, forward = stack.pop()
-        vertex = edge[0] if forward else edge[1]
+        vertex, forward = stack.pop()
 
         try:
             new_paths = g.search_paths(vertex, forward).values()
@@ -220,10 +219,10 @@ def _analyse_graph(graph):
             _merge_backward(g0, sequence, longest_ac, index)
 
         # Add new paths to stack for searching
-        stack.extendleft((e, True) for e in reversed(longest_ac.edges))
-        stack.extendleft((e, False) for e in longest_ac.edges)
+        stack.extendleft((v, True) for v in reversed(longest_ac))
+        stack.extendleft((v, False) for v in longest_ac)
         # Maybe another distinct path here - return vertex to queue
-        stack.append((edge, forward))
+        stack.append((vertex, forward))
 
     assert not g.vertices, "vertices %r still in graph" % g.vertices
 
@@ -1009,7 +1008,7 @@ class Graph:
 
     def remove_edge(self, v1, v2, delete=True):
         """ Removes edge from graph. If delete is True, any orphaned vertices
-            are removed as well.
+            within edge are removed as well.
         """
         if v1 not in self._v:
             raise KeyError(v1)
@@ -1020,7 +1019,7 @@ class Graph:
 
         if delete and not self._v[v1] and v1 not in self.tails:
             del self[v1]
-        if delete and not self._v[v2]:
+        if delete and not self._v[v2] and v2 not in self.tails:
             del self[v2]
 
     def add_path(self, path):
@@ -1039,7 +1038,7 @@ class Graph:
 
     def remove_path(self, path, delete=True):
         """ Removes all edges in Path or sequence of edges from this graph. If
-            delete is True, any orphaned vertices are removed as well.
+            delete is True, any orphaned vertices on path are removed as well.
         """
         try:
             edges = path.edges
@@ -1048,8 +1047,8 @@ class Graph:
 
         for e in edges:
             if not self.contains_edge(e):
-                raise ValueError("Edge %r does not exist in graph %r" %
-                                 (e, self))
+                raise ValueError("Edge %r on path %r does not exist in graph "
+                                 "%r" % (e, path, self))
 
         for v1, v2 in edges:
             self.remove_edge(v1, v2, delete)

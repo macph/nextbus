@@ -484,7 +484,8 @@ class GraphTests(BaseGraphTests):
 
     def test_remove_path_wrong_edge(self):
         num_vertices = len(self.simple)
-        msg = "Edge \(4, 5\) does not exist in graph"
+        msg = (r"Edge \(4, 5\) on path \[\(2, 3\), \(3, 4\), \(4, 5\)\] does "
+               r"not exist in graph")
         with self.assertRaisesRegex(ValueError, msg):
             self.simple.remove_path([(2, 3), (3, 4), (4, 5)])
         self.assertEqual(len(self.simple), num_vertices)

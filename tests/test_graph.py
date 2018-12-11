@@ -3,7 +3,9 @@ Testing the graph module for service diagrams.
 """
 import unittest
 
-from nextbus.graph import Path, Graph, _Layout, _set_lines, draw_graph
+from nextbus.graph import (
+    Path, Graph, _Layout, MaxColumnError, _set_lines, draw_graph
+)
 
 
 class PathTests(unittest.TestCase):
@@ -714,6 +716,14 @@ def _tuple_rows(layout):
 
 class DrawGraphTests(BaseGraphTests):
     """ Test the _GraphLayout class. """
+    def test_limit_not_hit(self):
+        self.complex.draw()
+        self.complex.draw(max_columns=4)
+
+    def test_limit_hit(self):
+        with self.assertRaises(MaxColumnError):
+            self.complex.draw(max_columns=2)
+
     def test_set_rows(self):
         layout_rows = {
             "empty": [],
@@ -786,14 +796,14 @@ class DrawGraphTests(BaseGraphTests):
                 (3, 0, [set()], [], {}, {}),
             ],
             "simple cycle": [
-                (None, 0, [{0}], [{0}], {}, {0: (3, 0)}),
+                (None, None, [{0}], [{0}], {}, {0: (3, 0)}),
                 (0, 0, [{1}], [{1}], {}, {}),
                 (1, 0, [{2}], [{2}], {}, {}),
                 (2, 0, [{3}], [{3}], {}, {}),
                 (3, 0, [{0}], [{0}], {0: (3, 0)}, {}),
             ],
             "starting cycle": [
-                (None, 0, [{0}], [{0}], {}, {0: (3, 0)}),
+                (None, None, [{0}], [{0}], {}, {0: (3, 0)}),
                 (0, 0, [{1}], [{1}], {}, {}),
                 (1, 0, [{2}], [{2}], {}, {}),
                 (2, 0, [{3}], [{3}], {}, {}),
@@ -810,7 +820,7 @@ class DrawGraphTests(BaseGraphTests):
                 (5, 0, [{2}], [{2}], {0: (5, 2)}, {}),
             ],
             "crossed cycles": [
-                (None, 0, [{3}], [{3}], {}, {0: (0, 3)}),
+                (None, None, [{3}], [{3}], {}, {0: (0, 3)}),
                 (3, 0, [{4}], [{4}], {}, {}),
                 (4, 0, [{5}], [{5}], {}, {}),
                 (5, 0, [{1}], [{1}], {}, {}),
@@ -933,14 +943,14 @@ class DrawGraphTests(BaseGraphTests):
                 (3, 0, []),
             ],
             "simple cycle": [
-                (None, 0, [(0, 0, 1, 3)]),
+                (None, None, [(0, 0, 1, 3)]),
                 (0, 0, [(0, 0, 0, None)]),
                 (1, 0, [(0, 0, 0, None)]),
                 (2, 0, [(0, 0, 0, None)]),
                 (3, 0, [(0, 0, -1, 0)]),
             ],
             "starting cycle": [
-                (None, 0, [(0, 0, 1, 3)]),
+                (None, None, [(0, 0, 1, 3)]),
                 (0, 0, [(0, 0, 0, None)]),
                 (1, 0, [(0, 0, 0, None)]),
                 (2, 0, [(0, 0, 0, None)]),
@@ -957,7 +967,7 @@ class DrawGraphTests(BaseGraphTests):
                 (5, 0, [(0, 0, -1, 2)]),
             ],
             "crossed cycles": [
-                (None, 0, [(0, 0, 1, 0)]),
+                (None, None, [(0, 0, 1, 0)]),
                 (3, 0, [(0, 0, 0, None)]),
                 (4, 0, [(0, 0, 0, None)]),
                 (5, 0, [(0, 0, 0, None)]),

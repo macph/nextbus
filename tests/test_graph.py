@@ -159,6 +159,13 @@ class BaseGraphTests(unittest.TestCase):
 
 class GraphTests(BaseGraphTests):
     """ Testing the Graph class. """
+    def test_graph_false(self):
+        self.assertFalse(self.empty)
+
+    def test_graph_true(self):
+        self.assertTrue(self.single)
+        self.assertTrue(self.simple)
+
     def test_graph_len(self):
         self.assertEqual(10, len(self.merge))
 

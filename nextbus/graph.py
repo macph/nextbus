@@ -857,6 +857,9 @@ class Graph:
     def __iter__(self):
         return iter(self.vertices)
 
+    def __bool__(self):
+        return bool(self.vertices)
+
     def __len__(self):
         return len(self.vertices)
 

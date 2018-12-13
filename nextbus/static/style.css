@@ -14,7 +14,7 @@ html {
   font-weight: 400;
   color: rgb(40, 40, 40);
 }
-  
+
 body {
   flex: 1 0 100%;
   display: flex;
@@ -824,6 +824,10 @@ button:focus {
   column-width: 280px;
 }
 
+.list--relative {
+  position: relative;
+}
+
 /*
  *  LIST ITEMS
  */
@@ -835,6 +839,7 @@ button:focus {
   -webkit-column-break-inside: avoid; /* Chrome, Safari */
   page-break-inside: avoid;           /* Theoretically FF 20+ */
   break-inside: avoid-column;         /* IE 11 */
+  z-index: 1;
 }
 
 .item:visited {
@@ -860,7 +865,7 @@ button:focus {
 }
 
 .item--stop,
-.item--service{
+.item--service {
   display: flex;
   align-items: center;
 }
@@ -874,6 +879,35 @@ button:focus {
   margin: 0;
   padding-left: calc(36px + 12px);
   font-size: 1.4rem;
+}
+
+.item--stop--empty:hover {
+  background: transparent;
+  cursor: auto;
+}
+
+.item--stop--empty > .indicator {
+  background: transparent;
+  border-color: transparent;
+}
+
+.item--stop--service {
+  padding: 0;
+  z-index: 0;
+}
+
+.item--stop--service > div {
+  padding: 5px 15px;
+}
+
+.item--stop--multiline > div > p {
+  margin: 0;
+  padding-left: calc(36px + 12px);
+  font-size: 1.4rem;
+}
+
+.item--stop--service > * {
+  z-index: 1;
 }
 
 .item__label {
@@ -1120,6 +1154,15 @@ button:focus {
 .area-147 {
     background: dimgrey;
     border-color: dimgrey;
+}
+
+/*
+ *  SERVICE DIAGRAMS
+ */
+
+.diagram {
+  position: absolute;
+  z-index: 1;
 }
 
 /*

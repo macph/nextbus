@@ -475,10 +475,18 @@ def service(service_id):
                         if p.direction == reverse}
     }
 
-    stops = graph.service_stop_list(line.id, reverse)
+    s_graph, d_stops = graph.service_graph_stops(line.id, reverse)
+
+    sequence = s_graph.sequence()
+    stops = [d_stops[s] for s in sequence]
+    try:
+        layout = s_graph.draw(sequence, max_columns=5)
+    except graph.MaxColumnError:
+        layout = None
 
     return render_template("service.html", service=line, dest=destinations,
-                           reverse=reverse, mirrored=mirrored, stops=stops)
+                           reverse=reverse, mirrored=mirrored, stops=stops,
+                           layout=layout)
 
 
 @page.route("/map/")

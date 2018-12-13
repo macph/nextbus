@@ -60,8 +60,8 @@
 {% endmacro %}
 
 {# Prints a list using callers #}
-{% macro print_list(items, class='') %}
-<ul class="list {{ class }}">
+{% macro print_list(items, class=none, name=none) %}
+<ul class="list{% if class %}{{ ' %s'|format(class) }}{% endif %}" {% if name %}id="{{ name }}"{% endif %}>
     {% for i in items %}
     <li>{{ caller(i) }}</li>
     {% endfor %}
@@ -78,8 +78,8 @@
 {% endmacro %}
 
 {# Prints the stop indicator #}
-{% macro print_stop_indicator(stop, reverse=false) %}
-<div class="indicator{{ ' indicator--reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}">
+{% macro print_stop_indicator(stop, reverse=false, name=none) %}
+<div class="indicator{{ ' indicator--reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
     {% if stop.short_ind != '' %}
     <span>{{ stop.short_ind }}</span>
     {% elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] %}

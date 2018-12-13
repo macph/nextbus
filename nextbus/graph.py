@@ -1213,45 +1213,17 @@ class Graph:
         return draw_graph(self, sequence=sequence, max_columns=max_columns)
 
 
-def _service_stops(service_id, direction=None):
-    """ Get dictionary of distinct stops for a service.
-
-        :param service_id: Service ID.
-        :param direction: Groups journey patterns by direction.
-        :returns: Dictionary with ATCO codes as keys for stop point objects.
-    """
-    pairs = (
-        db.session.query(models.JourneyLink.stop_point_ref,
-                         models.JourneyPattern.direction)
-        .join(models.JourneyPattern.links)
-        .filter(models.JourneyPattern.service_ref == service_id)
-    )
-
-    if direction is not None:
-        pairs = pairs.filter(models.JourneyPattern.direction == direction)
-
-    stops = (
-        models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.locality))
-    )
-
-    pairs = pairs.subquery()
-    stops = (
-        stops.distinct()
-        .join(pairs, pairs.c.stop_point_ref == models.StopPoint.atco_code)
-    )
-
-    return {s.atco_code: s for s in stops.all()}
-
-
-def service_graph(service_id, direction):
-    """ Get list of stops and their preceding and following stops for a service.
+def service_graph_stops(service_id, direction):
+    """ Creates graph and dictionary of stops from a service using pairs of
+        adjacent stops in journey patterns.
 
         :param service_id: Service ID.
         :param direction: Groups journey patterns by direction - False for
         outbound and True for inbound.
+        :returns: Graph of service and dict of stop models with ATCO codes as
+        keys.
     """
-    stops = (
+    stop_refs = (
         db.session.query(
             models.JourneyPattern.id.label("pattern_id"),
             models.JourneyLink.sequence.label("sequence"),
@@ -1262,20 +1234,61 @@ def service_graph(service_id, direction):
         .filter(models.JourneyPattern.service_ref == service_id,
                 models.JourneyPattern.direction == direction,
                 models.JourneyLink.stop_point_ref.isnot(None))
+        .subquery()
+    )
+    pairs = (
+        db.session.query(
+            stop_refs.c.stop_ref.label("current"),
+            db.func.lead(stop_refs.c.stop_ref)
+            .over(partition_by=stop_refs.c.pattern_id,
+                  order_by=stop_refs.c.sequence).label("next")
+        )
+        .distinct()
+        .subquery()
+    )
+    stops = (
+        db.session.query(
+            models.StopPoint,
+            db.func.array_remove(db.func.array_agg(pairs.c.next), None)
+            .label("next_stops")
+        )
+        .options(db.contains_eager(models.StopPoint.locality))
+        .join(models.StopPoint.locality)
+        .join(pairs, pairs.c.current == models.StopPoint.atco_code)
+        .group_by(models.StopPoint.atco_code, models.Locality.code)
+        .all()
     )
 
-    stops = stops.subquery()
-    pairs = db.session.query(
-        stops.c.stop_ref.label("current"),
-        db.func.lead(stops.c.stop_ref)
-        .over(partition_by=stops.c.pattern_id, order_by=stops.c.sequence)
-        .label("next")
-    )
+    edges, vertices = [], []
+    dict_stops = {}
+    for s in stops:
+        obj = s.StopPoint
+        dict_stops[obj.atco_code] = obj
+        edges.extend((obj.atco_code, n) for n in s.next_stops if n is not None)
+        vertices.extend(obj.atco_code for n in s.next_stops if n is None)
 
-    pairs = pairs.subquery()
-    query = db.session.query(pairs).filter(pairs.c.next.isnot(None))
+    return Graph(edges, vertices), dict_stops
 
-    return Graph(query.all())
+
+def service_graph(service_id, direction):
+    """ Creates Graph object from a service using adjacent stops on journey
+        patterns.
+
+        :param service_id: Service ID.
+        :param direction: Groups journey patterns by direction.
+        :returns: Graph object with vertices labelled by ATCO codes.
+    """
+    return service_graph_stops(service_id, direction)[0]
+
+
+def service_stops(service_id, direction):
+    """ Get dictionary of distinct stops for a service.
+
+        :param service_id: Service ID.
+        :param direction: Groups journey patterns by direction.
+        :returns: Dictionary with ATCO codes as keys for stop point objects.
+    """
+    return service_graph_stops(service_id, direction)[1]
 
 
 def service_stop_list(service_id, direction):
@@ -1286,14 +1299,11 @@ def service_stop_list(service_id, direction):
         :param direction: Groups journey patterns by direction - False for
         outbound and True for inbound.
     """
-    dict_stops = _service_stops(service_id, direction)
+    graph, dict_stops = service_graph_stops(service_id, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service ID %s" % service_id)
 
-    graph = service_graph(service_id, direction)
-    stops = [dict_stops[v] for v in graph.sequence()]
-
-    return stops
+    return [dict_stops[v] for v in graph.sequence()]
 
 
 def service_json(service_id, reverse):
@@ -1319,11 +1329,10 @@ def service_json(service_id, reverse):
     # Check line patterns - is there more than 1 direction?
     direction, mirrored = service.has_mirror(reverse)
 
-    dict_stops = _service_stops(service.id, direction)
+    graph, dict_stops = service_graph_stops(service.id, direction)
     if not dict_stops:
         raise ValueError("No stops exist for service %r" % service.id)
 
-    graph = service_graph(service.id, direction)
     paths, sequence = graph.analyse()
 
     def coordinates(vertex):

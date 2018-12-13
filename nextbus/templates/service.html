@@ -52,18 +52,21 @@
               <dt>To</dt>
               <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
             </dl>
+            <div id="diagram" class="diagram"></div>
             {% if stops|length > 0 %}
-            {% call(s) f.print_list(stops) %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
-                <div class="item--stop">
-                    {{ f.print_stop_indicator(s) }}
-                    <div class="item__label">{{ s.name }}</div>
+            {% call(s) f.print_list(stops, class='list--relative', name='listStops') %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline item--stop--service">
+                <div id={{ 'c' + s.atco_code }}>
+                    <div class="item--stop">
+                        {{ f.print_stop_indicator(s, id="i"+s.atco_code) }}
+                        <div class="item__label">{{ s.name }}</div>
+                    </div>
+                    {% if s.street and s.street != s.locality.name %}
+                    <p>{{ s.street }}, {{ s.locality.name }}</p>
+                    {% else %}
+                    <p>{{ s.locality.name }}</p>
+                    {% endif %}
                 </div>
-                {% if s.street and s.street != s.locality.name %}
-                <p>{{ s.street }}, {{ s.locality.name }}</p>
-                {% else %}
-                <p>{{ s.locality.name }}</p>
-                {% endif %}
             </a>
             {% endcall %}
             {% else %}
@@ -78,5 +81,11 @@
 {% block script %}
 <script>
     resizeIndicator('indicator');
+</script>
+<script>
+    let data = {{ layout|tojson }};
+    if (data !== null) {
+        drawGraph('diagram', 'listStops', data);
+    }
 </script>
 {% endblock %}

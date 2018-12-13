@@ -15,6 +15,16 @@ const STOPS_VISIBLE = 16;
 const TILE_LIMIT = 64;
 const TILE_ZOOM = 15;
 
+const LAYOUT_SPACE_X = 30;
+const LAYOUT_CURVE_MARGIN = 6;
+const LAYOUT_LINE_STROKE = 7.2;
+const LAYOUT_COLOUR = 'rgb(0, 33, 113)';
+const LAYOUT_INVISIBLE = 'rgba(255, 255, 255, 0)';
+
+const LAYOUT_DOM_TEXT_START = 12;
+const LAYOUT_DOM_DIV_START = 15;
+const LAYOUT_DOM_PARA_START = 36 + 12;
+
 
 /**
  * Sets up element to activate geolocation and direct to correct page
@@ -1289,4 +1299,271 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
         let newURL = MAP_URL + stop + center.lat + ',' + center.lng + ',' + zoom;
         history.replaceState(null, null, newURL);
     };
+}
+
+
+/**
+ * Returns a SVG element with specified attributes
+ * @param {String} tag SVG element tag
+ * @param {Object} [attr] Attributes for element
+ * @returns {Element}
+ * @private
+ */
+function _createSVGNode(tag, attr) {
+    let node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+
+    if (typeof attr === 'undefined') {
+        return node;
+    }
+
+    for (let a in attr) {
+        if (attr.hasOwnProperty(a)) {
+            node.setAttributeNS(null, a, attr[a]);
+        }
+    }
+
+    return node;
+}
+
+
+/**
+ * Creates a path command, eg 'C' and [[0, 0], [0, 1], [1, 1]] -> 'C 0,0 0,1 1,1'.
+ * @param {String} command path command type, eg 'M' or 'L'
+ * @param {Array} values Array of arrays, each containing numbers/coordinates
+ * @returns {string}
+ * @private
+ */
+function _pathCommand(command, ...values) {
+    values.map(function(v) {
+        return v.join(',');
+    });
+
+    return command + ' ' + values.join(' ');
+}
+
+
+/**
+ * Class for constructing service diagrams.
+ * @constructor
+ */
+function Diagram() {
+    let self = this;
+
+    this.paths = [];
+    this.definitions = [];
+    this.col = [];
+    this.row = [];
+
+    /**
+     * Sets stroke colour.
+     * @param {Number} x1 Starting x coordinate
+     * @param {Number} x2 Ending x coordinate
+     * @param {Number} y1 Starting y coordinate
+     * @param {Number} y2 Ending y coordinate
+     * @param {Number} fade Whether this line fades in (1) or fades out (-1).
+     * No fading if zero or undefined.
+     * @returns {String}
+     * @private
+     */
+    this._setStroke = function(x1, x2, y1, y2, fade) {
+        if (typeof fade === 'undefined' || fade === 0) {
+            return LAYOUT_COLOUR;
+        }
+
+        let name = 'gradient-' + self.definitions.length,
+            start = (fade < 0) ? '40%' : '0%',
+            end = (fade < 0) ? '100%' : '60%',
+            startColour = (fade < 0) ? LAYOUT_COLOUR : LAYOUT_INVISIBLE,
+            endColour = (fade < 0) ? LAYOUT_INVISIBLE : LAYOUT_COLOUR;
+
+        let gradient = _createSVGNode('linearGradient', {
+            id: name,
+            gradientUnits: 'userSpaceOnUse',
+            x1: x1, x2: x2,
+            y1: y1, y2: y2
+        });
+        gradient.appendChild(_createSVGNode('stop', {
+            offset: start,
+            'stop-color': startColour
+        }));
+        gradient.appendChild(_createSVGNode('stop', {
+            offset: end,
+            'stop-color': endColour
+        }));
+
+        self.definitions.push(gradient);
+
+        return 'url(#' + name + ')';
+    };
+
+    /**
+     * Adds path to diagram.
+     * @param {Number} x1 Starting x coordinate
+     * @param {Number} x2 Ending x coordinate
+     * @param {Number} y1 Starting y coordinate
+     * @param {Number} y2 Ending y coordinate
+     * @param {Number} fade Whether this line fades in (1) or fades out (-1).
+     * No fading if zero or undefined.
+     */
+    this.addPath = function(x1, x2, y1, y2, fade) {
+        self.col.push(Math.max(x1, x2));
+        self.row.push(Math.max(y1, y2));
+
+        let path = _pathCommand('M', [x1, y1]),
+            y = y2 - y1;
+        if (x1 === x2) {
+            path += ' ' + _pathCommand('L', [x2, y2]);
+        } else {
+            let i1 = y1 + y / LAYOUT_CURVE_MARGIN,
+                i2 = y1 + y / 2,
+                i3 = y1 + y - y / LAYOUT_CURVE_MARGIN;
+            path += ' ' + _pathCommand('L', [x1, i1]);
+            path += ' ' + _pathCommand('C', [x1, i2], [x2, i2], [x2, i3]);
+            path += ' ' + _pathCommand('L', [x2, y2]);
+        }
+
+        let stroke = self._setStroke(x1, x2, y1, y2, fade);
+        let pathNode = _createSVGNode('path', {
+            'fill': 'none',
+            'stroke': stroke,
+            'stroke-width': LAYOUT_LINE_STROKE,
+            'd': path
+        });
+
+        self.paths.push(pathNode);
+    };
+
+    /**
+     * Builds diagram and adds to container element.
+     * @param {HTMLElement} container DOM node
+     * @param {Number} startX Starting x coordinate for line
+     * @param {Number} startY Starting y coordinate for line
+     */
+    this.build = function(container, startX, startY) {
+        let boundsX = 2 * startX + (Math.max(...self.col) + 2),
+            boundsY = 2 * startY + Math.max(...self.row);
+
+        let svg = _createSVGNode('svg', {width: boundsX, height: boundsY});
+
+        if (self.definitions.length > 0) {
+            let defs = _createSVGNode('defs');
+            self.definitions.forEach(function(g) {
+                defs.appendChild(g);
+            });
+            svg.appendChild(defs);
+        }
+
+        self.paths.forEach(function(p) {
+            svg.appendChild(p);
+        });
+
+        container.appendChild(svg);
+    };
+}
+
+
+function _getRelativeElementCoords(element, startX, startY) {
+    let rect = element.getBoundingClientRect();
+
+    return [rect.left + rect.width / 2 - startX, rect.top + rect.height / 2 - startY];
+}
+
+
+function _moveStopItemElements(container, col, width) {
+    let text = container.querySelector('.item__label'),
+        p = container.querySelector('p');
+
+    container.style.paddingLeft = LAYOUT_DOM_DIV_START + LAYOUT_SPACE_X * col + 'px';
+    if (text !== null) {
+        text.style.marginLeft = LAYOUT_DOM_TEXT_START +
+            LAYOUT_SPACE_X * (width - col) + 'px';
+    }
+    if (p !== null) {
+        p.style.paddingLeft = LAYOUT_DOM_PARA_START +
+            LAYOUT_SPACE_X * (width - col) + 'px';
+    }
+}
+
+
+function _addEmptyItem(list) {
+    let item = document.createElement('li');
+    let anchor = document.createElement('div');
+    anchor.className = 'item item--stop item--stop--empty';
+    anchor.id = 'cNull';
+
+    let indicator = document.createElement('div');
+    indicator.className = 'indicator';
+    indicator.id = 'iNull';
+
+    anchor.appendChild(indicator);
+    item.appendChild(anchor);
+    list.insertBefore(item, list.childNodes[0]);
+}
+
+
+// TODO: Add event listener to redraw diagram when row heights change
+// TODO: Detect computed colours and use them for paths including transistions
+// TODO: Clean up code
+
+
+/**
+ * Draws diagram.
+ * @param {(String|HTMLElement)} container DOM div node.
+ * @param {(String|HTMLElement)} list DOM node for list of stops.
+ * @param data Required data
+ */
+function drawGraph(container, list, data) {
+    let c = (container instanceof HTMLElement) ? container : document.getElementById(container),
+        l = (list instanceof HTMLElement) ? list : document.getElementById(list),
+        d = new Diagram(),
+        s = [];
+
+    if (data[0][0] === null) {
+        _addEmptyItem(l);
+    }
+
+    data.forEach(function(v, r) {
+        let id = (v[0] !== null) ? v[0] : 'Null';
+        let div = document.getElementById('c' + id);
+
+        let cols = [];
+        v[2].forEach(function(p) {
+            cols.push(p[0]);
+            cols.push(p[1]);
+        });
+        if (r > 0) {
+            data[r - 1][2].forEach(function(p) {
+                cols.push(p[1]);
+            });
+        }
+        let width = (cols.length > 0) ? Math.max(...cols) : 0;
+        _moveStopItemElements(div, v[1], width);
+
+        s.push(document.getElementById('i' + id));
+    });
+
+    let b = c.getBoundingClientRect(),
+        coords = [],
+        rows = [];
+    s.forEach(function(stop) {
+        let next = _getRelativeElementCoords(stop, b.left, b.top);
+        coords.push(next);
+        rows.push(next[1]);
+    });
+    let startX = coords[0][0],
+        startY = coords[0][1];
+
+    data.forEach(function(v, r) {
+        v[2].forEach(function(p) {
+            d.addPath(
+                startX + p[0] * LAYOUT_SPACE_X,
+                startX + p[1] * LAYOUT_SPACE_X,
+                rows[r],
+                (r === data.length - 1) ? 2 * rows[r] - rows[r - 1] : rows[r + 1],
+                p[2]
+            );
+        });
+    });
+
+    d.build(c, startX, startY);
 }

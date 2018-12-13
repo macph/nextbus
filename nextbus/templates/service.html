@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
-{% block title %}{{ service.line }}: {{ service.description}}{% endblock %}
+{% block title %}{{ service.line }}: {{ service.description }}{% endblock %}
 
 {% block outer_header %}
 {{ f.add_search_bar() }}
@@ -22,8 +22,7 @@
   <h1>{{ service.description }}</h1>
 </div>
 {% if service.local_operators|length > 0 %}
-{% set next = joiner() %}
-<p>Operated by {% for o in service.local_operators %}{{ next() }}<strong>{{ o.name }}</strong>{% endfor %}</p>
+<p>Operated by {{ f.print_inline(service.local_operators|map(attribute='name')|list) }}</p>
 {% endif %}
 {% endblock %}
 

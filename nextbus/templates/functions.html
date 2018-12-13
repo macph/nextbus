@@ -31,6 +31,21 @@
 </script>
 {% endmacro %}
 
+{# Prints an inline list, using strong tags if required #}
+{% macro print_inline(items, strong=true) %}
+{% if items|length == 1 %}
+{% if strong %}<strong>{{ items[0] }}</strong>{% else %}{{ items[0] }}{% endif %}
+{% elif items|length > 1 %}
+{% set next = joiner() %}
+{% if strong %}
+{% for i in items[:-1] %}{{ next() }}<strong>{{ i }}</strong>{% endfor %} and <strong>{{ items[-1] }}</strong>
+{% else %}
+{% for i in items[:-1] %}{{ next() }}{{ i }}{% endfor %} and {{ items[-1] }}
+{% endif %}
+{% else %}
+{% endif %}
+{% endmacro %}
+
 {# Prints a list of groups, using <hr> to separate them #}
 {% macro print_groups(list_groups) %}
 {% set ctx = {'first': true} %}

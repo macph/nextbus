@@ -18,8 +18,8 @@ const TILE_ZOOM = 15;
 const LAYOUT_SPACE_X = 30;
 const LAYOUT_CURVE_MARGIN = 6;
 const LAYOUT_LINE_STROKE = 7.2;
-const LAYOUT_COLOUR = 'rgb(0, 33, 113)';
 const LAYOUT_INVISIBLE = 'rgba(255, 255, 255, 0)';
+const LAYOUT_TIMEOUT = 500;
 
 const LAYOUT_DOM_TEXT_START = 12;
 const LAYOUT_DOM_DIV_START = 15;
@@ -1343,86 +1343,158 @@ function _pathCommand(command, ...values) {
 
 
 /**
+ * Get centre coordinates of element relative to a pair of coordinates.
+ * @param {HTMLElement} element
+ * @param {Number} startX
+ * @param {Number} startY
+ * @returns {{x: Number, y: Number}}
+ * @private
+ */
+function _getRelativeElementCoords(element, startX, startY) {
+    let rect = element.getBoundingClientRect();
+
+    return {
+        x: rect.left + rect.width / 2 - startX,
+        y: rect.top + rect.height / 2 - startY
+    };
+}
+
+
+/**
+ * Finds the maximum value in a set.
+ * @param {Set} set
+ * @returns {*}
+ * @private
+ */
+function _setMax(set) {
+    let max = null;
+    set.forEach(function(i) {
+        if (max === null || i > max) {
+            max = i;
+        }
+    });
+
+    return max;
+}
+
+
+/**
  * Class for constructing service diagrams.
  * @constructor
+ * @param {HTMLElement} container DOM node
  */
-function Diagram() {
+function Diagram(container) {
     let self = this;
+
+    this.container = container;
+    this.data = null;
+    this.svg = null;
+    this.rebuildTimeOut = null;
+
+    this.listInd = null;
+    this.colours = null;
+    this.colStart = null;
+    this.rowCoords = null;
 
     this.paths = [];
     this.definitions = [];
-    this.col = [];
-    this.row = [];
+    this.col = new Set();
+    this.row = new Set();
 
     /**
      * Sets stroke colour.
-     * @param {Number} x1 Starting x coordinate
-     * @param {Number} x2 Ending x coordinate
-     * @param {Number} y1 Starting y coordinate
-     * @param {Number} y2 Ending y coordinate
-     * @param {Number} fade Whether this line fades in (1) or fades out (-1).
-     * No fading if zero or undefined.
-     * @returns {String}
+     * @param {{x1: Number, y1: Number, x2: Number, y2: Number}} c Coordinates for path.
+     * @param {String} colour Main colour of path.
+     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {String} [gradient.colour] Second colour to be used.
+     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
+     * @returns {String} CSS value of colour or URL to gradient if required.
      * @private
      */
-    this._setStroke = function(x1, x2, y1, y2, fade) {
-        if (typeof fade === 'undefined' || fade === 0) {
-            return LAYOUT_COLOUR;
+    this._setStroke = function(c, colour, gradient) {
+        if (typeof gradient === 'undefined') {
+            return colour;
+        }
+        let hasColour = gradient.hasOwnProperty('colour'),
+            hasFade = gradient.hasOwnProperty('fade');
+
+        if ((!hasFade || gradient.fade === 0) && !hasColour ||
+            hasColour && colour === gradient.colour)
+        {
+            return colour;
+        }
+        if (hasFade && gradient.fade !== 0 && hasColour) {
+            throw 'Fade and gradient colour cannot be used at the same time.';
         }
 
         let name = 'gradient-' + self.definitions.length,
-            start = (fade < 0) ? '40%' : '0%',
-            end = (fade < 0) ? '100%' : '60%',
-            startColour = (fade < 0) ? LAYOUT_COLOUR : LAYOUT_INVISIBLE,
-            endColour = (fade < 0) ? LAYOUT_INVISIBLE : LAYOUT_COLOUR;
+            start, end, startColour, endColour;
 
-        let gradient = _createSVGNode('linearGradient', {
+        if (hasColour) {
+            start = '35%';
+            end = '65%';
+            startColour = colour;
+            endColour = gradient.colour;
+        } else if (hasFade && gradient.fade < 0) {
+            start = '40%';
+            end = '100%';
+            startColour = colour;
+            endColour = LAYOUT_INVISIBLE;
+        } else {
+            start = '0%';
+            end = '60%';
+            startColour = LAYOUT_INVISIBLE;
+            endColour = colour;
+        }
+
+        let gradientDef = _createSVGNode('linearGradient', {
             id: name,
             gradientUnits: 'userSpaceOnUse',
-            x1: x1, x2: x2,
-            y1: y1, y2: y2
+            x1: c.x1, x2: c.x2,
+            y1: c.y1, y2: c.y2
         });
-        gradient.appendChild(_createSVGNode('stop', {
+        gradientDef.appendChild(_createSVGNode('stop', {
             offset: start,
             'stop-color': startColour
         }));
-        gradient.appendChild(_createSVGNode('stop', {
+        gradientDef.appendChild(_createSVGNode('stop', {
             offset: end,
             'stop-color': endColour
         }));
-
-        self.definitions.push(gradient);
+        self.definitions.push(gradientDef);
 
         return 'url(#' + name + ')';
     };
 
     /**
-     * Adds path to diagram.
-     * @param {Number} x1 Starting x coordinate
-     * @param {Number} x2 Ending x coordinate
-     * @param {Number} y1 Starting y coordinate
-     * @param {Number} y2 Ending y coordinate
-     * @param {Number} fade Whether this line fades in (1) or fades out (-1).
+     * Adds path to diagram using coordinates.
+     * @param {{x1: Number, y1: Number, x2: Number, y2: Number}} c Coordinates for path.
+     * @param {String} colour Main colour of path.
+     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {String} [gradient.colour] Second colour to be used.
+     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
      * No fading if zero or undefined.
      */
-    this.addPath = function(x1, x2, y1, y2, fade) {
-        self.col.push(Math.max(x1, x2));
-        self.row.push(Math.max(y1, y2));
+    this.addPathCoords = function(c, colour, gradient) {
+        self.col.add(c.x1);
+        self.col.add(c.x2);
+        self.row.add(c.y1);
+        self.row.add(c.y2);
 
-        let path = _pathCommand('M', [x1, y1]),
-            y = y2 - y1;
-        if (x1 === x2) {
-            path += ' ' + _pathCommand('L', [x2, y2]);
+        let path = _pathCommand('M', [c.x1, c.y1]),
+            y = c.y2 - c.y1;
+        if (c.x1 === c.x2) {
+            path += ' ' + _pathCommand('L', [c.x2, c.y2]);
         } else {
-            let i1 = y1 + y / LAYOUT_CURVE_MARGIN,
-                i2 = y1 + y / 2,
-                i3 = y1 + y - y / LAYOUT_CURVE_MARGIN;
-            path += ' ' + _pathCommand('L', [x1, i1]);
-            path += ' ' + _pathCommand('C', [x1, i2], [x2, i2], [x2, i3]);
-            path += ' ' + _pathCommand('L', [x2, y2]);
+            let i1 = c.y1 + y / LAYOUT_CURVE_MARGIN,
+                i2 = c.y1 + y / 2,
+                i3 = c.y1 + y - y / LAYOUT_CURVE_MARGIN;
+            path += ' ' + _pathCommand('L', [c.x1, i1]);
+            path += ' ' + _pathCommand('C', [c.x1, i2], [c.x2, i2], [c.x2, i3]);
+            path += ' ' + _pathCommand('L', [c.x2, c.y2]);
         }
 
-        let stroke = self._setStroke(x1, x2, y1, y2, fade);
+        let stroke = self._setStroke(c, colour, gradient);
         let pathNode = _createSVGNode('path', {
             'fill': 'none',
             'stroke': stroke,
@@ -1434,38 +1506,185 @@ function Diagram() {
     };
 
     /**
+     * Adds path to diagram using row and column numbers.
+     * @param {Number} c1 Starting column number
+     * @param {Number} c2 Ending column number
+     * @param {Number} r Starting row number
+     * @param {String} colour Main colour of path.
+     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {String} [gradient.colour] Second colour to be used.
+     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
+     * No fading if zero or undefined.
+     */
+    this.addPath = function(c1, c2, r, colour, gradient) {
+        if (self.colStart === null || self.rowCoords === null) {
+            throw 'Row and column coordinates need to be set first.';
+        } else if (r < 0 || r >= self.rowCoords.length) {
+            throw 'Row numbers need to be within range.';
+        }
+
+        let coords = {
+            x1: self.colStart + c1 * LAYOUT_SPACE_X,
+            y1: self.rowCoords[r],
+            x2: self.colStart + c2 * LAYOUT_SPACE_X,
+            y2: (r === data.length - 1) ?
+                2 * self.rowCoords[r] - self.rowCoords[r - 1] : self.rowCoords[r + 1]
+        };
+        self.addPathCoords(coords, colour, gradient);
+    };
+
+    this.clear = function() {
+        self.definitions = [];
+        self.paths = [];
+        self.col.clear();
+        self.row.clear();
+
+        if (self.container !== null && self.svg !== null) {
+            self.container.removeChild(self.svg);
+            self.svg = null;
+        }
+    };
+
+    /**
      * Builds diagram and adds to container element.
-     * @param {HTMLElement} container DOM node
      * @param {Number} startX Starting x coordinate for line
      * @param {Number} startY Starting y coordinate for line
      */
-    this.build = function(container, startX, startY) {
-        let boundsX = 2 * startX + (Math.max(...self.col) + 2),
-            boundsY = 2 * startY + Math.max(...self.row);
+    this.build = function(startX, startY) {
+        let boundsX = 2 * startX + (_setMax(self.col) + 2),
+            boundsY = 2 * startY + _setMax(self.row);
 
-        let svg = _createSVGNode('svg', {width: boundsX, height: boundsY});
+        self.svg = _createSVGNode('svg', {width: boundsX, height: boundsY});
 
         if (self.definitions.length > 0) {
             let defs = _createSVGNode('defs');
             self.definitions.forEach(function(g) {
                 defs.appendChild(g);
             });
-            svg.appendChild(defs);
+            self.svg.appendChild(defs);
         }
 
         self.paths.forEach(function(p) {
-            svg.appendChild(p);
+            self.svg.appendChild(p);
         });
 
-        container.appendChild(svg);
+        self.container.appendChild(self.svg);
     };
-}
 
+    /**
+     * Rebuilds diagram using data and updated coordinates of indicator elements.
+     */
+    this.rebuild = function() {
+        let b = self.container.getBoundingClientRect(),
+        coords = [],
+        rows = [];
 
-function _getRelativeElementCoords(element, startX, startY) {
-    let rect = element.getBoundingClientRect();
+        self.listInd.forEach(function(stop) {
+            let next = _getRelativeElementCoords(stop, b.left, b.top);
+            coords.push(next);
+            rows.push(next.y);
+        });
 
-    return [rect.left + rect.width / 2 - startX, rect.top + rect.height / 2 - startY];
+        let startX = coords[0].x,
+            startY = coords[0].y;
+
+        if (self.svg === null) {
+            self.colStart = startX;
+            self.rowCoords = rows;
+        } else if (self.rowCoords !== rows) {
+            self.clear();
+            self.rowCoords = rows;
+        } else {
+            // No need to change diagram
+            return;
+        }
+
+        let previous = new Map(),
+            current = new Map(),
+            v0, v1, c0, c1;
+
+        for (let r = 0; r < self.data.length; r++) {
+            v0 = self.data[r];
+            c0 = self.colours[r];
+            v1 = null;
+            c1 = null;
+            if (r + 1 < self.data.length) {
+                v1 = self.data[r + 1];
+                c1 = self.colours[r + 1];
+                if (c0 === null) {
+                    c0 = c1;
+                }
+            }
+
+            current = new Map();
+            v0.paths.forEach(function(p) {
+                let gradient = {},
+                    start = (previous.has(p.start)) ? previous.get(p.start): c0;
+
+                if (p.fade > 0) {
+                    gradient['fade'] = p.fade;
+                    current.set(p.end, start);
+                } else if (p.fade < 0) {
+                    gradient['fade'] = p.fade;
+                } else if (v1 !== null && p.end === v1.column && start !== c1) {
+                    gradient['colour'] = c1;
+                    current.set(p.end, c1);
+                } else {
+                    current.set(p.end, start);
+                }
+                self.addPath(p.start, p.end, r, start, gradient);
+            });
+            previous = current;
+        }
+
+        self.build(startX, startY);
+    };
+
+    /**
+     * Timer function to be used with window's event listener.
+     */
+    this.rebuildTimer = function() {
+        if (self.rebuildTimeOut === null) {
+            self.rebuildTimeOut = setTimeout(function() {
+                self.rebuildTimeOut = null;
+                self.rebuild();
+            }, LAYOUT_TIMEOUT);
+        }
+    };
+
+    /**
+     * Sets up diagram and build
+     * @param {Array} data
+     */
+    this.setUp = function(data) {
+        self.data = data.map(function(v) {
+            return {
+                vertex: v[0],
+                column: v[1],
+                paths: v[2].map(function(p) {
+                    return {start: p[0], end: p[1], fade: p[2]};
+                })
+            };
+        });
+
+        self.listInd = [];
+        self.colours = [];
+        self.data.forEach(function (v, i) {
+            let code = (v.vertex !== null) ? v.vertex : 'Null';
+            self.listInd.push(document.getElementById('i' + code));
+
+            let colour;
+            if (v.vertex !== null) {
+                colour = getComputedStyle(self.listInd[i]).backgroundColor;
+            } else {
+                colour = null;
+            }
+            self.colours.push(colour);
+        });
+
+        self.rebuild();
+        window.addEventListener('resize', self.rebuildTimer);
+    };
 }
 
 
@@ -1501,69 +1720,42 @@ function _addEmptyItem(list) {
 }
 
 
-// TODO: Add event listener to redraw diagram when row heights change
-// TODO: Detect computed colours and use them for paths including transistions
-// TODO: Clean up code
-
-
 /**
- * Draws diagram.
+ * Draws diagram and add event listener to rebuild graph if required.
  * @param {(String|HTMLElement)} container DOM div node.
  * @param {(String|HTMLElement)} list DOM node for list of stops.
  * @param data Required data
  */
-function drawGraph(container, list, data) {
-    let c = (container instanceof HTMLElement) ? container : document.getElementById(container),
-        l = (list instanceof HTMLElement) ? list : document.getElementById(list),
-        d = new Diagram(),
-        s = [];
+function setupGraph(container, list, data) {
+    let containerElement = (container instanceof HTMLElement) ?
+            container : document.getElementById(container),
+        listStops = (list instanceof HTMLElement) ? list : document.getElementById(list);
 
     if (data[0][0] === null) {
-        _addEmptyItem(l);
+        _addEmptyItem(listStops);
     }
 
     data.forEach(function(v, r) {
         let id = (v[0] !== null) ? v[0] : 'Null';
         let div = document.getElementById('c' + id);
 
-        let cols = [];
+        let cols = new Set();
         v[2].forEach(function(p) {
-            cols.push(p[0]);
-            cols.push(p[1]);
+            cols.add(p[0]);
+            cols.add(p[1]);
         });
         if (r > 0) {
             data[r - 1][2].forEach(function(p) {
-                cols.push(p[1]);
+                cols.add(p[1]);
             });
         }
-        let width = (cols.length > 0) ? Math.max(...cols) : 0;
+
+        let width = (cols.size > 0) ? _setMax(cols) : 0;
         _moveStopItemElements(div, v[1], width);
-
-        s.push(document.getElementById('i' + id));
     });
 
-    let b = c.getBoundingClientRect(),
-        coords = [],
-        rows = [];
-    s.forEach(function(stop) {
-        let next = _getRelativeElementCoords(stop, b.left, b.top);
-        coords.push(next);
-        rows.push(next[1]);
-    });
-    let startX = coords[0][0],
-        startY = coords[0][1];
+    let diagram = new Diagram(containerElement);
+    diagram.setUp(data);
 
-    data.forEach(function(v, r) {
-        v[2].forEach(function(p) {
-            d.addPath(
-                startX + p[0] * LAYOUT_SPACE_X,
-                startX + p[1] * LAYOUT_SPACE_X,
-                rows[r],
-                (r === data.length - 1) ? 2 * rows[r] - rows[r - 1] : rows[r + 1],
-                p[2]
-            );
-        });
-    });
-
-    d.build(c, startX, startY);
+    return diagram;
 }

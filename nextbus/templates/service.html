@@ -58,7 +58,7 @@
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline item--stop--service">
                 <div id={{ 'c' + s.atco_code }}>
                     <div class="item--stop">
-                        {{ f.print_stop_indicator(s, id="i"+s.atco_code) }}
+                        {{ f.print_stop_indicator(s, name="i"+s.atco_code) }}
                         <div class="item__label">{{ s.name }}</div>
                     </div>
                     {% if s.street and s.street != s.locality.name %}
@@ -84,8 +84,9 @@
 </script>
 <script>
     let data = {{ layout|tojson }};
+    let diagram = null;
     if (data !== null) {
-        drawGraph('diagram', 'listStops', data);
+        diagram = setupGraph('diagram', 'listStops', data);
     }
 </script>
 {% endblock %}

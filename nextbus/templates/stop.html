@@ -96,19 +96,20 @@
 <script>
     resizeIndicator('indicator');
 
-    const STARRED_URL = "{{ url_for('api.starred') }}"
+    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
+    const STARRED_URL = "{{ url_for('api.starred') }}";
+
     let set = "{{ ('stops' in session)|tojson }}" === 'true';
     let info = document.getElementById('cookie-request-info');
     let starred = new StarredStops(set, info);
 
-    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     let ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',
         'services',
         'liveTime',
         'liveCountdown'
-    )
+    );
     ld.startLoop();
 </script>
 {% endblock %}

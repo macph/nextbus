@@ -3,15 +3,13 @@
  */
 
 const INTERVAL = 60;
-const REFRESH = true;
 
-const MAP_ZOOM_MIN = 8;
+const MAP_ZOOM_MIN = 7;
 const MAP_ZOOM_MAX = 18;
 const MAP_CENTRE_GB = [54.00366, -2.547855];
-const MAP_BOUNDS_NW = 0;
-const MAP_BOUNDS_SE = 0;
+const MAP_BOUNDS_NW = [61, 2];
+const MAP_BOUNDS_SE = [49, -8];
 
-const STOPS_VISIBLE = 16;
 const TILE_LIMIT = 64;
 const TILE_ZOOM = 15;
 
@@ -43,12 +41,12 @@ function addGeolocation(LocationURL, activateElement) {
         console.log('Current coordinates (' + latitude + ', ' + longitude + ')');
         // Direct to list of stops
         window.location.href = LocationURL + latitude + ',' + longitude;
-    }
+    };
     let error = function(err) {
         console.log('Geolocation error: ' + err);
-    }
+    };
 
-    activateElement.addEventListener('click', function(event) {
+    activateElement.addEventListener('click', function() {
         navigator.geolocation.getCurrentPosition(success, error);
     });
 }
@@ -57,7 +55,7 @@ function addGeolocation(LocationURL, activateElement) {
 /**
  * Sends requests to modify cookie data with list of starred stops
  * @constructor
- * @param {Boolean} cookieSet Whether cookie has been set in first place or not
+ * @param {boolean} cookieSet Whether cookie has been set in first place or not
  * @param {HTMLElement} info Info element to show for setting cookie data
  */
 function StarredStops(cookieSet, info) {
@@ -85,17 +83,17 @@ function StarredStops(cookieSet, info) {
                 window.removeEventListener('resize', resizeInfo);
             });
         };
-    }
+    };
 
     this.get = function(callback) {
         self.r.onload = function() {
             let newData = JSON.parse(this.responseText);
             self.data = newData.stops;
             callback();
-        }
+        };
         self.r.open("GET", STARRED_URL, true);
         self.r.send();
-    }
+    };
 
     this.add = function(element, code, callback) {
         if (!self.set) {
@@ -172,28 +170,28 @@ function addSearchBarEvents() {
     let searchButtonText = searchButton.querySelector('span');
     let searchBar = document.getElementById('header-search-bar');
     let searchBarInput = document.getElementById('search-form');
-    let searchBarTransitionEnd = getTransitionEnd(searchBar)
-    
+    let searchBarTransitionEnd = getTransitionEnd(searchBar);
+
     let transitionCallback = function() {
         searchBar.removeEventListener(searchBarTransitionEnd, transitionCallback);
         searchBarInput.focus();
-    }
-  
+    };
+
     let openSearchBar = function() {
         searchBar.classList.add('search-bar--open');
         searchButtonText.textContent = 'Close';
         searchButton.blur();
         barHidden = false;
         searchBar.addEventListener(searchBarTransitionEnd, transitionCallback);
-    }
-  
+    };
+
     let closeSearchBar = function() {
         searchBar.classList.remove('search-bar--open');
         searchButtonText.textContent = 'Search';
         searchBarInput.blur();
         barHidden = true;
-    }
-  
+    };
+
     searchButton.addEventListener('click', function() {
         if (barHidden) {
             openSearchBar();
@@ -201,11 +199,13 @@ function addSearchBarEvents() {
             closeSearchBar();
         }
     });
-  
+
     document.addEventListener('click', function(event) {
-        if (!searchBar.contains(event.target) &&
+        if (event.target instanceof HTMLElement &&
+            !searchBar.contains(event.target) &&
             !searchButton.contains(event.target) &&
-            !barHidden) {
+            !barHidden)
+        {
             closeSearchBar();
         }
     });
@@ -214,11 +214,11 @@ function addSearchBarEvents() {
 
 /**
  * Resize text within boxes
- * @param {...*} arguments Class names as args to modify text in
+ * @param {...*} classes Class names as args to modify text in
  */
-function resizeIndicator() {
-    for (let i = 0; i < arguments.length; i++) {
-        let elements = document.getElementsByClassName(arguments[i]);
+function resizeIndicator(...classes) {
+    for (let i = 0; i < classes.length; i++) {
+        let elements = document.getElementsByClassName(classes[i]);
         for (let j = 0; j < elements.length; j++) {
             let elt = elements[j];
             let span = elt.querySelector('span');
@@ -258,11 +258,11 @@ function resizeIndicator() {
 
 /**
  * Reverts colours of indicators
- * @param {...*} arguments Class names as arguments to revert colours
+ * @param {...*} classes Class names as arguments to revert colours
  */
-function revertColours() {
-    for (let i = 0; i < arguments.length; i++) {
-        let elements = document.getElementsByClassName(arguments[i]);
+function revertColours(...classes) {
+    for (let i = 0; i < classes.length; i++) {
+        let elements = document.getElementsByClassName(classes[i]);
         for (let j = 0; j < elements.length; j++) {
             let elt = elements[j];
             let style = window.getComputedStyle(elt);
@@ -288,23 +288,54 @@ function removeSubElements(element) {
 
 
 /**
+ * JSON data from API for live bus times data.
+ * @typedef {{
+ *     atco_code: string,
+ *     naptan_code: string,
+ *     iso_date: string,
+ *     local_time: string,
+ *     services: {
+ *         line: string,
+ *         name: string,
+ *         dest: string,
+ *         op_name: string,
+ *         op_code: string,
+ *         expected: {
+ *             live: boolean,
+ *             secs: number,
+ *             exp_date: string
+ *         }[]
+ *     }[]
+ * }} LiveTimesData
+ */
+
+
+/**
  * Retrieves live data and displays it in a table
  * @constructor
  * @param {string} atcoCode ATCO code for stop
  * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
- * @param {string} table Table element in document
- * @param {string} time Element in document showing time when data was retrieved
- * @param {string} countdown Element in document showing time before next refresh
+ * @param {(HTMLElement|string)} table Table element or ID in document
+ * @param {(HTMLElement|string)} time Element or ID in document showing time when data was
+ * retrieved
+ * @param {(HTMLElement|string)} countdown Element or ID in document showing time before next
+ * refresh
  */
 function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
     this.url = LIVE_URL;
-    this.table = table;
-    this.headingTime = time;
-    this.headingCountdown = countdown;
-    this.countdownElement = null;
+
+    this.table = (table instanceof HTMLElement) ? table : document.getElementById(table);
+    this.headingTime = (time instanceof HTMLElement) ? time : document.getElementById(time);
+    this.headingCountdown = (countdown instanceof HTMLElement) ?
+        countdown : document.getElementById(countdown);
+
+    /**
+     * Live time data from API.
+     * @type {?LiveTimesData}
+     */
     this.data = null;
 
     this.interval = null;
@@ -313,11 +344,17 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     this.loopEnding = false;
 
     /**
-     * Gets data from server, refreshing table
-     * @param {function} callback Callback to be used upon successful request
+     * Called after live data is successfully received.
+     * @callback afterLiveData
+     * @param {string} atcoCode
      */
-    this.getData = function(callback) {
-        self.headingTime.textContent = 'Updating...'
+
+    /**
+     * Gets data from server, refreshing table
+     * @param {afterLiveData} [after] Callback to be used upon successful request
+     */
+    this.getData = function(after) {
+        self.headingTime.textContent = 'Updating...';
         let request = new XMLHttpRequest();
         request.open('GET', self.url + self.atcoCode, true);
         request.setRequestHeader('Content-Type', 'charset=utf-8');
@@ -336,13 +373,23 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                     self.isLive = false;
                     self.headingTime.textContent = 'No data available';
                 }
-                if (typeof callback !== 'undefined') {
-                    callback(self.atcoCode);
+                if (typeof after !== 'undefined') {
+                    after(self.atcoCode);
                 }
             }
-        }
+        };
 
         request.send();
+    };
+
+    /**
+     * Prints remaining seconds as 'due' or 'x min'
+     * @param {number} sec Remaining seconds
+     * @private
+     */
+    this._strDue = function(sec) {
+        let due = Math.round(sec / 60);
+        return (due < 2) ? 'due' : due + ' min';
     };
 
     /**
@@ -357,24 +404,11 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
             clLive = 'service--estimated';
         }
 
-        let container = document.getElementById(self.table);
-        let heading = document.getElementById(self.headingTime);
-
-        /**
-         * Prints remaining seconds as 'due' or 'x min'
-         * @param {number} sec Remaining seconds
-         */
-        let strDue = function(sec) {
-            let due = Math.round(sec / 60);
-            let str = (due < 2) ? 'due' : due + ' min';
-            return str;
-        }
-
         if (self.data !== null && self.data.services.length > 0) {
             if (self.isLive) {
-                heading.textContent = 'Live times at ' + self.data.local_time;
+                self.headingTime.textContent = 'Live times at ' + self.data.local_time;
             } else {
-                heading.textContent = 'Estimated times from ' + self.data.local_time;
+                self.headingTime.textContent = 'Estimated times from ' + self.data.local_time;
             }
 
             let table = document.createElement('div');
@@ -415,7 +449,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 if (service.expected[0].live) {
                     cNextSpan.className = clLive;
                 }
-                let exp = strDue(service.expected[0].secs)
+                let exp = self._strDue(service.expected[0].secs);
                 cNextSpan.appendChild(document.createTextNode(exp));
                 cNext.appendChild(cNextSpan);
 
@@ -426,13 +460,13 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 let cAfterSpan = document.createElement('span');
 
                 // If number of expected services is 2, only need to show the 2nd service here
-                if (service.expected.length == 2) {
+                if (service.expected.length === 2) {
                     let firstMin = document.createElement('span');
                     if (service.expected[1].live) {
                         firstMin.className = clLive;
                     }
                     firstMin.appendChild(
-                        document.createTextNode(strDue(service.expected[1].secs))
+                        document.createTextNode(self._strDue(service.expected[1].secs))
                     );
                     cAfter.appendChild(firstMin);
 
@@ -446,9 +480,9 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                     if (service.expected[2].live) {
                         secondMin.className = clLive;
                     }
-                    let exp1 = strDue(service.expected[1].secs).replace('min', 'and');
+                    let exp1 = self._strDue(service.expected[1].secs).replace('min', 'and');
                     firstMin.appendChild(document.createTextNode(exp1));
-                    let exp2 = strDue(service.expected[2].secs)
+                    let exp2 = self._strDue(service.expected[2].secs);
                     secondMin.appendChild(document.createTextNode(exp2));
 
                     cAfterSpan.appendChild(firstMin);
@@ -464,22 +498,22 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 table.appendChild(cAfter);
             }
             // Remove all existing elements
-            removeSubElements(container);
+            removeSubElements(self.table);
             // Add table
-            container.appendChild(table);
+            self.table.appendChild(table);
             console.log('Created table with ' + self.data.services.length +
                         ' services for stop "' + self.atcoCode + '".');
 
         } else if (self.data !== null) {
-            removeSubElements(container);
+            removeSubElements(self.table);
             if (self.isLive) {
-                heading.textContent = 'No services expected at ' + self.data.local_time;
+                self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
             } else {
-                heading.textContent = 'No services found';
+                self.headingTime.textContent = 'No services found';
             }
             console.log('No services found for stop ' + self.atcoCode + '.');
         } else {
-            heading.textContent = 'Updating...';
+            self.headingTime.textContent = 'Updating...';
             console.log('No data received yet when printed for stop ' + self.atcoCode);
         }
     };
@@ -518,23 +552,28 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     };
 
     /**
+     * Called on start, every interval or when the loop ends.
+     * @callback callbackLiveData
+     * @param {string} atcoCode
+     */
+
+    /**
      * Starts up the class with interval for refreshing. If it is already active, the table and
      * countdown are set to the correct elements again.
-     * @param {Object} callbacks Callback functions called at start, within interval or at end
-     * @param {function} callbacks.onStart At start of loop, when data is received.
-     *     If not defined the onInter function is called instead
-     * @param {function} callbacks.onInter Called every interval after initial interval
-     * @param {function} callbacks.onEnd Called when interval finishes and loop stops
+     * @param {object} [callbacks] Callback functions called at start, within interval or at end
+     * @param {callbackLiveData} [callbacks.start] At start of loop, when data is received.
+     * If not defined the onInter function is called instead
+     * @param {callbackLiveData} [callbacks.interval] Called every interval after initial interval
+     * @param {callbackLiveData} [callbacks.end] Called when interval finishes and loop stops
      */
     this.startLoop = function(callbacks) {
         let onInter, onStart, onEnd;
         if (typeof callbacks !== 'undefined') {
-            onInter = callbacks.onInter;
-            onStart = (typeof callbacks.onStart !== 'undefined') ? callbacks.onStart : onInter;
-            onEnd = callbacks.onEnd;
+            onInter = callbacks.interval;
+            onStart = (typeof callbacks.start !== 'undefined') ? callbacks.start : onInter;
+            onEnd = callbacks.end;
         }
 
-        self.countdownElement = document.getElementById(self.headingCountdown);
         if (self.loopActive) {
             if (self.loopEnding) {
                 self.loopEnding = false;
@@ -547,34 +586,31 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
         }
 
         self.getData(onStart);
-        if (REFRESH) {
-            self.loopActive = true;
-            let time = INTERVAL;
-            self.interval = setInterval(function() {
-                time--;
-                self.countdownElement.textContent = (time > 0) ? time + 's' : 'now';
-                if (time <= 0) {
-                    if (self.loopEnding) {
-                        self.loopActive = false;
-                        self.loopEnding = false;
-                        clearInterval(self.interval);
-                        if (typeof onEnd !== 'undefined') {
-                            onEnd(self.atcoCode);
-                        }
-                    } else {
-                        self.getData(onInter);
-                        time = INTERVAL;
+
+        let time = INTERVAL;
+        self.loopActive = true;
+        self.interval = setInterval(function() {
+            time--;
+            self.headingCountdown.textContent = (time > 0) ? time + 's' : 'now';
+            if (time <= 0) {
+                if (self.loopEnding) {
+                    self.loopActive = false;
+                    self.loopEnding = false;
+                    clearInterval(self.interval);
+                    if (typeof onEnd !== 'undefined') {
+                        onEnd(self.atcoCode);
                     }
+                } else {
+                    self.getData(onInter);
+                    time = INTERVAL;
                 }
-            }, 1000);
-        } else {
-            self.countdownElement.textContent.textContent = '';
-        }
+            }
+        }, 1000);
     };
 
     /**
      * Sets the loop to not repeat after it runs out. Can be restarted with startLoop() again
-     * @param {function} callback - Calls function at same time
+     * @param {callbackLiveData} callback - Calls function at same time
      */
     this.stopLoop = function(callback) {
         if (self.loopActive) {
@@ -606,7 +642,7 @@ function TileCache(max) {
 
     /**
      * Create hash with Cantor pairing function
-     * @param {Object} coords Coordinates with properties x and y
+     * @param {{x: number, y: number}} coords
      */
     this.hash = function(coords) {
         return 0.5 * (coords.x + coords.y) * (coords.x + coords.y + 1) + coords.y;
@@ -614,8 +650,8 @@ function TileCache(max) {
 
     /**
      * Gets value from map by key and push to front if requested
-     * @param {Object} coords Coordinates with properties x and y
-     * @param {Boolean} push Push key/value to front
+     * @param {{x: number, y: number}} coords
+     * @param {boolean} push Push key/value to front
      */
     this.get = function(coords, push) {
         let key = self.hash(coords);
@@ -632,8 +668,8 @@ function TileCache(max) {
 
     /**
      * Adds coordinates and layer to map, keeping to maximum size
-     * @param {Object} coords Coordinates with properties x and y
-     * @param {Object} layer Leaflet Layer object
+     * @param {{x: number, y: number}} coords
+     * @param {object} layer Leaflet Layer object
      */
     this.set = function(coords, layer) {
         self._data.set(self.hash(coords), {coords: coords, layer: layer});
@@ -643,14 +679,15 @@ function TileCache(max) {
                 if (first === null) {
                     first = key;
                 }
-            })
+            });
             self._data.delete(first);
         }
     };
 
     /**
      * Checks if coordinates exist in map
-     * @param {Object} coords Coordinates with properties x and y
+     * @param {{x: number, y: number}} coords
+     * @returns {boolean}
      */
     this.has = function(coords) {
         return self._data.has(self.hash(coords));
@@ -658,6 +695,7 @@ function TileCache(max) {
 
     /**
      * Returns array of coordinates within map
+     * @returns {{x: number, y: number}[]}
      */
     this.coords = function() {
         let array = [];
@@ -690,9 +728,32 @@ function detectIE() {
 
 
 /**
+ * GeoJSON data for a stop point
+ * @typedef {{
+ *     type: string,
+ *     geometry: {
+ *         type: string,
+ *         coordinates: number[]
+ *     },
+ *     properties: {
+ *         atcoCode: string,
+ *         naptanCode: string,
+ *         title: string,
+ *         name: string
+ *         indicator: string,
+ *         street: string,
+ *         bearing: string,
+ *         stopType: string,
+ *         adminAreaRef: string
+ *     }
+ * }} StopPoint
+ */
+
+
+/**
  * Handles layers of stop markers
  * @constructor
- * @param {Object} stopMap Parent stop map object
+ * @param {object} stopMap Parent stop map object
  */
 function StopLayer(stopMap) {
     let self = this;
@@ -711,7 +772,7 @@ function StopLayer(stopMap) {
 
     /**
      * Loads tile with stops - if it doesn't exist in cache, download data
-     * @param {Object} coords Tile coordinates at level TILE_ZOOM
+     * @param {object} coords Tile coordinates at level TILE_ZOOM
      */
     this.loadTile = function(coords) {
         let layer = self.loadedStops.get(coords, true);
@@ -743,17 +804,6 @@ function StopLayer(stopMap) {
 
     /**
      * Removes all tiles - but data stays in cache
-     * @param {Object} coords Tile coordinates at level TILE_ZOOM
-     */
-    this.removeTile = function(coords) {
-        let layer = self.loadedStops.get(coords);
-        if (self.layers.hasLayer(layer)) {
-            self.layers.removeLayer(layer);
-        }
-    };
-
-    /**
-     * Removes all tiles - but data stays in cache
      */
     this.removeAllTiles = function() {
         self.layers.eachLayer(function(layer) {
@@ -762,18 +812,24 @@ function StopLayer(stopMap) {
     };
 
     /**
+     * Converts latitude longitude coordinates to grid coordinates at TILE_ZOOM
+     * @param {L.Point} scale
+     * @param {L.latLng} coords
+     */
+    this._getTileCoords = function(scale, coords) {
+        let absolute = self.stopMap.map.project(coords, TILE_ZOOM);
+        return absolute.unscaleBy(scale).floor();
+    };
+
+    /**
      * Gets coordinates of all tiles visible current map at level TILE_ZOOM
      */
     this._getTileCoordinates = function() {
-        let pixelScale = self.stopMap.tileLayer.getTileSize();
-        let bounds = self.stopMap.map.getBounds();
+        let pixelScale = self.stopMap.tileLayer.getTileSize(),
+            bounds = self.stopMap.map.getBounds();
 
-        let getTile = function(coords) {
-            let absolute = self.stopMap.map.project(coords, TILE_ZOOM)
-            return absolute.unscaleBy(pixelScale).floor();
-        };
-        let northwest = getTile(bounds.getNorthWest());
-        let southeast = getTile(bounds.getSouthEast());
+        let northwest = self._getTileCoords(pixelScale, bounds.getNorthWest()),
+            southeast = self._getTileCoords(pixelScale, bounds.getSouthEast());
 
         let tileCoords = [];
         for (let i = northwest.x; i <= southeast.x; i++) {
@@ -789,7 +845,7 @@ function StopLayer(stopMap) {
      * Updates all stop point tiles, removing hidden tiles and adding new tiles
      */
     this.updateTiles = function() {
-        if (self.stopMap.map.getZoom() < STOPS_VISIBLE) {
+        if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
             return;
         }
 
@@ -809,7 +865,7 @@ function StopLayer(stopMap) {
 
     /**
      * Creates marker element to be used in map
-     * @param {Object} point Point object from data
+     * @param {StopPoint} point Point object from data
      */
     this.markerElement = function(point) {
         let ind = '';
@@ -817,9 +873,9 @@ function StopLayer(stopMap) {
             ind = '<span>' + point.properties.indicator + '</span>'
         } else if (point.properties.stopType === 'BCS' ||
                     point.properties.stopType === 'BCT') {
-            ind = '<img src="' + BUS_SVG + '" width=28px>'
+            ind = '<img src="' + BUS_SVG + '" width=28px alt="Bus stop">'
         } else if (point.properties.stopType === 'PLT') {
-            ind = '<img src="' + TRAM_SVG + '" width=28px>'
+            ind = '<img src="' + TRAM_SVG + '" width=28px alt="Tram stop">'
         }
 
         let arrow = '';
@@ -830,17 +886,16 @@ function StopLayer(stopMap) {
 
         let area = 'area-' + point.properties.adminAreaRef;
         let indClass = 'indicator indicator-marker ' + area;
-        let innerHTML = '<div class="' + indClass + '">' + arrow + ind + '</div>';
 
-        return innerHTML;
+        return '<div class="' + indClass + '">' + arrow + ind + '</div>';
     };
 
     /**
      * Creates GeoJSON layer of stops from list of stops
-     * @param {Object} stops FeatureCollection data of stops within title
+     * @param {object} stops FeatureCollection data of stops within title
      */
     this.createLayer = function(stops) {
-        let stopLayer = new L.GeoJSON(stops, {
+        return new L.GeoJSON(stops, {
             pointToLayer: function(point, latLng) {
                 let icon = L.divIcon({
                     className: 'marker',
@@ -853,20 +908,18 @@ function StopLayer(stopMap) {
                         alt: point.properties.indicator
                 });
                 // Move marker to front when mousing over
-                marker = marker.on('mouseover', function(event) {
+                marker = marker.on('mouseover', function() {
                     self.zCount += 100;
                     this.setZIndexOffset(self.zCount);
                 });
                 // Add callback function to each marker with GeoJSON pointer object as argument
-                marker = marker.on('click', function(event) {
+                marker = marker.on('click', function() {
                     self.stopMap.panel.setPanel(point);
                 });
 
                 return marker;
             }
         });
-
-        return stopLayer;
     };
 }
 
@@ -874,7 +927,7 @@ function StopLayer(stopMap) {
 /**
  * Handles tram/bus route on map
  * @constructor
- * @param {Object} stopMap Parent stop map object
+ * @param {object} stopMap Parent stop map object
  */
 function RouteLayer(stopMap) {
     let self = this;
@@ -883,7 +936,7 @@ function RouteLayer(stopMap) {
 
     /**
      * Creates route layer to be put on map
-     * @param {Object} route MultiLineString GeoJSON object
+     * @param {object} route MultiLineString GeoJSON object
      */
     this.createLayer = function(route) {
         // TODO: Find colour for a specific style and use it for paths
@@ -943,13 +996,13 @@ function RouteLayer(stopMap) {
 /**
  * Handles the stop panel
  * @constructor
- * @param {Object} stopMap Parent stop map object
+ * @param {object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
- * @param {Boolean} cookieSet Whether the cookie has been set or not
+ * @param {boolean} cookieSet Whether the cookie has been set or not
  */
 function StopPanel(stopMap, mapPanel, cookieSet) {
     let self = this;
-    this.stopMap = stopMap
+    this.stopMap = stopMap;
     this.mapPanel = mapPanel;
     this.starred = new StarredStops(cookieSet, null);
     this.activeStops = new Map();
@@ -975,7 +1028,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
         self.stopAllLoops(atcoCode);
         self.activeStops.get(atcoCode).startLoop({
-            onEnd: function(atcoCode) {
+            end: function(atcoCode) {
                 self.activeStops.delete(atcoCode);
             }
         });
@@ -1011,7 +1064,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
     /**
      * Sets panel depending on existence of point data and zoom level
-     * @param {Object} point If not null, displays stop point live data/info
+     * @param {?StopPoint} point If not null, displays stop point live data/info
      */
     self.setPanel = function(point) {
         if (point !== null) {
@@ -1040,7 +1093,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         heading.className = 'heading heading--panel';
 
         let headingText = document.createElement('h2');
-        if (self.stopMap.map.getZoom() < STOPS_VISIBLE) {
+        if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
             headingText.textContent = 'Zoom in to see stops';
         } else {
             headingText.textContent = 'Select a stop';
@@ -1054,7 +1107,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
     /**
      * Sets panel for bus stop live data and other associated info
-     * @param {Object} point GeoJSON data for stop point
+     * @param {StopPoint} point GeoJSON data for stop point
      */
     this._setStopPanel = function(point) {
         let heading = document.createElement('div');
@@ -1204,10 +1257,11 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
 /**
  * Handles the map container and stops
+ * @constructor
  * @param {string} mapToken Mapbox token
  * @param {string} mapContainer ID for map container element
  * @param {string} mapPanel ID for map panel element
- * @param {Boolean} cookieSet Whether the cookie has been set or not
+ * @param {boolean} cookieSet Whether the cookie has been set or not
  */
 function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
     let self = this;
@@ -1231,7 +1285,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
 
     /**
      * Starts up the map and adds map events
-     * @param {Object} point GeoJSON for initial stop point
+     * @param {?StopPoint} point GeoJSON for initial stop point
      * @param {number} latitude Starts map at centre with latitude if point not defined
      * @param {number} longitude Starts map at centre with longitude if point not defined
      * @param {number} zoom Starts map at centre with zoom level if point not defined
@@ -1263,7 +1317,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
         });
 
         self.map.on('zoomend', function() {
-            if (self.map.getZoom() < STOPS_VISIBLE) {
+            if (self.map.getZoom() <= TILE_ZOOM) {
                 self.stops.removeAllTiles();
             } else {
                 self.stops.updateTiles();
@@ -1304,9 +1358,9 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
 
 /**
  * Returns a SVG element with specified attributes
- * @param {String} tag SVG element tag
- * @param {Object} [attr] Attributes for element
- * @returns {Element}
+ * @param {string} tag SVG element tag
+ * @param {object} [attr] Attributes for element
+ * @returns {HTMLElement}
  * @private
  */
 function _createSVGNode(tag, attr) {
@@ -1328,7 +1382,7 @@ function _createSVGNode(tag, attr) {
 
 /**
  * Creates a path command, eg 'C' and [[0, 0], [0, 1], [1, 1]] -> 'C 0,0 0,1 1,1'.
- * @param {String} command path command type, eg 'M' or 'L'
+ * @param {string} command path command type, eg 'M' or 'L'
  * @param {Array} values Array of arrays, each containing numbers/coordinates
  * @returns {string}
  * @private
@@ -1345,9 +1399,9 @@ function _pathCommand(command, ...values) {
 /**
  * Get centre coordinates of element relative to a pair of coordinates.
  * @param {HTMLElement} element
- * @param {Number} startX
- * @param {Number} startY
- * @returns {{x: Number, y: Number}}
+ * @param {number} startX
+ * @param {number} startY
+ * @returns {{x: number, y: number}}
  * @private
  */
 function _getRelativeElementCoords(element, startX, startY) {
@@ -1403,12 +1457,12 @@ function Diagram(container) {
 
     /**
      * Sets stroke colour.
-     * @param {{x1: Number, y1: Number, x2: Number, y2: Number}} c Coordinates for path.
-     * @param {String} colour Main colour of path.
-     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
-     * @param {String} [gradient.colour] Second colour to be used.
-     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
-     * @returns {String} CSS value of colour or URL to gradient if required.
+     * @param {{x1: number, y1: number, x2: number, y2: number}} c Coordinates for path.
+     * @param {string} colour Main colour of path.
+     * @param {object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {string} [gradient.colour] Second colour to be used.
+     * @param {number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
+     * @returns {string} CSS value of colour or URL to gradient if required.
      * @private
      */
     this._setStroke = function(c, colour, gradient) {
@@ -1468,11 +1522,11 @@ function Diagram(container) {
 
     /**
      * Adds path to diagram using coordinates.
-     * @param {{x1: Number, y1: Number, x2: Number, y2: Number}} c Coordinates for path.
-     * @param {String} colour Main colour of path.
-     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
-     * @param {String} [gradient.colour] Second colour to be used.
-     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
+     * @param {{x1: number, y1: number, x2: number, y2: number}} c Coordinates for path.
+     * @param {string} colour Main colour of path.
+     * @param {object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {string} [gradient.colour] Second colour to be used.
+     * @param {number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
      * No fading if zero or undefined.
      */
     this.addPathCoords = function(c, colour, gradient) {
@@ -1507,13 +1561,13 @@ function Diagram(container) {
 
     /**
      * Adds path to diagram using row and column numbers.
-     * @param {Number} c1 Starting column number
-     * @param {Number} c2 Ending column number
-     * @param {Number} r Starting row number
-     * @param {String} colour Main colour of path.
-     * @param {Object} [gradient] Gradient, either with a second colour or fade in/out.
-     * @param {String} [gradient.colour] Second colour to be used.
-     * @param {Number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
+     * @param {number} c1 Starting column number
+     * @param {number} c2 Ending column number
+     * @param {number} r Starting row number
+     * @param {string} colour Main colour of path.
+     * @param {object} [gradient] Gradient, either with a second colour or fade in/out.
+     * @param {string} [gradient.colour] Second colour to be used.
+     * @param {number} [gradient.fade] Whether this line fades in (1) or fades out (-1).
      * No fading if zero or undefined.
      */
     this.addPath = function(c1, c2, r, colour, gradient) {
@@ -1547,8 +1601,8 @@ function Diagram(container) {
 
     /**
      * Builds diagram and adds to container element.
-     * @param {Number} startX Starting x coordinate for line
-     * @param {Number} startY Starting y coordinate for line
+     * @param {number} startX Starting x coordinate for line
+     * @param {number} startY Starting y coordinate for line
      */
     this.build = function(startX, startY) {
         let boundsX = 2 * startX + (_setMax(self.col) + 2),
@@ -1722,8 +1776,8 @@ function _addEmptyItem(list) {
 
 /**
  * Draws diagram and add event listener to rebuild graph if required.
- * @param {(String|HTMLElement)} container DOM div node.
- * @param {(String|HTMLElement)} list DOM node for list of stops.
+ * @param {(HTMLElement|string)} container DOM div node.
+ * @param {(HTMLElement|string)} list DOM node for list of stops.
  * @param data Required data
  */
 function setupGraph(container, list, data) {

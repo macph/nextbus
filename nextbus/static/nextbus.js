@@ -290,20 +290,20 @@ function removeSubElements(element) {
 /**
  * JSON data from API for live bus times data.
  * @typedef {{
- *     atco_code: string,
- *     naptan_code: string,
- *     iso_date: string,
- *     local_time: string,
+ *     atcoCode: string,
+ *     naptanCode: string,
+ *     isoDate: string,
+ *     localTime: string,
  *     services: {
  *         line: string,
  *         name: string,
  *         dest: string,
- *         op_name: string,
- *         op_code: string,
+ *         opName: string,
+ *         opCode: string,
  *         expected: {
  *             live: boolean,
  *             secs: number,
- *             exp_date: string
+ *             expDate: string
  *         }[]
  *     }[]
  * }} LiveTimesData
@@ -406,9 +406,9 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
 
         if (self.data !== null && self.data.services.length > 0) {
             if (self.isLive) {
-                self.headingTime.textContent = 'Live times at ' + self.data.local_time;
+                self.headingTime.textContent = 'Live times at ' + self.data.localTime;
             } else {
-                self.headingTime.textContent = 'Estimated times from ' + self.data.local_time;
+                self.headingTime.textContent = 'Estimated times from ' + self.data.localTime;
             }
 
             let table = document.createElement('div');
@@ -507,7 +507,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
         } else if (self.data !== null) {
             removeSubElements(self.table);
             if (self.isLive) {
-                self.headingTime.textContent = 'No services expected at ' + self.data.local_time;
+                self.headingTime.textContent = 'No services expected at ' + self.data.localTime;
             } else {
                 self.headingTime.textContent = 'No services found';
             }
@@ -530,7 +530,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
             let j = s.expected.length;
             while (j--) {
                 let e = s.expected[j];
-                let dtExp = new Date(e.exp_date);
+                let dtExp = new Date(e.expDate);
                 e.secs = Math.round((dtExp - dtNow) / 1000);
                 if (e.secs < 0) {
                     // Remove services past their expected datetime
@@ -546,7 +546,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
         self.data.services.sort(function(a, b) {
             return a.expected[0].secs - b.expected[0].secs;
         });
-        let dtReq = new Date(self.data.iso_date);
+        let dtReq = new Date(self.data.isoDate);
         let overDue = Math.round((dtNow - dtReq) / 60000);
         console.log('Live data overdue ' + overDue + ' minutes.');
     };

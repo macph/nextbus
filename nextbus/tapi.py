@@ -131,7 +131,7 @@ class _Services(object):
         sv_expected = {
             "live": is_live,
             "secs": exp_sec,
-            "exp_date": iso_date
+            "expDate": iso_date
         }
 
         for new_sv in self.list:
@@ -144,8 +144,8 @@ class _Services(object):
                 "line": line,
                 "name": service["line_name"],
                 "dest": new_dest,
-                "op_name": service["operator_name"],
-                "op_code": service["operator"],
+                "opName": service["operator_name"],
+                "opCode": service["operator"],
                 "expected": [sv_expected]
             }
             self.list.append(new_service)
@@ -190,10 +190,10 @@ def get_nextbus_times(atco_code, **kwargs):
                 raise
 
     new_data = {
-        "atco_code": data["atcocode"],
-        "naptan_code": data["smscode"],
-        "iso_date": req_date.isoformat(),
-        "local_time": req_date.astimezone(GB_TZ).strftime("%H:%M"),
+        "atcoCode": data["atcocode"],
+        "naptanCode": data["smscode"],
+        "isoDate": req_date.isoformat(),
+        "localTime": req_date.astimezone(GB_TZ).strftime("%H:%M"),
         "services": services.ordered_list()
     }
     current_app.logger.debug("%d services for ATCO code %s:\n%r" %

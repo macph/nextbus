@@ -165,12 +165,12 @@ class LiveServiceTests(unittest.TestCase):
         "line": "24",
         "name": "24",
         "dest": "Pimlico",
-        "op_name": "METROLINE TRAVEL LIMITED",
-        "op_code": "ML",
+        "opName": "METROLINE TRAVEL LIMITED",
+        "opCode": "ML",
         "expected": [{
                 "live": True,
                 "secs": 505,
-                "exp_date": "2018-02-03T09:34:00+00:00"
+                "expDate": "2018-02-03T09:34:00+00:00"
         }]
     }
     service_29 = {
@@ -192,12 +192,12 @@ class LiveServiceTests(unittest.TestCase):
         "line": "29",
         "name": "29",
         "dest": "Trafalgar Sq",
-        "op_name": None,
-        "op_code": "TFL",
+        "opName": None,
+        "opCode": "TFL",
         "expected": [{
                 "live": True,
                 "secs": 265,
-                "exp_date": "2018-02-03T09:30:00+00:00"
+                "expDate": "2018-02-03T09:30:00+00:00"
         }]
     }
 
@@ -240,7 +240,7 @@ class LiveServiceTests(unittest.TestCase):
         new_expected_24["expected"].insert(0, {
             "live": True,
             "secs": 205,
-            "exp_date": "2018-02-03T09:29:00+00:00"
+            "expDate": "2018-02-03T09:29:00+00:00"
         })
         self.assertEqual(self.sv.ordered_list(),
                          [new_expected_24, self.expected_29])

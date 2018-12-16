@@ -1006,34 +1006,52 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
     this.mapPanel = mapPanel;
     this.starred = new StarredStops(cookieSet, null);
     this.activeStops = new Map();
+    
+    this.directions = {
+        'N': 'northbound',
+        'NE': 'northeast bound',
+        'E': 'eastbound',
+        'SE': 'southeast bound',
+        'S': 'southbound',
+        'SW': 'southwest bound',
+        'W': 'westbound',
+        'NW': 'northwest bound'
+    };
 
     /**
      * Gets live data object for a bus stop or create one if it does not exist
      * @param {string} atcoCode ATCO code for bus stop
      * @param {string} adminAreaRef Admin area code for bus stop
-     * @param {string} table Table element ID
-     * @param {string} time Heading element ID
-     * @param {string} countdown Countdown element ID
+     * @param {HTMLElement} table Table element ID
+     * @param {HTMLElement} time Heading element ID
+     * @param {HTMLElement} countdown Countdown element ID
      */
     this.getStop = function(atcoCode, adminAreaRef, table, time, countdown) {
+        let live;
         if (!self.activeStops.has(atcoCode)) {
-            self.activeStops.set(atcoCode, new LiveData(
+            live = new LiveData(
                 atcoCode,
                 adminAreaRef,
                 table,
                 time,
                 countdown
-            ));
+            );
+            self.activeStops.set(atcoCode, live);
+        } else {
+            live = self.activeStops.get(atcoCode);
+            live.table = table;
+            live.headingTime = time;
+            live.countdown = countdown;
         }
 
         self.stopAllLoops(atcoCode);
-        self.activeStops.get(atcoCode).startLoop({
+        live.startLoop({
             end: function(atcoCode) {
                 self.activeStops.delete(atcoCode);
             }
         });
 
-        return self.activeStops.get(atcoCode);
+        return live;
     };
 
     /**
@@ -1142,13 +1160,13 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         headingOuter.className = 'heading heading--panel';
         headingOuter.id = 'panel-heading-outer';
         headingOuter.appendChild(heading);
-        if (point.properties.bearing !== null) {
+        if (point.properties.bearing !== null && self.directions.hasOwnProperty(point.properties.bearing)) {
             let headingText = document.createElement('p');
+            let dirText = self.directions[point.properties.bearing];
             if (point.properties.street !== null) {
-                headingText.innerHTML = '<strong>' + point.properties.street + '</strong>, ' +
-                    point.properties.bearing + '-bound';
+                headingText.innerHTML = '<strong>' + point.properties.street + '</strong>, ' + dirText;
             } else {
-                headingText.textContent = point.properties.bearing + '-bound';
+                headingText.textContent = dirText.charAt(0).toUpperCase() + dirText.slice(1);
             }
             headingOuter.appendChild(headingText);
         }
@@ -1200,7 +1218,6 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         actions.appendChild(zoomTo);
         actions.appendChild(visitStop);
 
-
         self.clearPanel();
         self.mapPanel.appendChild(headingOuter);
         resizeIndicator('indicator');
@@ -1211,9 +1228,9 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
         self.getStop(
             point.properties.atcoCode,
             point.properties.adminAreaRef,
-            'services',
-            'live-time',
-            'live-countdown'
+            liveServices,
+            liveHeadingTime,
+            liveHeadingCountdown
         );
 
         self.starred.get(function() {

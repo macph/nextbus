@@ -1,5 +1,5 @@
-{% import 'functions.html' as f %}
 {% extends 'base.html' %}
+{% import 'functions.html' as f %}
 {% block title %}Search results{{ " for \"%s\""|format(query) if query }}{% endblock %}
 
 {% set f_groups = filters|default(false) and filters.group.choices %}

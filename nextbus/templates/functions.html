@@ -96,6 +96,19 @@
 {%- endmacro %}
 
 
+{% macro stop_description(stop) -%}
+{% set dir = {"N": "northbound", "NE": "northeast bound", "E": "eastbound", "SE": "southeast bound",
+              "S": "southbound", "SW": "southwest bound", "W": "westbound", "NW": "northwest bound"} %}
+{% if stop.street is not none and stop.bearing is not none %}
+<strong>{{ stop.street }}</strong>, {{ dir.get(stop.bearing, "") }}
+{% elif stop.street is not none %}
+<strong>{{ stop.street }}</strong>
+{% elif stop.bearing is not none %}
+{{ dir.get(stop.bearing, "")|capitalize }}
+{% endif %}
+{%- endmacro %}
+
+
 {% macro print_list_stops_dist(list_stops, warning=true) -%}
 {% if list_stops|length > 0 %}
 <div class="list list-stops-services">

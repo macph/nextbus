@@ -1,5 +1,5 @@
-{% import 'functions.html' as f %}
 {% extends 'base.html' %}
+{% import 'functions.html' as f %}
 
 {% block title %}{{ f.stop_full_name(stop) }}{% endblock %}
 
@@ -24,9 +24,7 @@
     <h1>{{ stop.name }}</h1>
 </div>
 {% if stop.street or stop.bearing %}
-{% set pipe = joiner() %}
-<p>{% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
--->{% if stop.bearing is not none %}{{ pipe() }}{{ stop.bearing }}-bound{% endif %}</p>
+<p>{{ f.stop_description(stop) }}</p>
 {% endif %}
 {% endblock %}
 

@@ -1,5 +1,5 @@
-{% import 'functions.html' as f %}
 {% extends 'base.html' %}
+{% import 'functions.html' as f %}
 
 {% set place_name = locality.name + ', ' + (locality.district.name if locality.district is not none else locality.admin_area.name) %}
 {% block title %}{{ place_name }}{% endblock %}

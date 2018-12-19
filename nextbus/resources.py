@@ -64,14 +64,13 @@ def stop_get_times(atco_code=None):
     return response
 
 
-@api.route("/tile")
-def get_stops_tile():
+@api.route("/tile/<coord>")
+def get_stops_tile(coord):
     """ Gets list of stops within a tile. """
-    args = [request.args.get(i) for i in ["x", "y"]]
     try:
-        x, y = map(int, args)
-    except TypeError:
-        return bad_request(400, "API accessed with invalid params: %r" % args)
+        x, y = map(int, coord.split(","))
+    except ValueError:
+        return bad_request(400, "API accessed with invalid args: %r" % coord)
 
     box = location.tile_to_box(x, y, location.TILE_ZOOM)
     stops = models.StopPoint.within_box(box)
@@ -80,9 +79,18 @@ def get_stops_tile():
 
 
 @api.route("/route/<service_id>")
-def get_service_route(service_id):
+@api.route("/route/<service_id>/<direction>")
+def get_service_route(service_id, direction="outbound"):
     """ Gets service data including a MultiLineString GeoJSON object. """
-    data = graph.service_json(service_id, request.args.get("reverse") == "true")
+    if direction == "outbound":
+        reverse = False
+    elif direction == "inbound":
+        reverse = True
+    else:
+        return bad_request(404, "Direction given must be 'inbound' or "
+                           "'outbound'.")
+
+    data = graph.service_json(service_id, reverse)
 
     if data is None:
         return bad_request(404, "Service '%s' does not exist." % service_id)

@@ -30,7 +30,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map_with_service', service_id=service.id) }}"><span>View on map</span></a>
+            <a class="button" href="{{ url_for('page.show_map_with_service_direction', service_id=service.id, direction='outbound' if not reverse else 'inbound') }}"><span>View on map</span></a>
         </section>
     </div>
     <div class="column-3">
@@ -38,9 +38,9 @@
         <ul class="tabs tabs--2">
             {% if not reverse %}
             <li><div class="tab tab--active"><span>Outbound</span></div></li>
-            <li><a class="tab" href="{{ modify_query(reverse='true') }}">Inbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='inbound') }}">Inbound</a></li>
             {% else %}
-            <li><a class="tab" href="{{ modify_query(reverse='false') }}">Outbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='outbound') }}">Outbound</a></li>
             <li><div class="tab tab--active"><span>Inbound</span></div></li>
             {% endif %}
         </ul>

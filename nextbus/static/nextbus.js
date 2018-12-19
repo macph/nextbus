@@ -784,7 +784,7 @@ function StopLayer(stopMap) {
             return;
         }
 
-        let url = TILE_URL + '?x=' + coords.x + '&y=' + coords.y;
+        let url = TILE_URL + coords.x + ',' + coords.y;
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
 
@@ -940,11 +940,9 @@ function RouteLayer(stopMap) {
      */
     this.createLayer = function(route) {
         // TODO: Find colour for a specific style and use it for paths
-        let className = 'area-' + route.properties.adminAreaCode;
-
         return new L.GeoJSON(route, {
             style: function() {
-                return {className: className}
+                return {color: 'rgb(0, 33, 113)'}
             }
         });
     };

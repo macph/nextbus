@@ -1,22 +1,33 @@
 """
-URL converters for coordinates.
+URL converters for strings and coordinates.
 """
-import re
-
-from werkzeug.routing import BaseConverter, ValidationError
+from werkzeug import routing
 
 
-class LatLong(BaseConverter):
-    """ URL converter for lat/long coordinates. """
-    FIND_COORD = (r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                  r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*)$")
-
+class String(routing.UnicodeConverter):
+    """ Converter for string to """
     def to_python(self, value):
-        result = re.match(self.FIND_COORD, value)
-        print(value, result)
-        if not result:
-            raise ValidationError
-        latitude, longitude = float(result.group(1)), float(result.group(2))
+        return value.replace("+", " ")
+
+    def to_url(self, value):
+        return value.replace(" ", "+")
+
+
+class PathString(routing.PathConverter):
+    def to_python(self, value):
+        return value.replace("+", " ")
+
+    def to_url(self, value):
+        return value.replace(" ", "+")
+
+
+class LatLong(routing.BaseConverter):
+    """ URL converter for lat/long coordinates. """
+    def to_python(self, value):
+        try:
+            latitude, longitude = map(float, value.split(","))
+        except ValueError:
+            raise routing.ValidationError
 
         return latitude, longitude
 
@@ -24,18 +35,20 @@ class LatLong(BaseConverter):
         return "%f,%f" % value if value else ""
 
 
-class LatLongZoom(BaseConverter):
+class LatLongZoom(routing.BaseConverter):
     """ URL converter for lat/long coordinates and zoom value for maps. """
-    FIND_COORD_ZOOM = (r"^([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                       r"([-+]?\d*\.?\d+|[-+]?\d+\.?\d*),\s*"
-                       r"(\d+)$")
 
     def to_python(self, value):
-        result = re.match(self.FIND_COORD_ZOOM, value)
-        if not result:
-            raise ValidationError
-        latitude, longitude = float(result.group(1)), float(result.group(2))
-        zoom = int(result.group(3))
+        try:
+            numbers = value.split(",")
+            latitude, longitude, zoom = map(float, numbers)
+        except ValueError:
+            raise routing.ValidationError
+
+        if zoom == int(zoom):
+            zoom = int(zoom)
+        else:
+            raise routing.ValidationError
 
         return latitude, longitude, zoom
 
@@ -46,6 +59,8 @@ class LatLongZoom(BaseConverter):
 def add_converters(app):
     """ Adds URL converters to the Flask application. """
     app.url_map.converters.update({
+        "string": String,
+        "path_string": PathString,
         "lat_long": LatLong,
         "lat_long_zoom": LatLongZoom
     })

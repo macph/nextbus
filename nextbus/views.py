@@ -138,25 +138,24 @@ def search_query():
 
     if g.form.submit_query.data and g.form.search_query.data:
         query = g.form.search_query.data
-        query_url = query.replace(" ", "+")
         try:
             result = search.search_code(query)
         except search.NoPostcode:
             # Pass along to search results page to process
-            return redirect(url_for(".search_results", query=query_url))
+            return redirect(url_for(".search_results", query=query))
 
         if result.is_stop():
             stop_code = result.stop.atco_code
             return redirect(url_for(".stop_atco", atco_code=stop_code))
         elif result.is_postcode():
-            postcode_url = result.postcode.text.replace(" ", "+")
-            return redirect(url_for(".list_near_postcode", code=postcode_url))
+            return redirect(url_for(".list_near_postcode",
+                                    code=result.postcode.text))
         else:
-            return redirect(url_for(".search_results", query=query_url))
+            return redirect(url_for(".search_results", query=query))
 
 
 @page.route("/search/")
-@page.route("/search/<path:query>")
+@page.route("/search/<path_string:query>")
 def search_results(query=None):
     """ Shows a list of search results.
 
@@ -170,15 +169,14 @@ def search_results(query=None):
         # Blank search page
         return render_template("search.html", query=query)
 
-    s_query = query.replace("+", " ")
     # Check if query has enough alphanumeric characters, else raise
-    search.validate_characters(s_query)
+    search.validate_characters(query)
     # Set up form and retrieve request arguments
     filters = forms.FilterResults(request.args)
     try:
         # Do the search; raise errors if necessary
         result = search.search_all(
-            s_query,
+            query,
             types=filters.group.data if filters.group.data else None,
             admin_areas=filters.area.data if filters.area.data else None,
             page=filters.page.data
@@ -195,18 +193,18 @@ def search_results(query=None):
     if result.is_stop():
         return redirect(url_for(".stop_atco", atco_code=result.stop.atco_code))
     elif result.is_postcode():
-        postcode_url = result.postcode.text.replace(" ", "+")
-        return redirect(url_for(".list_near_postcode", code=postcode_url))
+        return redirect(url_for(".list_near_postcode",
+                                code=result.postcode.text))
     else:
         # List of results
-        groups, areas = search.filter_args(s_query, filters.area.data)
+        groups, areas = search.filter_args(query, filters.area.data)
         filters.add_choices(groups, areas)
         # Check the form data - if valid the area parameters are probably wrong
         if not filters.validate():
-            raise search.InvalidParameters(s_query, "area",
+            raise search.InvalidParameters(query, "area",
                                            filters.area.data)
 
-        return render_template("search.html", query=s_query,
+        return render_template("search.html", query=query,
                                results=result.list, filters=filters)
 
 
@@ -254,7 +252,7 @@ def list_in_region(region_code):
                              % region_code)
     if region.code != region_code:
         return redirect(url_for(".list_in_region", region_code=region.code),
-                        code=301)
+                        code=302)
 
     return render_template("region.html", region=region,
                            areas=region.list_areas())
@@ -329,7 +327,7 @@ def list_in_locality(locality_code):
     if locality.code != locality_code:
         code = locality.code
         return redirect(url_for(".list_in_locality", locality_code=code),
-                        code=301)
+                        code=302)
 
     group_areas = request.args.get("group") == "true"
     stops = locality.list_stops(group_areas=group_areas)
@@ -346,27 +344,7 @@ def list_in_locality(locality_code):
                            grouped=group_areas)
 
 
-@page.route("/near/postcode/<code>")
-def list_near_postcode(code):
-    """ Show stops within range of postcode. """
-    str_postcode = code.replace("+", " ")
-    index_postcode = "".join(str_postcode.split()).upper()
-    postcode = models.Postcode.query.get(index_postcode)
-
-    if postcode is None:
-        raise EntityNotFound("Postcode '%s' does not exist." % postcode)
-    if postcode.text != str_postcode:
-        # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
-        postcode_url = postcode.text.replace(" ", "+")
-        return redirect(url_for(".list_near_postcode", code=postcode_url),
-                        code=301)
-
-    stops = postcode.stops_in_range()
-
-    return render_template("postcode.html", postcode=postcode, list_stops=stops)
-
-
-@page.route("/near/location/<lat_long:coords>")
+@page.route("/near/<lat_long:coords>")
 def list_near_location(coords):
     """ Show stops within range of a GPS coordinate. """
     latitude, longitude = coords
@@ -379,6 +357,24 @@ def list_near_location(coords):
 
     return render_template("location.html", latitude=latitude,
                            longitude=longitude, list_stops=stops)
+
+
+@page.route("/near/<string:code>")
+def list_near_postcode(code):
+    """ Show stops within range of postcode. """
+    index_postcode = "".join(code.split()).upper()
+    postcode = models.Postcode.query.get(index_postcode)
+
+    if postcode is None:
+        raise EntityNotFound("Postcode '%s' does not exist." % code)
+    if postcode.text != code:
+        # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
+        return redirect(url_for(".list_near_postcode", code=postcode.text),
+                        code=302)
+
+    stops = postcode.stops_in_range()
+
+    return render_template("postcode.html", postcode=postcode, list_stops=stops)
 
 
 @page.route("/stop/area/<stop_area_code>")
@@ -397,7 +393,7 @@ def stop_area(stop_area_code):
                              % stop_area_code)
     if area.code != stop_area_code:
         return redirect(url_for(".stop_area", stop_area_code=area.code),
-                        code=301)
+                        code=302)
 
     return render_template("stop_area.html", stop_area=area,
                            stops=area.get_stops_lines())
@@ -421,7 +417,7 @@ def stop_naptan(naptan_code):
                              % naptan_code)
     if stop.naptan_code != naptan_code:
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
-                        code=301)
+                        code=302)
 
     return render_template("stop.html", stop=stop, services=stop.get_services())
 
@@ -446,13 +442,14 @@ def stop_atco(atco_code=""):
                              % atco_code)
     if stop.atco_code != atco_code:
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
-                        code=301)
+                        code=302)
 
     return render_template("stop.html", stop=stop, services=stop.get_services())
 
 
 @page.route("/service/<service_id>")
-def service(service_id):
+@page.route("/service/<service_id>/<direction>")
+def service(service_id, direction=None):
     line = (
         models.Service.query
         .join(models.Service.patterns)
@@ -466,8 +463,23 @@ def service(service_id):
     if line is None:
         raise EntityNotFound("Service '%s' does not exist." % service_id)
 
+    if direction is None or direction == "outbound":
+        is_reverse = False
+    elif direction == "inbound":
+        is_reverse = True
+    else:
+        return render_template(
+            "not_found.html",
+            message="Direction given must ""be 'inbound' or 'outbound'."
+        ), 404
+
     # Check line patterns - is there more than 1 direction?
-    reverse, mirrored = line.has_mirror(request.args.get("reverse") == "true")
+    reverse, mirrored = line.has_mirror(is_reverse)
+
+    if direction is None or is_reverse != reverse:
+        return redirect(url_for(".service", service_id=service_id,
+                                direction="inbound" if reverse else "outbound"),
+                        302)
 
     destinations = {
         "origin": {p.origin for p in line.patterns if p.direction == reverse},
@@ -510,7 +522,7 @@ def show_map_with_stop(atco_code, coords=None):
     stop = models.StopPoint.query.get(atco_code.upper())
     if stop.atco_code != atco_code:
         return redirect(url_for(".show_map", atco_code=stop.atco_code,
-                                coords=coords), code=301)
+                                coords=coords), code=302)
     elif stop is None:
         raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                              % atco_code)
@@ -525,9 +537,7 @@ def show_map_with_stop(atco_code, coords=None):
                            reverse=None)
 
 
-@page.route("/map/service/<service_id>/")
-@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
-def show_map_with_service(service_id, coords=None):
+def _show_map_service(service_id, direction="outbound", coords=None):
     """ Shows map with a stop already selected. """
     line = (
         models.Service.query
@@ -542,11 +552,39 @@ def show_map_with_service(service_id, coords=None):
     else:
         latitude, longitude, zoom = None, None, None
 
-    reverse, _ = line.has_mirror(request.args.get("reverse") == "true")
+    if direction == "outbound":
+        is_reverse = False
+    elif direction == "inbound":
+        is_reverse = True
+    else:
+        return render_template("not_found.html", message="Direction given must "
+                               "be 'inbound' or 'outbound'."), 404
+
+    reverse, _ = line.has_mirror(is_reverse)
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
                            zoom=zoom, stop=None, service=line.id,
                            reverse=reverse)
+
+
+@page.route("/map/service/<service_id>")
+def show_map_with_service(service_id):
+    return _show_map_service(service_id)
+
+
+@page.route("/map/service/<service_id>/<direction>")
+def show_map_with_service_direction(service_id, direction):
+    return _show_map_service(service_id, direction)
+
+
+@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
+def show_map_with_service_coords(service_id, coords):
+    return _show_map_service(service_id, coords=coords)
+
+
+@page.route("/map/service/<service_id>/<direction>/<lat_long_zoom:coords>")
+def show_map_with_service_direction_coords(service_id, direction, coords):
+    return _show_map_service(service_id, direction, coords)
 
 
 @page.app_errorhandler(EntityNotFound)

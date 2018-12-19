@@ -47,7 +47,7 @@
     const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     const MAP_URL = "{{ url_for('page.show_map') }}";
     const STOP_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
-    const TILE_URL = "{{ url_for('api.get_stops_tile') }}";
+    const TILE_URL = "{{ url_for('api.get_stops_tile', coord='') }}";
     const STARRED_URL = "{{ url_for('api.starred') }}";
     const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
 </script>
@@ -68,13 +68,13 @@
 <script>
     let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init(null, {{ latitude }}, {{ longitude }}, {{ zoom }});
-    map.route.addRoute('{{ service }}', '{{ direction }}' === 'true', false);
+    map.route.addRoute('{{ service }}', '{{ reverse }}' === 'true', false);
 </script>
 {% elif stop is none and service is not none %}
 <script>
     let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
     map.init(null, null, null, null);
-    map.route.addRoute('{{ service }}', '{{ direction }}' === 'true', true);
+    map.route.addRoute('{{ service }}', '{{ reverse }}' === 'true', true);
 </script>
 {% else %}
 <script>

@@ -1262,10 +1262,10 @@ def service_graph_stops(service_id, direction):
     edges, vertices = [], []
     dict_stops = {}
     for s in stops:
-        obj = s.StopPoint
-        dict_stops[obj.atco_code] = obj
-        edges.extend((obj.atco_code, n) for n in s.next_stops if n is not None)
-        vertices.extend(obj.atco_code for n in s.next_stops if n is None)
+        stop = s.StopPoint
+        dict_stops[stop.atco_code] = stop
+        edges.extend((stop.atco_code, n) for n in s.next_stops if n is not None)
+        vertices.extend(stop.atco_code for n in s.next_stops if n is None)
 
     return Graph(edges, vertices), dict_stops
 
@@ -1327,33 +1327,23 @@ def service_json(service_id, reverse):
         return None
 
     # Check line patterns - is there more than 1 direction?
-    direction, mirrored = service.has_mirror(reverse)
+    reverse_, mirrored = service.has_mirror(reverse)
 
-    graph, dict_stops = service_graph_stops(service.id, direction)
-    if not dict_stops:
-        raise ValueError("No stops exist for service %r" % service.id)
-
+    graph, stops = service_graph_stops(service.id, reverse_)
     paths, sequence = graph.analyse()
-
-    def coordinates(vertex):
-        stop = dict_stops[vertex]
-        return stop.longitude, stop.latitude
+    try:
+        layout = graph.draw(sequence, 5)
+    except MaxColumnError:
+        layout = None
 
     # Serialise data
-    lines = [[coordinates(v) for v in p] for p in paths if len(p) > 1]
-    route_data = [dict_stops[s].to_geojson() for s in sequence]
-
-    geojson = {
+    lines = [[(stops[v].longitude, stops[v].latitude) for v in p]
+             for p in paths if len(p) > 1]
+    paths = {
         "type": "Feature",
         "geometry": {
             "type": "MultiLineString",
             "coordinates": lines
-        },
-        "properties": {
-            "service": service.id,
-            "line": service.line,
-            "description": service.description,
-            "direction": direction
         }
     }
 
@@ -1361,11 +1351,14 @@ def service_json(service_id, reverse):
         "service": service.id,
         "line": service.line,
         "description": service.description,
-        "direction": direction,
-        "operator": [o.name for o in service.local_operators],
+        "direction": "inbound" if reverse_ else "outbound",
+        "reverse": reverse_,
         "mirrored": mirrored,
-        "sequence": route_data,
-        "paths": geojson
+        "operator": [o.name for o in service.local_operators],
+        "stops": {c: s.to_geojson() for c, s in stops.items()},
+        "sequence": sequence,
+        "paths": paths,
+        "layout": layout
     }
 
     return data

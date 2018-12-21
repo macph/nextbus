@@ -1773,36 +1773,14 @@ function _moveStopItemElements(container, col, width) {
 }
 
 
-function _addEmptyItem(list) {
-    let item = document.createElement('li');
-    let anchor = document.createElement('div');
-    anchor.className = 'item item--stop item--stop--empty';
-    anchor.id = 'cNull';
-
-    let indicator = document.createElement('div');
-    indicator.className = 'indicator';
-    indicator.id = 'iNull';
-
-    anchor.appendChild(indicator);
-    item.appendChild(anchor);
-    list.insertBefore(item, list.childNodes[0]);
-}
-
-
 /**
  * Draws diagram and add event listener to rebuild graph if required.
  * @param {(HTMLElement|string)} container DOM div node.
- * @param {(HTMLElement|string)} list DOM node for list of stops.
  * @param data Required data
  */
-function setupGraph(container, list, data) {
+function setupGraph(container, data) {
     let containerElement = (container instanceof HTMLElement) ?
-            container : document.getElementById(container),
-        listStops = (list instanceof HTMLElement) ? list : document.getElementById(list);
-
-    if (data[0][0] === null) {
-        _addEmptyItem(listStops);
-    }
+            container : document.getElementById(container);
 
     data.forEach(function(v, r) {
         let id = (v[0] !== null) ? v[0] : 'Null';

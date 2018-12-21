@@ -488,13 +488,13 @@ def service(service_id, direction=None):
     }
 
     s_graph, d_stops = graph.service_graph_stops(line.id, reverse)
-
     sequence = s_graph.sequence()
-    stops = [d_stops[s] for s in sequence]
     try:
         layout = s_graph.draw(sequence, max_columns=5)
     except graph.MaxColumnError:
         layout = None
+
+    stops = [d_stops.get(s) for s in sequence]
 
     return render_template("service.html", service=line, dest=destinations,
                            reverse=reverse, mirrored=mirrored, stops=stops,

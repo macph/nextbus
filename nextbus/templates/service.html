@@ -55,6 +55,7 @@
             <div id="diagram" class="diagram"></div>
             {% if stops|length > 0 %}
             {% call(s) f.print_list(stops, class='list--relative', name='listStops') %}
+            {% if s %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline item--stop--service">
                 <div id={{ 'c' + s.atco_code }}>
                     <div class="item--stop">
@@ -68,6 +69,11 @@
                     {% endif %}
                 </div>
             </a>
+            {% else %}
+            <div class="item item--stop item--stop--empty" id="cNull">
+                <div class="indicator" id="iNull"></div>
+            </div>
+            {% endif %}
             {% endcall %}
             {% else %}
             <p>No stops found.</p>
@@ -83,10 +89,10 @@
     resizeIndicator('indicator');
 </script>
 <script>
-    let data = {{ layout|tojson }};
-    let diagram = null;
-    if (data !== null) {
-        diagram = setupGraph('diagram', 'listStops', data);
+    let data, diagram;
+    data = {{ layout|tojson }};
+    if (data) {
+        diagram = setupGraph('diagram', data);
     }
 </script>
 {% endblock %}

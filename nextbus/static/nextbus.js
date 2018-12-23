@@ -222,6 +222,7 @@ function resizeIndicator(...classes) {
         for (let j = 0; j < elements.length; j++) {
             let elt = elements[j];
             let span = elt.querySelector('span');
+            let img = elt.querySelector('img');
             if (span !== null) {
                 let ind = span.textContent;
                 let len = ind.replace(/(&#?\w+;)/, ' ').length;
@@ -242,11 +243,7 @@ function resizeIndicator(...classes) {
                 default:
                     span.className = '';
                 }
-            } else {
-                let img = elt.querySelector('img');
-                if (typeof img === 'undefined') {
-                    throw 'No span or image elements within stop indicator for element' + elt;
-                }
+            } else if (img !== null) {
                 let style = window.getComputedStyle(elt);
                 let fontSize = parseFloat(style.fontSize);
                 img.width = Math.round(2.8 * fontSize);

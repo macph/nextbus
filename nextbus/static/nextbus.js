@@ -10,7 +10,7 @@ const MAP_CENTRE_GB = [54.00366, -2.547855];
 const MAP_BOUNDS_NW = [61, 2];
 const MAP_BOUNDS_SE = [49, -8];
 
-const TILE_LIMIT = 64;
+const CACHE_LIMIT = 64;
 const TILE_ZOOM = 15;
 
 const LAYOUT_SPACE_X = 30;
@@ -87,7 +87,7 @@ function StarredStops(cookieSet, info) {
 
     this.get = function(callback) {
         self.r.onload = function() {
-            let newData = JSON.parse(this.responseText);
+            let newData = JSON.parse(self.r.responseText);
             self.data = newData.stops;
             callback();
         };
@@ -555,8 +555,8 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
      */
 
     /**
-     * Starts up the class with interval for refreshing. If it is already active, the table and
-     * countdown are set to the correct elements again.
+     * Starts up the loop with interval for refreshing. If the loop was ending it will continue as
+     * normal.
      * @param {object} [callbacks] Callback functions called at start, within interval or at end
      * @param {callbackLiveData} [callbacks.start] At start of loop, when data is received.
      * If not defined the onInter function is called instead
@@ -757,8 +757,8 @@ function StopLayer(stopMap) {
     this.stopMap = stopMap;
     this.zCount = 0;
     this.isIE = detectIE();
-    this.loadedStops = new TileCache(TILE_LIMIT);
-    self.layers = L.layerGroup();
+    this.loadedStops = new TileCache(CACHE_LIMIT);
+    this.layers = L.layerGroup();
 
     /**
      * Sets up layer group.
@@ -785,8 +785,8 @@ function StopLayer(stopMap) {
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
 
-        request.addEventListener('load', function() {
-            let data = JSON.parse(this.responseText);
+        request.onload = function() {
+            let data = JSON.parse(request.responseText);
             if (data.features.length > 0) {
                 self.loadedStops.set(coords, self.createLayer(data));
                 self.layers.addLayer(self.loadedStops.get(coords));
@@ -794,7 +794,7 @@ function StopLayer(stopMap) {
             } else {
                 self.loadedStops.set(coords, null);
             }
-        });
+        };
 
         request.send();
     };
@@ -811,7 +811,7 @@ function StopLayer(stopMap) {
     /**
      * Converts latitude longitude coordinates to grid coordinates at TILE_ZOOM
      * @param {L.Point} scale
-     * @param {L.latLng} coords
+     * @param {L.LatLng} coords
      */
     this._getTileCoords = function(scale, coords) {
         let absolute = self.stopMap.map.project(coords, TILE_ZOOM);
@@ -863,8 +863,10 @@ function StopLayer(stopMap) {
     /**
      * Creates marker element to be used in map
      * @param {StopPoint} point Point object from data
+     * @returns {string} Needs to be a HTML string as divIcon does not accept HTML elements
+     * @private
      */
-    this.markerElement = function(point) {
+    this._markerElement = function(point) {
         let ind = '';
         if (point.properties.indicator !== '') {
             ind = '<span>' + point.properties.indicator + '</span>'
@@ -892,12 +894,12 @@ function StopLayer(stopMap) {
      * @param {object} stops FeatureCollection data of stops within title
      */
     this.createLayer = function(stops) {
-        return new L.GeoJSON(stops, {
+        return L.geoJSON(stops, {
             pointToLayer: function(point, latLng) {
                 let icon = L.divIcon({
                     className: 'marker',
                     iconSize: null,
-                    html: self.markerElement(point)
+                    html: self._markerElement(point)
                 });
                 let marker = L.marker(latLng, {
                         icon: icon,
@@ -911,12 +913,149 @@ function StopLayer(stopMap) {
                 });
                 // Add callback function to each marker with GeoJSON pointer object as argument
                 marker = marker.on('click', function() {
-                    self.stopMap.panel.setPanel(point);
+                    self.stopMap.update({stop: point});
                 });
 
                 return marker;
             }
         });
+    };
+}
+
+
+/**
+ * @typedef {{id: string, reverse: ?boolean}} ServiceID
+ */
+
+
+/**
+ * Gets URL component used to identify data for routes.
+ * @param {ServiceID} service
+ * @returns {string}
+ */
+function urlPart(service) {
+    let url = service.id;
+    if (service.reverse != null) {
+        url += '/';
+        url += (service.reverse) ? 'inbound' : 'outbound';
+    }
+    return url;
+}
+
+
+/**
+ * GeoJSON object for creating route layer
+ * @typedef {{
+ *     type: string,
+ *     geometry: {
+ *         type: string,
+ *         coordinates: number[][]
+ *     }
+ * }} RoutePaths
+ */
+
+
+/**
+ * Data for service route
+ * @typedef {{
+ *     service: string,
+ *     line: string,
+ *     description: string,
+ *     direction: string,
+ *     reverse: boolean,
+ *     mirrored: boolean,
+ *     operator: string[],
+ *     stops: StopPoint[],
+ *     sequence: string[],
+ *     paths: RoutePaths,
+ *     layout: Array
+ * }} ServiceData
+ */
+
+
+/**
+ * Handles route data.
+ * @constructor
+ */
+function ServicesData() {
+    let self = this;
+
+    this.max = CACHE_LIMIT;
+    /**
+     * Holds all loaded service data up to a limit
+     * @type {Map<string, ServiceData>}
+     */
+    this.loadedRoutes = new Map();
+
+    /**
+     * Gets data for service ID and direction without doing a call.
+     * @param {ServiceID} service Service ID and direction for route
+     * @returns {ServiceData} Service data
+     */
+    this.get = function(service) {
+        return self.loadedRoutes.get(urlPart(service));
+    };
+
+    /**
+     * Adds route to collection. If the collection size goes over limit the first entry is deleted
+     * @param {string} part
+     * @param {ServiceData} data
+     */
+    this.updateRoutes = function(part, data) {
+        self.loadedRoutes.set(part, data);
+        if (self.max != null && self.loadedRoutes.size > self.max) {
+            let first = null;
+            self.loadedRoutes.forEach(function(layer, url) {
+                if (first === null) {
+                    first = url;
+                }
+            });
+            self.loadedRoutes.delete(first);
+        }
+    };
+
+    /**
+     * @callback onLoadData
+     * @param {ServiceData} data
+     */
+
+    /**
+     * @callback failLoadData
+     * @param {XMLHttpRequest} request
+     */
+
+    /**
+     * Collects route data, using callback on successful retrieval
+     * @param {ServiceID} service Service ID and direction for route
+     * @param {onLoadData} [onLoad] Callback on successful request
+     * @param {failLoadData} [onError] Callback on request error
+     */
+    this.retrieve = function(service, onLoad, onError) {
+        let part = urlPart(service);
+
+        if (self.loadedRoutes.has(part)) {
+            let data = self.loadedRoutes.get(part);
+            if (onLoad) {
+                onLoad(data);
+            }
+            return;
+        }
+
+        let request = new XMLHttpRequest;
+        request.open('GET', ROUTE_URL + part, true);
+        request.onreadystatechange = function() {
+            if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+                let data = JSON.parse(request.responseText);
+                self.updateRoutes(part, data);
+                if (onLoad) {
+                    onLoad(data);
+                }
+            } else if (request.readyState === XMLHttpRequest.DONE && onError) {
+                onError(this);
+            }
+        };
+
+        request.send();
     };
 }
 
@@ -929,79 +1068,104 @@ function StopLayer(stopMap) {
 function RouteLayer(stopMap) {
     let self = this;
     this.stopMap = stopMap;
+
+    this.current = null;
+    this.data = null;
     this.layer = null;
 
     /**
      * Creates route layer to be put on map
-     * @param {object} route MultiLineString GeoJSON object
+     * @param {ServiceData} data Service data with MultiLineString GeoJSON object
      */
-    this.createLayer = function(route) {
+    this.createLayer = function(data) {
         // TODO: Find colour for a specific style and use it for paths
-        return new L.GeoJSON(route, {
+        let paths = L.geoJSON(data.paths, {
             style: function() {
                 return {color: 'rgb(0, 33, 113)'}
             }
         });
-    };
-
-    /**
-     * Queries route for service ID and adds it to the map
-     * @param {String} serviceId Service ID for route
-     * @param {Boolean} direction Direction of service
-     * @param {Boolean} zoom Whether map will zoom to fit route after load
-     */
-    this.addRoute = function(serviceId, direction, zoom) {
-        let url = ROUTE_URL + serviceId;
-        if (typeof(direction) !== 'undefined') {
-            url += '?reverse=' + direction;
-        }
-        let request = new XMLHttpRequest;
-        request.open('GET', url, true);
-
-        request.addEventListener('load', function() {
-            if (self.layer !== null) {
-                self.removeRoute();
-            }
-            let data = JSON.parse(this.responseText);
-            self.layer = self.createLayer(data.paths);
-            self.layer.addTo(self.stopMap.map);
-            // Rearrange layers with route behind markers and front of tiles
-            self.layer.bringToBack();
-            self.stopMap.tileLayer.bringToBack();
-            if (typeof(zoom) !== 'undefined' || zoom) {
-                self.stopMap.map.fitBounds(self.layer.getBounds());
-            }
+        paths.on('click', function() {
+            self.stopMap.update({stop: null});
         });
 
-        request.send();
+        return paths;
     };
 
     /**
-     * Removes route from map
+     * Removes layer from map and sets data to null
      */
-    this.removeRoute = function() {
+    this.clearLayer = function() {
         if (self.layer !== null) {
             self.stopMap.map.removeLayer(self.layer);
-            self.layer = null;
         }
+        self.data = null;
+        self.layer = null;
+    };
+
+    /**
+     * Loads new route layer.
+     * @param {ServiceData} data Route data to load
+     * @param {boolean} [fit] Fits map to service paths, true by default
+     */
+    this.loadLayer = function(data, fit) {
+        if (self.data === data) {
+            return;
+        }
+        self.clearLayer();
+        self.data = data;
+        self.layer = self.createLayer(data);
+
+        self.layer.addTo(self.stopMap.map);
+        // Rearrange layers with route behind markers and front of tiles
+        self.layer.bringToBack();
+        self.stopMap.tileLayer.bringToBack();
+        if (fit == null || fit) {
+            self.stopMap.map.fitBounds(self.layer.getBounds());
+        }
+    };
+
+    /**
+     * Sets paths on map using service data.
+     * @param {ServiceID} service Service ID and direction for route
+     * @param {boolean} [fit] Fits map to service paths, true by default
+     */
+    this.set = function(service, fit) {
+        self.current = service;
+        self.stopMap.services.retrieve(service, function(data) {
+            // Route only loads if it's the one most recently called
+            if (self.current === service) {
+                self.loadLayer(data, fit);
+            }
+        });
+    };
+
+    /**
+     * Clears the route and associated data from map
+     */
+    this.clear = function() {
+        self.current = null;
+        self.clearLayer();
     };
 }
 
 
 /**
- * Handles the stop panel
+ * Handles the panel
  * @constructor
  * @param {object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
  * @param {boolean} cookieSet Whether the cookie has been set or not
  */
-function StopPanel(stopMap, mapPanel, cookieSet) {
+function Panel(stopMap, mapPanel, cookieSet) {
     let self = this;
     this.stopMap = stopMap;
     this.mapPanel = mapPanel;
     this.starred = new StarredStops(cookieSet, null);
     this.activeStops = new Map();
-    
+
+    this.currentStop = null;
+    this.currentService = null;
+
     this.directions = {
         'N': 'northbound',
         'NE': 'northeast bound',
@@ -1036,7 +1200,7 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
             live = self.activeStops.get(atcoCode);
             live.table = table;
             live.headingTime = time;
-            live.countdown = countdown;
+            live.headingCountdown = countdown;
         }
 
         self.stopAllLoops(atcoCode);
@@ -1050,22 +1214,8 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
     };
 
     /**
-     * Finds the current stop shown on panel, or null if no stops are actively looping
-     */
-    this.getCurrentStop = function() {
-        let currentData = null;
-        self.activeStops.forEach(function(data) {
-            if (data.loopActive && !data.loopEnding) {
-                currentData = data;
-            }
-        });
-
-        return currentData;
-    };
-
-    /**
      * Stops all loops
-     * @param {string} exceptCode ATCO code for bus stop to be excluded
+     * @param {string} [exceptCode] ATCO code for bus stop to be excluded
      */
     this.stopAllLoops = function(exceptCode) {
         self.activeStops.forEach(function(data, code) {
@@ -1076,37 +1226,55 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
     };
 
     /**
-     * Sets panel depending on existence of point data and zoom level
-     * @param {?StopPoint} point If not null, displays stop point live data/info
+     * Sets panel to a stop point with live times or a service diagram based on stops and services
+     * being loaded by map
      */
-    self.setPanel = function(point) {
-        if (point !== null) {
-            self._setStopPanel(point);
-        } else if (self.getCurrentStop() === null) {
+    this.updatePanel = function() {
+        let updateStop = (self.stopMap.currentStop !== self.currentStop),
+            updateService = (self.stopMap.currentService !== self.currentService);
+
+        if (self.stopMap.currentStop && (updateStop || updateService)) {
+            // Set to a new stop or keep current stop and set new service
+            self.currentService = self.stopMap.currentService;
+            self.currentStop = self.stopMap.currentStop;
+            self._setStopPanel();
+        } else if (!self.stopMap.currentStop && self.stopMap.currentService &&
+                   (updateStop || updateService)) {
+            // Unset any current stops and return to original service, or set new service
+            self.currentStop = null;
+            self.currentService = self.stopMap.currentService;
+            self.stopAllLoops();
+            self._setServicePanel();
+        } else if (!self.stopMap.currentStop && !self.stopMap.currentService) {
+            // Unset any current stops and services
+            self.currentStop = null;
+            self.currentService = null;
+            self.stopAllLoops();
             self._setPanelMessage();
         }
-        self.stopMap.setURL();
     };
 
     /**
      * Clears all subelements from panel
      */
     this.clearPanel = function() {
-        while (self.mapPanel.firstChild) {
-            self.mapPanel.removeChild(self.mapPanel.firstChild);
-        }
+        removeSubElements(self.mapPanel);
     };
 
 
     /**
      * Sets message on blank panel
+     * @param {string} [text] Optional text to display
+     * @private
      */
-    this._setPanelMessage = function() {
+    this._setPanelMessage = function(text) {
         let heading = document.createElement('div');
         heading.className = 'heading heading--panel';
 
         let headingText = document.createElement('h2');
-        if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
+        if (text) {
+            headingText.textContent = text;
+        } else if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
             headingText.textContent = 'Zoom in to see stops';
         } else {
             headingText.textContent = 'Select a stop';
@@ -1120,9 +1288,10 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
 
     /**
      * Sets panel for bus stop live data and other associated info
-     * @param {StopPoint} point GeoJSON data for stop point
+     * @private
      */
-    this._setStopPanel = function(point) {
+    this._setStopPanel = function() {
+        let point = self.currentStop;
         let heading = document.createElement('div');
         heading.className = 'heading-stop';
 
@@ -1264,7 +1433,203 @@ function StopPanel(stopMap, mapPanel, cookieSet) {
             actions.appendChild(starred);
         });
     };
+
+    /**
+     * Draws service panel
+     * @param {ServiceData} data
+     * @private
+     */
+    this._setServicePanelData = function(data) {
+        let headingOuter = document.createElement('div');
+        headingOuter.className = 'heading heading--panel';
+        headingOuter.id = 'panel-heading-outer';
+
+        let heading = document.createElement('div');
+        heading.className = 'heading-service';
+
+        let headingLine = document.createElement('div');
+        headingLine.className = 'line';
+        let headingLineInner = document.createElement('div');
+        headingLineInner.className = 'line__inner';
+        let headingLineText = document.createElement('span');
+        headingLineText.className = 'line__text';
+        headingLineText.textContent = data.line;
+        headingLineInner.appendChild(headingLineText);
+        headingLine.appendChild(headingLineInner);
+        heading.appendChild(headingLine);
+
+        let headingDescription = document.createElement('h1');
+        headingDescription.textContent = data.description;
+        heading.appendChild(headingDescription);
+
+        headingOuter.appendChild(heading);
+
+        if (data.operator) {
+            let operators = document.createElement('p');
+            operators.appendChild(document.createTextNode('Operated by '));
+            data.operator.forEach(function(op, i) {
+                let strong = document.createElement('strong');
+                strong.textContent = op;
+                operators.appendChild(strong);
+                if (i < data.operator.length - 2) {
+                    operators.appendChild(document.createTextNode(', '));
+                } else if (i === data.operator.length - 2) {
+                    operators.appendChild(document.createTextNode(' and '));
+                }
+            });
+            headingOuter.appendChild(operators);
+        }
+
+        let tabs = null;
+        if (data.mirrored) {
+            tabs = document.createElement('ul');
+            tabs.className = 'tabs tabs--2';
+
+            let outbound = document.createElement('li'),
+                inbound = document.createElement('li');
+
+            let outboundDiv = document.createElement('div'),
+                inboundDiv = document.createElement('div');
+            if (data.reverse) {
+                outboundDiv.className = 'tab';
+                outboundDiv.onclick = function() {
+                    map.update({service: {id: data.service, reverse: false}});
+                };
+                inboundDiv.className = 'tab tab--active';
+            } else {
+                outboundDiv.className = 'tab tab--active';
+                inboundDiv.className = 'tab';
+                inboundDiv.onclick = function() {
+                    map.update({service: {id: data.service, reverse: true}});
+                };
+            }
+
+            let outboundSpan = document.createElement('span'),
+                inboundSpan = document.createElement('span');
+            outboundSpan.textContent = 'Outbound';
+            inboundSpan.textContent = 'Inbound';
+
+            outboundDiv.appendChild(outboundSpan);
+            outbound.appendChild(outboundDiv);
+            inboundDiv.appendChild(inboundSpan);
+            inbound.appendChild(inboundDiv);
+
+            tabs.appendChild(outbound);
+            tabs.appendChild(inbound);
+        }
+
+        let list = document.createElement('section');
+        list.className = 'card card--relative';
+
+        let diagram = document.createElement('div');
+        diagram.className = 'diagram';
+
+        let listStops = null;
+        if (data.sequence) {
+            listStops = document.createElement('ul');
+            listStops.className = 'list list--relative';
+            listStops.id = 'listStops';
+            data.sequence.forEach(function(code) {
+                let s = data.stops[code];
+                let li = document.createElement('li'),
+                    item = document.createElement('div');
+                if (code) {
+                    item.className = 'item item--stop--multiline item--stop--service';
+                    let inner = document.createElement('div');
+                    inner.id = 'c' + s.properties.atcoCode;
+
+                    let innerItem = document.createElement('div');
+                    innerItem.className = 'item--stop';
+
+                    let stopInd = document.createElement('div');
+                    stopInd.className = 'indicator area-' + s.properties.adminAreaRef;
+                    stopInd.id = 'i' + s.properties.atcoCode;
+                    let ind = null;
+                    if (s.properties.indicator !== '') {
+                        ind = document.createElement('span');
+                        ind.textContent = s.properties.indicator;
+                    } else if (s.properties.stopType === 'BCS' ||
+                                s.properties.stopType === 'BCT') {
+                        ind = document.createElement('img');
+                        ind.src = BUS_SVG;
+                        ind.width = '28';
+                        ind.alt = 'Bus stop';
+                    } else if (s.properties.stopType === 'PLT') {
+                        ind = document.createElement('img');
+                        ind.src = TRAM_SVG;
+                        ind.width = '28';
+                        ind.alt = 'Tram stop';
+                    }
+                    stopInd.appendChild(ind);
+
+                    let stopLabel = document.createElement('div');
+                    stopLabel.className = 'item__label';
+                    stopLabel.textContent = s.properties.name;
+
+                    innerItem.appendChild(stopInd);
+                    innerItem.appendChild(stopLabel);
+                    inner.appendChild(innerItem);
+                    if (s.properties.street) {
+                        let street = document.createElement('p');
+                        street.textContent = s.properties.street;
+                        inner.appendChild(street);
+                    }
+                    item.appendChild(inner);
+                    item.onmouseover = function() {
+                        let coords = [s.geometry.coordinates[1], s.geometry.coordinates[0]];
+                        self.stopMap.map.panTo(coords);
+                    };
+                    item.onclick = function() {
+                        self.stopMap.update({stop: s});
+                    };
+                } else {
+                    item.className = 'item item--stop item--stop--empty';
+                    item.id = 'cNull';
+                    let stopInd = document.createElement('div');
+                    stopInd.className = 'indicator';
+                    stopInd.id = 'iNull';
+                    item.appendChild(stopInd);
+                }
+                li.appendChild(item);
+                listStops.appendChild(li);
+            });
+        } else {
+            listStops = document.createElement('p');
+            listStops.textContent = 'No stops for this service.';
+        }
+        list.appendChild(diagram);
+        list.appendChild(listStops);
+
+        self.clearPanel();
+        self.mapPanel.appendChild(headingOuter);
+        if (tabs) {
+            self.mapPanel.appendChild(tabs);
+        }
+        self.mapPanel.appendChild(list);
+
+        if (data.stops) {
+            resizeIndicator('indicator');
+            setupGraph(diagram, data.layout);
+        }
+    };
+
+    /**
+     * Draws service panel after getting data
+     * @private
+     */
+    this._setServicePanel = function() {
+        self.stopMap.services.retrieve(self.currentService, self._setServicePanelData);
+    };
 }
+
+
+/**
+ * TODO: Add option to show stops on specified route only.
+ * Easiest way to do this is to remove all tiles and make new layer from collection of stops from
+ * service data.
+ */
+// TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
+// TODO: Add locality to stop GeoJSON
 
 
 /**
@@ -1291,34 +1656,26 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
         }
     );
 
-    this.panel = new StopPanel(this, this.mapPanel, cookieSet);
+    this.panel = new Panel(this, this.mapPanel, cookieSet);
+    this.services = new ServicesData();
     this.stops = new StopLayer(this);
     this.route = new RouteLayer(this);
 
+    this.currentStop = null;
+    this.currentService = null;
+
     /**
      * Starts up the map and adds map events
-     * @param {?StopPoint} point GeoJSON for initial stop point
-     * @param {number} latitude Starts map at centre with latitude if point not defined
-     * @param {number} longitude Starts map at centre with longitude if point not defined
-     * @param {number} zoom Starts map at centre with zoom level if point not defined
+     * @param {object} options
+     * @param {StopPoint} [options.point] GeoJSON for initial stop point
+     * @param {string} [options.service] Initial service ID
+     * @param {boolean} [options.reverse] Initial service direction
+     * @param {number} [options.latitude] Starts map with latitude
+     * @param {number} [options.longitude] Starts map with longitude
+     * @param {number} [options.zoom] Starts map with zoom
      */
-    this.init = function(point, latitude, longitude, zoom) {
-        let coords,
-            zoomLevel;
-        if (latitude && longitude && zoom) {
-            coords = L.latLng(latitude, longitude);
-            zoomLevel = zoom;
-        } else if (point !== null) {
-            coords = L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]);
-            zoomLevel = MAP_ZOOM_MAX;
-        } else {
-            coords = L.latLng(MAP_CENTRE_GB);
-            zoomLevel = MAP_ZOOM_MIN;
-        }
-
-        self.map = L.map(self.mapContainer.id, {
-            zoom: zoomLevel,
-            center: coords,
+    this.init = function(options) {
+        let mapOptions = {
             minZoom: MAP_ZOOM_MIN,
             maxZoom: MAP_ZOOM_MAX,
             maxBounds: L.latLngBounds(
@@ -1326,43 +1683,136 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
                 L.latLng(MAP_BOUNDS_SE)
             ),
             attributionControl: false
-        });
+        };
 
-        self.map.on('zoomend', function() {
-            if (self.map.getZoom() <= TILE_ZOOM) {
-                self.stops.removeAllTiles();
-            } else {
+        if (options && options.latitude && options.longitude && options.zoom) {
+            // Go straight to specified coordinates & zoom
+            mapOptions.center = L.latLng(options.latitude, options.longitude);
+            mapOptions.zoom = options.zoom;
+        } else if (options && options.point) {
+            // Go to coordinates of stop point at max zoom
+            mapOptions.center = L.latLng(options.point.geometry.coordinates[1],
+                                         options.point.geometry.coordinates[0]);
+            mapOptions.zoom = MAP_ZOOM_MAX;
+        } else if (!options || !options.service) {
+            // Centre of GB map. If a service is specified the coordinates and zoom are left
+            // undefined until the route is loaded.
+            mapOptions.center = L.latLng(MAP_CENTRE_GB);
+            mapOptions.zoom = MAP_ZOOM_MIN;
+        }
+
+        self.map = L.map(self.mapContainer.id, mapOptions);
+
+        let initMapComponents = function() {
+            self.map.on('zoomend', function() {
+                if (self.map.getZoom() <= TILE_ZOOM) {
+                    self.stops.removeAllTiles();
+                } else {
+                    self.stops.updateTiles();
+                }
+                self.update();
+            });
+
+            self.map.on('moveend', function() {
                 self.stops.updateTiles();
-            }
-            self.panel.setPanel(null);
-        });
+                self.setURL();
+            });
 
-        self.map.on('moveend', function() {
-            self.setURL();
+            self.map.on('click', function() {
+                self.panel.stopAllLoops();
+                self.update({stop: null});
+            });
+
+            self.tileLayer.addTo(self.map);
+
+            self.stops.init();
             self.stops.updateTiles();
-        });
 
-        self.map.on('click', function() {
-            self.panel.stopAllLoops();
-            self.panel.setPanel(null);
-        });
+            if (options && options.service) {
+                self.update({
+                    point: options.point,
+                    service: {id: options.service, reverse: options.reverse}
+                });
+            } else {
+                self.update({point: options.point});
+            }
+        };
 
-        self.tileLayer.addTo(self.map);
-        self.stops.init();
-        self.stops.updateTiles();
-        self.panel.setPanel(point);
+        if (options && options.service) {
+            // Request service data and set route layer
+            let service = {id: options.service, reverse: options.reverse},
+                fit = !(options.point || options.latitude && options.longitude && options.zoom);
+
+            let routeLoads = function() {
+                self.route.set(service, fit);
+                initMapComponents();
+            };
+            let routeFails = function() {
+                // If request fails go straight to initialising map with default coordinates
+                if (self.map.getZoom() == null) {
+                    self.map.setView(L.latLng(MAP_CENTRE_GB), MAP_ZOOM_MIN);
+                }
+                initMapComponents();
+            };
+            self.services.retrieve(service, routeLoads, routeFails);
+        } else {
+            initMapComponents();
+        }
     };
+
+    /**
+     * Updates map with a specified stop point with live times or a service diagram based on stops
+     * @param {object} [options] Sets stop and service for map
+     * @param {StopPoint} [options.stop] Sets stop (or removes if null) unless it is undefined
+     * @param {ServiceID} [options.service] Sets service (or removes if null) unless it is undefined
+     * @param {boolean} [options.fitService] If setting a new route, fit map to path bounds
+     */
+    this.update = function(options) {
+        if (options) {
+            if (typeof options.stop !== 'undefined') {
+                self.currentStop = options.stop;
+            }
+            if (typeof options.service !== 'undefined') {
+                self.currentService = options.service;
+            }
+            if (self.currentService) {
+                // Unset any current stops and return to original service, or set new service
+                self.services.retrieve(self.currentService, function () {
+                    self.route.set(self.currentService, options.fitService);
+                    self.panel.updatePanel();
+                });
+            } else {
+                self.route.clear();
+                self.panel.updatePanel();
+            }
+        } else {
+            self.panel.updatePanel();
+        }
+
+        self.setURL();
+    };
+
+    // TODO: Can the page title be modified too?
 
     /**
      * Sets page to new URL with current stop, coordinates and zoom
      */
     this.setURL = function() {
-        let data = self.panel.getCurrentStop();
-        let center = self.map.getCenter();
-        let zoom = self.map.getZoom();
-        let stop = (data !== null) ? 'stop/' + data.atcoCode + '/' : '';
+        let routeURL = '',
+            stopURL = '';
 
-        let newURL = MAP_URL + stop + center.lat + ',' + center.lng + ',' + zoom;
+        if (self.route.data !== null) {
+            let direction = (self.route.data.reverse) ? 'inbound' : 'outbound';
+            routeURL = 'service/' + self.route.data.service + '/' + direction + '/';
+        }
+        if (self.panel.currentStop !== null) {
+            stopURL = 'stop/' + self.panel.currentStop.properties.atcoCode + '/';
+        }
+
+        let centre = self.map.getCenter();
+        let coords = [centre.lat, centre.lng, self.map.getZoom()].join(',');
+
+        let newURL = MAP_URL + routeURL + stopURL + coords;
         history.replaceState(null, null, newURL);
     };
 }
@@ -1400,11 +1850,9 @@ function _createSVGNode(tag, attr) {
  * @private
  */
 function _pathCommand(command, ...values) {
-    values.map(function(v) {
+    return command + ' ' + values.map(function(v) {
         return v.join(',');
-    });
-
-    return command + ' ' + values.join(' ');
+    }).join(' ');
 }
 
 
@@ -1593,7 +2041,7 @@ function Diagram(container) {
             x1: self.colStart + c1 * LAYOUT_SPACE_X,
             y1: self.rowCoords[r],
             x2: self.colStart + c2 * LAYOUT_SPACE_X,
-            y2: (r === data.length - 1) ?
+            y2: (r === self.data.length - 1) ?
                 2 * self.rowCoords[r] - self.rowCoords[r - 1] : self.rowCoords[r + 1]
         };
         self.addPathCoords(coords, colour, gradient);
@@ -1735,16 +2183,16 @@ function Diagram(container) {
 
         self.listInd = [];
         self.colours = [];
-        self.data.forEach(function (v, i) {
-            let code = (v.vertex !== null) ? v.vertex : 'Null';
-            self.listInd.push(document.getElementById('i' + code));
-
-            let colour;
+        self.data.forEach(function (v) {
+            let ind, colour;
             if (v.vertex !== null) {
-                colour = getComputedStyle(self.listInd[i]).backgroundColor;
+                ind = document.getElementById('i' + v.vertex);
+                colour = getComputedStyle(ind).backgroundColor;
             } else {
+                ind = document.getElementById('iNull');
                 colour = null;
             }
+            self.listInd.push(ind);
             self.colours.push(colour);
         });
 

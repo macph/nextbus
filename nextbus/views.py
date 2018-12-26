@@ -501,90 +501,106 @@ def service(service_id, direction=None):
                            layout=layout)
 
 
-@page.route("/map/")
-@page.route("/map/<lat_long_zoom:coords>")
-def show_map(coords=None):
-    """ Shows map. """
+def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
+    """ Shows map.
+
+        The map, service line, stop being shown and coordinates/zoom are
+        expected to be the same as if the user has navigated there through the
+        map interface.
+
+        :param service_id: Service ID to show the paths on map. If ATCO code is
+        None the service diagram will be shown in panel.
+        :param direction: Direction of service. Ignored if service ID is None.
+        :param atco_code: Stop point code to show live data in panel.
+        :param coords: Starting map coordinates. If None, the coordinates will
+        default to stop point if specified, service paths if specified or the
+        centre of GB if neither are specified.
+    """
+    if atco_code is not None:
+        stop = models.StopPoint.query.get(atco_code.upper())
+        if stop is None:
+            raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
+                                 % atco_code)
+    else:
+        stop = None
+
+    if service_id is not None:
+        line = (
+            models.Service.query
+            .options(db.joinedload(models.Service.patterns))
+            .get(service_id)
+        )
+        if line is None:
+            raise EntityNotFound("Service '%s' does not exist." % service_id)
+
+        if direction is None or direction == "outbound":
+            is_reverse = False
+        elif direction == "inbound":
+            is_reverse = True
+        else:
+            raise EntityNotFound("Direction given must be 'inbound' or "
+                                 "'outbound'.")
+
+        reverse = line.has_mirror(is_reverse)[0]
+    else:
+        is_reverse = None
+        reverse = None
+
+    # TODO: Add redirect for incorrect capitalisation, etc
+
     # Quick check to ensure coordinates are within range of Great Britain
-    if coords and location.check_bounds(coords[0], coords[1]):
+    if coords is not None and location.check_bounds(coords[0], coords[1]):
         latitude, longitude, zoom = coords
     else:
         latitude, longitude, zoom = None, None, None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=None, service=None, reverse=None)
-
-
-@page.route("/map/stop/<atco_code>/")
-@page.route("/map/stop/<atco_code>/<lat_long_zoom:coords>")
-def show_map_with_stop(atco_code, coords=None):
-    """ Shows map with a stop already selected. """
-    stop = models.StopPoint.query.get(atco_code.upper())
-    if stop.atco_code != atco_code:
-        return redirect(url_for(".show_map", atco_code=stop.atco_code,
-                                coords=coords), code=302)
-    elif stop is None:
-        raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
-                             % atco_code)
-
-    if coords and location.check_bounds(coords[0], coords[1]):
-        latitude, longitude, zoom = coords
-    else:
-        latitude, longitude, zoom = None, None, None
-
-    return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=stop.to_geojson(), service=None,
-                           reverse=None)
-
-
-def _show_map_service(service_id, direction="outbound", coords=None):
-    """ Shows map with a stop already selected. """
-    line = (
-        models.Service.query
-        .options(db.joinedload(models.Service.patterns))
-        .get(service_id)
-    )
-    if line is None:
-        raise EntityNotFound("Service '%s' does not exist." % service_id)
-
-    if coords and location.check_bounds(coords[0], coords[1]):
-        latitude, longitude, zoom = coords
-    else:
-        latitude, longitude, zoom = None, None, None
-
-    if direction == "outbound":
-        is_reverse = False
-    elif direction == "inbound":
-        is_reverse = True
-    else:
-        return render_template("not_found.html", message="Direction given must "
-                               "be 'inbound' or 'outbound'."), 404
-
-    reverse, _ = line.has_mirror(is_reverse)
-
-    return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=None, service=line.id,
+                           zoom=zoom, stop=stop, service_id=service_id,
                            reverse=reverse)
 
 
+@page.route("/map/")
+@page.route("/map/<lat_long_zoom:coords>")
+def show_map(coords=None):
+    """ Shows map without service or stop. """
+    return _show_map(coords=coords)
+
+
 @page.route("/map/service/<service_id>")
-def show_map_with_service(service_id):
-    return _show_map_service(service_id)
+@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
+def show_map_service_no_direction(service_id, coords=None):
+    """ Shows map with service and unspecified direction. """
+    return _show_map(service_id, coords=coords)
 
 
 @page.route("/map/service/<service_id>/<direction>")
-def show_map_with_service_direction(service_id, direction):
-    return _show_map_service(service_id, direction)
-
-
-@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
-def show_map_with_service_coords(service_id, coords):
-    return _show_map_service(service_id, coords=coords)
-
-
 @page.route("/map/service/<service_id>/<direction>/<lat_long_zoom:coords>")
-def show_map_with_service_direction_coords(service_id, direction, coords):
-    return _show_map_service(service_id, direction, coords)
+def show_map_service_direction(service_id, direction, coords=None):
+    """ Shows map with service and direction. """
+    return _show_map(service_id, direction, coords=coords)
+
+
+@page.route("/map/stop/<atco_code>")
+@page.route("/map/stop/<atco_code>/<lat_long_zoom:coords>")
+def show_map_stop(atco_code, coords=None):
+    """ Shows map with stop. """
+    return _show_map(atco_code=atco_code, coords=coords)
+
+
+@page.route("/map/service/<service_id>/stop/<atco_code>")
+@page.route("/map/service/<service_id>/stop/<atco_code>/<lat_long_zoom:coords>")
+def show_map_service_no_direction_stop(service_id, atco_code, coords=None):
+    """ Shows map with service, unspecified direction and stop. """
+    return _show_map(service_id, atco_code=atco_code, coords=coords)
+
+
+@page.route("/map/service/<service_id>/<direction>/stop/<atco_code>")
+@page.route("/map/service/<service_id>/<direction>/stop/<atco_code>/"
+            "<lat_long_zoom:coords>")
+def show_map_service_direction_stop(service_id, direction, atco_code,
+                                    coords=None):
+    """ Shows map with service, direction and stop. """
+    return _show_map(service_id, direction, atco_code, coords)
 
 
 @page.app_errorhandler(EntityNotFound)

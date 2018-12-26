@@ -58,7 +58,7 @@
     </div>
     <div class="column-1">
         <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map_with_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
+            <a class="button" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
             {% if 'stops' not in session %}
             <div id="cookie-request-info" class="hidden" style="margin: -5px 0;">
                 <p>This will add a cookie to your device with a list of starred stops. No other identifiable information is stored. If you're happy with this, click again.</p>

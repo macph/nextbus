@@ -304,6 +304,10 @@ button:focus {
   max-width: 640px;
 }
 
+.card--relative {
+  position: relative;
+}
+
 /*
  * HTML BODY
  */
@@ -662,6 +666,7 @@ button:focus {
   font-size: 1.7rem;
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .tab:hover {
@@ -672,6 +677,7 @@ button:focus {
 .tab--active {
   font-weight: 700;
   background: white;
+  cursor: auto;
 }
 
 .tab--active:hover {

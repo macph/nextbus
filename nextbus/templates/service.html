@@ -30,7 +30,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map_with_service_direction', service_id=service.id, direction='outbound' if not reverse else 'inbound') }}"><span>View on map</span></a>
+            <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, direction='outbound' if not reverse else 'inbound') }}"><span>View on map</span></a>
         </section>
     </div>
     <div class="column-3">

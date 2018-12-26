@@ -52,34 +52,25 @@
     const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
 </script>
 <script>
-    let set = "{{ ('stops' in session)|tojson }}" === 'true';
+    let map = new StopMap(
+        '{{ config.get("MAPBOX_APP_TOKEN") }}',
+        'map',
+        'panel-content',
+        {{ ('stops' in session)|tojson }}
+    );
+    let options = {};
+    {% if stop -%}
+    options.point = {{ stop.to_geojson()|tojson }};
+    {%- endif %}
+    {% if latitude and longitude and zoom -%}
+    options.latitude = {{ latitude }};
+    options.longitude = {{ longitude }};
+    options.zoom = {{ zoom }};
+    {%- endif %}
+    {% if service_id -%}
+    options.service = {{ service_id }};
+    options.reverse = {{ reverse|tojson }};
+    {%- endif %}
+    map.init(options);
 </script>
-{% if stop is not none and service is none and (latitude and longitude and zoom) %}
-<script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
-    map.init({{ stop|tojson }}, {{ latitude }}, {{ longitude }}, {{ zoom }});
-</script>
-{% elif stop is not none and service is none %}
-<script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
-    map.init({{ stop|tojson }});
-</script>
-{% elif stop is none and service is not none and (latitude and longitude and zoom) %}
-<script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
-    map.init(null, {{ latitude }}, {{ longitude }}, {{ zoom }});
-    map.route.addRoute('{{ service }}', '{{ reverse }}' === 'true', false);
-</script>
-{% elif stop is none and service is not none %}
-<script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
-    map.init(null, null, null, null);
-    map.route.addRoute('{{ service }}', '{{ reverse }}' === 'true', true);
-</script>
-{% else %}
-<script>
-    let map = new StopMap('{{ config.get("MAPBOX_APP_TOKEN") }}', 'map', 'panel-content', set);
-    map.init(null, {{ latitude|tojson }}, {{ longitude|tojson }}, {{ zoom|tojson }});
-</script>
-{% endif %}
 {% endblock %}

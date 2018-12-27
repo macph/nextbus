@@ -42,6 +42,7 @@ function addGeolocation(LocationURL, activateElement) {
         // Direct to list of stops
         window.location.href = LocationURL + latitude + ',' + longitude;
     };
+
     let error = function(err) {
         console.log('Geolocation error: ' + err);
     };
@@ -154,8 +155,8 @@ function getTransitionEnd(element) {
         'WebkitTransition': 'webkitTransitionEnd'
     };
     for (let t in transitions) {
-        if (transitions.hasOwnProperty(t) && element.style[t] !== undefined) {
-        return transitions[t];
+        if (transitions.hasOwnProperty(t) && typeof element.style[t] !== 'undefined') {
+            return transitions[t];
         }
     }
 }
@@ -747,6 +748,34 @@ function detectIE() {
  * }} StopPoint
  */
 
+/**
+ * GeoJSON object for creating route layer
+ * @typedef {{
+ *     type: string,
+ *     geometry: {
+ *         type: string,
+ *         coordinates: number[][]
+ *     }
+ * }} RoutePaths
+ */
+
+/**
+ * Data for service route
+ * @typedef {{
+ *     service: string,
+ *     line: string,
+ *     description: string,
+ *     direction: string,
+ *     reverse: boolean,
+ *     mirrored: boolean,
+ *     operators: string[],
+ *     stops: StopPoint[],
+ *     sequence: string[],
+ *     paths: RoutePaths,
+ *     layout: Array
+ * }} ServiceData
+ */
+
 
 /**
  * Handles layers of stop markers
@@ -760,6 +789,7 @@ function StopLayer(stopMap) {
     this.isIE = detectIE();
     this.loadedStops = new TileCache(CACHE_LIMIT);
     this.layers = L.layerGroup();
+    this.route = null;
 
     /**
      * Sets up layer group.
@@ -801,7 +831,7 @@ function StopLayer(stopMap) {
     };
 
     /**
-     * Removes all tiles - but data stays in cache
+     * Removes all tiles and route stops - but data stays in cache
      */
     this.removeAllTiles = function() {
         self.layers.eachLayer(function(layer) {
@@ -840,25 +870,28 @@ function StopLayer(stopMap) {
     };
 
     /**
-     * Updates all stop point tiles, removing hidden tiles and adding new tiles
+     * Updates all stop point tiles or route stops, removing hidden tiles and adding new tiles
      */
     this.updateTiles = function() {
         if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
             return;
         }
-
-        let tiles = self._getTileCoordinates();
-
-        self.loadedStops.forEach(function(layer, coords) {
-            let index = tiles.indexOf(coords);
-            if (index > -1) {
-                self.loadTile(coords);
-                tiles.splice(index, 1);
-            } else if (self.layers.hasLayer(layer)) {
-                self.layers.removeLayer(layer);
-            }
-        });
-        tiles.forEach(self.loadTile);
+        if (self.route === null) {
+            let tiles = self._getTileCoordinates();
+            self.loadedStops.forEach(function(layer, coords) {
+                let index = tiles.indexOf(coords);
+                if (index > -1) {
+                    self.loadTile(coords);
+                    tiles.splice(index, 1);
+                } else if (self.layers.hasLayer(layer)) {
+                    self.layers.removeLayer(layer);
+                }
+            });
+            tiles.forEach(self.loadTile);
+        } else if (!self.layers.hasLayer(self.route)) {
+            self.route.addTo(self.layers);
+            resizeIndicator('indicator-marker');
+        }
     };
 
     /**
@@ -892,7 +925,10 @@ function StopLayer(stopMap) {
 
     /**
      * Creates GeoJSON layer of stops from list of stops
-     * @param {object} stops FeatureCollection data of stops within title
+     * @param {{
+     *     type: string,
+     *     features: StopPoint[]
+     * }} stops FeatureCollection data of stops within title
      */
     this.createLayer = function(stops) {
         return L.geoJSON(stops, {
@@ -921,6 +957,31 @@ function StopLayer(stopMap) {
             }
         });
     };
+
+    /**
+     * Creates layer of stops on route and sets layer such that only these route stops are loaded
+     * @param {ServiceData} data
+     */
+    this.setRoute = function(data) {
+        let stops = [];
+        for (let s in data.stops) {
+            if (data.stops.hasOwnProperty(s)) {
+                stops.push(data.stops[s]);
+            }
+        }
+        self.route = self.createLayer({type: 'FeatureCollection', features: stops});
+        self.removeAllTiles();
+        self.updateTiles();
+    };
+
+    /**
+     * Removes route from layer, and tiles will be loaded as usual
+     */
+    this.removeRoute = function() {
+        self.route = null;
+        self.removeAllTiles();
+        self.updateTiles();
+    };
 }
 
 
@@ -942,36 +1003,6 @@ function urlPart(service) {
     }
     return url;
 }
-
-
-/**
- * GeoJSON object for creating route layer
- * @typedef {{
- *     type: string,
- *     geometry: {
- *         type: string,
- *         coordinates: number[][]
- *     }
- * }} RoutePaths
- */
-
-
-/**
- * Data for service route
- * @typedef {{
- *     service: string,
- *     line: string,
- *     description: string,
- *     direction: string,
- *     reverse: boolean,
- *     mirrored: boolean,
- *     operator: string[],
- *     stops: StopPoint[],
- *     sequence: string[],
- *     paths: RoutePaths,
- *     layout: Array
- * }} ServiceData
- */
 
 
 /**
@@ -1633,11 +1664,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
 }
 
 
-/**
- * TODO: Add option to show stops on specified route only.
- * Easiest way to do this is to remove all tiles and make new layer from collection of stops from
- * service data.
- */
+// TODO: Add option to show stops on specified route only. Should this be optional?
 // TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
 // TODO: Add locality to stop GeoJSON
 
@@ -1734,9 +1761,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             });
 
             self.tileLayer.addTo(self.map);
-
             self.stops.init();
-            self.stops.updateTiles();
 
             if (options && options.service) {
                 self.update({
@@ -1787,12 +1812,14 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             }
             if (self.currentService) {
                 // Unset any current stops and return to original service, or set new service
-                self.services.retrieve(self.currentService, function () {
+                self.services.retrieve(self.currentService, function(data) {
                     self.route.set(self.currentService, options.fitService);
+                    self.stops.setRoute(data);
                     self.panel.updatePanel();
                 });
             } else {
                 self.route.clear();
+                self.stops.removeRoute();
                 self.panel.updatePanel();
             }
         } else {
@@ -1876,7 +1903,6 @@ function _pathCommand(command, ...values) {
  */
 function _getRelativeElementCoords(element, startX, startY) {
     let rect = element.getBoundingClientRect();
-
     return {
         x: rect.left + rect.width / 2 - startX,
         y: rect.top + rect.height / 2 - startY
@@ -2046,7 +2072,6 @@ function Diagram(container) {
         } else if (r < 0 || r >= self.rowCoords.length) {
             throw 'Row numbers need to be within range.';
         }
-
         let coords = {
             x1: self.colStart + c1 * LAYOUT_SPACE_X,
             y1: self.rowCoords[r],
@@ -2144,7 +2169,6 @@ function Diagram(container) {
             v0.paths.forEach(function(p) {
                 let gradient = {},
                     start = (previous.has(p.start)) ? previous.get(p.start): c0;
-
                 if (p.fade > 0) {
                     gradient['fade'] = p.fade;
                     current.set(p.end, start);

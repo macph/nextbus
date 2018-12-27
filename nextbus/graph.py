@@ -1354,7 +1354,7 @@ def service_json(service_id, reverse):
         "direction": "inbound" if reverse_ else "outbound",
         "reverse": reverse_,
         "mirrored": mirrored,
-        "operator": [o.name for o in service.local_operators],
+        "operators": [o.name for o in service.local_operators],
         "stops": {c: s.to_geojson() for c, s in stops.items()},
         "sequence": sequence,
         "paths": paths,

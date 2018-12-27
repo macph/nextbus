@@ -741,6 +741,7 @@ function detectIE() {
  *         street: string,
  *         bearing: string,
  *         stopType: string,
+ *         locality: ?string,
  *         adminAreaRef: string
  *     }
  * }} StopPoint
@@ -1464,16 +1465,16 @@ function Panel(stopMap, mapPanel, cookieSet) {
 
         headingOuter.appendChild(heading);
 
-        if (data.operator) {
+        if (data.operators) {
             let operators = document.createElement('p');
             operators.appendChild(document.createTextNode('Operated by '));
-            data.operator.forEach(function(op, i) {
+            data.operators.forEach(function(op, i) {
                 let strong = document.createElement('strong');
                 strong.textContent = op;
                 operators.appendChild(strong);
-                if (i < data.operator.length - 2) {
+                if (i < data.operators.length - 2) {
                     operators.appendChild(document.createTextNode(', '));
-                } else if (i === data.operator.length - 2) {
+                } else if (i === data.operators.length - 2) {
                     operators.appendChild(document.createTextNode(' and '));
                 }
             });
@@ -1569,11 +1570,20 @@ function Panel(stopMap, mapPanel, cookieSet) {
                     innerItem.appendChild(stopInd);
                     innerItem.appendChild(stopLabel);
                     inner.appendChild(innerItem);
+
+                    let sub = [];
                     if (s.properties.street) {
+                        sub.push(s.properties.street);
+                    }
+                    if (s.properties.locality) {
+                        sub.push(s.properties.locality)
+                    }
+                    if (sub) {
                         let street = document.createElement('p');
-                        street.textContent = s.properties.street;
+                        street.textContent = sub.join(', ');
                         inner.appendChild(street);
                     }
+
                     item.appendChild(inner);
                     item.onmouseover = function() {
                         let coords = [s.geometry.coordinates[1], s.geometry.coordinates[0]];

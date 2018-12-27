@@ -423,6 +423,7 @@ class StopPoint(utils.BaseModel):
             :returns: JSON-serializable dict.
         """
         title_ind = " (%s)" % self.indicator if self.indicator else ""
+        locality = self.locality.name if 'locality' in self.__dict__ else None
         geojson = {
             "type": "Feature",
             "geometry": {
@@ -438,6 +439,7 @@ class StopPoint(utils.BaseModel):
                 "street": self.street,
                 "bearing": self.bearing,
                 "stopType": self.stop_type,
+                "locality": locality,
                 "adminAreaRef": self.admin_area_ref,
             }
         }

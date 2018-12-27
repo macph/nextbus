@@ -109,17 +109,20 @@ p {
  * LINKS
  */
 
-a {
+a,
+.anchor {
   text-decoration: none;
   color: rgb(0, 33, 113);
 }
 
-a:visited {
+a:visited,
+.anchor:visited {
     text-decoration: none;
     color: rgb(0, 33, 113);
 }
 
-a:hover {
+a:hover,
+.anchor:hover {
     text-decoration: underline;
     text-decoration-skip-ink: auto;
     -webkit-text-decoration-skip: skip;
@@ -222,6 +225,7 @@ button:focus {
   font-family: inherit;
   font-size: 1.7rem;
   color: inherit;
+  cursor: pointer;
 }
 
 .button:hover {

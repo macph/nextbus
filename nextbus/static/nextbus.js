@@ -896,28 +896,28 @@ function StopLayer(stopMap) {
 
     /**
      * Creates marker element to be used in map
-     * @param {StopPoint} point Point object from data
+     * @param {StopPoint} stop Point object from data
      * @returns {string} Needs to be a HTML string as divIcon does not accept HTML elements
      * @private
      */
-    this._markerElement = function(point) {
+    this._markerElement = function(stop) {
         let ind = '';
-        if (point.properties.indicator !== '') {
-            ind = '<span>' + point.properties.indicator + '</span>'
-        } else if (point.properties.stopType === 'BCS' ||
-                    point.properties.stopType === 'BCT') {
+        if (stop.properties.indicator !== '') {
+            ind = '<span>' + stop.properties.indicator + '</span>'
+        } else if (stop.properties.stopType === 'BCS' ||
+                    stop.properties.stopType === 'BCT') {
             ind = '<img src="' + BUS_SVG + '" width=28px alt="Bus stop">'
-        } else if (point.properties.stopType === 'PLT') {
+        } else if (stop.properties.stopType === 'PLT') {
             ind = '<img src="' + TRAM_SVG + '" width=28px alt="Tram stop">'
         }
 
         let arrow = '';
         if (!self.isIE) {
-            let bearing = 'indicator-marker__arrow--' + point.properties.bearing;
+            let bearing = 'indicator-marker__arrow--' + stop.properties.bearing;
             arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
         }
 
-        let area = 'area-' + point.properties.adminAreaRef;
+        let area = 'area-' + stop.properties.adminAreaRef;
         let indClass = 'indicator indicator-marker ' + area;
 
         return '<div class="' + indClass + '">' + arrow + ind + '</div>';
@@ -932,25 +932,25 @@ function StopLayer(stopMap) {
      */
     this.createLayer = function(stops) {
         return L.geoJSON(stops, {
-            pointToLayer: function(point, latLng) {
+            pointToLayer: function(stop, latLng) {
                 let icon = L.divIcon({
                     className: 'marker',
                     iconSize: null,
-                    html: self._markerElement(point)
+                    html: self._markerElement(stop)
                 });
                 let marker = L.marker(latLng, {
                         icon: icon,
-                        title: point.properties.title,
-                        alt: point.properties.indicator
+                        title: stop.properties.title,
+                        alt: stop.properties.indicator
                 });
                 // Move marker to front when mousing over
                 marker = marker.on('mouseover', function() {
                     self.zCount += 100;
                     this.setZIndexOffset(self.zCount);
                 });
-                // Add callback function to each marker with GeoJSON pointer object as argument
+                // Add callback function to each marker with GeoJSON point object as argument
                 marker = marker.on('click', function() {
-                    self.stopMap.update({stop: point});
+                    self.stopMap.update({stop: stop});
                 });
 
                 return marker;
@@ -1323,31 +1323,55 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setStopPanel = function() {
-        let point = self.currentStop;
+        let stop = self.currentStop;
+
+        let nav = null;
+        if (self.currentService !== null) {
+            let data = self.stopMap.route.data;
+
+            nav = document.createElement('nav');
+            let breadcrumbs = document.createElement('ul');
+            breadcrumbs.className = 'breadcrumbs breadcrumbs--trailing';
+
+            let serviceItem = document.createElement('li'),
+                serviceLink = document.createElement('span');
+            serviceLink.className = 'anchor';
+            serviceLink.textContent = 'Service ' + data.line;
+            serviceLink.onclick = function() {
+                self.stopMap.update({stop: null});
+                return false;
+            };
+            serviceItem.appendChild(serviceLink);
+
+            breadcrumbs.appendChild(serviceItem);
+            nav.appendChild(breadcrumbs);
+        }
+
         let heading = document.createElement('div');
         heading.className = 'heading-stop';
 
         let stopInd = document.createElement('div');
-        stopInd.className = 'indicator area-' + point.properties.adminAreaRef;
+        stopInd.className = 'indicator area-' + stop.properties.adminAreaRef;
         let ind = null;
-        if (point.properties.indicator !== '') {
+        if (stop.properties.indicator !== '') {
             ind = document.createElement('span');
-            ind.textContent = point.properties.indicator;
-        } else if (point.properties.stopType === 'BCS' ||
-                    point.properties.stopType === 'BCT') {
+            ind.textContent = stop.properties.indicator;
+        } else if (stop.properties.stopType === 'BCS' ||
+                    stop.properties.stopType === 'BCT') {
             ind = document.createElement('img');
             ind.src = BUS_SVG;
             ind.width = '28';
             ind.alt = 'Bus stop';
-        } else if (point.properties.stopType === 'PLT') {
+        } else if (stop.properties.stopType === 'PLT') {
             ind = document.createElement('img');
             ind.src = TRAM_SVG;
             ind.width = '28';
             ind.alt = 'Tram stop';
         }
         stopInd.appendChild(ind);
+
         let stopHeading = document.createElement('h1');
-        stopHeading.textContent = point.properties.name;
+        stopHeading.textContent = stop.properties.name;
 
         heading.appendChild(stopInd);
         heading.appendChild(stopHeading);
@@ -1355,15 +1379,28 @@ function Panel(stopMap, mapPanel, cookieSet) {
         let headingOuter = document.createElement('div');
         headingOuter.className = 'heading heading--panel';
         headingOuter.id = 'panel-heading-outer';
+        if (nav !== null) {
+            headingOuter.appendChild(nav);
+        }
         headingOuter.appendChild(heading);
-        if (point.properties.bearing !== null && self.directions.hasOwnProperty(point.properties.bearing)) {
-            let headingText = document.createElement('p');
-            let dirText = self.directions[point.properties.bearing];
-            if (point.properties.street !== null) {
-                headingText.innerHTML = '<strong>' + point.properties.street + '</strong>, ' + dirText;
+
+        let headingText = null;
+        if (stop.properties.bearing !== null &&
+            self.directions.hasOwnProperty(stop.properties.bearing))
+        {
+            headingText = document.createElement('p');
+            let dirText = self.directions[stop.properties.bearing];
+            if (stop.properties.street !== null) {
+                headingText.innerHTML = '<strong>' + stop.properties.street + '</strong>, ' +
+                    dirText;
             } else {
                 headingText.textContent = dirText.charAt(0).toUpperCase() + dirText.slice(1);
             }
+        } else if (stop.properties.street !== null) {
+            headingText = document.createElement('p');
+            headingText.innerHTML = '<strong>' + stop.properties.street + '</strong>';
+        }
+        if (headingText !== null) {
             headingOuter.appendChild(headingText);
         }
 
@@ -1388,7 +1425,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         let infoHeading = document.createElement('h2');
         infoHeading.textContent = 'Stop information';
         let smsCode = document.createElement('p');
-        smsCode.innerHTML = 'SMS code <strong>' + point.properties.naptanCode+ '</strong>';
+        smsCode.innerHTML = 'SMS code <strong>' + stop.properties.naptanCode+ '</strong>';
         stopInfo.appendChild(infoHeading);
         stopInfo.appendChild(smsCode);
 
@@ -1402,12 +1439,12 @@ function Panel(stopMap, mapPanel, cookieSet) {
         zoomTo.onclick = function() {
             zoomTo.blur();
             self.stopMap.map.flyTo(
-                L.latLng(point.geometry.coordinates[1], point.geometry.coordinates[0]), 18
+                L.latLng(stop.geometry.coordinates[1], stop.geometry.coordinates[0]), 18
             );
         };
         let visitStop = document.createElement('a');
         visitStop.className = 'button';
-        visitStop.href = STOP_URL + point.properties.atcoCode;
+        visitStop.href = STOP_URL + stop.properties.atcoCode;
         let visitStopInner = document.createElement('span');
         visitStopInner.textContent = 'View stop page';
         visitStop.appendChild(visitStopInner);
@@ -1422,8 +1459,8 @@ function Panel(stopMap, mapPanel, cookieSet) {
         self.mapPanel.appendChild(actions);
 
         self.getStop(
-            point.properties.atcoCode,
-            point.properties.adminAreaRef,
+            stop.properties.atcoCode,
+            stop.properties.adminAreaRef,
             liveServices,
             liveHeadingTime,
             liveHeadingCountdown
@@ -1444,7 +1481,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 self.starred.info = info;
                 codeInList = false;
             } else {
-                codeInList = self.starred.data.indexOf(point.properties.naptanCode) > -1;
+                codeInList = self.starred.data.indexOf(stop.properties.naptanCode) > -1;
             }
 
             let starred = document.createElement('button');
@@ -1454,12 +1491,12 @@ function Panel(stopMap, mapPanel, cookieSet) {
             if (!self.starred.set || !codeInList) {
                 starredInner.textContent = 'Add starred stop';
                 starred.onclick = function() {
-                    self.starred.add(starred, point.properties.naptanCode);
+                    self.starred.add(starred, stop.properties.naptanCode);
                 };
             } else {
                 starredInner.textContent = 'Remove starred stop';
                 starred.onclick = function() {
-                    self.starred.remove(starred, point.properties.naptanCode);
+                    self.starred.remove(starred, stop.properties.naptanCode);
                 };
             }
             actions.appendChild(starred);
@@ -1704,7 +1741,7 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
     /**
      * Starts up the map and adds map events
      * @param {object} options
-     * @param {StopPoint} [options.point] GeoJSON for initial stop point
+     * @param {StopPoint} [options.stop] GeoJSON for initial stop point
      * @param {string} [options.service] Initial service ID
      * @param {boolean} [options.reverse] Initial service direction
      * @param {number} [options.latitude] Starts map with latitude
@@ -1726,10 +1763,10 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
             // Go straight to specified coordinates & zoom
             mapOptions.center = L.latLng(options.latitude, options.longitude);
             mapOptions.zoom = options.zoom;
-        } else if (options && options.point) {
+        } else if (options && options.stop) {
             // Go to coordinates of stop point at max zoom
-            mapOptions.center = L.latLng(options.point.geometry.coordinates[1],
-                                         options.point.geometry.coordinates[0]);
+            mapOptions.center = L.latLng(options.stop.geometry.coordinates[1],
+                                         options.stop.geometry.coordinates[0]);
             mapOptions.zoom = MAP_ZOOM_MAX;
         } else if (!options || !options.service) {
             // Centre of GB map. If a service is specified the coordinates and zoom are left
@@ -1765,18 +1802,18 @@ function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
 
             if (options && options.service) {
                 self.update({
-                    point: options.point,
+                    stop: options.stop,
                     service: {id: options.service, reverse: options.reverse}
                 });
             } else {
-                self.update({point: options.point});
+                self.update({stop: options.stop});
             }
         };
 
         if (options && options.service) {
             // Request service data and set route layer
             let service = {id: options.service, reverse: options.reverse},
-                fit = !(options.point || options.latitude && options.longitude && options.zoom);
+                fit = !(options.stop || options.latitude && options.longitude && options.zoom);
 
             let routeLoads = function() {
                 self.route.set(service, fit);

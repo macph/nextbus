@@ -36,26 +36,26 @@
             <h2>Stops</h2>
             {% if stops|length > 0 %}
             {% call(s) f.print_list(stops) %}
-            {% if s[1] %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s[0].atco_code) }}" class="item item--stop--multiline">
+            {% if s.lines %}
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
-                    {{ f.print_stop_indicator(s[0]) }}
-                    <div class="item__label">{{ s[0].name }}</div>
+                    {{ f.print_stop_indicator(s) }}
+                    <div class="item__label">{{ s.name }}</div>
                 </div>
                 <p>
-                    {% for line in s[1] %}
+                    {% for l in s.lines %}
                     <span class="line line--inline">
-                        <span class="line__inner {{ 'area-%s'|format(s[0].admin_area_ref) }}">
-                            <span class="line__text">{{ line }}</span>
+                        <span class="line__inner {{ 'area-%s'|format(s.admin_area_ref) }}">
+                            <span class="line__text">{{ l }}</span>
                         </span>
                     </span>
                     {% endfor %}
                 </p>
             </a>
             {% else %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s[0].atco_code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s[0]) }}
-                <div class="item__label">{{ s[0].name }}</div>
+            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
+                {{ f.print_stop_indicator(s) }}
+                <div class="item__label">{{ s.name }}</div>
             </a>
             {% endif %}
             {% endcall %}

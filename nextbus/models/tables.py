@@ -274,27 +274,31 @@ class StopArea(utils.BaseModel):
         """
         return db.cast(db.func.count(cls.code), db.Text)
 
-    def get_stops_lines(self):
-        """ Queries all stops associated with a stop area, sorted naturally, and
-            a list of services for every stop, also sorted naturally.
-        """
-        subquery_lines = (
-            db.session.query(Service.line)
-            .join(Service.patterns)
-            .join(JourneyPattern.links)
-            .filter(JourneyLink.stop_point_ref == StopPoint.atco_code)
-            .group_by(Service.line)
-            .order_by(Service.line_index)
-        ).as_scalar()
 
-        query_stops = (
-            db.session.query(StopPoint, db.func.array(subquery_lines))
-            .select_from(StopPoint)
-            .filter(StopPoint.stop_area_ref == self.code)
-            .order_by(StopPoint.name, StopPoint.ind_index)
+def _array_lines(code):
+    """ Create subquery for an distinct and ordered array of all lines serving a
+        stop.
+    """
+    service = db.table("service", db.column("id"), db.column("line"))
+    pattern = db.table("journey_pattern", db.column("id"),
+                       db.column("service_ref"))
+    link = db.table("journey_link", db.column("pattern_ref"),
+                    db.column("stop_point_ref"))
+    subquery = (
+        db.select([service.c.line])
+        .select_from(
+            service
+            .join(pattern, pattern.c.service_ref == service.c.id)
+            .join(link, link.c.pattern_ref == pattern.c.id)
         )
+        .where(link.c.stop_point_ref == code)
+        .group_by(service.c.line)
+        .order_by(db.select([_ns.c.index])
+                  .where(_ns.c.string == service.c.line))
+        .as_scalar()
+    )
 
-        return query_stops.all()
+    return db.func.array(subquery)
 
 
 class StopPoint(utils.BaseModel):
@@ -335,6 +339,8 @@ class StopPoint(utils.BaseModel):
     # Access to index for natural sort - only need it for ordering queries
     ind_index = db.deferred(db.select([_ns.c.index])
                             .where(_ns.c.string == short_ind))
+    # Distinct list of lines serving this stop
+    lines = db.deferred(_array_lines(atco_code))
 
     _join_other = db.and_(
         db.foreign(stop_area_ref).isnot(None),
@@ -374,26 +380,30 @@ class StopPoint(utils.BaseModel):
         return repr_text
 
     @classmethod
-    def within_box(cls, box):
+    def within_box(cls, box, *options):
         """ Finds all stop points within a box with latitude and longitude
             coordinates for each side.
 
             :param box: BoundingBox object with north, east, south and west
             attributes
+            :param options: Options for loading model instances, eg load_only
             :returns: Unordered list of StopPoint objects
         """
+        query = cls.query
+        if options:
+            query = query.options(*options)
         try:
-            nearby_stops = cls.query.filter(
+            nearby_stops = query.filter(
                 db.between(StopPoint.latitude, box.south, box.north),
                 db.between(StopPoint.longitude, box.west, box.east)
-            ).all()
+            )
         except AttributeError:
             raise TypeError("Box %r is not a valid BoundingBox object." % box)
 
-        return nearby_stops
+        return nearby_stops.all()
 
     @classmethod
-    def in_range(cls, latitude, longitude):
+    def in_range(cls, latitude, longitude, *options):
         """ Finds stop points in range of lat/long coordinates.
 
             Returns an ordered list of stop points and their distances from
@@ -401,11 +411,12 @@ class StopPoint(utils.BaseModel):
 
             :param latitude: Latitude of centre point
             :param longitude: Longitude of centre point
+            :param options: Options for loading model instances, eg load_only
             :returns: List of StopPoint objects with distance attribute added
             and sorted.
         """
         box = location.bounding_box(latitude, longitude, MAX_DIST)
-        nearby_stops = cls.within_box(box)
+        nearby_stops = cls.within_box(box, *options)
 
         stops = []
         for stop in nearby_stops:
@@ -495,9 +506,14 @@ class Postcode(utils.BaseModel):
 
         return repr_text
 
-    def stops_in_range(self):
-        """ Returns a list of all stop points within range. """
-        return StopPoint.in_range(self.latitude, self.longitude)
+    def stops_in_range(self, *options):
+        """ Returns a list of all stop points within range.
+
+            :param options: Options for loading model instances, eg load_only
+            :returns: List of StopPoint objects with distance attribute added
+            and sorted.
+        """
+        return StopPoint.in_range(self.latitude, self.longitude, *options)
 
 
 class Operator(utils.BaseModel):

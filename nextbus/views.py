@@ -353,7 +353,8 @@ def list_near_location(coords):
         raise EntityNotFound("The latitude and longitude coordinates are "
                              "nowhere near Great Britain!")
 
-    stops = models.StopPoint.in_range(latitude, longitude)
+    stops = models.StopPoint.in_range(latitude, longitude,
+                                      db.undefer(models.StopPoint.lines))
 
     return render_template("location.html", latitude=latitude,
                            longitude=longitude, list_stops=stops)
@@ -372,7 +373,7 @@ def list_near_postcode(code):
         return redirect(url_for(".list_near_postcode", code=postcode.text),
                         code=302)
 
-    stops = postcode.stops_in_range()
+    stops = postcode.stops_in_range(db.undefer(models.StopPoint.lines))
 
     return render_template("postcode.html", postcode=postcode, list_stops=stops)
 
@@ -395,8 +396,15 @@ def stop_area(stop_area_code):
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=302)
 
+    stops = (
+        db.session.query(models.StopPoint)
+        .options(db.undefer(models.StopPoint.lines))
+        .filter(models.StopPoint.stop_area_ref == area.code)
+        .all()
+    )
+
     return render_template("stop_area.html", stop_area=area,
-                           stops=area.get_stops_lines())
+                           stops=stops)
 
 
 @page.route("/stop/sms/<naptan_code>")

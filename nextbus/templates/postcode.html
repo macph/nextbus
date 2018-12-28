@@ -49,6 +49,17 @@
                     {% if s.street %}
                     <p>{{ s.street }}</p>
                     {% endif %}
+                    {% if s.lines %}
+                    <p>
+                    {% for l in s.lines %}
+                    <span class="line line--inline">
+                        <span class="line__inner {{ 'area-%s'|format(s.admin_area_ref) }}">
+                            <span class="line__text">{{ l }}</span>
+                        </span>
+                    </span>
+                    {% endfor %}
+                    </p>
+                    {% endif %}
                 </a>
             {% endcall %}
             {% else %}

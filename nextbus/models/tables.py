@@ -459,19 +459,38 @@ class StopPoint(utils.BaseModel):
 
     def get_services(self):
         """ Queries all services at this stop, returning a list including the
-            directions of these services.
+            origin and destination of these services, grouped by service ID and
+            direction. Services are also checked for whether they terminate at
+            this stop or not.
         """
+        # Checks if associated link is not last in sequence
+        link = db.aliased(JourneyLink)
+        next_link = (
+            db.session.query(link.id)
+            .filter(link.pattern_ref == JourneyLink.pattern_ref,
+                    link.sequence == JourneyLink.sequence + 1)
+            .as_scalar()
+        )
+
+        # Give service instance name in keyed tuple object
+        service = db.aliased(Service, name="service")
         query_services = (
             db.session.query(
-                Service,
-                db.func.array_agg(JourneyPattern.direction.distinct()
-                                  .label("directions"))
+                service,
+                JourneyPattern.direction,
+                db.func.string_agg(JourneyPattern.origin.distinct(), ' / ')
+                .label("origin"),
+                db.func.string_agg(JourneyPattern.destination.distinct(), ' / ')
+                .label("destination"),
+                db.case([(db.func.count(next_link) == 0, True)], else_=False)
+                .label("terminates")
             )
-            .join(Service.patterns)
+            .join(service.patterns)
             .join(JourneyPattern.links)
             .filter(JourneyLink.stop_point_ref == self.atco_code)
-            .group_by(Service.id)
-            .order_by(Service.line_index, Service.description)
+            .group_by(service.id, JourneyPattern.direction)
+            .order_by(service.line_index, service.description,
+                      JourneyPattern.direction)
         )
 
         return query_services.all()

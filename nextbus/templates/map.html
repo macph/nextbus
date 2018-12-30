@@ -25,7 +25,7 @@
             <footer class="footer footer--panel">
                 <div>
                     <p class="footer__text">
-                        A <a href="https://leafletjs.com">Leaflet map</a>. Data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a> and imagery © <a href="http://mapbox.com">Mapbox</a>.
+                        A <a href="https://leafletjs.com">Leaflet map</a>. Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and imagery © <a href="https://carto.com/attributions">CARTO</a>.
                     </p>
                     <p class="footer__text">
                         &copy; Ewan Macpherson and data sources, 2017&ndash;18. <a href="{{ url_for('page.about') }}">About this website</a>
@@ -52,7 +52,6 @@
     const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
 
     let map = new StopMap(
-        '{{ config.get("MAPBOX_APP_TOKEN") }}',
         'map',
         'panel-content',
         {{ ('stops' in session)|tojson }}

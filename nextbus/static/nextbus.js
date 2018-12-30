@@ -5,7 +5,7 @@
 const INTERVAL = 60;
 
 const MAP_ZOOM_MIN = 7;
-const MAP_ZOOM_MAX = 18;
+const MAP_ZOOM_MAX = 19;
 const MAP_CENTRE_GB = [54.00366, -2.547855];
 const MAP_BOUNDS_NW = [61, 2];
 const MAP_BOUNDS_SE = [49, -8];
@@ -1701,6 +1701,9 @@ function Panel(stopMap, mapPanel, cookieSet) {
 }
 
 
+// TODO: Add scroll action to point on map while service panel is active?
+// Eg: if a service panel is active and showing diagram, hovering a stop on the map should scroll
+// the same entry on diagram into view, like hovering that entry centers the point on map.
 // TODO: Add option to show stops on specified route only. Should this be optional?
 // TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
 // TODO: Add locality to stop GeoJSON
@@ -1709,24 +1712,22 @@ function Panel(stopMap, mapPanel, cookieSet) {
 /**
  * Handles the map container and stops
  * @constructor
- * @param {string} mapToken Mapbox token
  * @param {string} mapContainer ID for map container element
  * @param {string} mapPanel ID for map panel element
  * @param {boolean} cookieSet Whether the cookie has been set or not
  */
-function StopMap(mapToken, mapContainer, mapPanel, cookieSet) {
+function StopMap(mapContainer, mapPanel, cookieSet) {
     let self = this;
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
 
     this.map = null;
     this.tileLayer = L.tileLayer(
-        'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
         {
             minZoom: MAP_ZOOM_MIN,
             maxZoom: MAP_ZOOM_MAX,
-            id: 'mapbox.emerald',
-            accessToken: mapToken
+            subdomains: 'abcd'
         }
     );
 

@@ -341,6 +341,17 @@ def setup_tnds_functions():
         return exists
 
 
+def _execute_with_log(connection, statement, message):
+    """ Executes an insert, update or delete statement and logs with message.
+
+        Messages should have two format characters - first one with number of
+        rows updated/deleted/added and the second the plural 's' character.
+    """
+    result = connection.execute(statement)
+    count = result.rowcount
+    utils.logger.info(message % (count, "s" if count != 1 else ""))
+
+
 def _delete_empty_services():
     """ Delete services and associated operators if all stop point references
         are null - eg when including a metro route where all stop points are
@@ -376,33 +387,26 @@ def _delete_empty_services():
         .exists()
     )
 
-    def delete(connection, model, where):
-        result = connection.execute(model.__table__.delete().where(where))
-        return result.rowcount
-
-    def plural(i): return "s" if i != 1 else ""
+    def delete(model, where):
+        return model.__table__.delete().where(where)
 
     with utils.database_connection() as conn:
         # All associated journey links and journeys will be deleted too
-        patterns = delete(conn, models.JourneyPattern, empty_patterns)
-        utils.logger.info("%d journey pattern%s without stop point references "
-                          "deleted" % (patterns, plural(patterns)))
-
-        services = delete(conn, models.Service, empty_services)
-        utils.logger.info("%d service%s without journey patterns deleted" %
-                          (services, plural(services)))
-
-        local_ops = delete(conn, models.LocalOperator, empty_local_operators)
-        utils.logger.info("%d local operator%s without services deleted" %
-                          (local_ops, plural(local_ops)))
-
-        nat_ops = delete(conn, models.Operator, empty_operators)
-        utils.logger.info("%d operator%s without local operators deleted" %
-                          (nat_ops, plural(nat_ops)))
-
-        org = delete(conn, models.Organisation, empty_organisations)
-        utils.logger.info("%d organisation%s without journeys deleted" %
-                          (org, plural(org)))
+        _execute_with_log(conn, delete(models.JourneyPattern, empty_patterns),
+                          "%d journey pattern%s without stop point references "
+                          "deleted")
+        _execute_with_log(conn, delete(models.Service, empty_services),
+                          "%d service%s without journey patterns deleted")
+        _execute_with_log(conn, delete(models.Locality, empty_services),
+                          "%d service%s without journey patterns deleted")
+        _execute_with_log(conn,
+                          delete(models.LocalOperator, empty_local_operators),
+                          "%d local operator%s without services deleted")
+        _execute_with_log(conn, delete(models.LocalOperator, empty_operators),
+                          "%d operator%s without local operators deleted")
+        _execute_with_log(conn,
+                          delete(models.Organisation, empty_organisations),
+                          "%d organisation%s without journeys deleted")
 
 
 def _compare_arrays(array0, array1):
@@ -581,8 +585,6 @@ def _merge_services():
     other_ids = db.select([dup_directions.c.other])
     delete_services = service.delete().where(service.c.id.in_(other_ids))
 
-    def plural(i): return "s" if i != 1 else ""
-
     # Do everything within a transaction - temp tables will be dropped on commit
     with utils.database_connection() as conn:
         utils.logger.info("Finding all services sharing line labels and stops")
@@ -598,15 +600,11 @@ def _merge_services():
         dup_directions.create(conn)
         conn.execute(insert_dup_directions)
 
-        update_result = conn.execute(update_patterns)
-        num_updated = update_result.rowcount
-        utils.logger.info("%d journey pattern%s updated to new service refs" %
-                          (num_updated, plural(num_updated)))
+        _execute_with_log(conn, update_patterns,
+                          "%d journey pattern%s updated to new service refs")
 
-        del_result = conn.execute(delete_services)
-        num_deleted = del_result.rowcount
-        utils.logger.info("%d duplicate service%s deleted" %
-                          (num_deleted, plural(num_deleted)))
+        _execute_with_log(conn, delete_services,
+                          "%d duplicate service%s deleted")
 
 
 def _fill_description():

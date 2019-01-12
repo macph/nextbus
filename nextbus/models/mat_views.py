@@ -518,10 +518,6 @@ class FTS(utils.MaterializedView):
                  if row.admin_area_ref is not None}
 
         if admin_areas:
-            invalid_areas = set(admin_areas) - areas.keys()
-            if invalid_areas:
-                raise ValueError("Areas %r not found in set of filters" %
-                                 invalid_areas)
             tables = {row.table_name for row in result
                       if row.admin_area_ref in admin_areas}
         else:

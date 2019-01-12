@@ -9,6 +9,7 @@ from nextbus import db, models
 
 
 ORDER_ITERATIONS = 8
+MAX_COLUMNS = 5
 
 
 class MaxColumnError(Exception):
@@ -1306,12 +1307,13 @@ def service_stop_list(service_id, direction):
     return [dict_stops[v] for v in graph.sequence()]
 
 
-def service_json(service_id, reverse):
+def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     """ Creates geometry JSON data for map.
 
         :param service_id: Service ID.
         :param reverse: Groups journey patterns by direction - False for
         outbound and True for inbound.
+        :param max_columns: Maximum columns before giving up on drawing graph
     """
     service = (
         models.Service.query
@@ -1332,7 +1334,7 @@ def service_json(service_id, reverse):
     graph, stops = service_graph_stops(service.id, reverse_)
     paths, sequence = graph.analyse()
     try:
-        layout = graph.draw(sequence, 5)
+        layout = graph.draw(sequence, max_columns)
     except MaxColumnError:
         layout = None
 

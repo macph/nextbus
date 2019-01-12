@@ -72,8 +72,10 @@ def get_stops_tile(coord):
     except ValueError:
         return bad_request(400, "API accessed with invalid args: %r" % coord)
 
-    box = location.tile_to_box(x, y, location.TILE_ZOOM)
-    stops = models.StopPoint.within_box(box)
+    stops = models.StopPoint.within_box(
+        location.tile_to_box(x, y, location.TILE_ZOOM),
+        db.joinedload(models.StopPoint.locality)
+    )
 
     return jsonify(_list_geojson(stops))
 
@@ -96,6 +98,23 @@ def get_service_route(service_id, direction="outbound"):
         return bad_request(404, "Service '%s' does not exist." % service_id)
     else:
         return jsonify(data)
+
+
+@api.route("/stop/<atco_code>")
+def get_stop(atco_code):
+    stop = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
+                 db.joinedload(models.StopPoint.locality, innerjoin=True)
+                 .joinedload(models.Locality.district),
+                 db.joinedload(models.StopPoint.stop_area))
+        .get(atco_code.upper())
+    )
+
+    if not stop:
+        return bad_request(404, "Stop point '%s' does not exist." % atco_code)
+
+    return jsonify(stop.to_full_json())
 
 
 class StarredStop(MethodView):

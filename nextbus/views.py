@@ -498,7 +498,7 @@ def service(service_id, direction=None):
     s_graph, d_stops = graph.service_graph_stops(line.id, reverse)
     sequence = s_graph.sequence()
     try:
-        layout = s_graph.draw(sequence, max_columns=5)
+        layout = s_graph.draw(sequence, max_columns=graph.MAX_COLUMNS)
     except graph.MaxColumnError:
         layout = None
 
@@ -529,8 +529,9 @@ def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
         if stop is None:
             raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
                                  % atco_code)
+        stop_atco_code = stop.atco_code
     else:
-        stop = None
+        stop_atco_code = None
 
     if service_id is not None:
         line = (
@@ -563,8 +564,8 @@ def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
         latitude, longitude, zoom = None, None, None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop=stop, service_id=service_id,
-                           reverse=reverse)
+                           zoom=zoom, stop_atco_code=stop_atco_code,
+                           service_id=service_id, reverse=reverse)
 
 
 @page.route("/map/")

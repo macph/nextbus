@@ -18,7 +18,7 @@
     <div class="map-panel">
         <div id="panel-content" class="map-panel__content">
             <div id="panel-heading-outer" class="heading heading--panel">
-                <h1 id="panel-heading">Loading map...</h1>
+                <h2 id="panel-heading">Loading map...</h2>
             </div>
         </div>
         <div class="map-panel__footer">
@@ -46,7 +46,8 @@
     const TRAM_SVG = "{{ url_for('static', filename='img/tram-white.svg') }}";
     const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     const MAP_URL = "{{ url_for('page.show_map') }}";
-    const STOP_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
+    const STOP_URL = "{{ url_for('api.get_stop', atco_code='') }}";
+    const STOP_PAGE_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
     const TILE_URL = "{{ url_for('api.get_stops_tile', coord='') }}";
     const STARRED_URL = "{{ url_for('api.starred') }}";
     const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
@@ -57,8 +58,8 @@
         {{ ('stops' in session)|tojson }}
     );
     let options = {};
-    {% if stop -%}
-    options.stop = {{ stop.to_geojson()|tojson }};
+    {% if stop_atco_code -%}
+    options.stop = '{{ stop_atco_code }}';
     {%- endif %}
     {% if latitude and longitude and zoom -%}
     options.latitude = {{ latitude }};

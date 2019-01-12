@@ -25,21 +25,30 @@ class GeoJsonTests(utils.BaseAppTests):
             "adminAreaRef": "099",
             "bearing": "SW",
             "stopType": "BCT",
+            "locality": "Sharrow Vale",
             "street": "Psalter Lane"
         }
     }
 
     def test_single_stop(self):
         stop = models.StopPoint(**utils.STOP_POINT)
+        stop.locality = models.Locality(**utils.LOCALITY)
         self.assertEqual(stop.to_geojson(), self.EXPECTED)
+
+    def test_single_stop_no_locality(self):
+        stop = models.StopPoint(**utils.STOP_POINT)
+        with self.assertRaises(ValueError):
+            stop.to_geojson()
 
     def test_two_stops(self):
         second = utils.STOP_POINT.copy()
         second["indicator"] = ""
         second["short_ind"] = ""
 
+        locality = models.Locality(**utils.LOCALITY)
         first_stop = models.StopPoint(**utils.STOP_POINT)
         second_stop = models.StopPoint(**second)
+        first_stop.locality_ref = second_stop.locality = locality
 
         second_exp = copy.deepcopy(self.EXPECTED)
         second_exp["properties"]["indicator"] = ""

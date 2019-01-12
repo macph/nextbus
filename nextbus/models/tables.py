@@ -433,8 +433,10 @@ class StopPoint(utils.BaseModel):
 
             :returns: JSON-serializable dict.
         """
+        if "locality" in db.inspect(self).unloaded:
+            raise ValueError("Locality must be loaded for stop %r." % self)
+
         title_ind = " (%s)" % self.indicator if self.indicator else ""
-        locality = self.locality.name if 'locality' in self.__dict__ else None
         geojson = {
             "type": "Feature",
             "geometry": {
@@ -443,14 +445,13 @@ class StopPoint(utils.BaseModel):
             },
             "properties": {
                 "atcoCode": self.atco_code,
-                "naptanCode": self.naptan_code,
                 "title": self.name + title_ind,
                 "name": self.name,
                 "indicator": self.short_ind,
                 "street": self.street,
                 "bearing": self.bearing,
                 "stopType": self.stop_type,
-                "locality": locality,
+                "locality": self.locality.name,
                 "adminAreaRef": self.admin_area_ref,
             }
         }
@@ -494,6 +495,63 @@ class StopPoint(utils.BaseModel):
         )
 
         return query_services.all()
+
+    def to_full_json(self):
+        """ Produces full data for stop point in JSON format, including services
+            and locality data.
+        """
+        inspected = db.inspect(self)
+        if "admin_area" in inspected.unloaded:
+            raise ValueError("Admin area for stop %r must be loaded." %
+                             self.atco_code)
+        if "locality" in inspected.unloaded:
+            raise ValueError("Locality for stop %r must be loaded." %
+                             self.atco_code)
+        if "district" in db.inspect(self.locality).unloaded:
+            raise ValueError("District for stop %r and locality %r must be "
+                             "loaded." % (self.locality.code, self.atco_code))
+
+        title_ind = " (%s)" % self.indicator if self.indicator else ""
+
+        json = {
+            "atcoCode": self.atco_code,
+            "naptanCode": self.naptan_code,
+            "title": self.name + title_ind,
+            "name": self.name,
+            "indicator": self.short_ind,
+            "street": self.street,
+            "crossing": self.crossing,
+            "landmark": self.landmark,
+            "bearing": self.bearing,
+            "stopType": self.stop_type,
+            "adminAreaRef": self.admin_area_ref,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "adminArea": {
+                "code": self.admin_area.code,
+                "name": self.admin_area.name,
+            },
+            "district": {
+                "code": self.locality.district.code,
+                "name": self.locality.district.name,
+            } if self.locality.district is not None else None,
+            "locality": {
+                "code": self.locality.code,
+                "name": self.locality.name,
+            },
+            "services": [{
+                "id": s.service.id,
+                "description": s.service.description,
+                "line": s.service.line,
+                "direction": "inbound" if s.direction else "outbound",
+                "reverse": s.direction,
+                "origin": s.origin,
+                "destination": s.destination,
+                "terminates": s.terminates
+            } for s in self.get_services()]
+        }
+
+        return json
 
 
 class Postcode(utils.BaseModel):
@@ -597,6 +655,10 @@ class Service(utils.BaseModel):
             :returns: New direction based on initial direction or new one if
             no mirror exists, and boolean indicating a mirror exists.
         """
+        if "patterns" in db.inspect(self).unloaded:
+            raise ValueError("Journey patterns not loaded for service %r" %
+                             self)
+
         set_dir = {p.direction for p in self.patterns}
         if set_dir == {True, False}:
             reverse = bool(selected) if selected is not None else False

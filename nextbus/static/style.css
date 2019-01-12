@@ -312,6 +312,18 @@ button:focus {
   position: relative;
 }
 
+.card--buttons {
+  display: flex;
+  flex-flow: row wrap;
+  padding-left: calc(15px - 8px);
+  padding-right: calc(15px - 8px);
+}
+
+.card--buttons > .button {
+  flex: 1 1 240px;
+  margin: 8px;
+}
+
 /*
  * HTML BODY
  */
@@ -1397,6 +1409,11 @@ button:focus {
   }
 
   .card--panel {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .tabs--panel {
     margin-left: 0;
     margin-right: 0;
   }

@@ -313,6 +313,8 @@
           <weeks/>
         </xsl:otherwise>
       </xsl:choose>
+      <note_code><xsl:value-of select="txc:Note/txc:NoteCode"/></note_code>
+      <note_text><xsl:value-of select="txc:Note/txc:NoteText"/></note_text>
     </Journey>
   </xsl:template>
 

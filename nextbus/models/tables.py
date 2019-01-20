@@ -793,6 +793,8 @@ class Journey(utils.BaseModel):
     days = db.Column(db.SmallInteger, db.CheckConstraint("days < 256"),
                      nullable=False)
     weeks = db.Column(db.SmallInteger, db.CheckConstraint("weeks < 32"))
+    note_code = db.Column(db.Text)
+    note_text = db.Column(db.Text)
 
     holidays = db.relationship(
         "BankHoliday", secondary="bank_holidays",

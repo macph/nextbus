@@ -1080,6 +1080,10 @@
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
       <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <Note>
+        <NoteCode>SCHD</NoteCode>
+        <NoteText>School Days Only</NoteText>
+      </Note>
       <DepartureTime>16:32:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>

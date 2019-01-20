@@ -115,7 +115,7 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
         errors = True
     else:
         options["t"] = tnds_d or tnds_f
-        tnds_files = dict((t[1], t[0]) for t in tnds_f)
+        tnds_files = dict((t[1], t[0]) for t in tnds_f) if tnds_f else None
 
     options["m"] = modify_d
 

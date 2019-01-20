@@ -119,9 +119,6 @@
     <replace atco_code="370027392">
       <name old="Charles Street CS3">Charles Street</name>
     </replace>
-    <replace atco_code="370022819">
-      <name old="FS3">Flat Street</name>
-    </replace>
     <replace atco_code="370022831">
       <name old="FS1">Flat Street</name>
     </replace>
@@ -129,7 +126,7 @@
       <name old="FS2">Flat Street</name>
     </replace>
     <replace atco_code="370022835">
-      <name old="FS4">Flat Street</name>
+      <name old="FS3">Flat Street</name>
     </replace>
     <replace atco_code="370022817">
       <name old="CG1">Commerical Street</name>

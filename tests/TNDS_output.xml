@@ -694,6 +694,8 @@
     <departure>12:19:00</departure>
     <days>126</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>2</id>
@@ -703,6 +705,8 @@
     <departure>14:19:00</departure>
     <days>126</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>3</id>
@@ -712,6 +716,8 @@
     <departure>16:19:00</departure>
     <days>190</days>
     <weeks>5</weeks>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>4</id>
@@ -721,6 +727,8 @@
     <departure>18:19:00</departure>
     <days>254</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>5</id>
@@ -730,6 +738,8 @@
     <departure>18:19:00</departure>
     <days>0</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>6</id>
@@ -739,6 +749,8 @@
     <departure>14:32:00</departure>
     <days>62</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <Journey>
     <id>7</id>
@@ -748,6 +760,8 @@
     <departure>16:32:00</departure>
     <days>254</days>
     <weeks/>
+    <note_code>SCHD</note_code>
+    <note_text>School Days Only</note_text>
   </Journey>
   <Journey>
     <id>8</id>
@@ -757,6 +771,8 @@
     <departure>16:32:00</departure>
     <days>0</days>
     <weeks/>
+    <note_code/>
+    <note_text/>
   </Journey>
   <JourneySpecificLink>
     <id>1</id>

@@ -185,7 +185,7 @@ def _analyse_graph(graph):
     diameter = g.diameter()
     if not diameter:
         # The graph has no edges so return sorted list of isolated vertices
-        return [], sorted(g.isolated)
+        return [], sorted(g.isolated, key=graph.sort)
     diameter_ac = diameter.make_acyclic()
 
     # Remove diameter from graph and search the rest
@@ -198,6 +198,9 @@ def _analyse_graph(graph):
     stack.extend((v, True) for v in reversed(diameter))
     stack.extend((v, False) for v in diameter)
 
+    def sort_path(path):
+        return tuple(graph.sort(i) for i in path)
+
     while stack:
         vertex, forward = stack.pop()
 
@@ -209,7 +212,7 @@ def _analyse_graph(graph):
             continue
 
         # Add paths to list
-        longest = max(sorted(new_paths, key=tuple), key=len)
+        longest = max(sorted(new_paths, key=sort_path), key=len)
         g.remove_path(longest)
         paths.append(longest)
 
@@ -841,9 +844,11 @@ def draw_graph(graph, sequence=None, order=True, max_columns=None):
 class Graph:
     """ Directed graph.
 
-        Can be created from a list of edges as tuples of two vertex labels.
+        :param pairs: Edges as iterables of length 2.
+        :param singles: Vertices without any edges.
+        :param sort: Optional function to sort vertices by when comparing paths
     """
-    def __init__(self, pairs=None, singles=None):
+    def __init__(self, pairs=None, singles=None, sort=None):
         self._v = collections.defaultdict(set)
         if pairs is not None:
             for v1, v2 in pairs:
@@ -851,6 +856,13 @@ class Graph:
         if singles is not None:
             for v in singles:
                 self.add_vertex(v)
+
+        if sort is not None:
+            self.sort = sort
+        else:
+            def do_nothing(item):
+                return item
+            self.sort = do_nothing
 
     def __repr__(self):
         return "<Graph(%s)>" % (repr(set(self)) if self else "")
@@ -942,7 +954,7 @@ class Graph:
 
     def copy(self):
         """ Makes a copy of the graph. """
-        return Graph(self.edges, singles=self.isolated)
+        return Graph(self.edges, self.isolated, self.sort)
 
     def clean_copy(self):
         """ Makes a copy of the graph with no self-edges. """
@@ -1078,8 +1090,8 @@ class Graph:
         for e, i in edges.items():
             groups[i].append(e)
 
-        connected = [Graph(s) for s in groups.values()]
-        isolated = [Graph(singles=[v]) for v in self.isolated]
+        connected = [Graph(s, sort=self.sort) for s in groups.values()]
+        isolated = [Graph(singles=[v], sort=self.sort) for v in self.isolated]
 
         if connected or isolated:
             return connected + isolated
@@ -1105,7 +1117,7 @@ class Graph:
 
         # Add all immediately adjacent paths to queue
         queue.extendleft(
-            Path([v, w]) for w in sorted(self.following(v))
+            Path([v, w]) for w in sorted(self.following(v), key=self.sort)
         )
 
         while queue:
@@ -1119,9 +1131,8 @@ class Graph:
                 break
             if u != v:
                 # Add all following paths to queue
-                queue.extendleft(
-                    p.append_with(w) for w in sorted(self.following(u))
-                )
+                queue.extendleft(p.append_with(w) for w in
+                                 sorted(self.following(u), key=self.sort))
 
         # Find all vertices not covered by BFS
         for u in self.vertices - paths.keys():
@@ -1171,8 +1182,11 @@ class Graph:
             new_paths = self._search_paths(v)
             longest_paths.extend(new_paths.values())
 
+        def sort_path(path):
+            return tuple(self.sort(u) for u in path)
+
         if longest_paths:
-            longest_paths.sort(key=tuple)
+            longest_paths.sort(key=sort_path)
             return max(longest_paths, key=len)
         else:
             return Path()
@@ -1237,21 +1251,24 @@ def service_graph_stops(service_id, direction):
                 models.JourneyLink.stop_point_ref.isnot(None))
         .subquery()
     )
+    next_stop = (
+        db.func.lead(stop_refs.c.stop_ref)
+        .over(partition_by=stop_refs.c.pattern_id,
+              order_by=stop_refs.c.sequence)
+    )
     pairs = (
-        db.session.query(
-            stop_refs.c.stop_ref.label("current"),
-            db.func.lead(stop_refs.c.stop_ref)
-            .over(partition_by=stop_refs.c.pattern_id,
-                  order_by=stop_refs.c.sequence).label("next")
-        )
-        .distinct()
+        db.session.query(stop_refs.c.stop_ref.label("current"),
+                         stop_refs.c.sequence.label("sequence"),
+                         next_stop.label("next"))
+        .distinct(stop_refs.c.stop_ref, next_stop)
         .subquery()
     )
     stops = (
         db.session.query(
             models.StopPoint,
             db.func.array_remove(db.func.array_agg(pairs.c.next), None)
-            .label("next_stops")
+            .label("next_stops"),
+            db.func.mode().within_group(pairs.c.sequence).label("sequence")
         )
         .options(db.contains_eager(models.StopPoint.locality))
         .join(models.StopPoint.locality)
@@ -1261,14 +1278,18 @@ def service_graph_stops(service_id, direction):
     )
 
     edges, vertices = [], []
-    dict_stops = {}
+    dict_stops, sequence = {}, {}
     for s in stops:
         stop = s.StopPoint
         dict_stops[stop.atco_code] = stop
+        sequence[stop.atco_code] = s.sequence
         edges.extend((stop.atco_code, n) for n in s.next_stops if n is not None)
         vertices.extend(stop.atco_code for n in s.next_stops if n is None)
 
-    return Graph(edges, vertices), dict_stops
+    def sort_by_seq(vertex):
+        return sequence[vertex], vertex
+
+    return Graph(edges, vertices, sort_by_seq), dict_stops
 
 
 def service_graph(service_id, direction):

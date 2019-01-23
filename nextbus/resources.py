@@ -81,17 +81,9 @@ def get_stops_tile(coord):
 
 
 @api.route("/route/<service_id>")
-@api.route("/route/<service_id>/<direction>")
-def get_service_route(service_id, direction="outbound"):
+@api.route("/route/<service_id>/<direction:reverse>")
+def get_service_route(service_id, reverse=False):
     """ Gets service data including a MultiLineString GeoJSON object. """
-    if direction == "outbound":
-        reverse = False
-    elif direction == "inbound":
-        reverse = True
-    else:
-        return bad_request(404, "Direction given must be 'inbound' or "
-                           "'outbound'.")
-
     data = graph.service_json(service_id, reverse)
 
     if data is None:

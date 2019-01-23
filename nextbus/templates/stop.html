@@ -42,8 +42,7 @@
             <h2>Services</h2>
             {% if services %}
             {% call(s) f.print_list(services|rejectattr('terminates')) %}
-            {% set direction = 'inbound' if s.direction else 'outbound' %}
-            <a href="{{ url_for('page.service', service_id=s.service.id, direction=direction) }}" class="item item--service">
+            <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item item--service">
                 <div class="line">
                     <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
                         <span class="line__text">{{ s.service.line }}</span>
@@ -55,8 +54,7 @@
             {% if services|selectattr('terminates')|list %}
             <h3>Terminating services</h3>
             {% call(s) f.print_list(services|selectattr('terminates')) %}
-            {% set direction = 'inbound' if s.direction else 'outbound' %}
-            <a href="{{ url_for('page.service', service_id=s.service.id, direction=direction) }}" class="item item--service">
+            <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item item--service">
                 <div class="line">
                     <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
                         <span class="line__text">{{ s.service.line }}</span>

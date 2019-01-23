@@ -458,8 +458,11 @@ def stop_atco(atco_code=""):
 
 
 @page.route("/service/<service_id>")
-@page.route("/service/<service_id>/<direction>")
-def service(service_id, direction=None):
+@page.route("/service/<service_id>/<direction:reverse>")
+def service(service_id, reverse=None):
+    """ Shows service with ID and optional direction, which is outbound by
+        default.
+    """
     line = (
         models.Service.query
         .join(models.Service.patterns)
@@ -473,31 +476,21 @@ def service(service_id, direction=None):
     if line is None:
         raise EntityNotFound("Service '%s' does not exist." % service_id)
 
-    if direction is None or direction == "outbound":
-        is_reverse = False
-    elif direction == "inbound":
-        is_reverse = True
-    else:
-        return render_template(
-            "not_found.html",
-            message="Direction given must ""be 'inbound' or 'outbound'."
-        ), 404
-
     # Check line patterns - is there more than 1 direction?
-    reverse, mirrored = line.has_mirror(is_reverse)
+    is_reverse, mirrored = line.has_mirror(reverse)
 
-    if direction is None or is_reverse != reverse:
+    if reverse is None or reverse != is_reverse:
         return redirect(url_for(".service", service_id=service_id,
-                                direction="inbound" if reverse else "outbound"),
-                        302)
+                                reverse=is_reverse))
 
     destinations = {
-        "origin": {p.origin for p in line.patterns if p.direction == reverse},
+        "origin": {p.origin for p in line.patterns
+                   if p.direction == is_reverse},
         "destination": {p.destination for p in line.patterns
-                        if p.direction == reverse}
+                        if p.direction == is_reverse}
     }
 
-    s_graph, d_stops = graph.service_graph_stops(line.id, reverse)
+    s_graph, d_stops = graph.service_graph_stops(line.id, is_reverse)
     sequence = s_graph.sequence()
     try:
         layout = s_graph.draw(sequence, max_columns=graph.MAX_COLUMNS)
@@ -512,15 +505,16 @@ def service(service_id, direction=None):
         date = datetime.date.today()
         select_date.date.data = date
 
-    tt_data = timetable.get_timetable(line.id, reverse, date, sequence, d_stops)
+    tt_data = timetable.get_timetable(line.id, is_reverse, date, sequence,
+                                      d_stops)
 
     return render_template("service.html", service=line, dest=destinations,
-                           reverse=reverse, mirrored=mirrored,
+                           reverse=is_reverse, mirrored=mirrored,
                            sequence=sequence, stops=d_stops, layout=layout,
                            timetable=tt_data, select_date=select_date)
 
 
-def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
+def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
     """ Shows map.
 
         The map, service line, stop being shown and coordinates/zoom are
@@ -529,7 +523,7 @@ def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
 
         :param service_id: Service ID to show the paths on map. If ATCO code is
         None the service diagram will be shown in panel.
-        :param direction: Direction of service. Ignored if service ID is None.
+        :param reverse: Direction of service. Ignored if service ID is None.
         :param atco_code: Stop point code to show live data in panel.
         :param coords: Starting map coordinates. If None, the coordinates will
         default to stop point if specified, service paths if specified or the
@@ -553,18 +547,9 @@ def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
         if line is None:
             raise EntityNotFound("Service '%s' does not exist." % service_id)
 
-        if direction is None or direction == "outbound":
-            is_reverse = False
-        elif direction == "inbound":
-            is_reverse = True
-        else:
-            raise EntityNotFound("Direction given must be 'inbound' or "
-                                 "'outbound'.")
-
-        reverse = line.has_mirror(is_reverse)[0]
+        is_reverse, _ = line.has_mirror(reverse)
     else:
         is_reverse = None
-        reverse = None
 
     # TODO: Add redirect for incorrect capitalisation, etc
 
@@ -576,7 +561,7 @@ def _show_map(service_id=None, direction=None, atco_code=None, coords=None):
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
                            zoom=zoom, stop_atco_code=stop_atco_code,
-                           service_id=service_id, reverse=reverse)
+                           service_id=service_id, reverse=is_reverse)
 
 
 @page.route("/map/")
@@ -593,11 +578,12 @@ def show_map_service_no_direction(service_id, coords=None):
     return _show_map(service_id, coords=coords)
 
 
-@page.route("/map/service/<service_id>/<direction>")
-@page.route("/map/service/<service_id>/<direction>/<lat_long_zoom:coords>")
-def show_map_service_direction(service_id, direction, coords=None):
+@page.route("/map/service/<service_id>/<direction:reverse>")
+@page.route("/map/service/<service_id>/<direction:reverse>/"
+            "<lat_long_zoom:coords>")
+def show_map_service_direction(service_id, reverse, coords=None):
     """ Shows map with service and direction. """
-    return _show_map(service_id, direction, coords=coords)
+    return _show_map(service_id, reverse, coords=coords)
 
 
 @page.route("/map/stop/<atco_code>")
@@ -614,13 +600,13 @@ def show_map_service_no_direction_stop(service_id, atco_code, coords=None):
     return _show_map(service_id, atco_code=atco_code, coords=coords)
 
 
-@page.route("/map/service/<service_id>/<direction>/stop/<atco_code>")
-@page.route("/map/service/<service_id>/<direction>/stop/<atco_code>/"
+@page.route("/map/service/<service_id>/<direction:reverse>/stop/<atco_code>")
+@page.route("/map/service/<service_id>/<direction:reverse>/stop/<atco_code>/"
             "<lat_long_zoom:coords>")
-def show_map_service_direction_stop(service_id, direction, atco_code,
+def show_map_service_direction_stop(service_id, reverse, atco_code,
                                     coords=None):
     """ Shows map with service, direction and stop. """
-    return _show_map(service_id, direction, atco_code, coords)
+    return _show_map(service_id, reverse, atco_code, coords)
 
 
 @page.app_errorhandler(EntityNotFound)

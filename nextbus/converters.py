@@ -5,7 +5,7 @@ from werkzeug import routing
 
 
 class String(routing.UnicodeConverter):
-    """ Converter for string to """
+    """ Converter for strings with `+` representing spaces, eg 'W1A+1AA'. """
     def to_python(self, value):
         return value.replace("+", " ")
 
@@ -14,6 +14,7 @@ class String(routing.UnicodeConverter):
 
 
 class PathString(routing.PathConverter):
+    """ Converter for strings with `/` and `+` representing spaces. """
     def to_python(self, value):
         return value.replace("+", " ")
 
@@ -37,7 +38,6 @@ class LatLong(routing.BaseConverter):
 
 class LatLongZoom(routing.BaseConverter):
     """ URL converter for lat/long coordinates and zoom value for maps. """
-
     def to_python(self, value):
         try:
             numbers = value.split(",")
@@ -56,11 +56,26 @@ class LatLongZoom(routing.BaseConverter):
         return "%f,%f,%d" % value if value else ""
 
 
+class Direction(routing.BaseConverter):
+    """ Direction for service which must be either 'inbound' or 'outbound'. """
+    def to_python(self, value):
+        if value == "outbound":
+            return False
+        elif value == "inbound":
+            return True
+        else:
+            raise routing.ValidationError
+
+    def to_url(self, value):
+        return "inbound" if value else "outbound"
+
+
 def add_converters(app):
     """ Adds URL converters to the Flask application. """
     app.url_map.converters.update({
         "string": String,
         "path_string": PathString,
         "lat_long": LatLong,
-        "lat_long_zoom": LatLongZoom
+        "lat_long_zoom": LatLongZoom,
+        "direction": Direction
     })

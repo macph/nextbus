@@ -30,7 +30,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--buttons card--minor">
-            <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, direction='outbound' if not reverse else 'inbound') }}"><span>View on map</span></a>
+            <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>View on map</span></a>
             <a class="button" href="#timetable"><span>Timetable</span></a>
         </section>
     </div>
@@ -39,9 +39,9 @@
         <ul class="tabs tabs--2">
             {% if not reverse %}
             <li><div class="tab tab--active"><span>Outbound</span></div></li>
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='inbound') }}">Inbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>
             {% else %}
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='outbound') }}">Outbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}">Outbound</a></li>
             <li><div class="tab tab--active"><span>Inbound</span></div></li>
             {% endif %}
         </ul>
@@ -86,9 +86,9 @@
         <ul class="tabs tabs--2">
             {% if not reverse %}
             <li><div class="tab tab--active"><span>Outbound</span></div></li>
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='inbound') }}#timetable">Inbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}#timetable">Inbound</a></li>
             {% else %}
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='outbound') }}#timetable">Outbound</a></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}#timetable">Outbound</a></li>
             <li><div class="tab tab--active"><span>Inbound</span></div></li>
             {% endif %}
         </ul>

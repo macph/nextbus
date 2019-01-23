@@ -2,22 +2,22 @@
 Forms for searching bus stops.
 """
 from flask_wtf import FlaskForm
-from wtforms.fields import IntegerField, SelectMultipleField, SubmitField
-from wtforms.fields.html5 import SearchField
-from wtforms.validators import InputRequired
-from wtforms.widgets import CheckboxInput, ListWidget
+from wtforms import fields, validators, widgets
+import wtforms.fields.html5 as html5_fields
 
 
 class SearchPlaces(FlaskForm):
     """ Full text search for places, stops and postcodes. """
-    search_query = SearchField("search", validators=[InputRequired()])
-    submit_query = SubmitField("Search")
+    search_query = html5_fields.SearchField(
+        "search", validators=[validators.InputRequired()]
+    )
+    submit_query = fields.SubmitField("Search")
 
 
-class MultipleCheckboxField(SelectMultipleField):
+class MultipleCheckboxField(fields.SelectMultipleField):
     """ Sets up a list of checkboxes for multiple choices. """
-    widget = ListWidget(prefix_label=False)
-    option_widget = CheckboxInput()
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
 
     def render_elements(self, **kwargs):
         """ Creates a list of elements with each checkbox input within its
@@ -39,7 +39,7 @@ class FilterResults(FlaskForm):
 
     group = MultipleCheckboxField("group")
     area = MultipleCheckboxField("area")
-    page = IntegerField("page", default=1)
+    page = fields.IntegerField("page", default=1)
 
     def add_choices(self, groups, areas):
         """ Populate with available choices and selected by arguments passed
@@ -50,3 +50,12 @@ class FilterResults(FlaskForm):
         """
         self.group.choices = sorted(groups.items(), key=lambda g: g[1])
         self.area.choices = sorted(areas.items(), key=lambda a: a[1])
+
+
+class SelectDate(FlaskForm):
+    """ Pick a date for service timetable. """
+    class Meta(object):
+        """ Disable CSRF as this form uses GET. """
+        csrf = False
+
+    date = html5_fields.DateField("date")

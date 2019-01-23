@@ -2,6 +2,7 @@
 Views for the nextbus website.
 """
 import collections
+import datetime
 import re
 import string
 
@@ -9,7 +10,8 @@ from flask import (abort, Blueprint, current_app, g, render_template, redirect,
                    request, session, url_for)
 from werkzeug.urls import url_encode
 
-from nextbus import db, forms, graph, location, models, parser, search
+from nextbus import (db, forms, graph, location, models, parser, search,
+                     timetable)
 
 
 MIN_GROUPED = 72
@@ -502,11 +504,20 @@ def service(service_id, direction=None):
     except graph.MaxColumnError:
         layout = None
 
-    stops = [d_stops.get(s) for s in sequence]
+    select_date = forms.SelectDate(request.args)
+
+    if select_date.date.data is not None:
+        date = select_date.date.data
+    else:
+        date = datetime.date.today()
+        select_date.date.data = date
+
+    tt_data = timetable.get_timetable(line.id, reverse, date, sequence, d_stops)
 
     return render_template("service.html", service=line, dest=destinations,
-                           reverse=reverse, mirrored=mirrored, stops=stops,
-                           layout=layout)
+                           reverse=reverse, mirrored=mirrored,
+                           sequence=sequence, stops=d_stops, layout=layout,
+                           timetable=tt_data, select_date=select_date)
 
 
 def _show_map(service_id=None, direction=None, atco_code=None, coords=None):

@@ -29,8 +29,9 @@
 {% block content %}
 <div class="columns">
     <div class="column-1">
-        <section class="card card--minor">
+        <section class="card card--buttons card--minor">
             <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, direction='outbound' if not reverse else 'inbound') }}"><span>View on map</span></a>
+            <a class="button" href="#timetable"><span>Timetable</span></a>
         </section>
     </div>
     <div class="column-3">
@@ -45,27 +46,28 @@
             {% endif %}
         </ul>
         {% endif %}
-        <section class="card">
+        <section class="card" id="diagram">
             <dl class="description-list">
               <dt>From</dt>
               <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
               <dt>To</dt>
               <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
             </dl>
-            <div id="diagram" class="diagram"></div>
-            {% if stops|length > 0 %}
-            {% call(s) f.print_list(stops, class='list--relative', name='listStops') %}
+            <div id="diag" class="diagram"></div>
+            {% if sequence|length > 0 %}
+            {% call(s) f.print_list(sequence, class='list--relative', name='listStops') %}
             {% if s %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline item--stop--service">
-                <div id={{ 'c' + s.atco_code }}>
+            {% set stop = stops[s] %}
+            <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item item--stop--multiline item--stop--service">
+                <div id={{ 'c' + stop.atco_code }}>
                     <div class="item--stop">
-                        {{ f.print_stop_indicator(s, name="i"+s.atco_code) }}
-                        <div class="item__label">{{ s.name }}</div>
+                        {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
+                        <div class="item__label">{{ stop.name }}</div>
                     </div>
-                    {% if s.street and s.street != s.locality.name %}
-                    <p>{{ s.street }}, {{ s.locality.name }}</p>
+                    {% if stop.street and stop.street != stop.locality.name %}
+                    <p>{{ stop.street }}, {{ stop.locality.name }}</p>
                     {% else %}
-                    <p>{{ s.locality.name }}</p>
+                    <p>{{ stop.locality.name }}</p>
                     {% endif %}
                 </div>
             </a>
@@ -80,6 +82,81 @@
             {% endif %}
 
         </section>
+        {% if mirrored %}
+        <ul class="tabs tabs--2">
+            {% if not reverse %}
+            <li><div class="tab tab--active"><span>Outbound</span></div></li>
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='inbound') }}#timetable">Inbound</a></li>
+            {% else %}
+            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, direction='outbound') }}#timetable">Outbound</a></li>
+            <li><div class="tab tab--active"><span>Inbound</span></div></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        <section class="card" id="timetable">
+            <h2>Timetable</h2>
+            <form method="GET" action="#timetable">
+                {{ select_date.date() }}
+                <button>Refresh</button>
+            </form>
+            {% if timetable.head|length > 0 %}
+                <div class="timetable-wrapper">
+                    <table class="timetable" id="tt">
+                        {% if timetable.notes %}
+                        <tr>
+                            <td></td>
+                            {% for h in timetable.head %}
+                            <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endif %}
+                        {% if timetable.operators %}
+                        <tr>
+                            <td></td>
+                            {% for h in timetable.head %}
+                            <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endif %}
+                        {% for r in timetable.stops %}
+                        {% set stop = stops[r.code] %}
+                        <tr class="timetable__row{{ ' timetable__row--major' if r.timing else ' timetable__row--hidden' }}">
+                            <th>
+                                {% if stop.indicator %}
+                                {{ stop.name }} <span>({{ stop.indicator }})</span>
+                                {% else %}
+                                {{ stop.name }}
+                                {% endif %}
+                            </th>
+                            {% for t in r.times %}
+                            <td {% if t[2] %}class="timetable--bold"{% endif %}>
+                                {% if t[0] and t[1] and t[0] != t[1] %}
+                                <span>a {{ t[0] }}</span> <span>d {{ t[1] }}</span>
+                                {% elif t[1] or t[0] %}
+                                {{ t[1] or t[0]}}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <dl class="description-list">
+                    {% for o in timetable.operators %}
+                    <dt><strong>{{ o[0] }}</strong></dt>
+                    <dd>{{ o[1] }}</dd>
+                    {% endfor %}
+                </dl>
+                <dl class="description-list">
+                    {% for n in timetable.notes %}
+                    <dt><strong>{{ n[0] }}</strong></dt>
+                    <dd>{{ n[1] }}</dd>
+                    {% endfor %}
+                </dl>
+            {% else %}
+            <p>No services run on this day.</p>
+            {% endif %}
+        </section>
     </div>
 </div>
 {% endblock %}
@@ -92,7 +169,45 @@
     let data, diagram;
     data = {{ layout|tojson }};
     if (data) {
-        diagram = setupGraph('diagram', data);
+        diagram = setupGraph('diag', data);
+    }
+</script>
+<script>
+    function addRowEvent(group) {
+        let hidden = true;
+        if (!group.next.length) {
+            return;
+        }
+        group.current.classList.add('timetable__row--selectable');
+        group.current.onclick = function() {
+            let r;
+            for (let i = 0; i < group.next.length; i++) {
+                r = group.next[i];
+                if (hidden) {
+                    r.classList.remove('timetable__row--hidden');
+                } else {
+                    r.classList.add('timetable__row--hidden');
+                }
+            }
+            hidden = !hidden;
+        }
+    }
+
+    let table = document.getElementById('tt');
+    if (table != null) {
+        let rows = table.getElementsByTagName('tr'),
+            i, row, groups = [];
+        for (i = 0; i < rows.length; i++) {
+            row = rows[i];
+            if (row.classList.contains('timetable__row--major')) {
+                groups.push({current: row, next: []});
+            } else if (groups.length) {
+                groups[groups.length - 1].next.push(row);
+            }
+        }
+        for (i = 0; i < groups.length; i++) {
+            addRowEvent(groups[i]);
+        }
     }
 </script>
 {% endblock %}

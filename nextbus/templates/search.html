@@ -125,16 +125,9 @@
             {% endcall %}
             {% if results.has_next or results.has_prev %}
             <div class="page-select">
-                <p>
-                    {% if results.has_prev %}
-                    <a href="{{ modify_query(page=results.prev_num) }}"><span>Previous page</span> <span>({{ results.prev_num }} of {{ results.pages }})</span></a>
-                    {% endif %}
-                </p>
-                <p>
-                    {% if results.has_next %}
-                    <a href="{{ modify_query(page=results.next_num) }}"><span>Next page</span> <span>({{ results.next_num }} of {{ results.pages}})</span></a>
-                    {% endif %}
-                </p>
+                <p>{% if results.has_prev %}<a href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}</p>
+                <p>{{ results.page }} of {{ results.pages }}</p>
+                <p>{% if results.has_next %}<a href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
             </div>
             {% endif %}
             {% else %}
@@ -189,9 +182,10 @@
 
     filterShow.addEventListener('click', function() {
         showFilter = !showFilter;
+        filterShow.blur();
+        filterShow.textContent = (showFilter) ? 'Hide' : 'Show';
         filterList.style.height = (showFilter) ? filterList.scrollHeight + 'px' : '';
         filterList.style.marginTop = filterList.style.marginBottom = (showFilter) ? '10px': '';
-        filterShow.textContent = (showFilter) ? 'Hide' : 'Show';
         if (showFilter) {
             filterBox.scrollIntoView({behavior: 'smooth'});
         }

@@ -690,6 +690,10 @@ button:focus {
   text-decoration: none;
 }
 
+.tab:visited {
+  color: inherit;
+}
+
 .tab--active {
   font-weight: 700;
   background: white;
@@ -764,18 +768,22 @@ button:focus {
   align-items: baseline;
 }
 
+.page-select > p {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
 .page-select > p:first-child {
+  margin-left: 0;
   margin-right: auto;
   text-align: left;
 }
 
 .page-select > p:last-child {
   margin-left: auto;
+  margin-right: 0;
   text-align: right;
-}
-
-.page-select span {
-  white-space: nowrap;
 }
 
 /*

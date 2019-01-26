@@ -214,7 +214,8 @@ function addSearchBarEvents() {
 
 
 /**
- * Resize text within boxes
+ * Resize text within indicators so they look better. Elements have a data attribute set so they can
+ * be skipped the next time this function is called.
  * @param {...*} classes Class names as args to modify text in
  */
 function resizeIndicator(...classes) {
@@ -222,6 +223,12 @@ function resizeIndicator(...classes) {
         let elements = document.getElementsByClassName(classes[i]);
         for (let j = 0; j < elements.length; j++) {
             let elt = elements[j];
+            // Already covered previously; skip over
+            if (elt.dataset.indicatorSet != null) {
+                continue;
+            }
+            // Set data attribute and add class
+            elt.dataset.indicatorSet = "1";
             let span = elt.querySelector('span');
             let img = elt.querySelector('img');
             if (span !== null) {
@@ -263,6 +270,12 @@ function revertColours(...classes) {
         let elements = document.getElementsByClassName(classes[i]);
         for (let j = 0; j < elements.length; j++) {
             let elt = elements[j];
+            // Already covered previously; skip over
+            if (elt.dataset.coloursSet != null) {
+                continue;
+            }
+            // Set data attribute and add class
+            elt.dataset.coloursSet = "1";
             let style = window.getComputedStyle(elt);
             let foreground = style.getPropertyValue('color');
             let background = style.getPropertyValue('background-color');

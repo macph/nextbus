@@ -6,6 +6,16 @@ import functools
 from nextbus import db, graph, models
 
 
+# TODO: A better way to detect timezone changes and take away or add departures?
+# 1. Create a CTE with date and whether it is a March or October DST day
+# (Last Sunday, ie 25-31, of March or October). Check if departure is 0100-0200
+# 2. Add generate_series using a subquery
+# 3. Exclude departure if in March, repeat if in October or no repetition
+# otherwise
+# 4. Add departure timestamp. Need to be able to set correct time in October
+# (eg 2019-10-31 01:03:00+01 in addition to 2019-10-31 01:03:00+00)
+
+
 def _in_bit_array(array, col):
     """ SQL expression for matching integer with a bit array, equivalent to
         `(1 << col) & array > 0`.
@@ -13,24 +23,34 @@ def _in_bit_array(array, col):
     return db.literal_column("1").op("<<")(col).op("&")(array) > 0
 
 
+def _set_timezone(timestamp, timezone):
+    """ Sets timestamp to a timezone specified by tz, eg 'Europe/London'.
+
+        Precedence is set to 100 as it has precedence over +, etc.
+    """
+    return timestamp.op("AT TIME ZONE", 100)(timezone)
+
+
 def _format_time(timestamp):
     """ SQL expression to format a date or timestamp as `HHMM`, eg 0730. """
     return db.func.to_char(db.func.date_trunc("minute", timestamp), "HH24MI")
 
 
-def _query_journeys(service_id, direction, date):
+def _query_journeys(service_id, direction, date_col):
     """ Creates query to find all IDs for journeys that run on a particular day.
 
         Journeys are included and excluded them by matching with special dates,
         bank holidays, date ranges associated with organisations, weeks of month
         and days of week.
     """
-    # Cast date to Date type
-    date_ = db.cast(date.strftime("%Y-%m-%d"), db.Date)
-
     # Find day of week (Monday 1 to Sunday 7) and week of month (0 to 4)
-    week = db.cast(db.func.floor(db.extract("DAY", date_) / 7), db.Integer)
-    weekday = db.cast(db.extract("ISODOW", date_), db.Integer)
+    week = db.cast(db.func.floor(db.extract("DAY", date_col) / 7), db.Integer)
+    weekday = db.cast(db.extract("ISODOW", date_col), db.Integer)
+
+    # Get date + journey departure and add timezone. We can find and exclude
+    # departure times that have been skipped over.
+    timestamp = date_col + models.Journey.departure
+    timestamp_tz = _set_timezone(timestamp, "Europe/London")
 
     journeys = (
         db.session.query(models.Journey.id.label("id"))
@@ -39,15 +59,15 @@ def _query_journeys(service_id, direction, date):
         # Match special period if they fall within date range
         .outerjoin(models.SpecialPeriod,
                    (models.Journey.id == models.SpecialPeriod.journey_ref) &
-                   (models.SpecialPeriod.date_start <= date_) &
-                   (models.SpecialPeriod.date_end >= date_))
+                   (models.SpecialPeriod.date_start <= date_col) &
+                   (models.SpecialPeriod.date_end >= date_col))
         # Match bank holidays on the same day
         .outerjoin(models.BankHolidays,
                    models.Journey.id == models.BankHolidays.journey_ref)
         .outerjoin(models.BankHolidayDate,
                    _in_bit_array(models.BankHolidays.holidays,
                                  models.BankHolidayDate.holiday_ref) &
-                   (models.BankHolidayDate.date == date_))
+                   (models.BankHolidayDate.date == date_col))
         # Match organisations working/holiday periods - can be operational
         # during holiday or working periods associated with organisation so
         # working attributes need to match (eg journey running during holidays
@@ -60,44 +80,42 @@ def _query_journeys(service_id, direction, date):
                    (models.Organisation.code == models.OperatingPeriod.org_ref)
                    & (models.Organisations.working ==
                       models.OperatingPeriod.working) &
-                   (models.OperatingPeriod.date_start <= date_) &
-                   (models.OperatingPeriod.date_end >= date_))
+                   (models.OperatingPeriod.date_start <= date_col) &
+                   (models.OperatingPeriod.date_end >= date_col))
         .outerjoin(models.OperatingDate,
                    (models.Organisation.code == models.OperatingDate.org_ref) &
                    (models.Organisations.working ==
                     models.OperatingDate.working) &
-                   (models.OperatingDate.date == date_))
+                   (models.OperatingDate.date == date_col))
         .filter(
             # Match journey patterns on service ID and direction
             models.JourneyPattern.service_ref == service_id,
             models.JourneyPattern.direction == direction,
             # Date must be within range for journey pattern
-            models.JourneyPattern.date_start <= date_,
+            models.JourneyPattern.date_start <= date_col,
             models.JourneyPattern.date_end.is_(None) |
-            (models.JourneyPattern.date_end >= date_),
+            (models.JourneyPattern.date_end >= date_col),
+            # Setting the time zone for a timestamp without time zone should not
+            # change the time, unless the hour has been skipped over while
+            # switching from GMT to BST in March
+            db.func.extract("hour", timestamp) ==
+            db.func.extract("hour", timestamp_tz),
             # In order of precedence:
-            # - Do not run on bank holidays or special dates
+            # - Do not run on bank holidays or special dates (check with HAVING)
             # - Run on bank holidays or special dates
             # - Do not run during organisation working/holiday periods
             # - Run during organisation working or holiday periods
             # - Run on specific weeks of month
             # - Run on specific days of week
-            db.case([
-                (models.SpecialPeriod.id.isnot(None) &
-                 ~models.SpecialPeriod.operational, False),
-                (models.BankHolidayDate.date.isnot(None) &
-                 ~models.BankHolidays.operational, False),
-                (models.SpecialPeriod.id.isnot(None) &
-                 models.SpecialPeriod.operational, True),
-                (models.BankHolidayDate.date.isnot(None) &
-                 models.BankHolidays.operational, True)
-            ], else_=(
-                (models.Organisations.org_ref.is_(None) |
-                 models.Organisations.operational) &
-                (models.Journey.weeks.is_(None) |
-                 _in_bit_array(models.Journey.weeks, week)) &
-                _in_bit_array(models.Journey.days, weekday)
-            ))
+            (models.SpecialPeriod.id.isnot(None) &
+             models.SpecialPeriod.operational) |
+            (models.BankHolidayDate.date.isnot(None) &
+             models.BankHolidays.operational) |
+            (models.Organisations.org_ref.is_(None) |
+             models.Organisations.operational) &
+            (models.Journey.weeks.is_(None) |
+             _in_bit_array(models.Journey.weeks, week)) &
+            _in_bit_array(models.Journey.days, weekday)
         )
         .group_by(models.Journey.id)
         # Exclusion from bank holidays or special dates take precedence over
@@ -116,12 +134,12 @@ def _query_journeys(service_id, direction, date):
 
 def _query_times(service_id, direction, date):
     """ Queries all times for journeys on a specific day. """
-    journeys = _query_journeys(service_id, direction, date).cte("journeys")
-
-    # Set departure to specific date, journey departure and in correct timezone
     date_ = db.cast(date.strftime("%Y-%m-%d"), db.Date)
-    timestamp = date_ + models.Journey.departure
-    departure = timestamp.op("AT TIME ZONE", 0)("Europe/London")
+
+    journeys = _query_journeys(service_id, direction, date_).cte("journeys")
+
+    # Set Journey departure with date and in correct timezone
+    departure = _set_timezone(date_ + models.Journey.departure, "Europe/London")
 
     zero = db.cast("0", db.Interval)
     # For each link, add running and wait intervals from journey-specific link,

@@ -457,11 +457,9 @@ def stop_atco(atco_code=""):
     return render_template("stop.html", stop=stop, services=stop.get_services())
 
 
-@page.route("/service/<service_id>")
-@page.route("/service/<service_id>/<direction:reverse>")
-def service(service_id, reverse=None):
-    """ Shows service with ID and optional direction, which is outbound by
-        default.
+def _query_service(service_id, reverse=None):
+    """ Finds service as well as all journey patterns and local operators
+        associated with the service.
     """
     line = (
         models.Service.query
@@ -478,6 +476,17 @@ def service(service_id, reverse=None):
 
     # Check line patterns - is there more than 1 direction?
     is_reverse, mirrored = line.has_mirror(reverse)
+
+    return line, is_reverse, mirrored
+
+
+@page.route("/service/<service_id>")
+@page.route("/service/<service_id>/<direction:reverse>")
+def service(service_id, reverse=None):
+    """ Shows service with ID and optional direction, which is outbound by
+        default.
+    """
+    line, is_reverse, mirrored = _query_service(service_id, reverse)
 
     if reverse is None or reverse != is_reverse:
         return redirect(url_for(".service", service_id=service_id,
@@ -497,20 +506,38 @@ def service(service_id, reverse=None):
     except graph.MaxColumnError:
         layout = None
 
-    select_date = forms.SelectDate(request.args)
-
-    if select_date.date.data is not None:
-        date = select_date.date.data
-    else:
-        date = datetime.date.today()
-        select_date.date.data = date
-
-    tt_data = timetable.get_timetable(line.id, is_reverse, date, sequence,
-                                      d_stops)
-
     return render_template("service.html", service=line, dest=destinations,
                            reverse=is_reverse, mirrored=mirrored,
-                           sequence=sequence, stops=d_stops, layout=layout,
+                           sequence=sequence, stops=d_stops, layout=layout)
+
+
+@page.route("/service/<service_id>/timetable")
+@page.route("/service/<service_id>/<direction:reverse>/timetable")
+def service_timetable(service_id, reverse=None):
+    """ Shows timetable for service with ID and optional direction. """
+    line, is_reverse, mirrored = _query_service(service_id, reverse)
+
+    if reverse is None or reverse != is_reverse:
+        return redirect(url_for(".service_timetable", service_id=service_id,
+                                reverse=is_reverse))
+
+    s_graph, d_stops = graph.service_graph_stops(line.id, is_reverse)
+    sequence = s_graph.sequence()
+
+    select_date = forms.SelectDate(request.args)
+    if select_date.date.data is None:
+        # Set to today by default
+        select_date.date.data = datetime.date.today()
+
+    select_date.set_dates(line)
+    select_date.validate()
+
+    tt_data = timetable.get_timetable(line.id, is_reverse,
+                                      select_date.date.data, sequence,
+                                      d_stops)
+
+    return render_template("timetable.html", service=line, reverse=is_reverse,
+                           mirrored=mirrored, sequence=sequence, stops=d_stops,
                            timetable=tt_data, select_date=select_date)
 
 

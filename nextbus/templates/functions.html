@@ -1,7 +1,7 @@
 {# Functions for templates #}
 
 {# Replaces header with search functionality #}
-{% macro add_search_bar(map=true) %}
+{% macro add_search_bar(map=true) -%}
 <div class="outer-header">
     <header class="header">
         <a class="header__home" href="{{ url_for('page.index') }}">
@@ -18,7 +18,7 @@
         </a>
     </header>
     <div id="header-search-bar" class="hidden search-bar">
-        <form class="search-form search-bar__form" action="{{ g.action }}" method="post" name="search">
+        <form class="form search-bar__form" action="{{ g.action }}" method="post" name="search">
             {% set aria = {'aria-label': 'Find a bus stop'} %}
             {{ g.form.hidden_tag() }}
             {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
@@ -29,10 +29,10 @@
 <script>
     addSearchBarEvents();
 </script>
-{% endmacro %}
+{%- endmacro %}
 
 {# Prints an inline list, using strong tags if required #}
-{% macro print_inline(items, strong=true) %}
+{% macro print_inline(items, strong=true) -%}
 {% if items|length == 1 %}
 {% if strong %}<strong>{{ items[0] }}</strong>{% else %}{{ items[0] }}{% endif %}
 {% elif items|length > 1 %}
@@ -44,10 +44,10 @@
 {% endif %}
 {% else %}
 {% endif %}
-{% endmacro %}
+{%- endmacro %}
 
 {# Prints a list of groups, using <hr> to separate them #}
-{% macro print_groups(list_groups) %}
+{% macro print_groups(list_groups) -%}
 {% set ctx = {'first': true} %}
 {% for name, group in list_groups %}
 {% if ctx.first %}
@@ -57,28 +57,28 @@
 {% endif %}
 {{ caller(name, group ) }}
 {% endfor %}
-{% endmacro %}
+{%- endmacro %}
 
 {# Prints a list using callers #}
-{% macro print_list(items, class=none, name=none) %}
+{% macro print_list(items, class=none, name=none) -%}
 <ul class="list{% if class %}{{ ' %s'|format(class) }}{% endif %}" {% if name %}id="{{ name }}"{% endif %}>
     {% for i in items %}
     <li>{{ caller(i) }}</li>
     {% endfor %}
 </ul>
-{% endmacro %}
+{%- endmacro %}
 
 {# Prints a list of indices from dictionary #}
-{% macro print_index(items) %}
+{% macro print_index(items) -%}
 <ul class="list-index">
     {% for name, _ in items|dictsort %}
     <li><a href="#{{ name }}"><span>{{ name }}</span></a></li>
     {% endfor %}
 </ul>
-{% endmacro %}
+{%- endmacro %}
 
 {# Prints the stop indicator #}
-{% macro print_stop_indicator(stop, reverse=false, name=none) %}
+{% macro print_stop_indicator(stop, reverse=false, name=none) -%}
 <div class="indicator{{ ' indicator--reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
     {% if stop.short_ind != '' %}
     <span>{{ stop.short_ind }}</span>

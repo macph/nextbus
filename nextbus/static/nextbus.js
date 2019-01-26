@@ -1752,7 +1752,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         let fitMap = document.createElement('button');
         fitMap.className = 'button';
         let fitMapInner = document.createElement('span');
-        fitMapInner.textContent = 'Fit service on map';
+        fitMapInner.textContent = 'Fit on map';
         fitMap.appendChild(fitMapInner);
         fitMap.onclick = function() {
             fitMap.blur();
@@ -1770,6 +1770,16 @@ function Panel(stopMap, mapPanel, cookieSet) {
             self.stopMap.update({service: null});
         };
         actions.appendChild(closeService);
+
+        let goToTimetable = document.createElement('a');
+        goToTimetable.className = 'button';
+        let goToTimetableInner = document.createElement('span');
+        goToTimetableInner.textContent = 'Timetable';
+        goToTimetable.appendChild(goToTimetableInner);
+        let newDirection = (data.reverse) ? 'inbound' : 'outbound',
+            newPart = '/' + data.service + '/' + newDirection + '/';
+        goToTimetable.href = TIMETABLE_URL.replace('//', newPart);
+        actions.appendChild(goToTimetable);
 
         let tabs = null;
         if (data.mirrored) {

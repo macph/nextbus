@@ -153,6 +153,7 @@ input[type="date"] {
   -webkit-appearance: none;
   -moz-appearance: none;
   outline: none;
+  line-height: normal;
 }
 
 input[type="search"],
@@ -531,7 +532,7 @@ button:focus {
  *  SEARCH FORM
  */
 
-.search-form {
+.form {
   display: flex;
   flex-direction: row;
   box-sizing: border-box;
@@ -539,15 +540,21 @@ button:focus {
   align-items: center;
 }
 
-.search-form > input[type="search"] {
-  flex: 1;
-  margin-right: 5px;
+.form--inline {
+  margin: 0 10px;
 }
 
-.search-form > input[type="submit"],
-.search-form > button {
+.form > input[type="text"],
+.form > input[type="search"],
+.form > input[type="date"] {
+  flex: 1;
+}
+
+.form > input[type="submit"],
+.form > button {
   flex: none;
   height: 36px;
+  margin-left: 10px;
 }
 
 /*
@@ -1207,6 +1214,7 @@ button:focus {
  *  SERVICE TIMETABLES
  */
 .timetable-wrapper {
+  margin: 15px -15px;
   overflow-x: auto;
   overflow-y: visible;
 }
@@ -1218,16 +1226,13 @@ button:focus {
   text-align: right;
 }
 
-.timetable th,
-.timetable td {
-  padding: 5px;
-}
-
 .timetable__row--selectable {
   cursor: pointer;
 }
 
-.timetable__row--selectable:hover {
+.timetable__row--selectable:hover,
+.timetable__row--selectable:hover > th,
+.timetable__row--selectable:hover > td {
   background: rgb(224, 224, 224);
 }
 
@@ -1235,8 +1240,17 @@ button:focus {
   display: none;
 }
 
+.timetable__head > th,
 .timetable__row > th {
-  min-width: 240px;
+  width: 192px;
+  min-width: 192px;
+  padding: 5px;
+
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: white;
+
   font-weight: 400;
 }
 
@@ -1244,20 +1258,41 @@ button:focus {
   font-weight: 700;
 }
 
+.timetable__head > td,
+.timetable__row > td {
+  width: 56px;
+  min-width: 56px;
+  padding: 5px;
+  z-index: 1;
+}
+
 .timetable__row > td {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-  font-style: italic;
 }
 
 .timetable__row > td.timetable--bold {
-  font-style: normal;
   font-weight: 700;
 }
 
 .timetable th > span,
 .timetable td > span {
   white-space: nowrap;
+}
+
+.timetable__stop {
+  display: flex;
+  align-items: center;
+}
+
+.timetable__stop__label {
+  flex: 1;
+  margin-right: 5px;
+}
+
+.timetable__stop__ind {
+  flex: none;
+  font-size: 0.7rem;
 }
 
 /*
@@ -1392,11 +1427,14 @@ button:focus {
     margin-left: 10px;
     margin-right: 10px;
   }
+
+  .timetable-wrapper {
+    margin: 0;
+  }
 }
   
 /* Split into two columns */
 @media screen and (min-width: 720px) {
-
   .columns {
     flex-direction: row;
   }

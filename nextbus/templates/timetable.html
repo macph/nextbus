@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% import 'functions.html' as f %}
+
+{% block title %}{{ service.line }}: {{ service.description }}{% endblock %}
+
+{% block outer_header %}
+{{ f.add_search_bar() }}
+{% endblock %}
+
+{% block heading %}
+<nav>
+    <ul class="breadcrumbs breadcrumbs--trailing">
+        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    </ul>
+</nav>
+<div class="heading-service">
+  <div class="line">
+    <div class="line__inner {{ 'area-%s'|format(service.admin_area.code) if service.admin_area }}">
+      <span class="line__text">{{ service.line }}</span>
+    </div>
+  </div>
+  <h1>{{ service.description }}</h1>
+</div>
+{% if service.local_operators|length > 0 -%}
+<p>Operated by {{ f.print_inline(service.local_operators|map(attribute='name')|list) }}</p>
+{%- endif %}
+{% endblock %}
+
+{% block content %}
+<div class="columns">
+    <div class="column-1">
+        <section class="card card--buttons card--minor">
+            <a class="button" href="{{ url_for('.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
+            <a class="button" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}"><span>Diagram</span></a>
+        </section>
+        {% if mirrored -%}
+        <ul class="tabs tabs--2">
+            {% if not reverse -%}
+            <li><div class="tab tab--active"><span>Outbound</span></div></li>
+            <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true) }}">Inbound</a></li>
+            {%- else -%}
+            <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false) }}">Outbound</a></li>
+            <li><div class="tab tab--active"><span>Inbound</span></div></li>
+            {%- endif %}
+        </ul>
+        {%- endif %}
+        <section class="card" id="timetable">
+            <div class="heading-inline heading-inline--right">
+                <h2>Timetable</h2>
+                <form method="GET" action="" id="date-form" class="form form--inline">
+                    {{ select_date.date() }}
+                    <button>Refresh</button>
+                </form>
+            </div>
+            {% if select_date.errors -%}
+            {%- for e in select_date.errors.date %}
+            <p>{{ e }}</p>
+            {%- endfor -%}
+            {%- endif %}
+            {% if timetable.head|length > 0 -%}
+            <div class="timetable-wrapper">
+                <table class="timetable" id="tt">
+                    {% if timetable.notes -%}
+                    <tr class="timetable__head">
+                        <th></th>
+                        {% for h in timetable.head -%}
+                        <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
+                        {%- endfor %}
+                    </tr>
+                    {% endif %}
+                    {% if timetable.operators -%}
+                    <tr class="timetable__head">
+                        <th></th>
+                        {%- for h in timetable.head %}
+                        <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
+                        {%- endfor %}
+                    </tr>
+                    {% endif %}
+                    {%- for r in timetable.stops %}
+                    {%- set stop = stops[r.code] -%}
+                    <tr class="timetable__row{{ ' timetable__row--major' if r.timing else ' timetable__row--hidden' }}">
+                        <th>
+                            <div class="timetable__stop">
+                                <div class="timetable__stop__label">{{ stop.locality.name }}, {{ stop.name }}</div>
+                                <div class="timetable__stop__ind">{{ f.print_stop_indicator(stop) }}</div>
+                            </div>
+                        </th>
+                        {%- for t in r.times %}
+                        <td{% if t[2] %} class="timetable--bold"{% endif %}>
+                            {%- if t[0] and t[1] and t[0] != t[1] -%}
+                            <span>a {{ t[0] }}</span> <span>d {{ t[1] }}</span>
+                            {%- elif t[1] or t[0] -%}
+                            {{ t[1] or t[0]}}
+                            {%- endif -%}
+                        </td>
+                        {%- endfor %}
+                    </tr>
+                    {%- endfor %}
+                </table>
+            </div>
+            {% if timetable.operators|length and timetable.notes|length -%}
+            <h3>Operators & notes</h3>
+            {%- elif timetable.operators|length -%}
+            <h3>Operators</h3>
+            {%- elif timetable.notes|length -%}
+            <h3>Notes</h3>
+            {%- endif %}
+            {% if timetable.operators|length -%}
+            <dl class="description-list">
+                {%- for o in timetable.operators %}
+                <dt><strong>{{ o[0] }}</strong></dt>
+                <dd>{{ o[1] }}</dd>
+                {%- endfor %}
+            </dl>
+            {%- endif %}
+            {% if timetable.notes|length -%}
+            <dl class="description-list">
+                {%- for n in timetable.notes %}
+                <dt><strong>{{ n[0] }}</strong></dt>
+                <dd>{{ n[1] }}</dd>
+                {%- endfor %}
+            </dl>
+            {%- endif %}
+            {%- elif not select_date.errors -%}
+            <p>No services run on this day.</p>
+            {%- endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    resizeIndicator('indicator');
+</script>
+<script>
+    let dateForm = document.getElementById('date-form');
+    let dateSubmit = dateForm.querySelector('button');
+    dateSubmit.style.display = 'none';
+    let dateField = dateForm.querySelector('input');
+    dateField.onchange = function() {
+        if (dateField.value) {
+            dateForm.submit();
+        }
+    };
+
+    function addRowEvent(group) {
+        let hidden = true;
+        if (group.next.length) {
+            group.current.classList.add('timetable__row--selectable');
+            group.current.onclick = function() {
+                let r;
+                for (let i = 0; i < group.next.length; i++) {
+                    r = group.next[i];
+                    if (hidden) {
+                        r.classList.remove('timetable__row--hidden');
+                    } else {
+                        r.classList.add('timetable__row--hidden');
+                    }
+                }
+                hidden = !hidden;
+            }
+        }
+    }
+
+    let table = document.getElementById('tt');
+    if (table != null) {
+        let rows = table.getElementsByTagName('tr'),
+            i, row, groups = [];
+        for (i = 0; i < rows.length; i++) {
+            row = rows[i];
+            if (row.classList.contains('timetable__row--major')) {
+                groups.push({current: row, next: []});
+            } else if (groups.length) {
+                groups[groups.length - 1].next.push(row);
+            }
+        }
+        for (i = 0; i < groups.length; i++) {
+            addRowEvent(groups[i]);
+        }
+    }
+</script>
+{% endblock %}

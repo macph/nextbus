@@ -1176,18 +1176,19 @@ class Graph:
             Longest paths are sorted by their vertices as to give a consistent
             result.
         """
-        longest_paths = []
+        paths = []
 
         for v in sorted(self):
-            new_paths = self._search_paths(v)
-            longest_paths.extend(new_paths.values())
+            paths.extend(self._search_paths(v).values())
 
         def sort_path(path):
             return tuple(self.sort(u) for u in path)
 
-        if longest_paths:
-            longest_paths.sort(key=sort_path)
-            return max(longest_paths, key=len)
+        if paths:
+            max_len = max(len(p) for p in paths)
+            longest_paths = sorted((p for p in paths if len(p) == max_len),
+                                   key=sort_path)
+            return longest_paths[0]
         else:
             return Path()
 
@@ -1242,54 +1243,63 @@ def service_graph_stops(service_id, direction):
         db.session.query(
             models.JourneyPattern.id.label("pattern_id"),
             models.JourneyLink.sequence.label("sequence"),
-            models.JourneyLink.stop_point_ref.label("stop_ref")
+            models.JourneyLink.stop_point_ref.label("stop_ref"),
+            db.func.count(models.Journey.id).label("journeys")
         )
         .select_from(models.JourneyPattern)
         .join(models.JourneyPattern.links)
+        .join(models.JourneyPattern.journeys)
         .filter(models.JourneyPattern.service_ref == service_id,
-                models.JourneyPattern.direction == direction,
+                models.JourneyPattern.direction.is_(direction),
                 models.JourneyLink.stop_point_ref.isnot(None))
+        .group_by(models.JourneyPattern.id, models.JourneyLink.sequence,
+                  models.JourneyLink.stop_point_ref)
         .subquery()
     )
-    next_stop = (
-        db.func.lead(stop_refs.c.stop_ref)
-        .over(partition_by=stop_refs.c.pattern_id,
-              order_by=stop_refs.c.sequence)
+    stop_journeys = (
+        db.session.query(stop_refs.c.stop_ref,
+                         db.func.max(stop_refs.c.journeys)
+                         .label("max_journeys"))
+        .group_by(stop_refs.c.stop_ref)
+        .subquery()
     )
     pairs = (
-        db.session.query(stop_refs.c.stop_ref.label("current"),
-                         stop_refs.c.sequence.label("sequence"),
-                         next_stop.label("next"))
-        .distinct(stop_refs.c.stop_ref, next_stop)
+        db.session.query(
+            stop_refs.c.stop_ref.label("current"),
+            stop_refs.c.sequence,
+            stop_refs.c.journeys,
+            db.func.lead(stop_refs.c.stop_ref)
+            .over(partition_by=stop_refs.c.pattern_id,
+                  order_by=stop_refs.c.sequence).label("next")
+        )
         .subquery()
     )
-    stops = (
+    adj_stops = (
         db.session.query(
             models.StopPoint,
+            db.func.max(pairs.c.journeys).label("journeys"),
+            db.func.min(pairs.c.sequence).label("sequence"),
             db.func.array_remove(db.func.array_agg(pairs.c.next), None)
-            .label("next_stops"),
-            db.func.mode().within_group(pairs.c.sequence).label("sequence")
+            .label("next_stops")
         )
         .options(db.contains_eager(models.StopPoint.locality))
         .join(models.StopPoint.locality)
         .join(pairs, pairs.c.current == models.StopPoint.atco_code)
+        .join(stop_journeys, (pairs.c.current == stop_journeys.c.stop_ref) &
+              (pairs.c.journeys == stop_journeys.c.max_journeys))
         .group_by(models.StopPoint.atco_code, models.Locality.code)
-        .all()
     )
 
-    edges, vertices = [], []
-    dict_stops, sequence = {}, {}
-    for s in stops:
+    stops = {}
+    ranking = {}
+    edges = []
+    for s in adj_stops.all():
         stop = s.StopPoint
-        dict_stops[stop.atco_code] = stop
-        sequence[stop.atco_code] = s.sequence
-        edges.extend((stop.atco_code, n) for n in s.next_stops if n is not None)
-        vertices.extend(stop.atco_code for n in s.next_stops if n is None)
+        stops[stop.atco_code] = stop
+        ranking[stop.atco_code] = -s.journeys, s.sequence, stop.atco_code
+        edges.extend((stop.atco_code, n) for n in s.next_stops)
 
-    def sort_by_seq(vertex):
-        return sequence[vertex], vertex
-
-    return Graph(edges, vertices, sort_by_seq), dict_stops
+    return Graph(edges, sort=ranking.get), stops
 
 
 def service_graph(service_id, direction):
@@ -1360,13 +1370,14 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         layout = None
 
     # Serialise data
-    lines = [[(stops[v].longitude, stops[v].latitude) for v in p]
-             for p in paths if len(p) > 1]
     paths = {
         "type": "Feature",
         "geometry": {
             "type": "MultiLineString",
-            "coordinates": lines
+            "coordinates": [
+                [(stops[v].longitude, stops[v].latitude) for v in p]
+                for p in paths if len(p) > 1
+            ]
         }
     }
 

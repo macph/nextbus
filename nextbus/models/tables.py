@@ -703,6 +703,7 @@ class JourneyPattern(utils.BaseModel):
 
     links = db.relationship("JourneyLink", backref="pattern", innerjoin=True,
                             order_by="JourneyLink.sequence")
+    journeys = db.relationship("Journey", backref="pattern")
 
 
 class JourneyLink(utils.BaseModel):

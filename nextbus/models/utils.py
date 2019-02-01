@@ -7,6 +7,7 @@ https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
 """
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.schema import DDLElement
+from sqlalchemy.sql import FromClause
 
 from nextbus import db
 
@@ -101,3 +102,52 @@ class MaterializedView(BaseModel):
         con = "CONCURRENTLY " if concurrently else ""
         db.session.execute("REFRESH MATERIALIZED VIEW " + con +
                            cls.__table__.fullname)
+
+
+class _ValuesClause(FromClause):
+    """ Represents a VALUES expression in a FROM clause. """
+    named_with_column = True
+
+    def __init__(self, columns, *values, alias_name=None, **kw):
+        self._column_args = columns
+        self.list = values
+        self.alias_name = self.name = alias_name
+
+    def _populate_column_collection(self):
+        for column in self._column_args:
+            column._make_proxy(self, column.name)
+
+
+@compiles(_ValuesClause)
+def _compile_values(element, compiler, asfrom=False, **kw):
+    """ Crates VALUES expression from list of columns and list of tuples. """
+
+    def print_value(value, column):
+        type_ = column.type if value is not None else db.NULLTYPE
+        str_value = compiler.render_literal_value(value, type_)
+
+        return str_value + "::" + str(column.type)
+
+    expression = "VALUES " + ", ".join(
+        "(" + ", ".join(
+            print_value(value, column)
+            for value, column in zip(row, element.columns)
+        ) + ")"
+        for row in element.list
+    )
+
+    if asfrom and element.alias_name is not None:
+        expression = "(%s) AS %s (%s)" % (
+            expression,
+            element.alias_name,
+            ", ".join(column.name for column in element.columns)
+        )
+    elif asfrom:
+        expression = "(" + expression + ")"
+
+    return expression
+
+
+def values(columns, *values, alias_name=None):
+    """ Creates a VALUES expression for use in FROM clauses. """
+    return _ValuesClause(columns, *values, alias_name=alias_name)

@@ -4,16 +4,7 @@ Creating timetables for a service.
 import functools
 
 from nextbus import db, graph, models
-
-
-# TODO: A better way to detect timezone changes and take away or add departures?
-# 1. Create a CTE with date and whether it is a March or October DST day
-# (Last Sunday, ie 25-31, of March or October). Check if departure is 0100-0200
-# 2. Add generate_series using a subquery
-# 3. Exclude departure if in March, repeat if in October or no repetition
-# otherwise
-# 4. Add departure timestamp. Need to be able to set correct time in October
-# (eg 2019-10-31 01:03:00+01 in addition to 2019-10-31 01:03:00+00)
+from nextbus.models import utils
 
 
 def _in_bit_array(array, col):
@@ -24,50 +15,67 @@ def _in_bit_array(array, col):
 
 
 def _set_timezone(timestamp, timezone):
-    """ Sets timestamp to a timezone specified by tz, eg 'Europe/London'.
+    """ Sets timestamp to a timezone specified, eg 'Europe/London'.
 
-        Precedence is set to 100 as it has precedence over +, etc.
+        This operator has precedence over others such as +.
     """
     return timestamp.op("AT TIME ZONE", 100)(timezone)
 
 
 def _format_time(timestamp):
     """ SQL expression to format a date or timestamp as `HHMM`, eg 0730. """
-    return db.func.to_char(db.func.date_trunc("minute", timestamp), "HH24MI")
+    trunc_min = db.bindparam("trunc_min", "minute")
+    fmt_time = db.bindparam("format_time", "HH24MI")
+
+    return db.func.to_char(db.func.date_trunc(trunc_min, timestamp), fmt_time)
 
 
-def _query_journeys(service_id, direction, date_col):
+def _query_journeys(service_id, direction, date):
     """ Creates query to find all IDs for journeys that run on a particular day.
 
         Journeys are included and excluded them by matching with special dates,
         bank holidays, date ranges associated with organisations, weeks of month
         and days of week.
     """
-    # Find day of week (Monday 1 to Sunday 7) and week of month (0 to 4)
-    week = db.cast(db.func.floor(db.extract("DAY", date_col) / 7), db.Integer)
-    weekday = db.cast(db.extract("ISODOW", date_col), db.Integer)
+    # Set as parameters for SQL query - reduces repetition of dates
+    p_service_id = db.bindparam("service", service_id)
+    p_direction = db.bindparam("direction", direction)
+    p_date = db.bindparam("date", date, type_=db.Date)
 
-    # Get date + journey departure and add timezone. We can find and exclude
-    # departure times that have been skipped over.
-    timestamp = date_col + models.Journey.departure
-    timestamp_tz = _set_timezone(timestamp, "Europe/London")
+    # Find week of month (0 to 4) and day of week (Monday 1 to Sunday 7)
+    week = db.cast(db.func.floor(db.extract("DAY", p_date) / 7), db.Integer)
+    weekday = db.cast(db.extract("ISODOW", p_date), db.Integer)
 
+    # Add timezones BST, GMT and Europe/London (which can be either)
+    timezones = utils.values(
+        [db.column("tz", type_=db.Text)],
+        ("BST",), ("GMT",), ("Europe/London",),
+        alias_name="timezones"
+    )
+
+    # Set each journey departure to the correct timezone
+    departure = _set_timezone(p_date + models.Journey.departure,
+                              timezones.c.tz)
+
+    # Find all journeys and their departures
     journeys = (
-        db.session.query(models.Journey.id.label("id"))
-        .select_from(models.JourneyPattern)
-        .join(models.Journey)
+        db.session.query(models.Journey.id.label("id"),
+                         departure.label("departure"))
+        .select_from(models.JourneyPattern, timezones)
+        .join(models.Journey,
+              models.JourneyPattern.id == models.Journey.pattern_ref)
         # Match special period if they fall within date range
         .outerjoin(models.SpecialPeriod,
                    (models.Journey.id == models.SpecialPeriod.journey_ref) &
-                   (models.SpecialPeriod.date_start <= date_col) &
-                   (models.SpecialPeriod.date_end >= date_col))
+                   (models.SpecialPeriod.date_start <= p_date) &
+                   (models.SpecialPeriod.date_end >= p_date))
         # Match bank holidays on the same day
         .outerjoin(models.BankHolidays,
                    models.Journey.id == models.BankHolidays.journey_ref)
         .outerjoin(models.BankHolidayDate,
                    _in_bit_array(models.BankHolidays.holidays,
                                  models.BankHolidayDate.holiday_ref) &
-                   (models.BankHolidayDate.date == date_col))
+                   (models.BankHolidayDate.date == p_date))
         # Match organisations working/holiday periods - can be operational
         # during holiday or working periods associated with organisation so
         # working attributes need to match (eg journey running during holidays
@@ -80,26 +88,37 @@ def _query_journeys(service_id, direction, date_col):
                    (models.Organisation.code == models.OperatingPeriod.org_ref)
                    & (models.Organisations.working ==
                       models.OperatingPeriod.working) &
-                   (models.OperatingPeriod.date_start <= date_col) &
-                   (models.OperatingPeriod.date_end >= date_col))
+                   (models.OperatingPeriod.date_start <= p_date) &
+                   (models.OperatingPeriod.date_end >= p_date))
         .outerjoin(models.OperatingDate,
                    (models.Organisation.code == models.OperatingDate.org_ref) &
                    (models.Organisations.working ==
                     models.OperatingDate.working) &
-                   (models.OperatingDate.date == date_col))
+                   (models.OperatingDate.date == p_date))
         .filter(
             # Match journey patterns on service ID and direction
-            models.JourneyPattern.service_ref == service_id,
-            models.JourneyPattern.direction == direction,
-            # Date must be within range for journey pattern
-            models.JourneyPattern.date_start <= date_col,
+            models.JourneyPattern.service_ref == p_service_id,
+            models.JourneyPattern.direction.is_(p_direction),
+            # Date must be within range for journey pattern, may be unbounded
+            models.JourneyPattern.date_start <= p_date,
             models.JourneyPattern.date_end.is_(None) |
-            (models.JourneyPattern.date_end >= date_col),
-            # Setting the time zone for a timestamp without time zone should not
-            # change the time, unless the hour has been skipped over while
-            # switching from GMT to BST in March
-            db.func.extract("hour", timestamp) ==
-            db.func.extract("hour", timestamp_tz),
+            (models.JourneyPattern.date_end >= p_date),
+            # Check to see if departure falls within 0100 and 0200 when timezone
+            # changes
+            # If in March, this journey is skipped.
+            # If in October, this journey is repeated in both BST and GMT.
+            # Otherwise Europe/London is picked, setting BST/GMT automatically.
+            db.case([
+                ((db.extract("MONTH", p_date) == 3) &
+                 (db.extract("DAY", p_date) > 24) &
+                 (db.extract("ISODOW", p_date) == 7) &
+                 (db.extract("HOUR", models.Journey.departure) == 1), False),
+                ((db.extract("MONTH", p_date) == 10) &
+                 (db.extract("DAY", p_date) > 24) &
+                 (db.extract("ISODOW", p_date) == 7) &
+                 (db.extract("HOUR", models.Journey.departure) == 1),
+                 (timezones.c.tz == "BST") | (timezones.c.tz == "GMT")),   
+            ], else_=timezones.c.tz == "Europe/London"),
             # In order of precedence:
             # - Do not run on bank holidays or special dates (check with HAVING)
             # - Run on bank holidays or special dates
@@ -117,7 +136,7 @@ def _query_journeys(service_id, direction, date_col):
              _in_bit_array(models.Journey.weeks, week)) &
             _in_bit_array(models.Journey.days, weekday)
         )
-        .group_by(models.Journey.id)
+        .group_by(models.Journey.id, departure)
         # Exclusion from bank holidays or special dates take precedence over
         # others so only include journey if neither bank holiday or special
         # period have matching records excluding this date
@@ -134,14 +153,9 @@ def _query_journeys(service_id, direction, date_col):
 
 def _query_times(service_id, direction, date):
     """ Queries all times for journeys on a specific day. """
-    date_ = db.cast(date.strftime("%Y-%m-%d"), db.Date)
+    journeys = _query_journeys(service_id, direction, date).subquery("journeys")
 
-    journeys = _query_journeys(service_id, direction, date_).cte("journeys")
-
-    # Set Journey departure with date and in correct timezone
-    departure = _set_timezone(date_ + models.Journey.departure, "Europe/London")
-
-    zero = db.cast("0", db.Interval)
+    zero = db.bindparam("zero", "0", type_=db.Interval)
     # For each link, add running and wait intervals from journey-specific link,
     # journey pattern link or zero if both are null
     sum_coalesced_times = db.func.sum(
@@ -155,22 +169,22 @@ def _query_times(service_id, direction, date):
 
     # Find last sequence number for each journey pattern
     last_sequence = db.func.first_value(models.JourneyLink.sequence).over(
-        partition_by=models.Journey.id,
+        partition_by=(journeys.c.id, journeys.c.departure),
         order_by=db.desc(models.JourneyLink.sequence)
     )
 
     # Sum all running and wait intervals from preceding rows plus this row's
     # running interval for arrival time
-    time_arrive = departure + sum_coalesced_times.over(
-        partition_by=models.Journey.id,
+    time_arrive = journeys.c.departure + sum_coalesced_times.over(
+        partition_by=(journeys.c.id, journeys.c.departure),
         order_by=models.JourneyLink.sequence,
         rows=(None, -1)
     ) + db.func.coalesce(models.JourneySpecificLink.run_time,
                          models.JourneyLink.run_time, zero)
 
     # Sum all running and wait intervals from preceding rows and this row
-    time_depart = departure + sum_coalesced_times.over(
-        partition_by=models.Journey.id,
+    time_depart = journeys.c.departure + sum_coalesced_times.over(
+        partition_by=(journeys.c.id, journeys.c.departure),
         order_by=models.JourneyLink.sequence,
         rows=(None, 0)
     )
@@ -185,7 +199,7 @@ def _query_times(service_id, direction, date):
             models.Journey.note_text,
             models.LocalOperator.code.label("local_operator_code"),
             models.LocalOperator.name.label("local_operator_name"),
-            departure.label("departure"),
+            journeys.c.departure,
             models.JourneyLink.stop_point_ref,
             models.JourneyLink.timing_point,
             # Journey may call or not call at this stop point
@@ -228,8 +242,7 @@ def _query_times(service_id, direction, date):
 def _query_timetable(service_id, direction, date):
     """ Creates a timetable for a service in a set direction on a specific day.
     """
-    times = _query_times(service_id, direction, date).cte("times")
-
+    times = _query_times(service_id, direction, date).subquery("times")
     query = (
         db.session.query(
             times.c.journey_id,
@@ -241,17 +254,19 @@ def _query_timetable(service_id, direction, date):
             times.c.stop_point_ref,
             times.c.timing_point,
             times.c.stopping,
-            times.c.time_arrive,
-            times.c.time_depart,
-            _format_time(times.c.time_arrive).label("arrive"),
-            _format_time(times.c.time_depart).label("depart")
+            db.func.timezone("UTC", times.c.time_arrive).label("utc_arrive"),
+            db.func.timezone("UTC", times.c.time_depart).label("utc_depart"),
+            _format_time(db.func.timezone("Europe/London", times.c.time_arrive))
+            .label("arrive"),
+            _format_time(db.func.timezone("Europe/London", times.c.time_depart))
+            .label("depart")
         )
         .select_from(times)
         .filter(times.c.stop_point_ref.isnot(None))
         .order_by(times.c.departure, times.c.journey_id, times.c.sequence)
     )
 
-    return query.all()
+    return query
 
 
 class Timetable:
@@ -298,15 +313,15 @@ class Timetable:
         self.notes = {}
         self.times = {c: list() for c in self.sequence}
 
-        result = _query_timetable(self.service_id, self.direction, self.date)
+        query = _query_timetable(self.service_id, self.direction, self.date)
+        self.data = list(query.all())
 
-        self.data = list(result)
         self._sort_times()
         self._fill_table()
 
     def _compare_times(self, a, b):
-        """ Compares two journeys and their times based on their first shared
-            stops.
+        """ Compares two journeys based on UTC arrival/departure times at their
+            shared stops.
         """
         for stop in self.sequence:
             ar = next((ar for ar in a if ar.stop_point_ref == stop), None)
@@ -314,25 +329,26 @@ class Timetable:
             if ar is None or br is None:
                 continue
 
-            at = ar.time_depart or ar.time_arrive
-            bt = br.time_depart or br.time_arrive
+            at = ar.utc_depart or ar.utc_arrive
+            bt = br.utc_depart or br.utc_arrive
             if at is not None and bt is not None and at != bt:
                 return 1 if at > bt else -1
 
         return 0
 
     def _sort_times(self):
-        """ Sorts journeys by their shared stop times.
+        """ Sorts journeys by arrivals/departures in UTC at shared stops.
 
-            For example, a journey may start from point A at 0700 and stops at
-            0730 at point B. Another journey starts from point B at 0715 but
-            should be placed before the first journey because it leaves point B
+            For example, Journey 1 starts from point A at 0700 and stops at
+            point B at 0730, and Journey 2 starts from point B at 0715. Journey
+            2 should be placed before Journey 1 because it leaves point B
             earlier.
         """
         dict_groups = {}
         for row in self.data:
-            list_ = dict_groups.setdefault(row.journey_id, list())
-            list_.append(row)
+            # Group by departure time as well, a journey may be repeated
+            identifier = row.journey_id, row.departure.timestamp()
+            dict_groups.setdefault(identifier, list()).append(row)
 
         groups = sorted(dict_groups.values(),
                         key=functools.cmp_to_key(self._compare_times))

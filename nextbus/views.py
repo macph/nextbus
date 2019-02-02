@@ -199,9 +199,8 @@ def search_results(query=None):
                                 code=result.postcode.text))
     else:
         # List of results
-        groups, areas = search.filter_args(query, filters.area.data)
-        filters.add_choices(groups, areas)
-        # Check the form data - if valid the area parameters are probably wrong
+        types, areas = search.filter_args(query, filters.area.data)
+        filters.add_choices(types, areas)
         if not filters.validate():
             raise search.InvalidParameters(query, "area",
                                            filters.area.data)

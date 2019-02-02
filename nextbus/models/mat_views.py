@@ -3,6 +3,8 @@ Materialized views for the nextbus package.
 """
 import functools
 
+from sqlalchemy.dialects import postgresql as pg
+
 from nextbus import db
 from nextbus.models import utils
 from nextbus.models.tables import (
@@ -76,7 +78,7 @@ def _select_fts_vectors():
         view.
 
         Core expressions are required, because the session has not been set up
-        yet, though ORM models and attributes can still be used,
+        yet, though ORM models and attributes can still be used.
     """
     null = db.literal_column("NULL")
 
@@ -93,8 +95,10 @@ def _select_fts_vectors():
             null.label("district_name"),
             null.label("admin_area_ref"),
             null.label("admin_area_name"),
+            db.cast(pg.array([]), pg.ARRAY(db.Text)).label("admin_areas"),
             _tsvector_column((Region.name, "A")).label("vector")
         ])
+        .where(Region.code != 'GB')
     )
 
     admin_area = (
@@ -110,8 +114,10 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
+            pg.array([AdminArea.code]).label("admin_areas"),
             _tsvector_column((AdminArea.name, "A")).label("vector")
         ])
+        .where(AdminArea.region_ref != 'GB')
     )
 
     district = (
@@ -127,6 +133,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
+            pg.array([AdminArea.code]).label("admin_areas"),
             _tsvector_column(
                 (District.name, "A"),
                 (AdminArea.name, "B")
@@ -136,14 +143,6 @@ def _select_fts_vectors():
             District.__table__
             .join(AdminArea, AdminArea.code == District.admin_area_ref)
         )
-    )
-
-    t_locality = (
-        db.select([
-            StopPoint.locality_ref.label("code")
-        ])
-        .group_by(StopPoint.locality_ref)
-        .alias("locality_stops")
     )
 
     locality = (
@@ -159,6 +158,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
+            pg.array([AdminArea.code]).label("admin_areas"),
             _tsvector_column(
                 (Locality.name, "A"),
                 (db.func.coalesce(District.name, ""), "B"),
@@ -167,19 +167,11 @@ def _select_fts_vectors():
         ])
         .select_from(
             Locality.__table__
-            .join(t_locality, t_locality.c.code == Locality.code)
             .outerjoin(District, District.code == Locality.district_ref)
             .join(AdminArea, AdminArea.code == Locality.admin_area_ref)
         )
-    )
-
-    t_area = (
-        db.select([
-            StopPoint.stop_area_ref.label("code"),
-            db.cast(db.func.count(StopPoint.atco_code), db.Text).label("ind")
-        ])
-        .group_by(StopPoint.stop_area_ref)
-        .alias("stop_count")
+        .where(db.exists([StopPoint.atco_code])
+               .where(StopPoint.locality_ref == Locality.code))
     )
 
     stop_area = (
@@ -187,7 +179,8 @@ def _select_fts_vectors():
             utils.table_name(StopArea).label("table_name"),
             StopArea.code.label("code"),
             StopArea.name.label("name"),
-            t_area.c.ind.label("short_ind"),
+            db.cast(db.func.count(StopPoint.atco_code), db.Text)
+            .label("short_ind"),
             null.label("street"),
             StopArea.stop_area_type.label("stop_type"),
             null.label("stop_area_ref"),
@@ -195,6 +188,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
+            pg.array([AdminArea.code]).label("admin_areas"),
             _tsvector_column(
                 (StopArea.name, "A"),
                 (db.func.coalesce(Locality.name, ""), "C"),
@@ -204,11 +198,12 @@ def _select_fts_vectors():
         ])
         .select_from(
             StopArea.__table__
-            .join(t_area, t_area.c.code == StopArea.code)
+            .outerjoin(StopPoint, StopArea.code == StopPoint.stop_area_ref)
             .outerjoin(Locality, Locality.code == StopArea.locality_ref)
             .outerjoin(District, District.code == Locality.district_ref)
             .join(AdminArea, AdminArea.code == StopArea.admin_area_ref)
         )
+        .group_by(StopArea.code, Locality.name, District.name, AdminArea.code)
     )
 
     stop_point = (
@@ -224,6 +219,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
+            pg.array([AdminArea.code]).label("admin_areas"),
             _tsvector_column(
                 (StopPoint.name, "A"),
                 (StopPoint.street, "B"),
@@ -240,52 +236,10 @@ def _select_fts_vectors():
         )
     )
 
-    # Concatenate operator, locality, district and admin area names covered
-    area_names = (
-        db.select([
-            Service.id.label("id"),
-            db.func.string_agg(db.distinct(Locality.name),
-                               " ").label("localities"),
-            db.func.string_agg(db.distinct(db.func.coalesce(District.name, "")),
-                               " ").label("districts"),
-            db.func.string_agg(db.distinct(AdminArea.name),
-                               " ").label("admin_areas")
-        ])
-        .select_from(
-            Service.__table__
-            .join(JourneyPattern, Service.id == JourneyPattern.service_ref)
-            .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
-            .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
-            .join(Locality, StopPoint.locality_ref == Locality.code)
-            .outerjoin(District, Locality.district_ref == District.code)
-            .join(AdminArea, Locality.admin_area_ref == AdminArea.code)
-        )
-        .group_by(Service.id)
-        .alias("area_names")
-    )
-
-    operator_names = (
-        db.select([
-            Service.id.label("id"),
-            db.func.string_agg(db.distinct(LocalOperator.name),
-                               " ").label("operators")
-        ])
-        .select_from(
-            Service.__table__
-            .join(JourneyPattern, JourneyPattern.service_ref == Service.id)
-            .join(LocalOperator, db.func.and_(
-                      LocalOperator.code == JourneyPattern.local_operator_ref,
-                      LocalOperator.region_ref == JourneyPattern.region_ref
-                  ))
-        )
-        .group_by(Service.id)
-        .alias("operator_names")
-    )
-
     service = (
         db.select([
             utils.table_name(Service).label("table_name"),
-            Service.id.label("code"),
+            db.cast(Service.id, db.Text).label("code"),
             Service.description.label("name"),
             Service.line.label("short_ind"),
             null.label("street"),
@@ -295,27 +249,36 @@ def _select_fts_vectors():
             null.label("district_name"),
             null.label("admin_area_ref"),
             null.label("admin_area_name"),
+            db.func.array_agg(db.distinct(AdminArea.code)).label("admin_areas"),
             _tsvector_column(
                 (Service.line, "A"),
                 (Service.description, "A"),
-                (operator_names.c.operators, "B"),
-                (area_names.c.localities, "C"),
-                (area_names.c.districts, "D"),
-                (area_names.c.admin_areas, "D")
+                (db.func.string_agg(db.distinct(LocalOperator.name), " "), "B"),
+                (db.func.string_agg(db.distinct(Locality.name), " "), "C"),
+                (db.func.coalesce(
+                    db.func.string_agg(db.distinct(District.name), " "),
+                    ""
+                ), "D"),
+                (db.func.string_agg(db.distinct(AdminArea.name), " "), "D")
             ).label("vector")
         ])
-        .distinct()
         .select_from(
             Service.__table__
-            .join(area_names, area_names.c.id == Service.id)
-            .join(operator_names, operator_names.c.id == Service.id)
+            .join(JourneyPattern, JourneyPattern.service_ref == Service.id)
+            .join(LocalOperator,
+                  (LocalOperator.code == JourneyPattern.local_operator_ref) &
+                  (LocalOperator.region_ref == JourneyPattern.region_ref))
+            .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
+            .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
+            .join(Locality, StopPoint.locality_ref == Locality.code)
+            .outerjoin(District, Locality.district_ref == District.code)
+            .join(AdminArea, Locality.admin_area_ref == AdminArea.code)
         )
+        .group_by(Service.id)
     )
 
-    queries = (region, admin_area, district, locality, stop_area, stop_point,
-               service)
-
-    return db.union_all(*queries)
+    return db.union_all(region, admin_area, district, locality, stop_area,
+                        stop_point, service)
 
 
 class NaturalSort(utils.MaterializedView):
@@ -345,9 +308,8 @@ class FTS(utils.MaterializedView):
         other results
         - ``admin_area_ref`` Admin area code for filtering on search page
         - ``admin_area_name`` Name of admin area for filtering on search page
+        - ``admin_areas`` Array of admin area refs to filter with
         - ``vector`` The tsvector value to be searched over
-        - ``rank`` Search rank - in case of stop point this is the first
-        non-zero rank
 
         A threshold for rankings can be set such that only results with name
         or street that matches the query are included. For example, a stop with
@@ -362,25 +324,22 @@ class FTS(utils.MaterializedView):
         to ``A`` respectively.
     """
     __table__ = utils.create_mat_view("fts", _select_fts_vectors())
-    # Rank attribute left blank for search queries. See:
-    # http://docs.sqlalchemy.org/en/latest/orm/mapped_sql_expr.html
-    rank = db.query_expression()
 
     # Unique index for table_name + code required for concurrent refresh
     __table_args__ = (
-        db.Index("ix_fts_name", "table_name"),
+        db.Index("ix_fts_table", "table_name"),
         db.Index("ix_fts_code", "code"),
         db.Index("ix_fts_unique", "table_name", "code", unique=True),
-        db.Index("ix_fts_area", "admin_area_ref"),
-        db.Index("ix_fts_gin", "tsvector", postgresql_using="gin")
+        db.Index("ix_fts_vector_gin", "tsvector", postgresql_using="gin"),
+        db.Index("ix_fts_areas_gin", "admin_areas", postgresql_using="gin")
     )
 
-    TYPES = {
-        "area": ("Areas", [Region, AdminArea, District]),
-        "place": ("Places", [Locality]),
-        "stop": ("Stops", [StopArea, StopPoint]),
-        "line": ("Lines", [Service])
-    }
+    TYPES = {"area": "Areas", "place": "Places", "stop": "Stops",
+             "service": "Services"}
+    TYPE_TABLES = {"area": {"region", "admin_area", "district"},
+                   "place": {"locality"}, "stop": {"stop_area", "stop_point"},
+                   "service": {"service"}}
+
     MINIMUM_AREA_RANK = 0.5
     MINIMUM_STOP_RANK = 0.25
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
@@ -389,7 +348,7 @@ class FTS(utils.MaterializedView):
         return "<FTS(%s, %s)>" % (self.table_name, self.code)
 
     @classmethod
-    def _match(cls, query):
+    def match(cls, query):
         """ Full text search expression with a tsquery.
 
             :param query: String suitable for ``to_tsquery()`` function.
@@ -398,7 +357,7 @@ class FTS(utils.MaterializedView):
         return cls.vector.match(query, postgresql_regconfig="english")
 
     @classmethod
-    def _ts_rank(cls, query):
+    def ts_rank(cls, query):
         """ Full text search rank expression with a tsquery.
 
             :param query: String suitable for ``to_tsquery()`` function.
@@ -419,25 +378,24 @@ class FTS(utils.MaterializedView):
             set by ``MINIMUM_AREA_RANK`` and ``MINIMUM_STOP_RANK``.
             :returns: Query expression with added filters, if any
         """
-        if types is not None and set(types) - cls.TYPES.keys():
+        if types and set(types) - cls.TYPES.keys():
             raise ValueError("Invalid values for type parameter.")
 
-        if types is not None:
+        if types:
             tables = []
             for type_ in types:
-                tables.extend(t.__tablename__ for t in cls.TYPES[type_][1])
+                tables.extend(cls.TYPE_TABLES[type_])
             match = match.filter(cls.table_name.in_(tables))
 
-        if areas is not None:
-            match = match.filter(cls.admin_area_ref.in_(areas),
-                                 cls.admin_area_ref.isnot(None))
+        if areas:
+            match = match.filter(cls.admin_areas.overlap(areas))
 
         if rank is not None:
-            match = match.filter(db.or_(
-                rank > cls.MINIMUM_AREA_RANK,
-                db.and_(cls.table_name == StopPoint.__tablename__,
-                        rank > cls.MINIMUM_STOP_RANK)
-            ))
+            match = match.filter(
+                (cls.table_name == StopPoint.__tablename__) &
+                (rank > cls.MINIMUM_STOP_RANK) |
+                (rank > cls.MINIMUM_AREA_RANK)
+            )
 
         return match
 
@@ -459,21 +417,21 @@ class FTS(utils.MaterializedView):
         except AttributeError:
             string = string_not = query
 
-        # Add rank value
-        rank = cls._ts_rank(string_not).label("rank")
-        # Join with stop area codes to exclude stop points
-        stop_areas = (
-            db.session.query(cls.code)
-            .filter(cls._match(string))
-            .subquery()
-        )
-        # Defer vector column and order by rank, name and indicator
+        fts_sa = db.aliased(cls)
+        rank = cls.ts_rank(string_not)
+        # Defer vector and admin areas, and order by rank, name and indicator
         match = (
             cls.query
-            .options(db.with_expression(cls.rank, rank), db.defer(cls.vector))
-            .outerjoin(stop_areas, stop_areas.c.code == cls.stop_area_ref)
+            .options(db.defer(cls.vector), db.defer(cls.admin_areas))
             .outerjoin(NaturalSort, cls.short_ind == NaturalSort.string)
-            .filter(cls._match(string), stop_areas.c.code.is_(None))
+            .filter(
+                cls.match(string),
+                # Ignore stops whose stop areas already match
+                ~db.exists().where(
+                    fts_sa.match(string) &
+                    (fts_sa.code == cls.stop_area_ref)
+                )
+            )
             .order_by(db.desc(rank), cls.name, NaturalSort.index)
         )
         # Add filters for rank, types or admin area
@@ -494,7 +452,7 @@ class FTS(utils.MaterializedView):
             :param admin_areas: Filter by admin areas to get matching types
             :param names_only: Sets thresholds for search rankings such that
             only results that match the higher weighted lexemes are retained.
-            :returns: A tuple with a dict of types and a dict of tuples with
+            :returns: A tuple with a dict of types and a dict with
             administrative area references and names
         """
         try:
@@ -504,28 +462,34 @@ class FTS(utils.MaterializedView):
             string = string_not = query
 
         expr = (
-            db.session.query(cls.table_name, cls.admin_area_ref,
-                             cls.admin_area_name)
-            .distinct(cls.table_name, cls.admin_area_ref)
-            .filter(cls._match(string))
+            db.session.query(
+                pg.array_agg(db.distinct(cls.table_name)).label("tables"),
+                pg.array_agg(db.distinct(
+                    pg.array([AdminArea.code, AdminArea.name])
+                )).label("areas")
+            )
+            .select_from(db.func.unnest(cls.admin_areas).alias("unnest_areas"))
+            .join(AdminArea, db.column("unnest_areas") == AdminArea.code)
+            .filter(cls.match(string))
         )
         if names_only:
-            expr = cls._apply_filters(expr, rank=cls._ts_rank(string_not))
+            expr = cls._apply_filters(expr, rank=cls.ts_rank(string_not))
 
-        result = expr.all()
-        # Sort results into separate sets and group tables into types
-        areas = {row.admin_area_ref: row.admin_area_name for row in result
-                 if row.admin_area_ref is not None}
+        # All data should have been aggregated into one row
+        result = expr.one()
 
-        if admin_areas:
-            tables = {row.table_name for row in result
-                      if row.admin_area_ref in admin_areas}
+        if result.tables is not None:
+            tables = set(result.tables)
+            if admin_areas:
+                tables &= set(admin_areas)
+            types = {t: n for t, n in cls.TYPES.items()
+                     if tables & cls.TYPE_TABLES[t]}
         else:
-            tables = {row.table_name for row in result}
+            types = {}
 
-        types = {}
-        for type_, (name, models) in cls.TYPES.items():
-            if tables & set(t.__tablename__ for t in models):
-                types[type_] = name
+        if result.areas is not None:
+            areas = dict(result.areas)
+        else:
+            areas = {}
 
         return types, areas

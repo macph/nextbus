@@ -121,8 +121,8 @@ def search_code(query):
         found = SearchResult(stop=q_stop)
 
     if found:
-        current_app.logger.info("Search query %r returned exact match %r"
-                                % (query, found))
+        current_app.logger.debug("Search query %r returned exact match %r"
+                                 % (query, found))
 
     return found
 
@@ -161,7 +161,7 @@ def search_all(query, types=None, admin_areas=None, page=1):
         page = res.paginate(page_num, per_page=PAGE_LENGTH, error_out=False)
 
         count = page.total
-        current_app.logger.info(
+        current_app.logger.debug(
             "Search query %r parsed as %r and returned %s result%s" %
             (query, parsed.to_string(), count, "" if count == 1 else "s")
         )
@@ -175,8 +175,7 @@ def filter_args(query, admin_areas=None):
 
     :param query: Query text returned from search form.
     :param admin_areas: Filter possible groups with pre-selected admin areas.
-    :returns: Tuple of two lists: the result types and administrative areas,
-    with the latter a list of tuples.
+    :returns: Tuple of two dicts: the result types and administrative areas
     """
     parsed = ts_parser(query)
     types, args = models.FTS.matching_types(parsed, admin_areas, NAMES_ONLY)

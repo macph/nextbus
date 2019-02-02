@@ -2,7 +2,7 @@
 {% import 'functions.html' as f %}
 {% block title %}Search results{{ " for \"%s\""|format(query) if query }}{% endblock %}
 
-{% set f_groups = filters|default(false) and filters.group.choices %}
+{% set f_groups = filters|default(false) and filters.group.choices|length > 1 %}
 {% set f_areas = filters|default(false) and filters.area.choices|length > 1 %}
 
 {# Set checkbox as checked if matching value is in query string #}

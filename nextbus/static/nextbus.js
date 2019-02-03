@@ -74,7 +74,7 @@ function StarredStops(cookieSet, info) {
         };
         self.info.style.height = self.info.scrollHeight + 'px';
         window.addEventListener('resize', resizeInfo);
-    
+
         element.blur();
         element.textContent = 'Confirm starred stop';
         element.onclick = function() {
@@ -286,6 +286,72 @@ function revertColours(...classes) {
 }
 
 /**
+ * Shorthand for creating a new element without namespace
+ * @param {string} tag tag name
+ * @param {?(object|HTMLElement|string|HTMLElement[]|string[])} attr object containing attributes
+ * for new element, eg style, but can also be first child element or array of children if no
+ * attributes are required
+ * @param  {...?(HTMLElement|string|HTMLElement[]|string[])} children child elements or array of
+ * elements to be appended
+ * @returns {HTMLElement}
+ */
+function element(tag, attr, ...children) {
+    let element = document.createElement(tag);
+
+    if (attr == null && !children) {
+        return element;
+    }
+
+    if (attr != null && (typeof attr === 'string' || attr instanceof HTMLElement ||
+                         attr instanceof Array)) {
+        children.unshift(attr);
+    } else if (attr != null) {
+        let a, s;
+        for (a in attr) {
+            if (!attr.hasOwnProperty(a)) {
+                continue;
+            }
+            if (a === 'style') {
+                for (s in attr['style']) {
+                    if (attr['style'].hasOwnProperty(s)) {
+                        element.style[s] = attr['style'][s];
+                    }
+                }
+            } else {
+                element[a] = attr[a];
+            }
+        }
+    }
+
+    let append = function(child) {
+        if (child == null) {
+            return;
+        }
+        if (typeof child == 'string') {
+            element.appendChild(document.createTextNode(child));
+        } else if (child instanceof HTMLElement) {
+            element.appendChild(child);
+        } else {
+            throw new TypeError('Child element is not a valid HTML element or string.');
+        }
+    };
+
+    if (children) {
+        let i, c;
+        for (i = 0; i < children.length; i++) {
+            c = children[i];
+            if (c instanceof Array) {
+                c.forEach(append);
+            } else {
+                append(c);
+            }
+        }
+    }
+
+    return element;
+}
+
+/**
  * Removes all sub-elements from an element
  * @param {HTMLElement} element Element to remove all children from
  */
@@ -422,85 +488,62 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 self.headingTime.textContent = 'Estimated times from ' + self.data.localTime;
             }
 
-            let table = document.createElement('div');
-            table.className = 'list-services';
+            let table = element('div', {className: 'list-services'});
             for (let s = 0; s < self.data.services.length; s++) {
                 let service = self.data.services[s];
                 let row = s + 1;
 
                 // Cell showing bus line number
-                let cNum = document.createElement('div');
-                cNum.className = 'service service__line';
-                cNum.style.msGridRow = row;
-
-                // Inner div to center line number and size properly
-                let cNumInner = document.createElement('div');
-                cNumInner.className = 'service service__line__inner area-' + self.adminAreaCode;
-                if (service.name.length > 6) {
-                    cNumInner.classList.add('service__line--small');
-                }
-                let cNumInnerSpan = document.createElement('span');
-                cNumInnerSpan.appendChild(document.createTextNode(service.name));
-                cNumInner.appendChild(cNumInnerSpan);
-                cNum.appendChild(cNumInner);
+                let cNum = element('div',
+                    {className: 'service service__line', style: {msGridRow: row}},
+                    element('div',
+                        {className: 'service service__line__inner area-' + self.adminAreaCode +
+                                    ((service.name.length > 6) ? ' service__line--small' : '')},
+                        element('span', service.name)
+                    )
+                );
 
                 // Destination
-                let cDest = document.createElement('div');
-                cDest.className = 'service service__destination';
-                cDest.style.msGridRow = row;
-                let cDestSpan = document.createElement('span');
-                cDestSpan.appendChild(document.createTextNode(service.dest));
-                cDest.appendChild(cDestSpan);
+                let cDest = element('div',
+                    {className: 'service service__destination', style: {msGridRow: row}},
+                    element('span', service.dest)
+                );
 
                 // Next bus due
-                let cNext = document.createElement('div');
-                cNext.className = 'service service__next';
-                cNext.style.msGridRow = row;
-                let cNextSpan = document.createElement('span');
-                if (service.expected[0].live) {
-                    cNextSpan.className = clLive;
-                }
-                let exp = self._strDue(service.expected[0].secs);
-                cNextSpan.appendChild(document.createTextNode(exp));
-                cNext.appendChild(cNextSpan);
+                let cNext = element('div',
+                    {className: 'service service__next', style: {msGridRow: row}},
+                    element('span',
+                        {className: (service.expected[0].live) ? clLive : ''},
+                        self._strDue(service.expected[0].secs)
+                    )
+                );
 
                 // Buses after
-                let cAfter = document.createElement('div');
-                cAfter.className = 'service service__after';
-                cAfter.style.msGridRow = row;
-                let cAfterSpan = document.createElement('span');
-
+                let cAfter, cAfterSpan;
                 // If number of expected services is 2, only need to show the 2nd service here
                 if (service.expected.length === 2) {
-                    let firstMin = document.createElement('span');
-                    if (service.expected[1].live) {
-                        firstMin.className = clLive;
-                    }
-                    firstMin.appendChild(
-                        document.createTextNode(self._strDue(service.expected[1].secs))
+                    cAfterSpan = element('span',
+                        {className: (service.expected[1].live) ? clLive : ''},
+                        self._strDue(service.expected[1].secs)
                     );
-                    cAfter.appendChild(firstMin);
-
                 // Otherwise, show the 2nd and 3rd services
                 } else if (service.expected.length > 2) {
-                    let firstMin = document.createElement('span');
-                    if (service.expected[1].live) {
-                        firstMin.className = clLive;
-                    }
-                    let secondMin = document.createElement('span');
-                    if (service.expected[2].live) {
-                        secondMin.className = clLive;
-                    }
-                    let exp1 = self._strDue(service.expected[1].secs).replace('min', 'and');
-                    firstMin.appendChild(document.createTextNode(exp1));
-                    let exp2 = self._strDue(service.expected[2].secs);
-                    secondMin.appendChild(document.createTextNode(exp2));
-
-                    cAfterSpan.appendChild(firstMin);
-                    cAfterSpan.appendChild(document.createTextNode(' '));
-                    cAfterSpan.appendChild(secondMin);
+                    cAfterSpan = element('span',
+                        element('span',
+                            {className: (service.expected[1].live) ? clLive : ''},
+                            self._strDue(service.expected[1].secs).replace(' min', '') + ' and'
+                        ),
+                        ' ',
+                        element('span',
+                            {className: (service.expected[2].live) ? clLive : ''},
+                            self._strDue(service.expected[2].secs)
+                        )
+                    );
                 }
-                cAfter.appendChild(cAfterSpan);
+                cAfter = element('div',
+                    {className: 'service service__after', style: {msGridRow: row}},
+                    cAfterSpan
+                );
 
                 // Add the four cells to new table
                 table.appendChild(cNum);
@@ -805,6 +848,27 @@ function detectIE() {
 
 
 /**
+ * Creates indicator element from stop point data
+ * @param {{indicator: string, stopType: string}} stopData
+ * @returns {?HTMLElement}
+ */
+function createIndicator(stopData) {
+    let ind;
+    if (stopData.indicator !== '') {
+        ind = element('span', stopData.indicator);
+    } else if (stopData.stopType === 'BCS' || stopData.stopType === 'BCT') {
+        ind = element('img', {src: BUS_SVG, width: '28', alt: 'Bus stop'});
+    } else if (stopData.stopType === 'PLT') {
+        ind = element('img', {src: TRAM_SVG, width: '28', alt: 'Tram stop'});
+    } else {
+        ind = null;
+    }
+
+    return ind;
+}
+
+
+/**
  * Handles layers of stop markers
  * @constructor
  * @param {object} stopMap Parent stop map object
@@ -937,30 +1001,24 @@ function StopLayer(stopMap) {
     /**
      * Creates marker element to be used in map
      * @param {StopPoint} stop Point object from data
-     * @returns {string} Needs to be a HTML string as divIcon does not accept HTML elements
+     * @returns {HTMLElement} Element for marker
      * @private
      */
     this._markerElement = function(stop) {
-        let ind = '';
-        if (stop.properties.indicator !== '') {
-            ind = '<span>' + stop.properties.indicator + '</span>'
-        } else if (stop.properties.stopType === 'BCS' ||
-                    stop.properties.stopType === 'BCT') {
-            ind = '<img src="' + BUS_SVG + '" width=28px alt="Bus stop">'
-        } else if (stop.properties.stopType === 'PLT') {
-            ind = '<img src="' + TRAM_SVG + '" width=28px alt="Tram stop">'
-        }
-
-        let arrow = '';
+        let arrow = null;
         if (!self.isIE) {
-            let bearing = 'indicator-marker__arrow--' + stop.properties.bearing;
-            arrow = '<div class="indicator-marker__arrow ' + bearing + '"></div>';
+            let className = 'indicator-marker__arrow';
+            if (stop.properties.bearing) {
+                className += ' ' + 'indicator-marker__arrow--' + stop.properties.bearing;
+            }
+            arrow = element('div', {className: className})
         }
 
-        let area = 'area-' + stop.properties.adminAreaRef;
-        let indClass = 'indicator indicator-marker ' + area;
-
-        return '<div class="' + indClass + '">' + arrow + ind + '</div>';
+        return element('div',
+            {className: 'indicator indicator-marker area-' + stop.properties.adminAreaRef},
+            arrow,
+            createIndicator(stop.properties)
+        );
     };
 
     /**
@@ -976,7 +1034,7 @@ function StopLayer(stopMap) {
                 let icon = L.divIcon({
                     className: 'marker',
                     iconSize: null,
-                    html: self._markerElement(stop)
+                    html: self._markerElement(stop).outerHTML
                 });
                 let marker = L.marker(latLng, {
                         icon: icon,
@@ -1409,18 +1467,19 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setPanelMessage = function(text) {
-        let heading = document.createElement('div');
-        heading.className = 'heading heading--panel';
-
-        let headingText = document.createElement('h2');
+        let headingText;
         if (text) {
-            headingText.textContent = text;
+            headingText = text;
         } else if (self.stopMap.map.getZoom() <= TILE_ZOOM) {
-            headingText.textContent = 'Zoom in to see stops';
+            headingText = 'Zoom in to see stops';
         } else {
-            headingText.textContent = 'Select a stop';
+            headingText = 'Select a stop';
         }
-        heading.appendChild(headingText);
+
+        let heading = element('div',
+            {className: 'heading heading--panel'},
+            element('h2', headingText)
+        );
 
         self.clearPanel();
         self.mapPanel.appendChild(heading);
@@ -1437,129 +1496,96 @@ function Panel(stopMap, mapPanel, cookieSet) {
         if (self.currentService !== null) {
             let data = self.stopMap.routeLayer.data;
 
-            nav = document.createElement('nav');
-            let breadcrumbs = document.createElement('ul');
-            breadcrumbs.className = 'breadcrumbs breadcrumbs--trailing';
-
-            let serviceItem = document.createElement('li'),
-                serviceLink = document.createElement('span');
-            serviceLink.className = 'anchor';
-            serviceLink.textContent = 'Service ' + data.line;
-            serviceLink.onclick = function() {
-                self.stopMap.update({stop: null});
-                return false;
-            };
-            serviceItem.appendChild(serviceLink);
-
-            breadcrumbs.appendChild(serviceItem);
-            nav.appendChild(breadcrumbs);
+            nav = element('nav',
+                element('ul',
+                    {className: 'breadcrumbs breadcrumbs--trailing'},
+                    element('li',
+                        element('span',
+                            {className: 'anchor', onclick: function() {
+                                self.stopMap.update({stop: null});
+                                return false;
+                            }},
+                            'Service ' + data.line
+                        )
+                    )
+                )
+            );
         }
 
-        let heading = document.createElement('div');
-        heading.className = 'heading-stop';
+        let heading = element('div',
+            {className: 'heading-stop'},
+            element('div',
+                {className: 'indicator area-' + data.adminAreaRef},
+                createIndicator(data)
+            ),
+            element('h1', data.name)
+        );
 
-        let stopInd = document.createElement('div');
-        stopInd.className = 'indicator area-' + data.adminAreaRef;
-        let ind = null;
-        if (data.indicator !== '') {
-            ind = document.createElement('span');
-            ind.textContent = data.indicator;
-        } else if (data.stopType === 'BCS' ||
-                    data.stopType === 'BCT') {
-            ind = document.createElement('img');
-            ind.src = BUS_SVG;
-            ind.width = '28';
-            ind.alt = 'Bus stop';
-        } else if (data.stopType === 'PLT') {
-            ind = document.createElement('img');
-            ind.src = TRAM_SVG;
-            ind.width = '28';
-            ind.alt = 'Tram stop';
-        }
-        stopInd.appendChild(ind);
+        let headingText = null,
+            hasBearing = (data.bearing !== null && self.directions.hasOwnProperty(data.bearing)),
+            hasStreet = (data.street !== null);
 
-        let stopHeading = document.createElement('h1');
-        stopHeading.textContent = data.name;
-
-        heading.appendChild(stopInd);
-        heading.appendChild(stopHeading);
-
-        let headingOuter = document.createElement('div');
-        headingOuter.className = 'heading heading--panel';
-        headingOuter.id = 'panel-heading-outer';
-        if (nav !== null) {
-            headingOuter.appendChild(nav);
-        }
-        headingOuter.appendChild(heading);
-
-        let headingText = null;
-        if (data.bearing !== null && self.directions.hasOwnProperty(data.bearing)) {
-            headingText = document.createElement('p');
+        if (hasBearing && hasStreet) {
+            headingText = element('p',
+                element('strong', data.street),
+                ', ',
+                self.directions[data.bearing]
+            );
+        } else if (hasBearing) {
             let dirText = self.directions[data.bearing];
-            if (data.street !== null) {
-                headingText.innerHTML = '<strong>' + data.street + '</strong>, ' + dirText;
-            } else {
-                headingText.textContent = dirText.charAt(0).toUpperCase() + dirText.slice(1);
-            }
-        } else if (data.street !== null) {
-            headingText = document.createElement('p');
-            headingText.innerHTML = '<strong>' + data.street + '</strong>';
-        }
-        if (headingText !== null) {
-            headingOuter.appendChild(headingText);
+            headingText = element('p', dirText.charAt(0).toUpperCase() + dirText.slice(1));
+        } else if (hasStreet) {
+            headingText = element('p', element('strong', data.street));
         }
 
-        let liveTimes = document.createElement('section');
-        liveTimes.className = 'card card--panel';
-        let liveHeading = document.createElement('div');
-        liveHeading.className = 'heading-inline heading-inline--right';
-        let liveHeadingTime = document.createElement('h2');
-        liveHeadingTime.id = 'live-time';
-        liveHeadingTime.textContent = 'Retrieving live data...';
-        let liveHeadingCountdown = document.createElement('p');
-        liveHeadingCountdown.id = 'live-countdown';
-        liveHeading.appendChild(liveHeadingTime);
-        liveHeading.appendChild(liveHeadingCountdown);
-        let liveServices = document.createElement('div');
-        liveServices.id = 'services';
-        liveTimes.appendChild(liveHeading);
-        liveTimes.appendChild(liveServices);
+        let headingOuter = element('div',
+            {className: 'heading heading--panel', id:  'panel-heading-outer'},
+            nav,
+            heading,
+            headingText
+        );
 
-        let services = document.createElement('section');
-        services.className = 'card card--panel';
-        let servicesHeading = document.createElement('h2');
-        servicesHeading.textContent = 'Services';
-        services.appendChild(servicesHeading);
+        let liveTimes = element('section',
+            {className: 'card card--panel'},
+            element('div',
+                {className: 'heading-inline heading-inline--right'},
+                element('h2', {id: 'live-time'}, 'Retrieving live data...'),
+                element('p', {id: 'live-countdown'})
+            ),
+            element('div', {id: 'services'})
+        );
+
+        let services = element('section',
+            {className: 'card card--panel'},
+            element('h2', 'Services')
+        );
 
         if (data.services) {
             let listNonTerminating = [],
                 listTerminating = [];
             data.services.forEach(function(s) {
-                let listItem = document.createElement('li');
-                let item = document.createElement('div');
-                item.onclick = function() {
-                    self.stopMap.update({
-                        stop: null,
-                        service: {id: s.id, reverse: s.reverse},
-                        fitService: true
-                    });
-                };
-                item.className = 'item item--service';
-                let line = document.createElement('div');
-                line.className = 'line';
-                let lineInner = document.createElement('div');
-                lineInner.className = 'line__inner area-' + data.adminAreaRef;
-                let lineSpan = document.createElement('span');
-                lineSpan.className = 'line__text';
-                lineSpan.textContent = s.line;
-                lineInner.appendChild(lineSpan);
-                line.appendChild(lineInner);
-                item.appendChild(line);
-                let itemLabel = document.createElement('div');
-                itemLabel.className = 'item__label';
-                itemLabel.textContent = (s.terminates) ? 'from ' + s.origin : s.destination;
-                item.appendChild(itemLabel);
-                listItem.appendChild(item);
+                let listItem = element('li',
+                    element('div',
+                        {className: 'item item--service', onclick: function() {
+                            self.stopMap.update({
+                                stop: null,
+                                service: {id: s.id, reverse: s.reverse},
+                                fitService: true
+                            });
+                        }},
+                        element('div',
+                            {className: 'line'},
+                            element('div',
+                                {className: 'line__inner area-' + data.adminAreaRef},
+                                element('span', {className: 'line__text'}, s.line)
+                            )
+                        ),
+                        element('div',
+                            {className: 'item__label'},
+                            (s.terminates) ? 'from ' + s.origin : s.destination
+                        )
+                    )
+                );
                 if (s.terminates) {
                     listTerminating.push(listItem);
                 } else {
@@ -1567,78 +1593,59 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 }
             });
 
-            let listServices = document.createElement('ul');
-            listServices.className = 'list';
-            listNonTerminating.forEach(function(i) {
-                listServices.appendChild(i);
-            });
-            services.appendChild(listServices);
+            services.appendChild(element('ul', {className: 'list'}, listNonTerminating));
+
             // Add terminating services under own section
             if (listTerminating.length > 0) {
-                let terminatingHeading = document.createElement('h3');
-                terminatingHeading.textContent = 'Terminating services';
-                services.appendChild(terminatingHeading);
-                let terminatingServices = document.createElement('ul');
-                terminatingServices.className = 'list';
-                listTerminating.forEach(function(i) {
-                    terminatingServices.appendChild(i);
-                });
-                services.appendChild(terminatingServices);
+                services.appendChild(element('h3', 'Terminating services'));
+                services.appendChild(element('ul', {className: 'list'}, listTerminating));
             }
         } else {
-            let message = document.createElement('p');
-            message.textContent = 'No services stop here.';
-            services.appendChild(message);
+            services.appendChild(element('p', 'No services stop here.'));
         }
 
-        let stopInfo = document.createElement('section');
-        stopInfo.className = 'card card--panel';
-        let infoHeading = document.createElement('h2');
-        infoHeading.textContent = 'Stop information';
-        stopInfo.appendChild(infoHeading);
-
-        let infoSet = [];
+        let infoLine = null,
+            infoSet = [];
         if (data.street) {
-            infoSet.push('<strong>' + data.street + '</strong>');
+            infoSet.push(element('strong', data.street));
         }
         if (data.crossing) {
-            infoSet.push(data.street);
+            infoSet.push(data.crossing);
         }
         if (data.landmark) {
             infoSet.push(data.landmark);
         }
         if (infoSet) {
-            let infoLine = document.createElement('p');
-            infoLine.innerHTML = infoSet.join(', ');
-            stopInfo.appendChild(infoLine);
+            let i;
+            for (i = infoSet.length - 1; i > 0; i--) {
+                infoSet.splice(i, 0, ', ');
+            }
+            infoLine = element('p', infoSet);
         }
 
-        let smsCode = document.createElement('p');
-        smsCode.innerHTML = 'SMS code <strong>' + data.naptanCode + '</strong>';
-        stopInfo.appendChild(smsCode);
+        let stopInfo = element('section',
+            {className: 'card card--panel'},
+            element('h2', 'Stop Information'),
+            infoLine,
+            element('p', 'SMS code ', element('strong', data.naptanCode))
+        );
 
-        let actions = document.createElement('section');
-        actions.className = 'card card--minor card--panel card--buttons';
-        let zoomTo = document.createElement('button');
-        zoomTo.className = 'button';
-        let zoomToInner = document.createElement('span');
-        zoomToInner.textContent = 'Zoom to stop';
-        zoomTo.appendChild(zoomToInner);
-        zoomTo.onclick = function() {
-            zoomTo.blur();
-            self.stopMap.map.flyTo(
-                L.latLng(data.latitude, data.longitude), 18
-            );
-        };
-        let visitStop = document.createElement('a');
-        visitStop.className = 'button';
-        visitStop.href = STOP_PAGE_URL + data.atcoCode;
-        let visitStopInner = document.createElement('span');
-        visitStopInner.textContent = 'View stop page';
-        visitStop.appendChild(visitStopInner);
-        actions.appendChild(zoomTo);
-        actions.appendChild(visitStop);
-
+        let actions = element('section',
+            {className: 'card card--minor card--panel card--buttons'},
+            element('button',
+                {className: 'button', onclick: function() {
+                    this.blur();
+                    self.stopMap.map.flyTo(
+                        L.latLng(data.latitude, data.longitude), 18
+                    );
+                }},
+                element('span', 'Fly to stop')
+            ),
+            element('a',
+                {className: 'button', href: STOP_PAGE_URL + data.atcoCode},
+                element('span', 'Stop page')
+            )
+        );
         self.clearPanel();
         self.mapPanel.appendChild(headingOuter);
         resizeIndicator('indicator');
@@ -1650,22 +1657,22 @@ function Panel(stopMap, mapPanel, cookieSet) {
         self.getStop(
             data.atcoCode,
             data.adminAreaRef,
-            liveServices,
-            liveHeadingTime,
-            liveHeadingCountdown
+            'services',
+            'live-time',
+            'live-countdown'
         );
 
         self.starred.get(function() {
             let codeInList;
             if (!self.starred.set) {
-                let info = document.createElement('div');
-                info.className = 'hidden';
-                info.style.margin = '-5px 10px';
-                let infoInner = document.createElement('p');
-                infoInner.textContent = 'This will add a cookie to your device with a list of ' +
-                    'starred stops. No other identifiable information is stored. If you\'re happy ' +
-                    'with this, click again.';
-                info.appendChild(infoInner);
+                let info = element('div',
+                    {className: 'hidden', style: {margin: '-5px 10px'}},
+                    element('p',
+                        'This will add a cookie to your device with a list of starred stops. No ' +
+                        'other identifiable information is stored. If you\'re happy with this, ' +
+                        'click again.'
+                    )
+                );
                 actions.appendChild(info);
                 self.starred.info = info;
                 codeInList = false;
@@ -1673,21 +1680,22 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 codeInList = self.starred.data.indexOf(data.naptanCode) > -1;
             }
 
-            let starred = document.createElement('button');
-            starred.className = 'button';
-            let starredInner = document.createElement('span');
-            starred.appendChild(starredInner);
+            let starredAction, starredText;
             if (!self.starred.set || !codeInList) {
-                starredInner.textContent = 'Add starred stop';
-                starred.onclick = function() {
+                starredAction = function() {
                     self.starred.add(starred, data.naptanCode);
                 };
+                starredText = 'Add starred stop';
             } else {
-                starredInner.textContent = 'Remove starred stop';
-                starred.onclick = function() {
+                starredAction = function() {
                     self.starred.remove(starred, data.naptanCode);
                 };
+                starredText = 'Remove starred stop';
             }
+            let starred = element('button',
+                {className: 'button', onclick: starredAction},
+                element('span', starredText)
+            );
             actions.appendChild(starred);
         });
     };
@@ -1706,170 +1714,97 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setServicePanelData = function(data) {
-        let headingOuter = document.createElement('div');
-        headingOuter.className = 'heading heading--panel';
-        headingOuter.id = 'panel-heading-outer';
-
-        let heading = document.createElement('div');
-        heading.className = 'heading-service';
-
-        let headingLine = document.createElement('div');
-        headingLine.className = 'line';
-        let headingLineInner = document.createElement('div');
-        headingLineInner.className = 'line__inner';
-        let headingLineText = document.createElement('span');
-        headingLineText.className = 'line__text';
-        headingLineText.textContent = data.line;
-        headingLineInner.appendChild(headingLineText);
-        headingLine.appendChild(headingLineInner);
-        heading.appendChild(headingLine);
-
-        let headingDescription = document.createElement('h1');
-        headingDescription.textContent = data.description;
-        heading.appendChild(headingDescription);
-
-        headingOuter.appendChild(heading);
+        let headingOuter = element('div',
+            {className: 'heading heading--panel', id: 'panel-heading-outer'},
+            element('div',
+                {className: 'heading-service'},
+                element('div',
+                    {className: 'line'},
+                    element('div',
+                        {className: 'line__inner'},
+                        element('span', {className: 'line__text'}, data.line)
+                    )
+                ),
+                element('h1', data.description)
+            ),
+        );
 
         if (data.operators) {
-            let operators = document.createElement('p');
-            operators.appendChild(document.createTextNode('Operated by '));
+            let listOperators = [];
             data.operators.forEach(function(op, i) {
-                let strong = document.createElement('strong');
-                strong.textContent = op;
-                operators.appendChild(strong);
+                listOperators.push(element('strong', op));
                 if (i < data.operators.length - 2) {
-                    operators.appendChild(document.createTextNode(', '));
+                    listOperators.push(', ');
                 } else if (i === data.operators.length - 2) {
-                    operators.appendChild(document.createTextNode(' and '));
+                    listOperators.push(' and ');
                 }
             });
-            headingOuter.appendChild(operators);
+            headingOuter.appendChild(element('p', 'Operated by ', listOperators));
         }
 
-        let actions = document.createElement('section');
-        actions.className = 'card card--minor card--panel card--buttons';
+        let direction = (data.reverse) ? 'inbound' : 'outbound',
+            timetableURL = TIMETABLE_URL.replace('//', '/' + data.service + '/' + direction + '/');
 
-        let fitMap = document.createElement('button');
-        fitMap.className = 'button';
-        let fitMapInner = document.createElement('span');
-        fitMapInner.textContent = 'Fit on map';
-        fitMap.appendChild(fitMapInner);
-        fitMap.onclick = function() {
-            fitMap.blur();
-            self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
-        };
-        actions.appendChild(fitMap);
-
-        let closeService = document.createElement('button');
-        closeService.className = 'button';
-        let closeServiceInner = document.createElement('span');
-        closeServiceInner.textContent = 'Close service';
-        closeService.appendChild(closeServiceInner);
-        closeService.onclick = function() {
-            closeService.blur();
-            self.stopMap.update({service: null});
-        };
-        actions.appendChild(closeService);
-
-        let goToTimetable = document.createElement('a');
-        goToTimetable.className = 'button';
-        let goToTimetableInner = document.createElement('span');
-        goToTimetableInner.textContent = 'Timetable';
-        goToTimetable.appendChild(goToTimetableInner);
-        let newDirection = (data.reverse) ? 'inbound' : 'outbound',
-            newPart = '/' + data.service + '/' + newDirection + '/';
-        goToTimetable.href = TIMETABLE_URL.replace('//', newPart);
-        actions.appendChild(goToTimetable);
+        let actions = element('section',
+            {className: 'card card--minor card--panel card--buttons'},
+            element('button',
+                {className: 'button', onclick: function() {
+                    this.blur();
+                    self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
+                }},
+                element('span', 'Fit on map')
+            ),
+            element('button',
+                {className: 'button', onclick: function() {
+                    this.blur();
+                    self.stopMap.update({service: null});
+                }},
+                element('span', 'Close service')
+            ),
+            element('a',
+                {className: 'button', href: timetableURL},
+                element('span', 'Timetable')
+            )
+        );
 
         let tabs = null;
         if (data.mirrored) {
-            tabs = document.createElement('ul');
-            tabs.className = 'tabs tabs--panel tabs--2';
-
-            let outbound = document.createElement('li'),
-                inbound = document.createElement('li');
-
-            let outboundDiv = document.createElement('div'),
-                inboundDiv = document.createElement('div');
-            if (data.reverse) {
-                outboundDiv.className = 'tab';
-                outboundDiv.onclick = function() {
-                    map.update({service: {id: data.service, reverse: false}});
-                };
-                inboundDiv.className = 'tab tab--active';
-            } else {
-                outboundDiv.className = 'tab tab--active';
-                inboundDiv.className = 'tab';
-                inboundDiv.onclick = function() {
-                    map.update({service: {id: data.service, reverse: true}});
-                };
-            }
-
-            let outboundSpan = document.createElement('span'),
-                inboundSpan = document.createElement('span');
-            outboundSpan.textContent = 'Outbound';
-            inboundSpan.textContent = 'Inbound';
-
-            outboundDiv.appendChild(outboundSpan);
-            outbound.appendChild(outboundDiv);
-            inboundDiv.appendChild(inboundSpan);
-            inbound.appendChild(inboundDiv);
-
-            tabs.appendChild(outbound);
-            tabs.appendChild(inbound);
+            tabs = element('ul',
+                {className: 'tabs tabs--panel tabs--2'},
+                element('li',
+                    element('div',
+                        {className: (data.reverse) ? 'tab' : 'tab tab--active',
+                         onclick: (data.reverse) ? function() {
+                             map.update({service: {id: data.service, reverse: false}});
+                         } : null},
+                        element('span', 'Inbound')
+                    )
+                ),
+                element('li',
+                    element('div',
+                        {className: (data.reverse) ? 'tab tab--active' : 'tab',
+                         onclick: (data.reverse) ? null : function() {
+                             map.update({service: {id: data.service, reverse: true}});
+                         }},
+                        element('span', 'Outbound')
+                    )
+                )
+            );
         }
 
-        let list = document.createElement('section');
-        list.className = 'card card--panel card--relative';
-
-        let diagram = document.createElement('div');
-        diagram.className = 'diagram';
+        let list = element('section', {className: 'card card--panel card--relative'}),
+            diagram = element('div', {className: 'diagram'});
 
         let listStops = null;
         if (data.sequence) {
-            listStops = document.createElement('ul');
-            listStops.className = 'list list--relative';
-            listStops.id = 'listStops';
+            listStops = element('ul', {className: 'list list--relative'});
             data.sequence.forEach(function(code) {
-                let s = data.stops[code];
-                let li = document.createElement('li'),
-                    item = document.createElement('div');
+                let s = data.stops[code],
+                    item;
                 if (code) {
-                    item.className = 'item item--stop--multiline item--stop--service';
-                    let inner = document.createElement('div');
-                    inner.id = 'c' + s.properties.atcoCode;
-
-                    let innerItem = document.createElement('div');
-                    innerItem.className = 'item--stop';
-
-                    let stopInd = document.createElement('div');
-                    stopInd.className = 'indicator area-' + s.properties.adminAreaRef;
-                    stopInd.id = 'i' + s.properties.atcoCode;
-                    let ind = null;
-                    if (s.properties.indicator !== '') {
-                        ind = document.createElement('span');
-                        ind.textContent = s.properties.indicator;
-                    } else if (s.properties.stopType === 'BCS' ||
-                                s.properties.stopType === 'BCT') {
-                        ind = document.createElement('img');
-                        ind.src = BUS_SVG;
-                        ind.width = '28';
-                        ind.alt = 'Bus stop';
-                    } else if (s.properties.stopType === 'PLT') {
-                        ind = document.createElement('img');
-                        ind.src = TRAM_SVG;
-                        ind.width = '28';
-                        ind.alt = 'Tram stop';
-                    }
-                    stopInd.appendChild(ind);
-
-                    let stopLabel = document.createElement('div');
-                    stopLabel.className = 'item__label';
-                    stopLabel.textContent = s.properties.name;
-
-                    innerItem.appendChild(stopInd);
-                    innerItem.appendChild(stopLabel);
-                    inner.appendChild(innerItem);
+                    item = element('div',
+                        {className: 'item item--stop--multiline item--stop--service'}
+                    );
 
                     let sub = [];
                     if (s.properties.street) {
@@ -1878,11 +1813,21 @@ function Panel(stopMap, mapPanel, cookieSet) {
                     if (s.properties.locality) {
                         sub.push(s.properties.locality)
                     }
-                    if (sub) {
-                        let street = document.createElement('p');
-                        street.textContent = sub.join(', ');
-                        inner.appendChild(street);
-                    }
+                    let subtitle = (sub) ? element('p', sub.join(', ')) : null;
+
+                    let inner = element('div',
+                        {id: 'c' + s.properties.atcoCode},
+                        element('div',
+                            {className: 'item--stop'},
+                            element('div',
+                                {className: 'indicator area-' + s.properties.adminAreaRef,
+                                 id: 'i' + s.properties.atcoCode},
+                                createIndicator(s.properties)
+                            ),
+                            element('div', {className: 'item__label'}, s.properties.name),
+                        ),
+                        subtitle
+                    );
 
                     item.appendChild(inner);
                     item.onmouseover = function() {
@@ -1895,19 +1840,15 @@ function Panel(stopMap, mapPanel, cookieSet) {
                         self.stopMap.update({stop: s.properties.atcoCode, fitStop: true});
                     };
                 } else {
-                    item.className = 'item item--stop item--stop--empty';
-                    item.id = 'cNull';
-                    let stopInd = document.createElement('div');
-                    stopInd.className = 'indicator';
-                    stopInd.id = 'iNull';
-                    item.appendChild(stopInd);
+                    item = element('div',
+                        {className: 'item item--stop item--stop--empty', id: 'cNull'},
+                        element('div', {className: 'indicator', id: 'iNull'})
+                    );
                 }
-                li.appendChild(item);
-                listStops.appendChild(li);
+                listStops.appendChild(element('li', item));
             });
         } else {
-            listStops = document.createElement('p');
-            listStops.textContent = 'No stops for this service.';
+            listStops = element('p', 'No stops for this service.');
         }
 
         list.appendChild(diagram);

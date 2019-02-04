@@ -901,7 +901,7 @@ class Graph:
             self._v[v1].add(v2)
             if v2 not in self._v:
                 self._v[v2] = set()
-        else:
+        elif v1 not in self._v:
             self._v[v1] = set()
 
     def __delitem__(self, v):
@@ -912,10 +912,28 @@ class Graph:
         for u in self._v:
             self._v[u].discard(v)
 
+    @classmethod
+    def from_adj(cls, adj_list):
+        """ Creates graph from adjacency list as a dict of vertices and
+            iterables of following vertices.
+        """
+        adj = {}
+        for start, end in adj_list.items():
+            adj[start] = set(end)
+
+        for v in set().union(*adj_list.values()):
+            if v not in adj:
+                adj[v] = set()
+
+        new_graph = cls()
+        new_graph._v = adj
+
+        return new_graph
+
     @property
     def adj(self):
         """ Adjacency list for this graph as a dictionary of sets. """
-        return dict(self._v)
+        return {v: set(w) for v, w in self._v.items()}
 
     @property
     def vertices(self):

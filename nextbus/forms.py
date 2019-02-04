@@ -5,8 +5,6 @@ from flask_wtf import FlaskForm
 from wtforms import fields, validators, widgets
 import wtforms.fields.html5 as html5_fields
 
-from nextbus import db
-
 
 class SearchPlaces(FlaskForm):
     """ Full text search for places, stops and postcodes. """
@@ -68,10 +66,6 @@ class SelectDate(FlaskForm):
         """ Sets starting and ending dates from a service's patterns for
             validation.
         """
-        if "patterns" in db.inspect(service).unloaded:
-            raise ValueError("Patterns must be loaded for service %r." %
-                             service)
-
         self._start = min(p.date_start for p in service.patterns)
 
         if all(p.date_end is not None for p in service.patterns):

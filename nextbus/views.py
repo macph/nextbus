@@ -266,7 +266,8 @@ def list_in_area(area_code):
     """
     area = (
         models.AdminArea.query
-        .options(db.joinedload(models.AdminArea.region, innerjoin=True))
+        .options(db.joinedload(models.AdminArea.region, innerjoin=True),
+                 db.joinedload(models.AdminArea.districts))
         .get(area_code)
     )
 

@@ -215,15 +215,9 @@ def _query_times(service_id, direction, date):
         )
         .select_from(models.Journey)
         .join(journeys, models.Journey.id == journeys.c.id)
-        .join(models.JourneyPattern,
-              models.Journey.pattern_ref == models.JourneyPattern.id)
-        .join(models.LocalOperator,
-              (models.JourneyPattern.local_operator_ref ==
-               models.LocalOperator.code) &
-              (models.JourneyPattern.region_ref ==
-               models.LocalOperator.region_ref))
-        .join(models.JourneyLink,
-              models.JourneyPattern.id == models.JourneyLink.pattern_ref)
+        .join(models.Journey.pattern)
+        .join(models.JourneyPattern.local_operator)
+        .join(models.JourneyPattern.links)
         .outerjoin(jl_start, models.Journey.start_run == jl_start.id)
         .outerjoin(jl_end, models.Journey.end_run == jl_end.id)
         .outerjoin(models.JourneySpecificLink)

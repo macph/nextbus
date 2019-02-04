@@ -9,8 +9,15 @@ from nextbus.models import utils
 MIN_GROUPED = 72
 MAX_DIST = 500
 
-# Can't load NaturalSort materialized view yet, so use alias here
-_ns = db.table("natural_sort", db.column("string"), db.column("index"))
+# Aliases for tables or views not yet defined
+_natural_sort = db.table("natural_sort", db.column("string"),
+                         db.column("index"))
+_stop_point = db.table("stop_point", db.column("stop_area_ref"))
+_service = db.table("service", db.column("id"), db.column("line"))
+_pattern = db.table("journey_pattern", db.column("id"),
+                    db.column("service_ref"))
+_link = db.table("journey_link", db.column("pattern_ref"),
+                 db.column("stop_point_ref"))
 
 
 class ServiceMode(utils.BaseModel):
@@ -29,7 +36,7 @@ class BankHoliday(utils.BaseModel):
     name = db.Column(db.Text, nullable=False, unique=True)
 
     dates = db.relationship("BankHolidayDate", backref="bank_holiday",
-                            innerjoin=True)
+                            innerjoin=True, lazy="raise")
 
 
 class Region(utils.BaseModel):
@@ -41,7 +48,7 @@ class Region(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
-                            order_by="AdminArea.name")
+                            order_by="AdminArea.name", lazy="raise")
 
     def __repr__(self):
         return "<Region(%r)>" % self.code
@@ -84,28 +91,30 @@ class AdminArea(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     districts = db.relationship("District", backref="admin_area",
-                                order_by="District.name")
+                                order_by="District.name", lazy="raise")
     localities = db.relationship("Locality", backref="admin_area",
-                                 innerjoin=True, order_by="Locality.name")
+                                 innerjoin=True, order_by="Locality.name",
+                                 lazy="raise")
     postcodes = db.relationship("Postcode", backref="admin_area",
-                                innerjoin=True, order_by="Postcode.text")
+                                innerjoin=True, order_by="Postcode.text",
+                                lazy="raise")
     stop_points = db.relationship(
         "StopPoint", backref="admin_area", innerjoin=True,
-        order_by="StopPoint.name, StopPoint.ind_index"
+        order_by="StopPoint.name, StopPoint.ind_index", lazy="raise"
     )
     stop_areas = db.relationship("StopArea", backref="admin_area",
-                                 innerjoin=True, order_by="StopArea.name")
+                                 innerjoin=True, order_by="StopArea.name",
+                                 lazy="raise")
 
     def __repr__(self):
         return "<AdminArea(%r)>" % self.code
 
     def list_localities(self):
         """ Queries all localities that do contain stops or stop areas. """
-        locality_refs = db.session.query(StopPoint.locality_ref).subquery()
         query_local = (
             Locality.query
             .filter(Locality.admin_area_ref == self.code,
-                    Locality.code.in_(locality_refs))
+                    Locality.stop_points.any())
             .order_by(Locality.name)
         )
 
@@ -126,20 +135,19 @@ class District(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     localities = db.relationship("Locality", backref="district",
-                                 order_by="Locality.name")
+                                 order_by="Locality.name", lazy="raise")
     postcodes = db.relationship("Postcode", backref="district",
-                                order_by="Postcode.text")
+                                order_by="Postcode.text", lazy="raise")
 
     def __repr__(self):
         return "<District(%r)>" % self.code
 
     def list_localities(self):
         """ Queries all localities that do contain stops or stop areas. """
-        locality_refs = db.session.query(StopPoint.locality_ref).subquery()
         query_local = (
             Locality.query
             .filter(Locality.district_ref == self.code,
-                    Locality.code.in_(locality_refs))
+                    Locality.stop_points.any())
             .order_by(Locality.name)
         )
 
@@ -168,11 +176,11 @@ class Locality(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     stop_points = db.relationship(
-        "StopPoint", backref="locality",
-        order_by="StopPoint.name, StopPoint.ind_index"
+        "StopPoint", order_by="StopPoint.name, StopPoint.ind_index",
+        back_populates="locality", lazy="raise"
     )
     stop_areas = db.relationship("StopArea", backref="locality",
-                                 order_by="StopArea.name")
+                                 order_by="StopArea.name", lazy="raise")
 
     def __repr__(self):
         return "<Locality(%r)>" % self.code
@@ -197,11 +205,11 @@ class Locality(utils.BaseModel):
         )
 
         if group_areas:
-            stops_not_areas = (
+            stops_outside_areas = (
                 stops
                 .outerjoin(StopPoint.stop_area)
-                .filter(db.or_(StopPoint.stop_area_ref.is_(None),
-                               StopArea.locality_ref != self.code))
+                .filter((StopPoint.stop_area_ref.is_(None) |
+                        (StopArea.locality_ref != self.code)))
             )
             stop_areas = (
                 db.session.query(
@@ -217,13 +225,13 @@ class Locality(utils.BaseModel):
                 .group_by(StopArea.code)
                 .filter(StopArea.locality_ref == self.code)
             )
-            subquery = stops_not_areas.union(stop_areas).subquery()
+            subquery = stops_outside_areas.union(stop_areas).subquery()
             query = (
                 db.session.query(subquery)
-                .join(_ns, _ns.c.string == subquery.c.short_ind)
-                .order_by(subquery.c.name, _ns.c.index)
+                .join(_natural_sort,
+                      _natural_sort.c.string == subquery.c.short_ind)
+                .order_by(subquery.c.name, _natural_sort.c.index)
             )
-
         else:
             query = stops.order_by(StopPoint.name, StopPoint.ind_index)
 
@@ -253,48 +261,34 @@ class StopArea(utils.BaseModel):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
+    # Number of stop points associated with this stop area
+    stop_count = db.deferred(db.select([db.cast(db.func.count(), db.Text)])
+                             .where(_stop_point.c.stop_area_ref == code))
+
     stop_points = db.relationship(
         "StopPoint", backref="stop_area",
-        order_by="StopPoint.name, StopPoint.ind_index"
+        order_by="StopPoint.name, StopPoint.ind_index", lazy="raise"
     )
 
     def __repr__(self):
         return "<StopArea(%r)>" % self.code
-
-    @hybrid.hybrid_property
-    def stop_count(self):
-        """ Counts number of stops in area using the ORM. """
-        return len(self.stop_points)
-
-    @stop_count.expression
-    def stop_count(cls):
-        """ ORM expression finding the number of associated stop points.
-            Requires an inner join with stop points and grouped by stop area
-            code.
-        """
-        return db.cast(db.func.count(cls.code), db.Text)
 
 
 def _array_lines(code):
     """ Create subquery for an distinct and ordered array of all lines serving a
         stop.
     """
-    service = db.table("service", db.column("id"), db.column("line"))
-    pattern = db.table("journey_pattern", db.column("id"),
-                       db.column("service_ref"))
-    link = db.table("journey_link", db.column("pattern_ref"),
-                    db.column("stop_point_ref"))
     subquery = (
-        db.select([service.c.line])
+        db.select([_service.c.line])
         .select_from(
-            service
-            .join(pattern, pattern.c.service_ref == service.c.id)
-            .join(link, link.c.pattern_ref == pattern.c.id)
+            _service
+            .join(_pattern, _pattern.c.service_ref == _service.c.id)
+            .join(_link, _link.c.pattern_ref == _pattern.c.id)
         )
-        .where(link.c.stop_point_ref == code)
-        .group_by(service.c.line)
-        .order_by(db.select([_ns.c.index])
-                  .where(_ns.c.string == service.c.line))
+        .where(_link.c.stop_point_ref == code)
+        .group_by(_service.c.line)
+        .order_by(db.select([_natural_sort.c.index])
+                  .where(_natural_sort.c.string == _service.c.line))
         .as_scalar()
     )
 
@@ -306,7 +300,8 @@ class StopPoint(utils.BaseModel):
     __tablename__ = "stop_point"
 
     atco_code = db.Column(db.VARCHAR(12), primary_key=True)
-    naptan_code = db.Column(db.VARCHAR(9), index=True, unique=True, nullable=False)
+    naptan_code = db.Column(db.VARCHAR(9), index=True, unique=True,
+                            nullable=False)
     name = db.Column(db.Text, nullable=False, index=True)
     landmark = db.Column(db.Text)
     street = db.Column(db.Text)
@@ -337,33 +332,23 @@ class StopPoint(utils.BaseModel):
     modified = db.deferred(db.Column(db.DateTime))
 
     # Access to index for natural sort - only need it for ordering queries
-    ind_index = db.deferred(db.select([_ns.c.index])
-                            .where(_ns.c.string == short_ind))
+    ind_index = db.deferred(db.select([_natural_sort.c.index])
+                            .where(_natural_sort.c.string == short_ind))
     # Distinct list of lines serving this stop
     lines = db.deferred(_array_lines(atco_code))
 
-    _join_other = db.and_(
-        db.foreign(stop_area_ref).isnot(None),
-        db.remote(stop_area_ref) == db.foreign(stop_area_ref),
-        db.remote(atco_code) != db.foreign(atco_code)
-    )
+    locality = db.relationship("Locality", uselist=False,
+                               back_populates="stop_points", lazy="raise")
     other_stops = db.relationship(
         "StopPoint",
-        primaryjoin=_join_other,
+        primaryjoin=(
+            db.foreign(stop_area_ref).isnot(None) &
+            (db.remote(stop_area_ref) == db.foreign(stop_area_ref)) &
+            (db.remote(atco_code) != db.foreign(atco_code))
+        ),
         uselist=True,
-        order_by="StopPoint.name, StopPoint.ind_index"
-    )
-    patterns = db.relationship(
-        "JourneyLink",
-        backref=db.backref("stops", uselist=True))
-    services = db.relationship(
-        "Service",
-        secondary="join(JourneyLink, JourneyPattern, "
-                  "JourneyLink.pattern_ref == JourneyPattern.id)",
-        primaryjoin="JourneyLink.stop_point_ref == StopPoint.atco_code",
-        secondaryjoin="Service.id == JourneyPattern.service_ref",
-        backref=db.backref("stops", uselist=True),
-        order_by="Service.line_index, Service.description"
+        order_by="StopPoint.name, StopPoint.ind_index",
+        lazy="raise"
     )
 
     def __init__(self, *args, **kwargs):
@@ -433,9 +418,6 @@ class StopPoint(utils.BaseModel):
 
             :returns: JSON-serializable dict.
         """
-        if "locality" in db.inspect(self).unloaded:
-            raise ValueError("Locality must be loaded for stop %r." % self)
-
         title_ind = " (%s)" % self.indicator if self.indicator else ""
         geojson = {
             "type": "Feature",
@@ -500,17 +482,6 @@ class StopPoint(utils.BaseModel):
         """ Produces full data for stop point in JSON format, including services
             and locality data.
         """
-        inspected = db.inspect(self)
-        if "admin_area" in inspected.unloaded:
-            raise ValueError("Admin area for stop %r must be loaded." %
-                             self.atco_code)
-        if "locality" in inspected.unloaded:
-            raise ValueError("Locality for stop %r must be loaded." %
-                             self.atco_code)
-        if "district" in db.inspect(self.locality).unloaded:
-            raise ValueError("District for stop %r and locality %r must be "
-                             "loaded." % (self.locality.code, self.atco_code))
-
         title_ind = " (%s)" % self.indicator if self.indicator else ""
 
         json = {
@@ -577,11 +548,11 @@ class Postcode(utils.BaseModel):
 
     def __repr__(self):
         if "index" in self.__dict__:
-            repr_text = "<Postcode(index=%r)>" % self.index
+            repr_text = "index=%r" % self.index
         else:
-            repr_text = "<Postcode(text=%r)>" % self.text
+            repr_text = "text=%r" % self.text
 
-        return repr_text
+        return "<Postcode(%s)>" % repr_text
 
     def stops_in_range(self, *options):
         """ Returns a list of all stop points within range.
@@ -601,7 +572,8 @@ class Operator(utils.BaseModel):
     name = db.Column(db.Text, nullable=True)
 
     local_codes = db.relationship("LocalOperator", backref="operator",
-                                  innerjoin=True, order_by="LocalOperator.code")
+                                  innerjoin=True, order_by="LocalOperator.code",
+                                  lazy="raise")
 
 
 class LocalOperator(utils.BaseModel):
@@ -621,7 +593,8 @@ class LocalOperator(utils.BaseModel):
     )
     name = db.Column(db.Text, nullable=True)
 
-    patterns = db.relationship("JourneyPattern", backref="local_operator")
+    patterns = db.relationship("JourneyPattern", backref="local_operator",
+                               lazy="raise")
 
 
 class Service(utils.BaseModel):
@@ -639,13 +612,13 @@ class Service(utils.BaseModel):
     )
 
     # Access to index for natural sort
-    line_index = db.deferred(db.select([_ns.c.index])
-                             .where(_ns.c.string == line))
+    line_index = db.deferred(db.select([_natural_sort.c.index])
+                             .where(_natural_sort.c.string == line))
 
     patterns = db.relationship("JourneyPattern", backref="service",
-                               innerjoin=True)
+                               innerjoin=True, lazy="raise")
     local_operators = db.relationship("LocalOperator", backref="services",
-                                      secondary="journey_pattern")
+                                      secondary="journey_pattern", lazy="raise")
 
     def has_mirror(self, selected=None):
         """ Checks directions for all patterns for a service and return the
@@ -655,10 +628,6 @@ class Service(utils.BaseModel):
             :returns: New direction based on initial direction or new one if
             no mirror exists, and boolean indicating a mirror exists.
         """
-        if "patterns" in db.inspect(self).unloaded:
-            raise ValueError("Journey patterns not loaded for service %r" %
-                             self)
-
         set_dir = {p.direction for p in self.patterns}
         if set_dir == {True, False}:
             reverse = bool(selected) if selected is not None else False
@@ -702,8 +671,9 @@ class JourneyPattern(utils.BaseModel):
     )
 
     links = db.relationship("JourneyLink", backref="pattern", innerjoin=True,
-                            order_by="JourneyLink.sequence")
-    journeys = db.relationship("Journey", backref="pattern")
+                            order_by="JourneyLink.sequence", lazy="raise")
+    journeys = db.relationship("Journey", backref="pattern", innerjoin=True,
+                               lazy="raise")
 
 
 class JourneyLink(utils.BaseModel):
@@ -797,22 +767,16 @@ class Journey(utils.BaseModel):
     note_code = db.Column(db.Text)
     note_text = db.Column(db.Text)
 
-    holidays = db.relationship(
-        "BankHoliday", secondary="bank_holidays",
-        secondaryjoin="BankHolidays.holidays"
-                      ".op('&')(literal(1).op('<<')(BankHoliday.id)) > 0",
-        viewonly=True
-    )
     holiday_dates = db.relationship(
-        "BankHolidayDate",
-        secondary="join(BankHolidays, BankHoliday, "
-                  "BankHolidays.holidays"
-                  ".op('&')(literal(1).op('<<')(BankHoliday.id)) > 0)",
-        primaryjoin="Journey.id == BankHolidays.journey_ref",
-        secondaryjoin="BankHoliday.id == BankHolidayDate.holiday_ref",
-        viewonly=True
+        "BankHolidayDate", secondary="bank_holidays",
+        secondaryjoin="BankHolidays.holidays.op('&')("
+                      "literal(1).op('<<')(BankHolidayDate.holiday_ref)"
+                      ") > 0",
+        viewonly=True,
+        lazy="raise"
     )
-    special_days = db.relationship("SpecialPeriod", backref="journey")
+    special_days = db.relationship("SpecialPeriod", backref="journey",
+                                   lazy="raise")
 
 
 class Organisation(utils.BaseModel):
@@ -821,10 +785,12 @@ class Organisation(utils.BaseModel):
 
     code = db.Column(db.Text, primary_key=True)
 
-    periods = db.relationship("OperatingPeriod", backref="organisation")
-    excluded = db.relationship("OperatingDate", backref="organisation")
+    periods = db.relationship("OperatingPeriod", backref="organisation",
+                              lazy="raise")
+    excluded = db.relationship("OperatingDate", backref="organisation",
+                               lazy="raise")
     journeys = db.relationship("Journey", secondary="organisations",
-                               backref="organisations")
+                               backref="organisations", lazy="raise")
 
 
 class Organisations(utils.BaseModel):

@@ -147,6 +147,7 @@ class BaseAppTests(unittest.TestCase, metaclass=TestAppContext):
                 db.create_all()
             except:
                 db.drop_all()
+                raise
 
     @classmethod
     def drop_tables(cls):

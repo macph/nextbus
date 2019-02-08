@@ -164,7 +164,6 @@ def _setup_naptan_functions(list_area_codes=None, list_locality_codes=None):
     """ Sets up XSLT extension functions to filter stop points and areas as
         well as parsing indicators for stop points.
     """
-    area_codes = set()
     areas = list_area_codes
     localities = list_locality_codes
     ind_parser = _create_ind_parser()
@@ -385,20 +384,23 @@ def commit_naptan_data(archive=None, list_files=None):
         :param list_files: List of file paths for NaPTAN XML files.
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
-    query_area = db.engine.execute(db.select([models.AdminArea.code]))
-    query_local = db.engine.execute(db.select([models.Locality.code]))
-    if not query_area or not query_local:
+    with utils.database_connection() as conn:
+        query_area = conn.execute(db.select([models.AdminArea.code,
+                                             models.AdminArea.atco_code]))
+        query_local = conn.execute(db.select([models.Locality.code]))
+
+    areas = query_area.fetchall()
+    localities = query_local.fetchall()
+    if not areas or not localities:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data. "
                          "Populate the database with NPTG data first.")
 
     atco_codes = utils.get_atco_codes()
-    local_codes = set(l.code for l in query_local) if atco_codes else None
-    area_codes = set(a.code for a in query_area) if atco_codes else None
-
+    local_codes = set(l.code for l in areas) if atco_codes else None
+    area_codes = set(a.code for a in localities) if atco_codes else None
     # Use full list of ATCO codes for downloading NaPTAN data
-    query_atco = db.engine.execute(db.select([models.AdminArea.atco_code]))
-    all_atco_codes = set(a.atco_code for a in query_atco)
+    all_atco_codes = set(a.atco_code for a in areas)
 
     downloaded = None
     if archive is not None and list_files is not None:

@@ -281,7 +281,8 @@ class EntryTests(utils.BaseAppTests):
 
     def setUp(self):
         with self.app.app_context():
-            self.db_entries = pop_utils.PopulateData(io.StringIO(self.XML))
+            self.db_entries = pop_utils.PopulateData()
+            self.db_entries.set_input(io.StringIO(self.XML))
 
     def tearDown(self):
         del self.db_entries
@@ -297,22 +298,6 @@ class EntryTests(utils.BaseAppTests):
         self.assertEqual(self.db_entries.entries[models.Region],
                          [self.EXPECTED] * 2)
 
-    def test_no_duplicate(self):
-        self.db_entries.set_data(io.StringIO(self.XML_TWO))
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        self.db_entries._check_duplicates()
-        self.assertEqual(self.db_entries.entries[models.Region],
-                         [self.EXPECTED_NW, self.EXPECTED_DT])
-
-    def test_remove_duplicate(self):
-        self.db_entries.set_data(io.StringIO(self.XML))
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        self.db_entries.add("Regions/Region", models.Region, indices=("code",))
-        self.db_entries._check_duplicates()
-        self.assertEqual(len(self.db_entries.entries[models.Region]), 1)
-        self.assertEqual(self.db_entries.entries[models.Region][0],
-                         self.EXPECTED_DT)
-
 
 class EntryDBTests(utils.BaseAppTests):
     """ Tests on PopulateData and committing changes to database """
@@ -325,7 +310,8 @@ class EntryDBTests(utils.BaseAppTests):
         self.create_tables()
         # Set up temporary file to be read by et.parse()
         with self.app.app_context():
-            self.db_entries = pop_utils.PopulateData(self.xml)
+            self.db_entries = pop_utils.PopulateData()
+            self.db_entries.set_input(self.xml)
 
     def tearDown(self):
         self.drop_tables()

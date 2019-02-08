@@ -18,7 +18,6 @@ class GeoJsonTests(utils.BaseAppTests):
         },
         "properties": {
             "atcoCode": "370020602",
-            "naptanCode": "37020602",
             "name": "Cherry Tree Road",
             "indicator": "adj",
             "title": "Cherry Tree Road (adj)",
@@ -35,11 +34,6 @@ class GeoJsonTests(utils.BaseAppTests):
         stop.locality = models.Locality(**utils.LOCALITY)
         self.assertEqual(stop.to_geojson(), self.EXPECTED)
 
-    def test_single_stop_no_locality(self):
-        stop = models.StopPoint(**utils.STOP_POINT)
-        with self.assertRaises(ValueError):
-            stop.to_geojson()
-
     def test_two_stops(self):
         second = utils.STOP_POINT.copy()
         second["indicator"] = ""
@@ -48,7 +42,7 @@ class GeoJsonTests(utils.BaseAppTests):
         locality = models.Locality(**utils.LOCALITY)
         first_stop = models.StopPoint(**utils.STOP_POINT)
         second_stop = models.StopPoint(**second)
-        first_stop.locality_ref = second_stop.locality = locality
+        first_stop.locality = second_stop.locality = locality
 
         second_exp = copy.deepcopy(self.EXPECTED)
         second_exp["properties"]["indicator"] = ""

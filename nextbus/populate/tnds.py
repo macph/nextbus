@@ -28,10 +28,9 @@ def download_tnds_files():
                          "Traveline website for more details.")
 
     # Get all region codes to iterate over - not GB
-    query_regions = db.engine.execute(
-        db.select([models.Region.code])
-        .where(models.Region.code != "GB")
-    )
+    with utils.database_connection() as conn:
+        query_regions = conn.execute(db.select([models.Region.code])
+                                     .where(models.Region.code != "GB"))
     regions = [r[0] for r in query_regions]
 
     if not regions:
@@ -325,7 +324,8 @@ def bank_holidays(_, nodes):
 def setup_tnds_functions():
     """ Finds all existing stop points in database, setting up XSLT functions.
     """
-    query_stops = db.engine.execute(db.select([models.StopPoint.atco_code]))
+    with utils.database_connection() as conn:
+        query_stops = conn.execute(db.select([models.StopPoint.atco_code]))
     set_stops = set(c.atco_code for c in query_stops)
     set_not_exists = set()
 

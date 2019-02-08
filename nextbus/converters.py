@@ -1,7 +1,7 @@
 """
 URL converters for strings and coordinates.
 """
-from werkzeug import routing
+from werkzeug import routing, urls
 
 
 class String(routing.UnicodeConverter):
@@ -19,7 +19,7 @@ class PathString(routing.PathConverter):
         return value.replace("+", " ")
 
     def to_url(self, value):
-        return value.replace(" ", "+")
+        return urls.url_quote(value.replace(" ", "+"), charset=self.map.charset)
 
 
 class LatLong(routing.BaseConverter):

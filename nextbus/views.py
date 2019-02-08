@@ -100,7 +100,10 @@ def modify_query(**values):
         elif attr in args:
             del args[attr]
 
-    return request.path + "?" + url_encode(args) if args else request.path
+    if args:
+        return request.base_url + "?" + url_encode(args)
+    else:
+        return request.base_url
 
 
 @page.app_template_global()

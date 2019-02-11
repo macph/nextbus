@@ -1285,7 +1285,6 @@ def service_graph_stops(service_id, direction):
         db.session.query(
             stop_refs.c.stop_ref.label("current"),
             stop_refs.c.sequence,
-            stop_refs.c.journeys,
             db.func.lead(stop_refs.c.stop_ref)
             .over(partition_by=stop_refs.c.pattern_id,
                   order_by=stop_refs.c.sequence).label("next")
@@ -1295,16 +1294,15 @@ def service_graph_stops(service_id, direction):
     adj_stops = (
         db.session.query(
             models.StopPoint,
-            db.func.max(pairs.c.journeys).label("journeys"),
+            db.func.max(stop_journeys.c.max_journeys).label("journeys"),
             db.func.min(pairs.c.sequence).label("sequence"),
-            db.func.array_remove(db.func.array_agg(pairs.c.next), None)
-            .label("next_stops")
+            db.func.array_remove(db.func.array_agg(db.distinct(pairs.c.next)),
+                                 None).label("next_stops")
         )
         .options(db.contains_eager(models.StopPoint.locality))
         .join(models.StopPoint.locality)
         .join(pairs, pairs.c.current == models.StopPoint.atco_code)
-        .join(stop_journeys, (pairs.c.current == stop_journeys.c.stop_ref) &
-              (pairs.c.journeys == stop_journeys.c.max_journeys))
+        .join(stop_journeys, pairs.c.current == stop_journeys.c.stop_ref)
         .group_by(models.StopPoint.atco_code, models.Locality.code)
     )
 

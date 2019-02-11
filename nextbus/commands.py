@@ -29,8 +29,8 @@ def cli():
 
 
 @cli.command(help="Populate NaPTAN, NPTG and NSPL data. To download and "
-                  "populate the database with everything use 'nxb populate "
-                  "-gnptm'.")
+             "populate the database with everything use "
+             "'nxb populate -gnpotm'.")
 @click.option("--nptg", "-g", "nptg_d", is_flag=True,
               help="Download NPTG locality data and add to database.")
 @click.option("--nptg-path", "-G", "nptg_f", default=None,
@@ -48,13 +48,18 @@ def cli():
 @click.option("--nspl-path", "-P", "nspl_f", default=None,
               type=click.Path(exists=True),
               help="Add NSPL postcode data from specified JSON file.")
+@click.option("--noc", "-o", "noc_d", is_flag=True,
+              help="Download NOC service operator data and add to database.")
+@click.option("--noc-path", "-O", "noc_f", default=None,
+              type=click.Path(exists=True),
+              help="Add NOC service operator data from specified XML file.")
 @click.option("--tnds", "-t", "tnds_d", is_flag=True,
               help="Download TNDS data and add to database.")
 @click.option("--tnds-path", "-T", "tnds_f", default=(), nargs=2,
               type=click.Tuple([click.Path(exists=True), str]), multiple=True,
               help="Add TNDS services data from specified zip file with XML "
               "files and a region code.")
-@click.option("--no-delete-tnds", "tnds_nd", is_flag=True,
+@click.option("--keep-tnds", "tnds_keep", is_flag=True,
               help="Don't delete existing TNDS data (eg when adding other "
               "regions).")
 @click.option("--modify", "-m", "modify_d", is_flag=True,
@@ -70,72 +75,72 @@ def cli():
               type=click.Path(), help="Restore database from a specified dump "
               "file before populating database.")
 @click.pass_context
-def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
-             tnds_f, tnds_nd, modify_d, backup, backup_f, restore, restore_f):
-    """ Calls the populate functions for filling the static database with data.
-    """
+def populate(ctx, **kw):
+    """ Calls the populate functions for filling the database with data. """
     from flask import current_app
     from nextbus import models, populate
     from nextbus.populate import file_ops, utils
 
     errors = False
-    options = {o: False for o in "brgnptm"}
+    options = {o: False for o in "brgnpotm"}
 
-    nptg_file = None
-    naptan_file = None
-    tnds_files = None
-    delete_tnds = not tnds_nd
-
-    if nptg_d and nptg_f:
+    if kw["nptg_d"] and kw["nptg_f"]:
         click.echo("Download (-g) and filepath (-G) options for NPTG data are "
                    "mutually exclusive.")
         errors = True
     else:
-        options["g"] = nptg_d or nptg_f
-        nptg_file = nptg_f
+        options["g"] = kw["nptg_d"] or kw["nptg_f"]
 
-    if naptan_d and naptan_f:
+    if kw["naptan_d"] and kw["naptan_f"]:
         click.echo("Download (-n) and filepath (-N) options for NaPTAN data "
                    "are mutually exclusive.")
         errors = True
     else:
-        options["n"] = naptan_d or naptan_f
-        naptan_file = naptan_f
+        options["n"] = kw["naptan_d"] or kw["naptan_f"]
 
-    if nspl_d and nspl_f:
+    if kw["nspl_d"] and kw["nspl_f"]:
         click.echo("Download (-p) and filepath (-P) options for NSPL data are "
                    "mutually exclusive.")
         errors = True
     else:
-        options["p"] = nspl_d or nspl_f
+        options["p"] = kw["nspl_d"] or kw["nspl_f"]
 
-    if tnds_d and tnds_f and tnds_f[0][0]:
+    if kw["noc_d"] and kw["noc_f"]:
+        click.echo("Download (-o) and filepath (-O) options for NOC data are "
+                   "mutually exclusive.")
+        errors = True
+    else:
+        options["o"] = kw["noc_d"] or kw["noc_f"]
+
+    if kw["tnds_d"] and kw["tnds_f"] and kw["tnds_f"][0][0]:
         click.echo("Download (-t) and filepath (-T) options for TNDS data are "
                    "mutually exclusive.")
         errors = True
     else:
-        options["t"] = tnds_d or tnds_f
-        tnds_files = dict((t[1], t[0]) for t in tnds_f) if tnds_f else None
+        options["t"] = kw["tnds_d"] or kw["tnds_f"]
 
-    options["m"] = modify_d
+    options["m"] = kw["modify_d"]
 
-    if (backup or backup_f) and (restore or restore_f):
+    backup = kw["backup"] or kw["backup_f"]
+    restore = kw["restore"] or kw["restore_f"]
+
+    if backup and restore:
         click.echo("Can't backup and restore database at the same time!")
         errors = True
 
-    if backup and backup_f:
+    if kw["backup"] and kw["backup_f"]:
         click.echo("Default (-b) and filepath (-B) options for backing up "
                    "data are mutually exclusive.")
         errors = True
     else:
-        options["b"] = backup or backup_f
+        options["b"] = backup
 
-    if restore and restore_f:
+    if kw["restore"] and kw["restore_f"]:
         click.echo("Default (-r) and filepath (-R) options for restoring "
                    "data are mutually exclusive.")
         errors = True
     else:
-        options["r"] = restore or restore_f
+        options["r"] = restore
 
     if errors:
         # Messages already printed; return to shell
@@ -143,18 +148,25 @@ def populate(ctx, nptg_d, nptg_f, naptan_d, naptan_f, nspl_d, nspl_f, tnds_d,
     elif any(options.values()):
         if options["b"]:
             # Carry out at least one option, back up beforehand if needed
-            file_ops.backup_database(backup_f)
+            file_ops.backup_database(kw["backup_f"])
         if options["r"]:
             # Carry out at least one option, back up beforehand if needed
-            file_ops.restore_database(backup_f)
+            file_ops.restore_database(kw["restore_f"])
         if options["g"]:
-            populate.commit_nptg_data(archive=nptg_file)
+            populate.commit_nptg_data(archive=kw["nptg_f"])
         if options["n"]:
-            populate.commit_naptan_data(archive=naptan_file)
+            populate.commit_naptan_data(archive=kw["naptan_f"])
         if options["p"]:
-            populate.commit_nspl_data(file_=nspl_f)
+            populate.commit_nspl_data(file_=kw["nspl_f"])
+        if options["o"]:
+            populate.commit_noc_data(kw["noc_f"])
         if options["t"]:
-            populate.commit_tnds_data(archives=tnds_files, delete=delete_tnds)
+            if kw["tnds_f"]:
+                tnds_files = {t[1]: t[0] for t in kw["tnds_f"]}
+            else:
+                tnds_files = None
+            populate.commit_tnds_data(archives=tnds_files,
+                                      delete=not kw["tnds_keep"])
         if options["m"]:
             populate.modify_data()
         # Update views after population

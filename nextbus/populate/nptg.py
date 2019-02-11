@@ -16,8 +16,7 @@ NPTG_XML = r"temp/nptg_data.xml"
 
 
 def download_nptg_data():
-    """ Downloads NPTG data from the DfT. Comes in a zipped file so the NPTG
-        XML file is extracted first.
+    """ Downloads NPTG data from the DfT. Comes in a zipped file.
     """
     params = {"format": "xml"}
     new = file_ops.download(NPTG_URL, directory="temp", params=params)

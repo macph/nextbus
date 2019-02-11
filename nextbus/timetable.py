@@ -104,7 +104,7 @@ def _query_journeys(service_id, direction, date):
             models.JourneyPattern.date_end.is_(None) |
             (models.JourneyPattern.date_end >= p_date),
             # Check to see if departure falls within 0100 and 0200 when timezone
-            # changes
+            # changes on last Sunday of March or October
             # If in March, this journey is skipped.
             # If in October, this journey is repeated in both BST and GMT.
             # Otherwise Europe/London is picked, setting BST/GMT automatically.
@@ -117,7 +117,7 @@ def _query_journeys(service_id, direction, date):
                  (db.extract("DAY", p_date) > 24) &
                  (db.extract("ISODOW", p_date) == 7) &
                  (db.extract("HOUR", models.Journey.departure) == 1),
-                 (timezones.c.tz == "BST") | (timezones.c.tz == "GMT")),   
+                 (timezones.c.tz == "BST") | (timezones.c.tz == "GMT"))
             ], else_=timezones.c.tz == "Europe/London"),
             # In order of precedence:
             # - Do not run on bank holidays or special dates (check with HAVING)
@@ -198,7 +198,7 @@ def _query_times(service_id, direction, date):
             models.Journey.note_code,
             models.Journey.note_text,
             models.LocalOperator.code.label("local_operator_code"),
-            models.LocalOperator.name.label("local_operator_name"),
+            models.Operator.name.label("operator_name"),
             journeys.c.departure,
             models.JourneyLink.stop_point_ref,
             models.JourneyLink.timing_point,
@@ -217,6 +217,7 @@ def _query_times(service_id, direction, date):
         .join(journeys, models.Journey.id == journeys.c.id)
         .join(models.Journey.pattern)
         .join(models.JourneyPattern.local_operator)
+        .join(models.LocalOperator.operator)
         .join(models.JourneyPattern.links)
         .outerjoin(jl_start, models.Journey.start_run == jl_start.id)
         .outerjoin(jl_end, models.Journey.end_run == jl_end.id)
@@ -243,7 +244,7 @@ def _query_timetable(service_id, direction, date):
             times.c.note_code,
             times.c.note_text,
             times.c.local_operator_code,
-            times.c.local_operator_name,
+            times.c.operator_name,
             times.c.departure,
             times.c.stop_point_ref,
             times.c.timing_point,
@@ -369,7 +370,7 @@ class Timetable:
 
                 self.head.append((r.journey_id, r.local_operator_code,
                                   r.note_code))
-                self.operators[r.local_operator_code] = r.local_operator_name
+                self.operators[r.local_operator_code] = r.operator_name
                 if r.note_code is not None:
                     self.notes[r.note_code] = r.note_text
                 journeys.add(r.journey_id)

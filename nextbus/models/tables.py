@@ -569,11 +569,35 @@ class Operator(utils.BaseModel):
     __tablename__ = "operator"
 
     code = db.Column(db.Text, primary_key=True)
-    name = db.Column(db.Text, nullable=True)
+    region_ref = db.Column(
+        db.VARCHAR(2),
+        db.ForeignKey("region.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    name = db.Column(db.Text, nullable=False)
+    mode = db.Column(
+        db.Integer,
+        db.ForeignKey("service_mode.id"),
+        nullable=False, index=True
+    )
+    licence_name = db.deferred(db.Column(db.Text, nullable=True))
+    email = db.deferred(db.Column(db.Text))
+    address = db.deferred(db.Column(db.Text))
+    website = db.deferred(db.Column(db.Text))
+    twitter = db.deferred(db.Column(db.Text))
 
-    local_codes = db.relationship("LocalOperator", backref="operator",
-                                  innerjoin=True, order_by="LocalOperator.code",
-                                  lazy="raise")
+    local_codes = db.relationship(
+        "LocalOperator",
+        backref=db.backref("operator", innerjoin=True, uselist=False),
+        order_by="LocalOperator.code",
+        lazy="raise"
+    )
+    patterns = db.relationship(
+        "JourneyPattern",
+        backref=db.backref("operator", innerjoin=True, uselist=False),
+        secondary="local_operator",
+        lazy="raise"
+    )
 
 
 class LocalOperator(utils.BaseModel):
@@ -593,8 +617,11 @@ class LocalOperator(utils.BaseModel):
     )
     name = db.Column(db.Text, nullable=True)
 
-    patterns = db.relationship("JourneyPattern", backref="local_operator",
-                               lazy="raise")
+    patterns = db.relationship(
+        "JourneyPattern",
+        backref=db.backref("local_operator", innerjoin=True, uselist=False),
+        lazy="raise"
+    )
 
 
 class Service(utils.BaseModel):
@@ -617,8 +644,18 @@ class Service(utils.BaseModel):
 
     patterns = db.relationship("JourneyPattern", backref="service",
                                innerjoin=True, lazy="raise")
-    local_operators = db.relationship("LocalOperator", backref="services",
-                                      secondary="journey_pattern", lazy="raise")
+    operators = db.relationship(
+        "Operator",
+        backref=db.backref("services", uselist=True,
+                           order_by="Service.line_index, Service.description"),
+        primaryjoin="Service.id == JourneyPattern.service_ref",
+        secondary="join(JourneyPattern, LocalOperator, "
+                  "(JourneyPattern.local_operator_ref == LocalOperator.code) & "
+                  "(JourneyPattern.region_ref == LocalOperator.region_ref))",
+        secondaryjoin="LocalOperator.operator_ref == Operator.code",
+        order_by="Operator.name",
+        lazy="raise"
+    )
 
     def has_mirror(self, selected=None):
         """ Checks directions for all patterns for a service and return the

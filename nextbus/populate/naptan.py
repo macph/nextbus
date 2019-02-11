@@ -23,8 +23,7 @@ IND_MAX_WORDS = 2
 
 
 def download_naptan_data(atco_codes=None):
-    """ Downloads NaPTAN data from the DfT. Comes in a zipped file so the
-        NaPTAN XML data are extracted first.
+    """ Downloads NaPTAN data from the DfT. Comes in a zipped file.
 
         :param atco_codes: List of ATCO codes used to filter areas. If None,
         all data in Great Britain (outwith IoM, Channel Islands and Northern

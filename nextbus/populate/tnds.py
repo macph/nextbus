@@ -190,14 +190,6 @@ def format_destination(_, text):
     return text
 
 
-@utils.xslt_text_func
-def format_operator(_, text):
-    if text is not None and text.isupper():
-        text = utils.capitalize(None, text)
-
-    return text
-
-
 @utils.xslt_func
 def days_week(_, nodes=None):
     """ Gets days of week from a RegularDayType element.
@@ -325,9 +317,18 @@ def setup_tnds_functions():
     """ Finds all existing stop points in database, setting up XSLT functions.
     """
     with utils.database_connection() as conn:
+        query_operators = conn.execute(db.select([models.Operator.code]))
         query_stops = conn.execute(db.select([models.StopPoint.atco_code]))
-    set_stops = set(c.atco_code for c in query_stops)
+    set_operators = {o.code for o in query_operators}
+    set_stops = {c.atco_code for c in query_stops}
     set_not_exists = set()
+
+    if not set_stops:
+        raise ValueError("No stop points were found. The TNDS dataset requires "
+                         "the database to be populated from NaPTAN data first.")
+    if not set_operators:
+        raise ValueError("No operators were found. The TNDS dataset requires "
+                         "the database to be populated from NOC data first.")
 
     @utils.xslt_text_func
     def stop_exists(_, code):
@@ -629,6 +630,8 @@ def _commit_tnds_region(transform, archive, region, delete=False,
     str_region = transform.strparam(region)
 
     del_ = delete
+    excluded = models.Operator, models.LocalOperator
+
     for i, file_ in enumerate(file_ops.iter_archive(archive)):
         utils.logger.info("Parsing file %r" % os.path.join(archive, file_.name))
         data = et.parse(file_)
@@ -657,11 +660,11 @@ def _commit_tnds_region(transform, archive, region, delete=False,
         tnds.add("BankHolidays", models.BankHolidays)
 
         if tnds.total() > rollover:
-            tnds.commit(delete=del_, clear=True)
+            tnds.commit(delete=del_, exclude=excluded, clear=True)
             del_ = False
 
     # Commit rest of entries
-    tnds.commit(delete=del_)
+    tnds.commit(delete=del_, exclude=excluded)
 
 
 def commit_tnds_data(archives=None, delete=True):

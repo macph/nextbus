@@ -2,7 +2,7 @@
 <xsl:transform version="1.0"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:txc="http://www.transxchange.org.uk/"
-               xmlns:func="http://nextbus.org/functions" 
+               xmlns:func="http://nextbus.org/functions"
                xmlns:exsl="http://exslt.org/common"
                exclude-result-prefixes="xsl func exsl re txc">
   <xsl:output method="xml" indent="yes"/>
@@ -19,28 +19,14 @@
 
   <xsl:param name="vehicle_journeys" select="txc:TransXChange/txc:VehicleJourneys/txc:VehicleJourney"/>
 
-  <xsl:param name="bank_holiday_ids">
-    <holiday id="1">NewYearsDay</holiday>
-    <holiday id="2">Jan2ndScotland</holiday>
-    <holiday id="3">GoodFriday</holiday>
-    <holiday id="4">EasterMonday</holiday>
-    <holiday id="5">MayDay</holiday>
-    <holiday id="6">SpringBank</holiday>
-    <holiday id="7">LateSummerBankHolidayNotScotland</holiday>
-    <holiday id="8">AugustBankHolidayScotland</holiday>
-    <holiday id="9">ChristmasDay</holiday>
-    <holiday id="10">BoxingDay</holiday>
-    <holiday id="11">ChristmasDayHoliday</holiday>
-    <holiday id="12">BoxingDayHoliday</holiday>
-    <holiday id="13">NewYearsDayHoliday</holiday>
-    <holiday id="14">ChristmasEve</holiday>
-    <holiday id="15">NewYearsEve</holiday>
-  </xsl:param>
   <xsl:param name="mode_ids">
     <mode id="1">bus</mode>
-    <mode id="2">metro</mode>
+    <mode id="2">coach</mode>
     <mode id="3">tram</mode>
+    <mode id="4">metro</mode>
+    <mode id="5">underground</mode>
   </xsl:param>
+  <xsl:param name="set_mode_ids" select="exsl:node-set($mode_ids)"/>
 
   <xsl:key name="key_operators" match="txc:TransXChange/txc:Operators/txc:Operator" use="@id"/>
   <xsl:key name="key_routes" match="txc:TransXChange/txc:Routes/txc:Route" use="@id"/>
@@ -71,10 +57,13 @@
   </xsl:template>
 
   <xsl:template match="txc:Operator" mode="national">
-    <xsl:if test="txc:NationalOperatorCode">
+    <xsl:variable name="mode" select="$services/txc:Mode"/>
+    <xsl:if test="txc:NationalOperatorCode and txc:OperatorShortName != ''">
       <Operator>
         <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
-        <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
+        <region_ref><xsl:value-of select="$region"/></region_ref>
+        <name><xsl:value-of select="txc:OperatorShortName"/></name>
+        <mode><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></mode>
       </Operator>
     </xsl:if>
   </xsl:template>
@@ -84,18 +73,12 @@
       <operator_ref><xsl:value-of select="txc:NationalOperatorCode"/></operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
       <code><xsl:value-of select="txc:OperatorCode"/></code>
-      <name><xsl:value-of select="func:format_operator(txc:OperatorShortName)"/></name>
+      <name><xsl:value-of select="txc:OperatorShortName"/></name>
     </LocalOperator>
   </xsl:template>
 
   <xsl:template match="txc:Service">
-    <xsl:variable name="mode">
-      <xsl:choose>
-        <xsl:when test="boolean(txc:Mode = 'underground')">metro</xsl:when>
-        <xsl:when test="boolean(txc:Mode = 'coach')">bus</xsl:when>
-        <xsl:otherwise><xsl:value-of select="txc:Mode"/></xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="mode" select="txc:Mode"/>
     <Service>
       <id><xsl:value-of select="func:add_id('Service', $file)"/></id>
       <code>
@@ -110,7 +93,7 @@
           <xsl:value-of select="func:format_description(txc:Description)"/>
         </xsl:if>
       </description>
-      <mode><xsl:value-of select="exsl:node-set($mode_ids)/mode[.=$mode]/@id"/></mode>
+      <mode><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></mode>
     </Service>
   </xsl:template>
 

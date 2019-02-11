@@ -21,8 +21,8 @@
   </div>
   <h1>{{ service.description }}</h1>
 </div>
-{% if service.local_operators|length > 0 -%}
-<p>Operated by {{ f.print_inline(service.local_operators|map(attribute='name')|list) }}</p>
+{% if service.operators|length > 0 -%}
+<p>Operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}</p>
 {%- endif %}
 {% endblock %}
 

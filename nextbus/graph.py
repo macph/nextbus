@@ -1367,9 +1367,9 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     service = (
         models.Service.query
         .join(models.Service.patterns)
-        .join(models.JourneyPattern.local_operator)
-        .options(db.contains_eager(models.Service.local_operators),
-                 db.contains_eager(models.Service.patterns))
+        .join(models.JourneyPattern.operator)
+        .options(db.contains_eager(models.Service.patterns),
+                 db.contains_eager(models.Service.operators))
         .filter(models.Service.id == service_id)
         .one_or_none()
     )
@@ -1406,7 +1406,7 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         "direction": "inbound" if reverse_ else "outbound",
         "reverse": reverse_,
         "mirrored": mirrored,
-        "operators": [o.name for o in service.local_operators],
+        "operators": [o.name for o in service.operators],
         "stops": {c: s.to_geojson() for c, s in stops.items()},
         "sequence": sequence,
         "paths": paths,

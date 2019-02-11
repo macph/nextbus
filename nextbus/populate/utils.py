@@ -385,14 +385,16 @@ class PopulateData:
 
         self.metadata.remove(temp_table)
 
-    def commit(self, delete=False, clear=False):
+    def commit(self, delete=False, exclude=None, clear=False):
         """ Copies data from XML data which has been added.
             :param delete: Delete old data from models before copying.
+            :param exclude: Iterable of models that shouldn't be deleted
             :param clear: Delete all entries after committing.
         """
         with database_connection() as conn:
             for m in self.entries:
-                self._commit(conn, m, delete)
+                delete_model = delete and (exclude is None or m not in exclude)
+                self._commit(conn, m, delete_model)
         if clear:
             self.entries.clear()
 

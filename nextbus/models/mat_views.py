@@ -9,7 +9,7 @@ from nextbus import db
 from nextbus.models import utils
 from nextbus.models.tables import (
     Region, AdminArea, District, Locality, StopArea, StopPoint,
-    JourneyPattern, JourneyLink, Service, LocalOperator
+    JourneyPattern, JourneyLink, Service, Operator, LocalOperator
 )
 
 
@@ -253,7 +253,7 @@ def _select_fts_vectors():
             _tsvector_column(
                 (Service.line, "A"),
                 (Service.description, "A"),
-                (db.func.string_agg(db.distinct(LocalOperator.name), " "), "B"),
+                (db.func.string_agg(db.distinct(Operator.name), " "), "B"),
                 (db.func.string_agg(db.distinct(Locality.name), " "), "C"),
                 (db.func.coalesce(
                     db.func.string_agg(db.distinct(District.name), " "),
@@ -264,10 +264,11 @@ def _select_fts_vectors():
         ])
         .select_from(
             Service.__table__
-            .join(JourneyPattern, JourneyPattern.service_ref == Service.id)
+            .join(JourneyPattern, Service.id == JourneyPattern.service_ref)
             .join(LocalOperator,
-                  (LocalOperator.code == JourneyPattern.local_operator_ref) &
-                  (LocalOperator.region_ref == JourneyPattern.region_ref))
+                  (JourneyPattern.local_operator_ref == LocalOperator.code) &
+                  (JourneyPattern.region_ref == LocalOperator.region_ref))
+            .join(Operator, LocalOperator.operator_ref == Operator.code)
             .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
             .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
             .join(Locality, StopPoint.locality_ref == Locality.code)

@@ -467,9 +467,9 @@ def _query_service(service_id, reverse=None):
     line = (
         models.Service.query
         .join(models.Service.patterns)
-        .join(models.JourneyPattern.local_operator)
-        .options(db.contains_eager(models.Service.local_operators),
-                 db.contains_eager(models.Service.patterns))
+        .join(models.JourneyPattern.operator)
+        .options(db.contains_eager(models.Service.patterns),
+                 db.contains_eager(models.Service.operators))
         .filter(models.Service.id == service_id)
         .one_or_none()
     )

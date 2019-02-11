@@ -1,7 +1,9 @@
 <Data>
   <Operator>
     <code>SYRK</code>
+    <region_ref>Y</region_ref>
     <name>Stagecoach Yorkshire</name>
+    <mode>1</mode>
   </Operator>
   <LocalOperator>
     <operator_ref>SYRK</operator_ref>

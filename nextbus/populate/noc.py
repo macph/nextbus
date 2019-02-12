@@ -61,13 +61,13 @@ def _get_noc_data(noc_file, debug=False):
     return new_data
 
 
-def commit_noc_data(xml_file=None):
+def commit_noc_data(file_=None):
     """ Convert NOC data (service operators) to database objects and commit them
         to the application database.
 
-        :param xml_file: Path to raw data in XML form
+        :param file_: Path to raw data in XML form
     """
-    path = download_noc_data() if xml_file is None else xml_file
+    path = download_noc_data() if file_ is None else file_
     new_data = _get_noc_data(path)
     noc = utils.PopulateData()
     noc.set_input(new_data)
@@ -76,6 +76,6 @@ def commit_noc_data(xml_file=None):
     noc.add("LocalOperator", models.LocalOperator)
     noc.commit(delete=True)
 
-    if xml_file is None:
+    if file_ is None:
         utils.logger.info("New file %r downloaded; can be deleted" % path)
     utils.logger.info("NOC population done")

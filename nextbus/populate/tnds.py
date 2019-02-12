@@ -18,6 +18,21 @@ TNDS_XSLT = r"nextbus/populate/tnds.xslt"
 TNDS_ROLLOVER = 100000
 
 
+def _get_regions():
+    """ Get list of regions in database excluding GB. If no regions are found,
+        a ValueError is raised.
+    """
+    with utils.database_connection() as conn:
+        query_regions = conn.execute(db.select([models.Region.code])
+                                     .where(models.Region.code != "GB"))
+    regions = [r[0] for r in query_regions]
+
+    if not regions:
+        raise ValueError("NPTG data not populated yet.")
+
+    return regions
+
+
 def download_tnds_files():
     """ Download TNDS files from FTP server. """
     user = current_app.config.get("TNDS_USERNAME")
@@ -27,15 +42,7 @@ def download_tnds_files():
                          "password to access the TNDS FTP server. See the "
                          "Traveline website for more details.")
 
-    # Get all region codes to iterate over - not GB
-    with utils.database_connection() as conn:
-        query_regions = conn.execute(db.select([models.Region.code])
-                                     .where(models.Region.code != "GB"))
-    regions = [r[0] for r in query_regions]
-
-    if not regions:
-        raise ValueError("NPTG data not populated yet.")
-
+    regions = _get_regions()
     paths = {}
     utils.logger.info("Opening FTP connection to %r with credentials" %
                       TNDS_URL)
@@ -667,19 +674,33 @@ def _commit_tnds_region(transform, archive, region, delete=False,
     tnds.commit(delete=del_, exclude=excluded)
 
 
-def commit_tnds_data(archives=None, delete=True):
+def commit_tnds_data(directory=None, delete=True):
     """ Commits TNDS data to database.
 
-        :param archives: Dictionary of regions and paths to zipped archives
-        with TNDS XML documents. If None, they will be downloaded.
+        :param directory: Directory where zip files with TNDS XML documents and
+        named after region codes are contained. If None, they will be
+        downloaded.
         :param delete: Truncate all data from TNDS tables before populating.
     """
-    if archives is None:
+    if directory is None:
         # Download required files and get region code from each filename
         data = download_tnds_files()
     else:
-        # Use archives and associated region codes
-        data = archives
+        regions = _get_regions()
+        data = {}
+        for r in regions:
+            file_ = r + ".zip"
+            path = os.path.join(directory, file_)
+            if os.path.exists(path):
+                data[r] = path
+            else:
+                utils.logger.warning("Archive %r not found in directory %r." %
+                                     (file_, directory))
+
+    if not data:
+        raise ValueError("No files were passed - either specified directory "
+                         "did not contain any suitable archives or they failed "
+                         "to be downloaded.")
 
     transform = _get_tnds_transform()
     setup_tnds_functions()

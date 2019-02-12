@@ -47,9 +47,9 @@
         <section class="card" id="timetable">
             <div class="heading-inline heading-inline--right">
                 <h2>Timetable</h2>
-                <form method="GET" action="" id="date-form" class="form form--inline">
+                <form method="GET" action="" class="form form--inline">
                     {{ select_date.date() }}
-                    <button>Refresh</button>
+                    <button>View</button>
                 </form>
             </div>
             {% if select_date.errors -%}
@@ -76,8 +76,8 @@
                         {%- endfor %}
                     </tr>
                     {% endif %}
-                    {%- for r in timetable.stops %}
-                    {%- set stop = stops[r.code] -%}
+                    {%- for r in timetable.rows %}
+                    {%- set stop = timetable.stops[r.stop_point_ref] -%}
                     <tr class="timetable__row{{ ' timetable__row--major' if r.timing else ' timetable__row--hidden' }}">
                         <th>
                             <div class="timetable__stop">
@@ -86,11 +86,11 @@
                             </div>
                         </th>
                         {%- for t in r.times %}
-                        <td{% if t[2] %} class="timetable--bold"{% endif %}>
-                            {%- if t[0] and t[1] and t[0] != t[1] -%}
-                            <span>a {{ t[0] }}</span> <span>d {{ t[1] }}</span>
-                            {%- elif t[1] or t[0] -%}
-                            {{ t[1] or t[0]}}
+                        <td{% if t.timing %} class="timetable--bold"{% endif %}>
+                            {%- if t.arrive and t.depart and t.arrive != t.depart -%}
+                            <span>a {{ t.arrive }}</span> <span>d {{ t.depart }}</span>
+                            {%- elif t.arrive or t.depart -%}
+                            {{ t.arrive or t.depart}}
                             {%- endif -%}
                         </td>
                         {%- endfor %}
@@ -107,17 +107,17 @@
             {%- endif %}
             {% if timetable.operators|length -%}
             <dl class="description-list">
-                {%- for o in timetable.operators %}
-                <dt><strong>{{ o[0] }}</strong></dt>
-                <dd>{{ o[1] }}</dd>
+                {%- for c, n in timetable.operators|dictsort(by='value') %}
+                <dt><strong>{{ c }}</strong></dt>
+                <dd>{{ n }}</dd>
                 {%- endfor %}
             </dl>
             {%- endif %}
             {% if timetable.notes|length -%}
             <dl class="description-list">
-                {%- for n in timetable.notes %}
-                <dt><strong>{{ n[0] }}</strong></dt>
-                <dd>{{ n[1] }}</dd>
+                {%- for c, t in timetable.notes|dictsort(by='value') %}
+                <dt><strong>{{ c }}</strong></dt>
+                <dd>{{ t }}</dd>
                 {%- endfor %}
             </dl>
             {%- endif %}
@@ -134,16 +134,6 @@
     resizeIndicator('indicator');
 </script>
 <script>
-    let dateForm = document.getElementById('date-form');
-    let dateSubmit = dateForm.querySelector('button');
-    dateSubmit.style.display = 'none';
-    let dateField = dateForm.querySelector('input');
-    dateField.onchange = function() {
-        if (dateField.value) {
-            dateForm.submit();
-        }
-    };
-
     function addRowEvent(group) {
         let hidden = true;
         if (group.next.length) {

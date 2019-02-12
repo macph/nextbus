@@ -524,9 +524,6 @@ def service_timetable(service_id, reverse=None):
         return redirect(url_for(".service_timetable", service_id=service_id,
                                 reverse=is_reverse))
 
-    s_graph, d_stops = graph.service_graph_stops(line.id, is_reverse)
-    sequence = s_graph.sequence()
-
     select_date = forms.SelectDate(request.args)
     if select_date.date.data is None:
         # Set to today by default
@@ -535,13 +532,11 @@ def service_timetable(service_id, reverse=None):
     select_date.set_dates(line)
     select_date.validate()
 
-    tt_data = timetable.get_timetable(line.id, is_reverse,
-                                      select_date.date.data, sequence,
-                                      d_stops)
+    tt_data = timetable.Timetable(line.id, is_reverse, select_date.date.data)
 
     return render_template("timetable.html", service=line, reverse=is_reverse,
-                           mirrored=mirrored, sequence=sequence, stops=d_stops,
-                           timetable=tt_data, select_date=select_date)
+                           mirrored=mirrored, timetable=tt_data,
+                           select_date=select_date)
 
 
 def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):

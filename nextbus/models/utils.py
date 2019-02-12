@@ -124,7 +124,7 @@ def _compile_values(element, compiler, asfrom=False, **kw):
 
     def print_value(value, column):
         type_ = column.type if value is not None else db.NULLTYPE
-        str_value = compiler.render_literal_value(value, type_)
+        str_value = compiler.process(db.bindparam(None, value, type_=type_))
 
         return str_value + "::" + str(column.type)
 

@@ -1,6 +1,7 @@
 """
 Creating timetables for a service.
 """
+from collections import abc
 import functools
 
 from nextbus import db, graph, models
@@ -59,7 +60,7 @@ def _query_journeys(service_id, direction, date):
 
     # Find all journeys and their departures
     journeys = (
-        db.session.query(models.Journey.id.label("id"),
+        db.session.query(models.Journey.id.label("journey_id"),
                          departure.label("departure"))
         .select_from(models.JourneyPattern, timezones)
         .join(models.Journey,
@@ -155,7 +156,7 @@ def _query_times(service_id, direction, date):
     """ Queries all times for journeys on a specific day. """
     journeys = _query_journeys(service_id, direction, date).subquery("journeys")
 
-    zero = db.bindparam("zero", "0", type_=db.Interval)
+    zero = db.cast("0", db.Interval)
     # For each link, add running and wait intervals from journey-specific link,
     # journey pattern link or zero if both are null
     sum_coalesced_times = db.func.sum(
@@ -169,14 +170,14 @@ def _query_times(service_id, direction, date):
 
     # Find last sequence number for each journey pattern
     last_sequence = db.func.first_value(models.JourneyLink.sequence).over(
-        partition_by=(journeys.c.id, journeys.c.departure),
+        partition_by=(journeys.c.journey_id, journeys.c.departure),
         order_by=db.desc(models.JourneyLink.sequence)
     )
 
     # Sum all running and wait intervals from preceding rows plus this row's
     # running interval for arrival time
     time_arrive = journeys.c.departure + sum_coalesced_times.over(
-        partition_by=(journeys.c.id, journeys.c.departure),
+        partition_by=(journeys.c.journey_id, journeys.c.departure),
         order_by=models.JourneyLink.sequence,
         rows=(None, -1)
     ) + db.func.coalesce(models.JourneySpecificLink.run_time,
@@ -184,7 +185,7 @@ def _query_times(service_id, direction, date):
 
     # Sum all running and wait intervals from preceding rows and this row
     time_depart = journeys.c.departure + sum_coalesced_times.over(
-        partition_by=(journeys.c.id, journeys.c.departure),
+        partition_by=(journeys.c.journey_id, journeys.c.departure),
         order_by=models.JourneyLink.sequence,
         rows=(None, 0)
     )
@@ -194,12 +195,13 @@ def _query_times(service_id, direction, date):
 
     times = (
         db.session.query(
-            models.Journey.id.label("journey_id"),
+            journeys.c.journey_id,
+            journeys.c.departure,
+            models.LocalOperator.code.label("local_operator_code"),
+            models.Operator.code.label("operator_code"),
+            models.Operator.name.label("operator_name"),
             models.Journey.note_code,
             models.Journey.note_text,
-            models.LocalOperator.code.label("local_operator_code"),
-            models.Operator.name.label("operator_name"),
-            journeys.c.departure,
             models.JourneyLink.stop_point_ref,
             models.JourneyLink.timing_point,
             # Journey may call or not call at this stop point
@@ -214,7 +216,7 @@ def _query_times(service_id, direction, date):
                     else_=time_depart).label("time_depart"),
         )
         .select_from(models.Journey)
-        .join(journeys, models.Journey.id == journeys.c.id)
+        .join(journeys, models.Journey.id == journeys.c.journey_id)
         .join(models.Journey.pattern)
         .join(models.JourneyPattern.local_operator)
         .join(models.LocalOperator.operator)
@@ -241,14 +243,14 @@ def _query_timetable(service_id, direction, date):
     query = (
         db.session.query(
             times.c.journey_id,
+            times.c.departure,
+            times.c.local_operator_code,
+            times.c.operator_code,
+            times.c.operator_name,
             times.c.note_code,
             times.c.note_text,
-            times.c.local_operator_code,
-            times.c.operator_name,
-            times.c.departure,
             times.c.stop_point_ref,
             times.c.timing_point,
-            times.c.stopping,
             db.func.timezone("UTC", times.c.time_arrive).label("utc_arrive"),
             db.func.timezone("UTC", times.c.time_depart).label("utc_depart"),
             _format_time(db.func.timezone("Europe/London", times.c.time_arrive))
@@ -257,15 +259,141 @@ def _query_timetable(service_id, direction, date):
             .label("depart")
         )
         .select_from(times)
-        .filter(times.c.stop_point_ref.isnot(None))
+        .filter(times.c.stop_point_ref.isnot(None), times.c.stopping)
         .order_by(times.c.departure, times.c.journey_id, times.c.sequence)
     )
 
     return query
 
 
+class TimetableStop:
+    """ Represents a cell in the timetable with arrival, departure and timing
+        status.
+    """
+    __slots__ = ("stop_point_ref", "arrive", "depart", "timing", "utc_arrive",
+                 "utc_depart")
+
+    def __init__(self, row_data):
+        self.stop_point_ref = row_data.stop_point_ref
+        self.arrive = row_data.arrive
+        self.depart = row_data.depart
+        self.timing = row_data.timing_point
+        self.utc_arrive = row_data.utc_arrive
+        self.utc_depart = row_data.utc_depart
+
+    def __repr__(self):
+        return "<TimetableStop(%r, %r, %r, %r)>" % (
+            self.stop_point_ref, self.arrive, self.depart, self.timing
+        )
+
+
+class TimetableJourney(abc.MutableSequence):
+    """ Journey for timetable, represented as one or more columns.
+
+        :param first_row: First row from query from which journey ID, departure
+        time, etc is taken.
+        :param other_rows: Extra rows to add to this journey.
+        :param add: If False, the specified rows will not be added at start and
+        will need to be appended separately.
+    """
+    def __init__(self, first_row, *other_rows, add=True):
+        self.journey_id = first_row.journey_id
+        self.departure = first_row.departure
+        self.operator = first_row.local_operator_code, first_row.operator_name
+        self.note = first_row.note_code, first_row.note_text
+
+        self._stops = []
+        if add:
+            self._stops.append(TimetableStop(first_row))
+            for row in other_rows:
+                self.append(TimetableStop(row))
+
+    def __repr__(self):
+        return "<TimetableJourney(%r, %r, %r, %r)>" % (
+            self.journey_id, self.departure, self.operator, self.note
+        )
+
+    def __len__(self):
+        return len(self._stops)
+
+    def __getitem__(self, index):
+        return self._stops[index]
+
+    def __setitem__(self, index, value):
+        self._check(value)
+        self._stops[index] = TimetableStop(value)
+
+    def __delitem__(self, index):
+        del self._stops[index]
+
+    def insert(self, index, value):
+        self._check(value)
+        self._stops.insert(index, TimetableStop(value))
+
+    def _check(self, row):
+        if any([self.journey_id != row.journey_id,
+                self.departure != row.departure,
+                self.operator != (row.local_operator_code, row.operator_name),
+                self.note != (row.note_code, row.note_text)]):
+            raise ValueError(
+                "Row %r does not match with journey attributes %r" % (
+                    row,
+                    (self.journey_id, self.departure, self.operator, self.note)
+                )
+            )
+
+    def wrap(self, sequence):
+        """ Wraps journey around sequence, adding extra columns and empty rows
+            if necessary.
+        """
+        len_ = len(sequence)
+        columns = [[]]
+        index = 0
+        col = 0
+
+        for row in self:
+            if row.stop_point_ref not in sequence:
+                raise ValueError("Row %r stop point ref does not exist in "
+                                 "sequence." % row)
+            # Skip over sequence until the next stop in journey
+            while index < len_ and row.stop_point_ref != sequence[index]:
+                columns[col].append(None)
+                index += 1
+            # Add new column, starting the sequence over
+            if index == len_:
+                columns.append([])
+                index = 0
+                col += 1
+            while row.stop_point_ref != sequence[index]:
+                columns[col].append(None)
+                index += 1
+
+            columns[col].append(row)
+            index += 1
+
+        # After last stop, fill rest of sequence
+        while index < len_:
+            columns[col].append(None)
+            index += 1
+
+        return columns
+
+
+class TimetableRow:
+    """ Row in timetable with stop point ref and timing status. """
+    __slots__ = "stop_point_ref", "times", "timing"
+
+    def __init__(self, stop_point_ref, list_times):
+        self.stop_point_ref = stop_point_ref
+        self.times = list_times
+        self.timing = any(t is not None and t.timing for t in self.times)
+
+    def __repr__(self):
+        return "<TimetableRow(%r, %r)>" % (self.stop_point_ref, self.timing)
+
+
 class Timetable:
-    """ Creates a timetable for a service and a direction.
+    """ Creates a timetable for a service and direction.
 
         :param service_id: Service ID.
         :param direction: Direction of service - outbound if false, inbound if
@@ -276,26 +404,21 @@ class Timetable:
         timetable from. If this is None the sequence is generated from a graph.
         :param dict_stops: Dictionary of stop points. If this is None the
         dictionary is generated from this service.
+        :param query_result: Use this result set to create timetable.
     """
     def __init__(self, service_id, direction, date, sequence=None,
-                 dict_stops=None):
+                 dict_stops=None, query_result=None):
         self.service_id = service_id
         self.direction = direction
         self.date = date
 
-        # Generate new dict and list of stops or use existing dict and list
         if sequence is None or dict_stops is None:
-            service = models.Service.query.get(self.service_id)
-            if service is None:
-                raise ValueError("Service %r does not exist." % self.service_id)
-
-            graph_, stops = graph.service_graph_stops(self.service_id,
-                                                      self.direction)
-            self.stops = stops if dict_stops is None else dict_stops
-            self.sequence = graph_.sequence() if sequence is None else sequence
+            g, ds = graph.service_graph_stops(service_id, direction)
+            self.sequence = g.sequence() if sequence is None else list(sequence)
+            self.stops = ds if dict_stops is None else dict(dict_stops)
         else:
-            self.stops = dict(dict_stops)
             self.sequence = list(sequence)
+            self.stops = dict(dict_stops)
 
         # Remove null values from start or end of sequence
         if self.sequence[0] is None:
@@ -303,116 +426,77 @@ class Timetable:
         if self.sequence[-1] is None:
             del self.sequence[-1]
 
-        self.head = []
-        self.operators = {}
-        self.notes = {}
-        self.times = {c: list() for c in self.sequence}
+        self.journeys = self._timetable_journeys(query_result)
+        self.head, self.rows, self.operators, self.notes = self._create_table()
 
-        query = _query_timetable(self.service_id, self.direction, self.date)
-        self.data = list(query.all())
+    def __repr__(self):
+        return "<Timetable(%r, %r, %r)>" % (self.service_id, self.direction,
+                                            self.date)
 
-        self._sort_times()
-        self._fill_table()
-
-    def _compare_times(self, a, b):
+    def _compare_times(self, journey_a, journey_b):
         """ Compares two journeys based on UTC arrival/departure times at their
             shared stops.
         """
         for stop in self.sequence:
-            ar = next((ar for ar in a if ar.stop_point_ref == stop), None)
-            br = next((br for br in b if br.stop_point_ref == stop), None)
-            if ar is None or br is None:
+            try:
+                row_a = next(r for r in journey_a if r.stop_point_ref == stop)
+                row_b = next(r for r in journey_b if r.stop_point_ref == stop)
+            except StopIteration:
                 continue
 
-            at = ar.utc_depart or ar.utc_arrive
-            bt = br.utc_depart or br.utc_arrive
-            if at is not None and bt is not None and at != bt:
-                return 1 if at > bt else -1
+            time_a = row_a.utc_arrive or row_a.utc_depart
+            time_b = row_b.utc_arrive or row_b.utc_depart
+            if time_a is None or time_b is None:
+                continue
+            if time_a != time_b:
+                return 1 if time_a > time_b else -1
 
         return 0
 
-    def _sort_times(self):
-        """ Sorts journeys by arrivals/departures in UTC at shared stops.
+    def _timetable_journeys(self, query_result=None):
+        dict_journeys = {}
+        query = _query_timetable(self.service_id, self.direction, self.date)
+        result = query.all() if query_result is None else query_result
 
-            For example, Journey 1 starts from point A at 0700 and stops at
-            point B at 0730, and Journey 2 starts from point B at 0715. Journey
-            2 should be placed before Journey 1 because it leaves point B
-            earlier.
-        """
-        dict_groups = {}
-        for row in self.data:
-            # Group by departure time as well, a journey may be repeated
-            identifier = row.journey_id, row.departure.timestamp()
-            dict_groups.setdefault(identifier, list()).append(row)
+        for row in result:
+            dict_journeys.setdefault(
+                (row.journey_id, row.departure),
+                TimetableJourney(row, add=False)
+            ).append(row)
 
-        groups = sorted(dict_groups.values(),
-                        key=functools.cmp_to_key(self._compare_times))
+        return sorted(dict_journeys.values(),
+                      key=functools.cmp_to_key(self._compare_times))
 
-        self.data = [row for g in groups for row in g]
+    def _create_table(self):
+        head_journey = []
+        head_operator = []
+        head_note = []
+        columns = []
 
-    def _append_empty_rows(self, start, end):
-        """ Appends an empty cell to each row in a range. """
-        for i in range(start, end):
-            self.times[self.sequence[i]].append(None)
+        operators = {}
+        notes = {}
 
-    def _fill_table(self):
-        """ Fills table using data from query. """
-        current = 0
-        journeys = set()
-        len_sequence = len(self.sequence)
+        for j in self.journeys:
+            wrapped = j.wrap(self.sequence)
+            empty = [None] * (len(wrapped) - 1)
 
-        for r in self.data:
-            if r.journey_id not in journeys:
-                if current != 0:
-                    # Need to fill previous column before moving to new one
-                    self._append_empty_rows(current, len_sequence)
-                    current = 0
+            head_journey.extend([j.journey_id] + empty)
 
-                self.head.append((r.journey_id, r.local_operator_code,
-                                  r.note_code))
-                self.operators[r.local_operator_code] = r.operator_name
-                if r.note_code is not None:
-                    self.notes[r.note_code] = r.note_text
-                journeys.add(r.journey_id)
+            o_code, o_name = j.operator
+            head_operator.extend([o_code] + empty)
+            if o_code is not None:
+                operators[o_code] = o_name
 
-            index = self.sequence.index(r.stop_point_ref)
-            if index > current:
-                # Skip over rows to next stop
-                self._append_empty_rows(current, index)
-            elif index < current:
-                # Stop appears in earlier row - skip over rest of rows, back to
-                # start then skip over to that row
-                self._append_empty_rows(current, len_sequence)
-                self.head.append(None)
-                self._append_empty_rows(0, index)
+            n_code, n_text = j.note
+            head_note.extend([n_code] + empty)
+            if n_code is not None:
+                notes[n_code] = n_text
 
-            self.times[r.stop_point_ref].append((r.arrive, r.depart,
-                                                 r.timing_point))
-            current = (index + 1) % len_sequence
+            columns.extend(wrapped)
 
-        if current != 0:
-            # Fill last column
-            self._append_empty_rows(current, len_sequence)
-
-    def to_json(self):
-        """ Serialises the table data. """
+        head = list(zip(head_journey, head_operator, head_note))
         rows = []
-        for c in self.sequence:
-            if c is not None:
-                rows.append({
-                    "code": c,
-                    "times": list(self.times[c]),
-                    "timing": any(s is not None and s[2] for s in self.times[c])
-                })
+        for i, stop in enumerate(self.sequence):
+            rows.append(TimetableRow(stop, [c[i] for c in columns]))
 
-        return {
-            "operators": sorted(self.operators.items()),
-            "notes": sorted(self.notes.items()),
-            "head": list(self.head),
-            "stops": rows
-        }
-
-
-def get_timetable(*args, **kwargs):
-    """ Get timetable in serialised form. """
-    return Timetable(*args, **kwargs).to_json()
+        return head, rows, operators, notes

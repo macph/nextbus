@@ -403,11 +403,24 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
     this.url = LIVE_URL;
+    this.table = null;
+    this.headingTime = null;
+    this.headingCountdown = null;
 
-    this.table = (table instanceof HTMLElement) ? table : document.getElementById(table);
-    this.headingTime = (time instanceof HTMLElement) ? time : document.getElementById(time);
-    this.headingCountdown = (countdown instanceof HTMLElement) ?
-        countdown : document.getElementById(countdown);
+    /**
+     * Sets table, heading with time and subheading with countdown to specified elements
+     * @param {(HTMLElement|string)} table
+     * @param {(HTMLElement|string)} time
+     * @param {(HTMLElement|string)} countdown
+     */
+    this.setElements = function(table, time, countdown) {
+        self.table = (table instanceof HTMLElement) ? table : document.getElementById(table);
+        self.headingTime = (time instanceof HTMLElement) ? time : document.getElementById(time);
+        self.headingCountdown = (countdown instanceof HTMLElement) ?
+            countdown : document.getElementById(countdown);
+    };
+
+    this.setElements(table, time, countdown);
 
     /**
      * Live time data from API.
@@ -1362,9 +1375,9 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * Gets live data object for a bus stop or create one if it does not exist
      * @param {string} atcoCode ATCO code for bus stop
      * @param {string} adminAreaRef Admin area code for bus stop
-     * @param {HTMLElement} table Table element ID
-     * @param {HTMLElement} time Heading element ID
-     * @param {HTMLElement} countdown Countdown element ID
+     * @param {(HTMLElement|string)} table Table element ID
+     * @param {(HTMLElement|string)} time Heading element ID
+     * @param {(HTMLElement|string)} countdown Countdown element ID
      */
     this.getStop = function(atcoCode, adminAreaRef, table, time, countdown) {
         let live;
@@ -1379,9 +1392,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
             self.activeStops.set(atcoCode, live);
         } else {
             live = self.activeStops.get(atcoCode);
-            live.table = table;
-            live.headingTime = time;
-            live.headingCountdown = countdown;
+            live.setElements(table, time, countdown);
         }
 
         self.stopAllLoops(atcoCode);

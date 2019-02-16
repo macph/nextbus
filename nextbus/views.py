@@ -505,7 +505,7 @@ def service(service_id, reverse=None):
     s_graph, d_stops = graph.service_graph_stops(line.id, is_reverse)
     sequence = s_graph.sequence()
     try:
-        layout = s_graph.draw(sequence, max_columns=graph.MAX_COLUMNS)
+        layout = s_graph.draw(max_columns=graph.MAX_COLUMNS)
     except graph.MaxColumnError:
         layout = None
 

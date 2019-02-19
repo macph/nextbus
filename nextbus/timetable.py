@@ -5,7 +5,6 @@ from collections import abc
 import functools
 
 from nextbus import db, graph, models
-from nextbus.models import utils
 
 
 def _in_bit_array(array, col):
@@ -48,7 +47,7 @@ def _query_journeys(service_id, direction, date):
     weekday = db.cast(db.extract("ISODOW", p_date), db.Integer)
 
     # Add timezones BST, GMT and Europe/London (which can be either)
-    timezones = utils.values(
+    timezones = models.utils.values(
         [db.column("tz", type_=db.Text)],
         ("BST",), ("GMT",), ("Europe/London",),
         alias_name="timezones"

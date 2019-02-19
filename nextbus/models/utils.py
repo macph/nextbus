@@ -5,9 +5,8 @@ SQLAlchemy materialized view code based on code from the following:
 http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
 https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
 """
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.schema import DDLElement
-from sqlalchemy.sql import FromClause
+import sqlalchemy as sa
+import sqlalchemy.ext.compiler as sa_compiler
 
 from nextbus import db
 
@@ -30,31 +29,49 @@ class BaseModel(db.Model):
                 if attr in self.__table__.columns}
 
 
-class _CreateMatView(DDLElement):
+class _CreateMatView(sa.schema.DDLElement):
     """ Creates materialized view with a command. """
-    def __init__(self, name, selectable):
+    def __init__(self, name, selectable, with_data=False):
         self.name = name
         self.selectable = selectable
+        self.with_data = with_data
 
 
-class _DropMatView(DDLElement):
+class _DropMatView(sa.schema.DDLElement):
     """ Drops materialized view with a command. """
     def __init__(self, name):
         self.name = name
 
 
-@compiles(_CreateMatView)
-def _compile_create_mat_view(element, compiler_):
-    statement = "CREATE MATERIALIZED VIEW %s AS %s WITH NO DATA"
-    selectable = compiler_.sql_compiler.process(element.selectable,
-                                                literal_binds=True)
-
-    return statement % (element.name, selectable)
+class _RefreshMatView(sa.schema.DDLElement):
+    """ Drops materialized view with a command. """
+    def __init__(self, name, concurrently=False):
+        self.name = name
+        self.concurrently = concurrently
 
 
-@compiles(_DropMatView)
-def _compile_drop_mat_view(element, _):
-    return "DROP MATERIALIZED VIEW IF EXISTS %s" % element.name
+@sa_compiler.compiles(_CreateMatView)
+def _compile_create_mat_view(clause, compiler):
+    statement = "CREATE MATERIALIZED VIEW %s AS %s WITH %s"
+    selectable = compiler.sql_compiler.process(clause.selectable,
+                                               literal_binds=True)
+    with_data = "DATA" if clause.with_data else "NO DATA"
+
+    return statement % (clause.name, selectable, with_data)
+
+
+@sa_compiler.compiles(_DropMatView)
+def _compile_drop_mat_view(clause, _):
+    return "DROP MATERIALIZED VIEW IF EXISTS " + clause.name
+
+
+@sa_compiler.compiles(_RefreshMatView)
+def _compile_refresh_mat_view(clause, _):
+    statement = "REFRESH MATERIALIZED VIEW "
+    if clause.concurrently:
+        statement += "CONCURRENTLY "
+
+    return statement + clause.name
 
 
 def create_mat_view(name, selectable, metadata=db.metadata):
@@ -78,14 +95,14 @@ def create_mat_view(name, selectable, metadata=db.metadata):
 
     # Set view to be created and dropped at same time as metadata
     @db.event.listens_for(metadata, "after_create")
-    def create_view(_, connection, **kwargs):
+    def create_view(_, connection, **kw):
         connection.execute(_CreateMatView(name, selectable))
         # Add indexes after metadata created
         for idx in table.indexes:
             idx.create(connection)
 
     @db.event.listens_for(metadata, "before_drop")
-    def drop_view(_, connection, **kwargs):
+    def drop_view(_, connection, **kw):
         connection.execute(_DropMatView(name))
 
     return table
@@ -99,18 +116,24 @@ class MaterializedView(BaseModel):
     def refresh(cls, concurrently=False):
         """ Refreshes materialized view. Must be committed in a transaction. """
         db.session.flush()
-        con = "CONCURRENTLY " if concurrently else ""
-        db.session.execute("REFRESH MATERIALIZED VIEW " + con +
-                           cls.__table__.fullname)
+        db.session.execute(_RefreshMatView(cls.__table__.fullname,
+                                           concurrently))
 
 
-class _ValuesClause(FromClause):
+def refresh_mat_views(concurrently=False):
+    """ Refresh all materialized views declared with db.Model. """
+    for m in db.Model._decl_class_registry.values():
+        if hasattr(m, "__table__") and issubclass(m, MaterializedView):
+            m.refresh(concurrently)
+
+
+class _ValuesClause(sa.sql.FromClause):
     """ Represents a VALUES expression in a FROM clause. """
     named_with_column = True
 
-    def __init__(self, columns, *values, alias_name=None, **kw):
+    def __init__(self, columns, *args, alias_name=None, **kw):
         self._column_args = columns
-        self.list = values
+        self.list = args
         self.alias_name = self.name = alias_name
 
     def _populate_column_collection(self):
@@ -118,7 +141,7 @@ class _ValuesClause(FromClause):
             column._make_proxy(self, column.name)
 
 
-@compiles(_ValuesClause)
+@sa_compiler.compiles(_ValuesClause)
 def _compile_values(element, compiler, asfrom=False, **kw):
     """ Crates VALUES expression from list of columns and list of tuples. """
 
@@ -148,6 +171,6 @@ def _compile_values(element, compiler, asfrom=False, **kw):
     return expression
 
 
-def values(columns, *values, alias_name=None):
+def values(columns, *args, alias_name=None):
     """ Creates a VALUES expression for use in FROM clauses. """
-    return _ValuesClause(columns, *values, alias_name=alias_name)
+    return _ValuesClause(columns, *args, alias_name=alias_name)

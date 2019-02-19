@@ -176,7 +176,6 @@ def populate(ctx, **kw):
         if options["g"] or options["n"] or options["m"] or options["t"]:
             with utils.database_session():
                 current_app.logger.info("Refreshing materialized views")
-                models.FTS.refresh(concurrently=False)
-                models.NaturalSort.refresh(concurrently=False)
+                models.utils.refresh_mat_views()
     else:
         click.echo(ctx.get_help())

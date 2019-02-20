@@ -128,7 +128,7 @@
       <service_ref><xsl:value-of select="func:get_id('Service', $file)"/></service_ref>
       <local_operator_ref><xsl:value-of select="key('key_operators', ancestor::txc:Service/txc:RegisteredOperatorRef)/txc:OperatorCode"/></local_operator_ref>
       <region_ref><xsl:value-of select="$region"/></region_ref>
-      <direction py_type="bool">
+      <direction>
         <xsl:choose>
           <xsl:when test="boolean($direction=$service_direction)">0</xsl:when>
           <xsl:otherwise>1</xsl:otherwise>
@@ -158,20 +158,20 @@
     <xsl:param name="timing"/>
     <xsl:choose>
       <xsl:when test="boolean($timing='PTP')">
-        <timing_point py_type="bool">1</timing_point>
-        <principal_point py_type="bool">1</principal_point>
+        <timing_point>1</timing_point>
+        <principal_point>1</principal_point>
       </xsl:when>
       <xsl:when test="boolean($timing='PPT')">
-        <timing_point py_type="bool">0</timing_point>
-        <principal_point py_type="bool">1</principal_point>
+        <timing_point>0</timing_point>
+        <principal_point>1</principal_point>
       </xsl:when>
       <xsl:when test="boolean($timing='TIP')">
-        <timing_point py_type="bool">1</timing_point>
-        <principal_point py_type="bool">0</principal_point>
+        <timing_point>1</timing_point>
+        <principal_point>0</principal_point>
       </xsl:when>
       <xsl:when test="boolean($timing='OTH')">
-        <timing_point py_type="bool">0</timing_point>
-        <principal_point py_type="bool">0</principal_point>
+        <timing_point>0</timing_point>
+        <principal_point>0</principal_point>
       </xsl:when>
     </xsl:choose>
   </xsl:template>
@@ -186,9 +186,9 @@
           <xsl:value-of select="txc:From/txc:StopPointRef"/>
         </xsl:if>
       </stop_point_ref>
-      <run_time py_type="duration"/>
-      <wait_arrive py_type="duration"/>
-      <wait_leave py_type="duration">
+      <run_time/>
+      <wait_arrive/>
+      <wait_leave>
         <xsl:choose>
           <xsl:when test="txc:From/txc:WaitTime"><xsl:value-of select="txc:From/txc:WaitTime"/></xsl:when>
           <xsl:otherwise>PT0S</xsl:otherwise>
@@ -197,7 +197,7 @@
       <xsl:call-template name="stop_timing">
         <xsl:with-param name="timing"><xsl:value-of select="txc:From/txc:TimingStatus"/></xsl:with-param>
       </xsl:call-template>
-      <stopping py_type="bool">
+      <stopping>
         <xsl:choose>
           <xsl:when test="txc:From[txc:Activity[.='pass']]">0</xsl:when>
           <xsl:otherwise>1</xsl:otherwise>
@@ -218,14 +218,14 @@
           <xsl:value-of select="txc:To/txc:StopPointRef"/>
         </xsl:if>
       </stop_point_ref>
-      <run_time py_type="duration"><xsl:value-of select="txc:RunTime"/></run_time>
-      <wait_arrive py_type="duration">
+      <run_time><xsl:value-of select="txc:RunTime"/></run_time>
+      <wait_arrive>
         <xsl:choose>
           <xsl:when test="txc:To/txc:WaitTime"><xsl:value-of select="txc:To/txc:WaitTime"/></xsl:when>
           <xsl:otherwise>PT0S</xsl:otherwise>
         </xsl:choose>
       </wait_arrive>
-      <wait_leave py_type="duration">
+      <wait_leave>
         <xsl:choose>
           <xsl:when test="$next_jl/txc:From/txc:WaitTime"><xsl:value-of select="$next_jl/txc:From/txc:WaitTime"/></xsl:when>
           <xsl:when test="position() = last()"/>
@@ -235,7 +235,7 @@
       <xsl:call-template name="stop_timing">
         <xsl:with-param name="timing"><xsl:value-of select="txc:To/txc:TimingStatus"/></xsl:with-param>
       </xsl:call-template>
-      <stopping py_type="bool">
+      <stopping>
         <xsl:choose>
           <xsl:when test="txc:To[txc:Activity[.='pass']]">0</xsl:when>
           <xsl:otherwise>1</xsl:otherwise>
@@ -310,10 +310,10 @@
       <id><xsl:value-of select="func:add_id('JourneySpecificLink')"/></id>
       <link_ref><xsl:value-of select="func:get_id('JourneyLink', $file, $jp_id, txc:JourneyPatternTimingLinkRef, 'e')"/></link_ref>
       <journey_ref><xsl:value-of select="func:get_id('Journey', $file, $vj_code)"/></journey_ref>
-      <run_time py_type="duration"><xsl:value-of select="txc:RunTime"/></run_time>
-      <wait_arrive py_type="duration"><xsl:value-of select="preceding-sibling::txc:VehicleJourneyTimingLink[1]/txc:To/txc:WaitTime"/></wait_arrive>
-      <wait_leave py_type="duration"><xsl:value-of select="txc:From/txc:WaitTime"/></wait_leave>
-      <stopping py_type="bool">
+      <run_time><xsl:value-of select="txc:RunTime"/></run_time>
+      <wait_arrive><xsl:value-of select="preceding-sibling::txc:VehicleJourneyTimingLink[1]/txc:To/txc:WaitTime"/></wait_arrive>
+      <wait_leave><xsl:value-of select="txc:From/txc:WaitTime"/></wait_leave>
+      <stopping>
         <xsl:if test="txc:From/txc:Activity">
           <xsl:choose>
             <xsl:when test="txc:From[txc:Activity[.='pass']]">0</xsl:when>
@@ -360,7 +360,7 @@
         <id><xsl:value-of select="func:add_id('OperatingDate')"/></id>
         <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
         <date><xsl:value-of select="current()"/></date>
-        <working py_type="bool">
+        <working>
           <xsl:choose>
             <xsl:when test="ancestor::txc:WorkingDays">0</xsl:when>
             <xsl:otherwise>1</xsl:otherwise>
@@ -382,7 +382,7 @@
             <xsl:otherwise><xsl:value-of select="txc:StartDate"/></xsl:otherwise>
           </xsl:choose>
         </date_end>
-        <working py_type="bool">
+        <working>
           <xsl:choose>
             <xsl:when test="ancestor::txc:WorkingDays">1</xsl:when>
             <xsl:otherwise>0</xsl:otherwise>
@@ -398,8 +398,8 @@
     <Organisations>
       <org_ref><xsl:value-of select="concat($region, current())"/></org_ref>
       <journey_ref><xsl:value-of select="func:get_id('Journey', $file, ancestor::txc:VehicleJourney/txc:VehicleJourneyCode)"/></journey_ref>
-      <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
-      <working py_type="bool"><xsl:value-of select="$working"/></working>
+      <operational><xsl:value-of select="$operational"/></operational>
+      <working><xsl:value-of select="$working"/></working>
     </Organisations>
   </xsl:template>
 
@@ -465,7 +465,7 @@
       <journey_ref><xsl:value-of select="$id"/></journey_ref>
       <date_start><xsl:value-of select="txc:StartDate"/></date_start>
       <date_end><xsl:value-of select="txc:EndDate"/></date_end>
-      <operational py_type="bool">
+      <operational>
         <xsl:choose>
           <xsl:when test="ancestor::txc:DaysOfOperation">1</xsl:when>
           <xsl:otherwise>0</xsl:otherwise>
@@ -538,7 +538,7 @@
       <BankHolidays>
         <holidays><xsl:value-of select="func:bank_holidays(./*)"/></holidays>
         <journey_ref><xsl:value-of select="$id"/></journey_ref>
-        <operational py_type="bool"><xsl:value-of select="$operational"/></operational>
+        <operational><xsl:value-of select="$operational"/></operational>
       </BankHolidays>
     </xsl:for-each>
   </xsl:template>

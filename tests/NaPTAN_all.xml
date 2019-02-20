@@ -5,88 +5,88 @@
     <name>Sheffield Interchange</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GBCS</stop_area_type>
-    <easting py_type="int">435753</easting>
-    <northing py_type="int">387184</northing>
-    <longitude py_type="float">-1.46399376411</longitude>
-    <latitude py_type="float">53.38030472742</latitude>
-    <modified py_type="datetime">2008-10-03T12:00:00</modified>
+    <easting>435753</easting>
+    <northing>387184</northing>
+    <longitude>-1.46399376411</longitude>
+    <latitude>53.38030472742</latitude>
+    <modified>2008-10-03T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>370G100020</code>
     <name>Sheffield - Wicker</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GCLS</stop_area_type>
-    <easting py_type="int">435875</easting>
-    <northing py_type="int">387989</northing>
-    <longitude py_type="float">-1.46206869421</longitude>
-    <latitude py_type="float">53.38753197234</latitude>
-    <modified py_type="datetime">2008-10-03T12:00:00</modified>
+    <easting>435875</easting>
+    <northing>387989</northing>
+    <longitude>-1.46206869421</longitude>
+    <latitude>53.38753197234</latitude>
+    <modified>2008-10-03T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>370G100887</code>
     <name>Ecclesall Road/Rustlings Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
-    <easting py_type="int">433008</easting>
-    <northing py_type="int">385655</northing>
-    <longitude py_type="float">-1.50541639314</longitude>
-    <latitude py_type="float">53.36673971296</latitude>
-    <modified py_type="datetime">2010-11-15T12:00:00</modified>
+    <easting>433008</easting>
+    <northing>385655</northing>
+    <longitude>-1.50541639314</longitude>
+    <latitude>53.36673971296</latitude>
+    <modified>2010-11-15T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>370G100888</code>
     <name>Rustlings Road - Ecclesall Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
-    <easting py_type="int">432900</easting>
-    <northing py_type="int">385655</northing>
-    <longitude py_type="float">-1.50703936082</longitude>
-    <latitude py_type="float">53.36674642278</latitude>
-    <modified py_type="datetime">2010-11-15T12:00:00</modified>
+    <easting>432900</easting>
+    <northing>385655</northing>
+    <longitude>-1.50703936082</longitude>
+    <latitude>53.36674642278</latitude>
+    <modified>2010-11-15T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>370G100890</code>
     <name>Ecclesall Road - Greystones Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
-    <easting py_type="int">432834</easting>
-    <northing py_type="int">385314</northing>
-    <longitude py_type="float">-1.5080664623</longitude>
-    <latitude py_type="float">53.36368550962</latitude>
-    <modified py_type="datetime">2010-11-15T12:00:00</modified>
+    <easting>432834</easting>
+    <northing>385314</northing>
+    <longitude>-1.5080664623</longitude>
+    <latitude>53.36368550962</latitude>
+    <modified>2010-11-15T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>370G100955</code>
     <name>West Street - Fitzwilliam Street</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
-    <easting py_type="int">434721</easting>
-    <northing py_type="int">387159</northing>
-    <longitude py_type="float">-1.47950971677</longitude>
-    <latitude py_type="float">53.38014862918</latitude>
-    <modified py_type="datetime">2010-11-15T12:00:00</modified>
+    <easting>434721</easting>
+    <northing>387159</northing>
+    <longitude>-1.47950971677</longitude>
+    <latitude>53.38014862918</latitude>
+    <modified>2010-11-15T12:00:00</modified>
   </StopArea>
   <StopArea>
     <code>940GZZSYSHU</code>
     <name>Sheffield Station - Hallam Univ (Supertram)</name>
     <admin_area_ref>147</admin_area_ref>
     <stop_area_type>GTMU</stop_area_type>
-    <easting py_type="int">435936</easting>
-    <northing py_type="int">386911</northing>
-    <longitude py_type="float">-1.46127383583</longitude>
-    <latitude py_type="float">53.37783857512</latitude>
-    <modified py_type="datetime">2007-05-17T10:00:00</modified>
+    <easting>435936</easting>
+    <northing>386911</northing>
+    <longitude>-1.46127383583</longitude>
+    <latitude>53.37783857512</latitude>
+    <modified>2007-05-17T10:00:00</modified>
   </StopArea>
   <StopArea>
     <code>940GZZSYWTS</code>
     <name>West Street (Sheffield Supertram)</name>
     <admin_area_ref>147</admin_area_ref>
     <stop_area_type>GTMU</stop_area_type>
-    <easting py_type="int">434856</easting>
-    <northing py_type="int">387205</northing>
-    <longitude py_type="float">-1.47747532006</longitude>
-    <latitude py_type="float">53.38055322685</latitude>
-    <modified py_type="datetime">2007-05-17T10:00:00</modified>
+    <easting>434856</easting>
+    <northing>387205</northing>
+    <longitude>-1.47747532006</longitude>
+    <latitude>53.38055322685</latitude>
+    <modified>2007-05-17T10:00:00</modified>
   </StopArea>
   <StopPoint>
     <atco_code>370010113</atco_code>
@@ -95,18 +95,18 @@
     <landmark>Sheffield Interchange A4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">A3</indicator>
-    <short_ind py_null="false">A3</short_ind>
+    <indicator default="">A3</indicator>
+    <short_ind default="">A3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435710</easting>
-    <northing py_type="int">387182</northing>
-    <longitude py_type="float">-1.46464037211</longitude>
-    <latitude py_type="float">53.3802896499</latitude>
+    <easting>435710</easting>
+    <northing>387182</northing>
+    <longitude>-1.46464037211</longitude>
+    <latitude>53.3802896499</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010114</atco_code>
@@ -115,18 +115,18 @@
     <landmark>Sheffield Interchange A5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">A4</indicator>
-    <short_ind py_null="false">A4</short_ind>
+    <indicator default="">A4</indicator>
+    <short_ind default="">A4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435710</easting>
-    <northing py_type="int">387167</northing>
-    <longitude py_type="float">-1.46464206231</longitude>
-    <latitude py_type="float">53.38015482699</latitude>
+    <easting>435710</easting>
+    <northing>387167</northing>
+    <longitude>-1.46464206231</longitude>
+    <latitude>53.38015482699</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010115</atco_code>
@@ -135,18 +135,18 @@
     <landmark>Sheffield Interchange A6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">A5</indicator>
-    <short_ind py_null="false">A5</short_ind>
+    <indicator default="">A5</indicator>
+    <short_ind default="">A5</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435715</easting>
-    <northing py_type="int">387144</northing>
-    <longitude py_type="float">-1.46456949377</longitude>
-    <latitude py_type="float">53.37994776163</latitude>
+    <easting>435715</easting>
+    <northing>387144</northing>
+    <longitude>-1.46456949377</longitude>
+    <latitude>53.37994776163</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010119</atco_code>
@@ -155,18 +155,18 @@
     <landmark>Sheffield Interchange B3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B3</indicator>
-    <short_ind py_null="false">B3</short_ind>
+    <indicator default="">B3</indicator>
+    <short_ind default="">B3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435720</easting>
-    <northing py_type="int">387189</northing>
-    <longitude py_type="float">-1.46448926164</longitude>
-    <latitude py_type="float">53.38035189342</latitude>
+    <easting>435720</easting>
+    <northing>387189</northing>
+    <longitude>-1.46448926164</longitude>
+    <latitude>53.38035189342</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010120</atco_code>
@@ -175,18 +175,18 @@
     <landmark>Sheffield Interchange B4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B4</indicator>
-    <short_ind py_null="false">B4</short_ind>
+    <indicator default="">B4</indicator>
+    <short_ind default="">B4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435722</easting>
-    <northing py_type="int">387169</northing>
-    <longitude py_type="float">-1.46446145165</longitude>
-    <latitude py_type="float">53.38017199475</latitude>
+    <easting>435722</easting>
+    <northing>387169</northing>
+    <longitude>-1.46446145165</longitude>
+    <latitude>53.38017199475</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010121</atco_code>
@@ -195,18 +195,18 @@
     <landmark>Sheffield Interchange B5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B5</indicator>
-    <short_ind py_null="false">B5</short_ind>
+    <indicator default="">B5</indicator>
+    <short_ind default="">B5</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435725</easting>
-    <northing py_type="int">387151</northing>
-    <longitude py_type="float">-1.4644183844</longitude>
-    <latitude py_type="float">53.38001000506</latitude>
+    <easting>435725</easting>
+    <northing>387151</northing>
+    <longitude>-1.4644183844</longitude>
+    <latitude>53.38001000506</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010122</atco_code>
@@ -215,18 +215,18 @@
     <landmark>Sheffield Interchange B6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B6</indicator>
-    <short_ind py_null="false">B6</short_ind>
+    <indicator default="">B6</indicator>
+    <short_ind default="">B6</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435727</easting>
-    <northing py_type="int">387133</northing>
-    <longitude py_type="float">-1.46439034947</longitude>
-    <latitude py_type="float">53.37984808276</latitude>
+    <easting>435727</easting>
+    <northing>387133</northing>
+    <longitude>-1.46439034947</longitude>
+    <latitude>53.37984808276</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010123</atco_code>
@@ -235,18 +235,18 @@
     <landmark>Sheffield Interchange C1</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C1</indicator>
-    <short_ind py_null="false">C1</short_ind>
+    <indicator default="">C1</indicator>
+    <short_ind default="">C1</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435741</easting>
-    <northing py_type="int">387222</northing>
-    <longitude py_type="float">-1.46416986434</longitude>
-    <latitude py_type="float">53.38064708809</latitude>
+    <easting>435741</easting>
+    <northing>387222</northing>
+    <longitude>-1.46416986434</longitude>
+    <latitude>53.38064708809</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010124</atco_code>
@@ -255,18 +255,18 @@
     <landmark>Sheffield Interchange C2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C2</indicator>
-    <short_ind py_null="false">C2</short_ind>
+    <indicator default="">C2</indicator>
+    <short_ind default="">C2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435743</easting>
-    <northing py_type="int">387205</northing>
-    <longitude py_type="float">-1.46414171716</longitude>
-    <latitude py_type="float">53.38049415394</latitude>
+    <easting>435743</easting>
+    <northing>387205</northing>
+    <longitude>-1.46414171716</longitude>
+    <latitude>53.38049415394</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010125</atco_code>
@@ -275,18 +275,18 @@
     <landmark>Sheffield Interchange C3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C3</indicator>
-    <short_ind py_null="false">C3</short_ind>
+    <indicator default="">C3</indicator>
+    <short_ind default="">C3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435745</easting>
-    <northing py_type="int">387187</northing>
-    <longitude py_type="float">-1.46411368297</longitude>
-    <latitude py_type="float">53.38033223159</latitude>
+    <easting>435745</easting>
+    <northing>387187</northing>
+    <longitude>-1.46411368297</longitude>
+    <latitude>53.38033223159</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010126</atco_code>
@@ -295,18 +295,18 @@
     <landmark>Sheffield Interchange C4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C4</indicator>
-    <short_ind py_null="false">C4</short_ind>
+    <indicator default="">C4</indicator>
+    <short_ind default="">C4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435747</easting>
-    <northing py_type="int">387166</northing>
-    <longitude py_type="float">-1.46408598738</longitude>
-    <latitude py_type="float">53.38014334464</latitude>
+    <easting>435747</easting>
+    <northing>387166</northing>
+    <longitude>-1.46408598738</longitude>
+    <latitude>53.38014334464</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010127</atco_code>
@@ -315,18 +315,18 @@
     <landmark>Sheffield Interchange C5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C5</indicator>
-    <short_ind py_null="false">C5</short_ind>
+    <indicator default="">C5</indicator>
+    <short_ind default="">C5</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435750</easting>
-    <northing py_type="int">387147</northing>
-    <longitude py_type="float">-1.46404303438</longitude>
-    <latitude py_type="float">53.37997236663</latitude>
+    <easting>435750</easting>
+    <northing>387147</northing>
+    <longitude>-1.46404303438</longitude>
+    <latitude>53.37997236663</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010128</atco_code>
@@ -335,18 +335,18 @@
     <landmark>Sheffield Interchange C6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">C6</indicator>
-    <short_ind py_null="false">C6</short_ind>
+    <indicator default="">C6</indicator>
+    <short_ind default="">C6</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435751</easting>
-    <northing py_type="int">387129</northing>
-    <longitude py_type="float">-1.46403003288</longitude>
-    <latitude py_type="float">53.37981051169</latitude>
+    <easting>435751</easting>
+    <northing>387129</northing>
+    <longitude>-1.46403003288</longitude>
+    <latitude>53.37981051169</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010130</atco_code>
@@ -355,18 +355,18 @@
     <landmark>Sheffield Interchange D2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">D2</indicator>
-    <short_ind py_null="false">D2</short_ind>
+    <indicator default="">D2</indicator>
+    <short_ind default="">D2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435760</easting>
-    <northing py_type="int">387206</northing>
-    <longitude py_type="float">-1.46388605658</longitude>
-    <latitude py_type="float">53.38050199541</latitude>
+    <easting>435760</easting>
+    <northing>387206</northing>
+    <longitude>-1.46388605658</longitude>
+    <latitude>53.38050199541</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010131</atco_code>
@@ -375,18 +375,18 @@
     <landmark>Sheffield Interchange D3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">D3</indicator>
-    <short_ind py_null="false">D3</short_ind>
+    <indicator default="">D3</indicator>
+    <short_ind default="">D3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435762</easting>
-    <northing py_type="int">387189</northing>
-    <longitude py_type="float">-1.46385791052</longitude>
-    <latitude py_type="float">53.3803490612</latitude>
+    <easting>435762</easting>
+    <northing>387189</northing>
+    <longitude>-1.46385791052</longitude>
+    <latitude>53.3803490612</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010132</atco_code>
@@ -395,18 +395,18 @@
     <landmark>Sheffield Interchange D4</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">D4</indicator>
-    <short_ind py_null="false">D4</short_ind>
+    <indicator default="">D4</indicator>
+    <short_ind default="">D4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435763</easting>
-    <northing py_type="int">387165</northing>
-    <longitude py_type="float">-1.46384558669</longitude>
-    <latitude py_type="float">53.38013327709</latitude>
+    <easting>435763</easting>
+    <northing>387165</northing>
+    <longitude>-1.46384558669</longitude>
+    <latitude>53.38013327709</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010133</atco_code>
@@ -415,18 +415,18 @@
     <landmark>Sheffield Interchange D5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">D5</indicator>
-    <short_ind py_null="false">D5</short_ind>
+    <indicator default="">D5</indicator>
+    <short_ind default="">D5</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435766</easting>
-    <northing py_type="int">387149</northing>
-    <longitude py_type="float">-1.4638022961</longitude>
-    <latitude py_type="float">53.37998926357</latitude>
+    <easting>435766</easting>
+    <northing>387149</northing>
+    <longitude>-1.4638022961</longitude>
+    <latitude>53.37998926357</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010134</atco_code>
@@ -435,18 +435,18 @@
     <landmark>Sheffield Interchange D6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">D6</indicator>
-    <short_ind py_null="false">D6</short_ind>
+    <indicator default="">D6</indicator>
+    <short_ind default="">D6</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435768</easting>
-    <northing py_type="int">387131</northing>
-    <longitude py_type="float">-1.46377426352</longitude>
-    <latitude py_type="float">53.37982734113</latitude>
+    <easting>435768</easting>
+    <northing>387131</northing>
+    <longitude>-1.46377426352</longitude>
+    <latitude>53.37982734113</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010140</atco_code>
@@ -455,18 +455,18 @@
     <landmark>Sheffield Interchange E6</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E6</indicator>
-    <short_ind py_null="false">E6</short_ind>
+    <indicator default="">E6</indicator>
+    <short_ind default="">E6</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435783</easting>
-    <northing py_type="int">387131</northing>
-    <longitude py_type="float">-1.46354878376</longitude>
-    <latitude py_type="float">53.37982632866</latitude>
+    <easting>435783</easting>
+    <northing>387131</northing>
+    <longitude>-1.46354878376</longitude>
+    <latitude>53.37982632866</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010143</atco_code>
@@ -475,18 +475,18 @@
     <landmark>Sheffield Interchange E9</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E4</indicator>
-    <short_ind py_null="false">E4</short_ind>
+    <indicator default="">E4</indicator>
+    <short_ind default="">E4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435780</easting>
-    <northing py_type="int">387168</northing>
-    <longitude py_type="float">-1.46358970243</longitude>
-    <latitude py_type="float">53.38015909433</latitude>
+    <easting>435780</easting>
+    <northing>387168</northing>
+    <longitude>-1.46358970243</longitude>
+    <latitude>53.38015909433</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010216</atco_code>
@@ -495,18 +495,18 @@
     <landmark>Sheffield Interchange E1</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E1</indicator>
-    <short_ind py_null="false">E1</short_ind>
+    <indicator default="">E1</indicator>
+    <short_ind default="">E1</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435778</easting>
-    <northing py_type="int">387214</northing>
-    <longitude py_type="float">-1.46361457342</longitude>
-    <latitude py_type="float">53.38057268618</latitude>
+    <easting>435778</easting>
+    <northing>387214</northing>
+    <longitude>-1.46361457342</longitude>
+    <latitude>53.38057268618</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010217</atco_code>
@@ -515,18 +515,18 @@
     <landmark>Sheffield Interchange E2</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E2</indicator>
-    <short_ind py_null="false">E2</short_ind>
+    <indicator default="">E2</indicator>
+    <short_ind default="">E2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435776</easting>
-    <northing py_type="int">387196</northing>
-    <longitude py_type="float">-1.46364666994</longitude>
-    <latitude py_type="float">53.38041103373</latitude>
+    <easting>435776</easting>
+    <northing>387196</northing>
+    <longitude>-1.46364666994</longitude>
+    <latitude>53.38041103373</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010218</atco_code>
@@ -535,18 +535,18 @@
     <landmark>Sheffield Interchange E3</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E3</indicator>
-    <short_ind py_null="false">E3</short_ind>
+    <indicator default="">E3</indicator>
+    <short_ind default="">E3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435778</easting>
-    <northing py_type="int">387184</northing>
-    <longitude py_type="float">-1.46361796031</longitude>
-    <latitude py_type="float">53.38030304042</latitude>
+    <easting>435778</easting>
+    <northing>387184</northing>
+    <longitude>-1.46361796031</longitude>
+    <latitude>53.38030304042</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010219</atco_code>
@@ -555,18 +555,18 @@
     <landmark>Sheffield Interchange E5</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">E5</indicator>
-    <short_ind py_null="false">E5</short_ind>
+    <indicator default="">E5</indicator>
+    <short_ind default="">E5</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435781</easting>
-    <northing py_type="int">387150</northing>
-    <longitude py_type="float">-1.46357670259</longitude>
-    <latitude py_type="float">53.37999723935</latitude>
+    <easting>435781</easting>
+    <northing>387150</northing>
+    <longitude>-1.46357670259</longitude>
+    <latitude>53.37999723935</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010231</atco_code>
@@ -575,18 +575,18 @@
     <landmark>10231</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B1</indicator>
-    <short_ind py_null="false">B1</short_ind>
+    <indicator default="">B1</indicator>
+    <short_ind default="">B1</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435716</easting>
-    <northing py_type="int">387210</northing>
-    <longitude py_type="float">-1.46454702362</longitude>
-    <latitude py_type="float">53.38054091504</latitude>
+    <easting>435716</easting>
+    <northing>387210</northing>
+    <longitude>-1.46454702362</longitude>
+    <latitude>53.38054091504</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010232</atco_code>
@@ -595,18 +595,18 @@
     <landmark>10232</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">A1</indicator>
-    <short_ind py_null="false">A1</short_ind>
+    <indicator default="">A1</indicator>
+    <short_ind default="">A1</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435707</easting>
-    <northing py_type="int">387209</northing>
-    <longitude py_type="float">-1.46468242643</longitude>
-    <latitude py_type="float">53.38053253325</latitude>
+    <easting>435707</easting>
+    <northing>387209</northing>
+    <longitude>-1.46468242643</longitude>
+    <latitude>53.38053253325</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010233</atco_code>
@@ -615,18 +615,18 @@
     <landmark>10233</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">A2</indicator>
-    <short_ind py_null="false">A2</short_ind>
+    <indicator default="">A2</indicator>
+    <short_ind default="">A2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435709</easting>
-    <northing py_type="int">387193</northing>
-    <longitude py_type="float">-1.46465416481</longitude>
-    <latitude py_type="float">53.38038858741</latitude>
+    <easting>435709</easting>
+    <northing>387193</northing>
+    <longitude>-1.46465416481</longitude>
+    <latitude>53.38038858741</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370010234</atco_code>
@@ -635,18 +635,18 @@
     <landmark>10234</landmark>
     <street>Sheffield Interchange</street>
     <crossing>Sheffield Interchange</crossing>
-    <indicator py_null="false">B2</indicator>
-    <short_ind py_null="false">B2</short_ind>
+    <indicator default="">B2</indicator>
+    <short_ind default="">B2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435718</easting>
-    <northing py_type="int">387200</northing>
-    <longitude py_type="float">-1.46451808621</longitude>
-    <latitude py_type="float">53.38045089833</latitude>
+    <easting>435718</easting>
+    <northing>387200</northing>
+    <longitude>-1.46451808621</longitude>
+    <latitude>53.38045089833</latitude>
     <stop_type>BCS</stop_type>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-05-13T09:40:31</modified>
+    <modified>2011-05-13T09:40:31</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020360</atco_code>
@@ -655,18 +655,18 @@
     <landmark>Opposite The Cavendish</landmark>
     <street>West Street</street>
     <crossing>Fitzwilliam Street</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434708</easting>
-    <northing py_type="int">387146</northing>
-    <longitude py_type="float">-1.47970655813</longitude>
-    <latitude py_type="float">53.38003263375</latitude>
+    <easting>434708</easting>
+    <northing>387146</northing>
+    <longitude>-1.47970655813</longitude>
+    <latitude>53.38003263375</latitude>
     <stop_type>BCT</stop_type>
     <bearing>W</bearing>
     <stop_area_ref>370G100955</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2010-11-17T12:15:06</modified>
+    <modified>2010-11-17T12:15:06</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020361</atco_code>
@@ -675,18 +675,18 @@
     <landmark>20361</landmark>
     <street>West Street</street>
     <crossing>Mappin Street</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434744</easting>
-    <northing py_type="int">387171</northing>
-    <longitude py_type="float">-1.47916266221</longitude>
-    <latitude py_type="float">53.3802549807</latitude>
+    <easting>434744</easting>
+    <northing>387171</northing>
+    <longitude>-1.47916266221</longitude>
+    <latitude>53.3802549807</latitude>
     <stop_type>BCT</stop_type>
     <bearing>NE</bearing>
     <stop_area_ref>370G100955</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-06T09:44:28</modified>
+    <modified>2011-04-06T09:44:28</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020378</atco_code>
@@ -695,18 +695,18 @@
     <landmark>Opposite Barracks</landmark>
     <street>Glossop Road</street>
     <crossing>Gell Street</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434510</easting>
-    <northing py_type="int">387147</northing>
-    <longitude py_type="float">-1.48268280526</longitude>
-    <latitude py_type="float">53.38005454947</latitude>
+    <easting>434510</easting>
+    <northing>387147</northing>
+    <longitude>-1.48268280526</longitude>
+    <latitude>53.38005454947</latitude>
     <stop_type>BCT</stop_type>
     <bearing>W</bearing>
     <stop_area_ref/>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-06T09:44:28</modified>
+    <modified>2011-04-06T09:44:28</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020581</atco_code>
@@ -715,18 +715,18 @@
     <landmark>Endcliffe Park</landmark>
     <street>Ecclesall Road</street>
     <crossing>Rustlings Road</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
-    <easting py_type="int">433034</easting>
-    <northing py_type="int">385672</northing>
-    <longitude py_type="float">-1.50502390866</longitude>
-    <latitude py_type="float">53.36689089495</latitude>
+    <easting>433034</easting>
+    <northing>385672</northing>
+    <longitude>-1.50502390866</longitude>
+    <latitude>53.36689089495</latitude>
     <stop_type>BCT</stop_type>
     <bearing>E</bearing>
     <stop_area_ref>370G100887</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2012-04-19T02:25:19</modified>
+    <modified>2012-04-19T02:25:19</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020582</atco_code>
@@ -735,18 +735,18 @@
     <landmark>Outside Trinity Church</landmark>
     <street>Ecclesall Road</street>
     <crossing>Rustlings Road</crossing>
-    <indicator py_null="false">opp</indicator>
-    <short_ind py_null="false">opp</short_ind>
+    <indicator default="">opp</indicator>
+    <short_ind default="">opp</short_ind>
     <locality_ref>N0060732</locality_ref>
-    <easting py_type="int">433017</easting>
-    <northing py_type="int">385650</northing>
-    <longitude py_type="float">-1.50528166621</longitude>
-    <latitude py_type="float">53.36669421145</latitude>
+    <easting>433017</easting>
+    <northing>385650</northing>
+    <longitude>-1.50528166621</longitude>
+    <latitude>53.36669421145</latitude>
     <stop_type>BCT</stop_type>
     <bearing>SW</bearing>
     <stop_area_ref>370G100887</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2012-02-03T10:11:11</modified>
+    <modified>2012-02-03T10:11:11</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020621</atco_code>
@@ -755,18 +755,18 @@
     <landmark>Opposite Harry Ramsden's</landmark>
     <street>Ecclesall Road</street>
     <crossing>Greystones Road</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
-    <easting py_type="int">432831</easting>
-    <northing py_type="int">385409</northing>
-    <longitude py_type="float">-1.50810171222</longitude>
-    <latitude py_type="float">53.36453958185</latitude>
+    <easting>432831</easting>
+    <northing>385409</northing>
+    <longitude>-1.50810171222</longitude>
+    <latitude>53.36453958185</latitude>
     <stop_type>BCT</stop_type>
     <bearing>N</bearing>
     <stop_area_ref>370G100890</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2012-03-23T02:32:24</modified>
+    <modified>2012-03-23T02:32:24</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020622</atco_code>
@@ -775,18 +775,18 @@
     <landmark>Adj. to Church</landmark>
     <street>Ecclesall Road</street>
     <crossing>Greystones Road</crossing>
-    <indicator py_null="false">nr</indicator>
-    <short_ind py_null="false">near</short_ind>
+    <indicator default="">nr</indicator>
+    <short_ind default="">near</short_ind>
     <locality_ref>E0029982</locality_ref>
-    <easting py_type="int">432837</easting>
-    <northing py_type="int">385290</northing>
-    <longitude py_type="float">-1.50802386665</longitude>
-    <latitude py_type="float">53.3634696052</latitude>
+    <easting>432837</easting>
+    <northing>385290</northing>
+    <longitude>-1.50802386665</longitude>
+    <latitude>53.3634696052</latitude>
     <stop_type>BCT</stop_type>
     <bearing>S</bearing>
     <stop_area_ref>370G100890</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-15T12:16:21</modified>
+    <modified>2011-04-15T12:16:21</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020637</atco_code>
@@ -795,18 +795,18 @@
     <landmark>Outside Victoria Wines</landmark>
     <street>Rustlings Road</street>
     <crossing>Ecclesall Road</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>N0060732</locality_ref>
-    <easting py_type="int">432878</easting>
-    <northing py_type="int">385657</northing>
-    <longitude py_type="float">-1.50736975817</longitude>
-    <latitude py_type="float">53.36676576344</latitude>
+    <easting>432878</easting>
+    <northing>385657</northing>
+    <longitude>-1.50736975817</longitude>
+    <latitude>53.36676576344</latitude>
     <stop_type>BCT</stop_type>
     <bearing>W</bearing>
     <stop_area_ref>370G100888</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-16T12:16:00</modified>
+    <modified>2011-04-16T12:16:00</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370020638</atco_code>
@@ -815,18 +815,18 @@
     <landmark>Opposite Victoria Wines/Outsid</landmark>
     <street>Rustlings Road</street>
     <crossing>Ecclesall Road</crossing>
-    <indicator py_null="false">nr</indicator>
-    <short_ind py_null="false">near</short_ind>
+    <indicator default="">nr</indicator>
+    <short_ind default="">near</short_ind>
     <locality_ref>N0060732</locality_ref>
-    <easting py_type="int">432910</easting>
-    <northing py_type="int">385662</northing>
-    <longitude py_type="float">-1.50688835988</longitude>
-    <latitude py_type="float">53.36680872034</latitude>
+    <easting>432910</easting>
+    <northing>385662</northing>
+    <longitude>-1.50688835988</longitude>
+    <latitude>53.36680872034</latitude>
     <stop_type>BCT</stop_type>
     <bearing>E</bearing>
     <stop_area_ref>370G100888</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-16T12:16:00</modified>
+    <modified>2011-04-16T12:16:00</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370022809</atco_code>
@@ -835,18 +835,18 @@
     <landmark>Wicker Arches</landmark>
     <street>Wicker</street>
     <crossing>Wicker Arches</crossing>
-    <indicator py_null="false">WK4</indicator>
-    <short_ind py_null="false">WK4</short_ind>
+    <indicator default="">WK4</indicator>
+    <short_ind default="">WK4</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435904</easting>
-    <northing py_type="int">388039</northing>
-    <longitude py_type="float">-1.46162702086</longitude>
-    <latitude py_type="float">53.387979417</latitude>
+    <easting>435904</easting>
+    <northing>388039</northing>
+    <longitude>-1.46162702086</longitude>
+    <latitude>53.387979417</latitude>
     <stop_type>BCT</stop_type>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2012-02-08T12:15:09</modified>
+    <modified>2012-02-08T12:15:09</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370022846</atco_code>
@@ -855,18 +855,18 @@
     <landmark>Pharmacy</landmark>
     <street>Wicker</street>
     <crossing>Wk1</crossing>
-    <indicator py_null="false">WK1</indicator>
-    <short_ind py_null="false">WK1</short_ind>
+    <indicator default="">WK1</indicator>
+    <short_ind default="">WK1</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435855</easting>
-    <northing py_type="int">387971</northing>
-    <longitude py_type="float">-1.46237142548</longitude>
-    <latitude py_type="float">53.38737153882</latitude>
+    <easting>435855</easting>
+    <northing>387971</northing>
+    <longitude>-1.46237142548</longitude>
+    <latitude>53.38737153882</latitude>
     <stop_type>BCT</stop_type>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-23T12:15:39</modified>
+    <modified>2011-04-23T12:15:39</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370022848</atco_code>
@@ -875,18 +875,18 @@
     <landmark>22848</landmark>
     <street>Wicker</street>
     <crossing>Wicker</crossing>
-    <indicator py_null="false">WK3</indicator>
-    <short_ind py_null="false">WK3</short_ind>
+    <indicator default="">WK3</indicator>
+    <short_ind default="">WK3</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435897</easting>
-    <northing py_type="int">388028</northing>
-    <longitude py_type="float">-1.46173351138</longitude>
-    <latitude py_type="float">53.38788102133</latitude>
+    <easting>435897</easting>
+    <northing>388028</northing>
+    <longitude>-1.46173351138</longitude>
+    <latitude>53.38788102133</latitude>
     <stop_type>BCT</stop_type>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2012-02-17T02:58:20</modified>
+    <modified>2012-02-17T02:58:20</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370023677</atco_code>
@@ -895,18 +895,18 @@
     <landmark>23677</landmark>
     <street>Glossop Road</street>
     <crossing>Regent Terrace</crossing>
-    <indicator py_null="false">adj</indicator>
-    <short_ind py_null="false">adj</short_ind>
+    <indicator default="">adj</indicator>
+    <short_ind default="">adj</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434586</easting>
-    <northing py_type="int">387155</northing>
-    <longitude py_type="float">-1.4815394921</longitude>
-    <latitude py_type="float">53.38012150192</latitude>
+    <easting>434586</easting>
+    <northing>387155</northing>
+    <longitude>-1.4815394921</longitude>
+    <latitude>53.38012150192</latitude>
     <stop_type>BCT</stop_type>
     <bearing>E</bearing>
     <stop_area_ref/>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-06T09:44:28</modified>
+    <modified>2011-04-06T09:44:28</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>370026733</atco_code>
@@ -915,18 +915,18 @@
     <landmark>Wk2</landmark>
     <street>Wicker</street>
     <crossing>Wk2</crossing>
-    <indicator py_null="false">WK2</indicator>
-    <short_ind py_null="false">WK2</short_ind>
+    <indicator default="">WK2</indicator>
+    <short_ind default="">WK2</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435799</easting>
-    <northing py_type="int">387864</northing>
-    <longitude py_type="float">-1.46322545701</longitude>
-    <latitude py_type="float">53.38641358974</latitude>
+    <easting>435799</easting>
+    <northing>387864</northing>
+    <longitude>-1.46322545701</longitude>
+    <latitude>53.38641358974</latitude>
     <stop_type>BCT</stop_type>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
-    <modified py_type="datetime">2011-04-23T12:15:39</modified>
+    <modified>2011-04-23T12:15:39</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>9400ZZSYSHU1</atco_code>
@@ -935,18 +935,18 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator py_null="false">From City</indicator>
-    <short_ind py_null="false">from CITY</short_ind>
+    <indicator default="">From City</indicator>
+    <short_ind default="">from CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435941</easting>
-    <northing py_type="int">386910</northing>
-    <longitude py_type="float">-1.46119879283</longitude>
-    <latitude py_type="float">53.37782924792</latitude>
+    <easting>435941</easting>
+    <northing>386910</northing>
+    <longitude>-1.46119879283</longitude>
+    <latitude>53.37782924792</latitude>
     <stop_type>PLT</stop_type>
     <bearing/>
     <stop_area_ref>940GZZSYSHU</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
-    <modified py_type="datetime">2008-08-19T16:36:00</modified>
+    <modified>2008-08-19T16:36:00</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>9400ZZSYSHU2</atco_code>
@@ -955,18 +955,18 @@
     <landmark>Main Train Station</landmark>
     <street>Off Sheaf Street</street>
     <crossing/>
-    <indicator py_null="false">To City</indicator>
-    <short_ind py_null="false">to CITY</short_ind>
+    <indicator default="">To City</indicator>
+    <short_ind default="">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">435930</easting>
-    <northing py_type="int">386912</northing>
-    <longitude py_type="float">-1.46136391014</longitude>
-    <latitude py_type="float">53.37784797006</latitude>
+    <easting>435930</easting>
+    <northing>386912</northing>
+    <longitude>-1.46136391014</longitude>
+    <latitude>53.37784797006</latitude>
     <stop_type>PLT</stop_type>
     <bearing/>
     <stop_area_ref>940GZZSYSHU</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
-    <modified py_type="datetime">2008-08-19T16:38:00</modified>
+    <modified>2008-08-19T16:38:00</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>9400ZZSYWTS1</atco_code>
@@ -975,18 +975,18 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator py_null="false">From City</indicator>
-    <short_ind py_null="false">from CITY</short_ind>
+    <indicator default="">From City</indicator>
+    <short_ind default="">from CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434834</easting>
-    <northing py_type="int">387190</northing>
-    <longitude py_type="float">-1.47780767871</longitude>
-    <latitude py_type="float">53.3804198499</latitude>
+    <easting>434834</easting>
+    <northing>387190</northing>
+    <longitude>-1.47780767871</longitude>
+    <latitude>53.3804198499</latitude>
     <stop_type>PLT</stop_type>
     <bearing/>
     <stop_area_ref>940GZZSYWTS</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
-    <modified py_type="datetime">2008-08-19T17:00:00</modified>
+    <modified>2008-08-19T17:00:00</modified>
   </StopPoint>
   <StopPoint>
     <atco_code>9400ZZSYWTS2</atco_code>
@@ -995,17 +995,17 @@
     <landmark>Portobello Centre</landmark>
     <street>West Street</street>
     <crossing/>
-    <indicator py_null="false">To City</indicator>
-    <short_ind py_null="false">to CITY</short_ind>
+    <indicator default="">To City</indicator>
+    <short_ind default="">to CITY</short_ind>
     <locality_ref>E0057890</locality_ref>
-    <easting py_type="int">434878</easting>
-    <northing py_type="int">387219</northing>
-    <longitude py_type="float">-1.47714306938</longitude>
-    <latitude py_type="float">53.38067761465</latitude>
+    <easting>434878</easting>
+    <northing>387219</northing>
+    <longitude>-1.47714306938</longitude>
+    <latitude>53.38067761465</latitude>
     <stop_type>PLT</stop_type>
     <bearing/>
     <stop_area_ref>940GZZSYWTS</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
-    <modified py_type="datetime">2008-08-19T17:01:00</modified>
+    <modified>2008-08-19T17:01:00</modified>
   </StopPoint>
 </Data>

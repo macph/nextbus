@@ -25,7 +25,7 @@
     <service_ref>1</service_ref>
     <local_operator_ref>YTC</local_operator_ref>
     <region_ref>Y</region_ref>
-    <direction py_type="bool">1</direction>
+    <direction>1</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>
   </JourneyPattern>
@@ -36,7 +36,7 @@
     <service_ref>1</service_ref>
     <local_operator_ref>YTC</local_operator_ref>
     <region_ref>Y</region_ref>
-    <direction py_type="bool">0</direction>
+    <direction>0</direction>
     <date_start>2018-01-28</date_start>
     <date_end>2038-01-17</date_end>
   </JourneyPattern>
@@ -44,648 +44,648 @@
     <id>1</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370021129</stop_point_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>2</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370021130</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>3</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370021134</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>4</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370021136</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>5</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370021138</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>6</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020764</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>7</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020789</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>8</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020771</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>9</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020772</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT60S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT60S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>10</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020376</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>11</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370023677</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>12</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020361</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>13</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370020362</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>13</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>14</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370022796</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>14</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>15</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370023176</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>15</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>16</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370027392</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>16</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>17</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370023715</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>17</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>18</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370022816</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>18</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>19</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370022788</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>19</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>20</id>
     <pattern_ref>1</pattern_ref>
     <stop_point_ref>370070005</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration"/>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave/>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>20</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>21</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021129</stop_point_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>1</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>22</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021130</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>2</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>23</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021134</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>3</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>24</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021136</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>4</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>25</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021138</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>26</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020764</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>6</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>27</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020789</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>28</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020771</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>8</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>29</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020772</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT60S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT60S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>30</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020376</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>10</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>31</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370023677</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>11</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>32</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020361</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>12</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>33</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020362</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>13</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>34</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370022796</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>14</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>35</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370023176</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>15</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>36</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370027392</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>16</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>37</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370023715</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>17</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>38</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370022816</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>18</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>39</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370022788</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>19</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>40</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370070005</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>20</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>41</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370022881</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>21</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>42</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370023697</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>22</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>43</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020360</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>23</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>44</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020378</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">0</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>0</stopping>
     <sequence>24</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>45</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020377</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>25</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>46</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020775</stop_point_ref>
-    <run_time py_type="duration">PT180S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT180S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>26</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>47</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020790</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>27</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>48</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020773</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>28</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>49</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370020778</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>29</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>50</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021137</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>30</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>51</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021135</stop_point_ref>
-    <run_time py_type="duration">PT60S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT60S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>31</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>52</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021132</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>32</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>53</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021131</stop_point_ref>
-    <run_time py_type="duration">PT0S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration">PT0S</wait_leave>
-    <timing_point py_type="bool">0</timing_point>
-    <principal_point py_type="bool">0</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT0S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
+    <stopping>1</stopping>
     <sequence>33</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>54</id>
     <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021128</stop_point_ref>
-    <run_time py_type="duration">PT120S</run_time>
-    <wait_arrive py_type="duration">PT0S</wait_arrive>
-    <wait_leave py_type="duration"/>
-    <timing_point py_type="bool">1</timing_point>
-    <principal_point py_type="bool">1</principal_point>
-    <stopping py_type="bool">1</stopping>
+    <run_time>PT120S</run_time>
+    <wait_arrive>PT0S</wait_arrive>
+    <wait_leave/>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
+    <stopping>1</stopping>
     <sequence>34</sequence>
   </JourneyLink>
   <Journey>
@@ -780,109 +780,109 @@
     <id>1</id>
     <link_ref>5</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration">PT0S</run_time>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time>PT0S</run_time>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>2</id>
     <link_ref>6</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>3</id>
     <link_ref>7</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>4</id>
     <link_ref>8</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration">PT0S</run_time>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time>PT0S</run_time>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>5</id>
     <link_ref>9</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>6</id>
     <link_ref>10</link_ref>
     <journey_ref>1</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>7</id>
     <link_ref>5</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration">PT0S</run_time>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time>PT0S</run_time>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>8</id>
     <link_ref>6</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>9</id>
     <link_ref>7</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>10</id>
     <link_ref>8</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration">PT0S</run_time>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time>PT0S</run_time>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>11</id>
     <link_ref>9</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <JourneySpecificLink>
     <id>12</id>
     <link_ref>10</link_ref>
     <journey_ref>2</journey_ref>
-    <run_time py_type="duration"/>
-    <wait_arrive py_type="duration"/>
-    <wait_leave py_type="duration"/>
-    <stopping py_type="bool">0</stopping>
+    <run_time/>
+    <wait_arrive/>
+    <wait_leave/>
+    <stopping>0</stopping>
   </JourneySpecificLink>
   <Organisation>
     <code>Y1</code>
@@ -891,139 +891,139 @@
     <id>1</id>
     <org_ref>Y1</org_ref>
     <date>2018-02-26</date>
-    <working py_type="bool">0</working>
+    <working>0</working>
   </OperatingDate>
   <OperatingDate>
     <id>2</id>
     <org_ref>Y1</org_ref>
     <date>2018-04-16</date>
-    <working py_type="bool">1</working>
+    <working>1</working>
   </OperatingDate>
   <OperatingDate>
     <id>3</id>
     <org_ref>Y1</org_ref>
     <date>2018-07-13</date>
-    <working py_type="bool">1</working>
+    <working>1</working>
   </OperatingDate>
   <OperatingPeriod>
     <id>1</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-01-08</date_start>
     <date_end>2018-02-09</date_end>
-    <working py_type="bool">1</working>
+    <working>1</working>
   </OperatingPeriod>
   <OperatingPeriod>
     <id>2</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-02-19</date_start>
     <date_end>2018-03-23</date_end>
-    <working py_type="bool">1</working>
+    <working>1</working>
   </OperatingPeriod>
   <OperatingPeriod>
     <id>3</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-04-09</date_start>
     <date_end>2018-05-04</date_end>
-    <working py_type="bool">0</working>
+    <working>0</working>
   </OperatingPeriod>
   <OperatingPeriod>
     <id>4</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-05-08</date_start>
     <date_end>2018-05-25</date_end>
-    <working py_type="bool">0</working>
+    <working>0</working>
   </OperatingPeriod>
   <OperatingPeriod>
     <id>5</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-06-04</date_start>
     <date_end>2018-07-23</date_end>
-    <working py_type="bool">0</working>
+    <working>0</working>
   </OperatingPeriod>
   <Organisations>
     <org_ref>Y1</org_ref>
     <journey_ref>4</journey_ref>
-    <operational py_type="bool">1</operational>
-    <working py_type="bool">1</working>
+    <operational>1</operational>
+    <working>1</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
     <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
-    <working py_type="bool">0</working>
+    <operational>0</operational>
+    <working>0</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
     <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
-    <working py_type="bool">0</working>
+    <operational>1</operational>
+    <working>0</working>
   </Organisations>
   <Organisations>
     <org_ref>Y1</org_ref>
     <journey_ref>5</journey_ref>
-    <operational py_type="bool">0</operational>
-    <working py_type="bool">1</working>
+    <operational>0</operational>
+    <working>1</working>
   </Organisations>
   <SpecialPeriod>
     <id>1</id>
     <journey_ref>1</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
     <id>2</id>
     <journey_ref>2</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
     <id>3</id>
     <journey_ref>4</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
     <id>4</id>
     <journey_ref>5</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">1</operational>
+    <operational>1</operational>
   </SpecialPeriod>
   <SpecialPeriod>
     <id>5</id>
     <journey_ref>7</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </SpecialPeriod>
   <SpecialPeriod>
     <id>6</id>
     <journey_ref>8</journey_ref>
     <date_start>2018-04-03</date_start>
     <date_end>2018-04-03</date_end>
-    <operational py_type="bool">1</operational>
+    <operational>1</operational>
   </SpecialPeriod>
   <BankHolidays>
     <holidays>65534</holidays>
     <journey_ref>4</journey_ref>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </BankHolidays>
   <BankHolidays>
     <holidays>65534</holidays>
     <journey_ref>5</journey_ref>
-    <operational py_type="bool">1</operational>
+    <operational>1</operational>
   </BankHolidays>
   <BankHolidays>
     <holidays>1786</holidays>
     <journey_ref>7</journey_ref>
-    <operational py_type="bool">0</operational>
+    <operational>0</operational>
   </BankHolidays>
   <BankHolidays>
     <holidays>2032</holidays>
     <journey_ref>8</journey_ref>
-    <operational py_type="bool">1</operational>
+    <operational>1</operational>
   </BankHolidays>
 </Data>

@@ -3,33 +3,25 @@ Utilities for the populate subpackage.
 """
 import collections
 import contextlib
-import datetime
 import functools
 import itertools
 import logging
 import os
-import re
 import shutil
 import tempfile
 import types
 
-import dateutil.parser as dp
 from flask import current_app
 import lxml.etree as et
 import psycopg2.sql
 from sqlalchemy.dialects import postgresql
 
-from nextbus import db, logger
+from definitions import ROOT_DIR
+from nextbus import db, logger, models
 
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
 ROW_LIMIT = 10000
-# Parses an ISO8601 duration string, eg 'P1Y2M3DT4H5M6.7S'
-PARSE_DURATION = re.compile(
-    r"^(|[-+])P(?=.+)(?:(?:)|(\d+)Y)(?:(?:)|(\d+)M)(?:(?:)|(\d+)D)"
-    r"(?:T?(?:)(?:)(?:)|T(?:(?:)|(\d+)H)(?:(?:)|(\d+)M)"
-    r"(?:(?:)|(\d*\.?\d+|\d+\.?\d*)S))$"
-)
 
 logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
@@ -46,7 +38,7 @@ def database_session():
     try:
         yield
         db.session.commit()
-    except:
+    except Exception:
         db.session.rollback()
         logger.error("An error occurred during the transaction", exc_info=1)
         raise
@@ -63,7 +55,7 @@ def database_connection():
     try:
         with db.engine.begin() as connection:
             yield connection
-    except:
+    except Exception:
         logger.error("An error occurred during the transaction", exc_info=1)
         raise
 
@@ -76,104 +68,19 @@ def reflect_metadata():
     return metadata
 
 
-def duration_delta(duration, ignore=False):
-    """ Converts a time duration from XML data to a timedelta object.
-
-        If the 'ignore' parameter is set to False, specifying a year or month
-        value other than zero will raise an exception as they cannot be used
-        without context.
-
-        :param duration: Duration value obtained from XML element
-        :param ignore: If True, will ignore non zero year or month values
-        instead of raising exception
-        :returns: timedelta object
-    """
-    match = PARSE_DURATION.match(duration)
-    if not match:
-        raise ValueError("Parsing %r failed - not a valid XML duration value."
-                         % duration)
-
-    if not ignore and any(i is not None and int(i) != 0 for i in
-                          [match.group(2), match.group(3)]):
-        raise ValueError("Year and month values cannot be used in timedelta "
-                         "objects - they need context.")
-
-    def convert(group, func):
-        return func(group) if group is not None else 0
-
-    delta = datetime.timedelta(
-        days=convert(match.group(4), int),
-        hours=convert(match.group(5), int),
-        minutes=convert(match.group(6), int),
-        seconds=convert(match.group(7), float)
-    )
-
-    if match.group(1) == '-':
-        delta *= -1
-
-    return delta
-
-
-def xml_as_dict(element, convert=True):
-    """ Creates a dictionary from a flat XML element. If convert is True,
-        ``py_type`` attributes are used to coerce values.
-
-        If another attribute ``py_null`` is truthy or omitted, the value None
-        can be returned for an empty element otherwise the default conversion
-        value (eg ``str()``) is used.
-
-        Types:
-        - ``bool``: Converts boolean strings such as 0 or true.
-        - ``int``: integers
-        - ``float``: floating point numbers
-        - ``datetime``: Parsed as datetime objects
+def xml_as_dict(element):
+    """ Creates a dictionary from a flat XML element.
 
         :param element: XML Element object
-        :param convert: If True, use attributes to convert values. The
         :returns: A dictionary with keys matching subelement tags in the
         element.
     """
-    def _bool(value="0"):
-        if value in {"1", "true"}:
-            return True
-        elif value in {"0", "false"}:
-            return False
-        else:
-            raise ValueError("%r does not represent a boolean value." % value)
-
-    convs = {
-        "bool": _bool,
-        "str": str,
-        "int": int,
-        "float": float,
-        "datetime": dp.parse,
-        "duration": duration_delta
-    }
-
     data = {}
-    for i in element:
-        if i.tag in data:
-            raise ValueError("Multiple elements have the same tag %r." % i.tag)
-
-        nullable = "py_null" not in i.keys() or _bool(i.get("py_null"))
-        type_ = i.get("py_type")
-        if convert and type_ is not None:
-            conv = convs.get(type_)
-            if conv is None:
-                raise ValueError("Invalid py_type attribute: %r" % type_)
-        else:
-            conv = str
-
-        try:
-            if i.text is not None:
-                data[i.tag] = conv(i.text)
-            elif not nullable:
-                data[i.tag] = conv()
-            else:
-                data[i.tag] = None
-        except (TypeError, ValueError) as err:
-            raise ValueError("Text %r cannot be converted with type %r." %
-                             (i.text, type_)) from err
+    for e in element:
+        if e.tag in data:
+            raise ValueError("Multiple elements have the same tag %r." % e.tag)
+        default = e.get("default", None)
+        data[e.tag] = default if e.text is None else e.text
 
     return data
 
@@ -297,12 +204,15 @@ def get_atco_codes():
 
 
 class PopulateData:
-    def __init__(self):
+    def __init__(self, xml_data=None):
         self.input = None
         self.entries = collections.OrderedDict()
 
         self.metadata = reflect_metadata()
         self.dc = DataCopy(self.metadata)
+
+        if xml_data is not None:
+            self.set_input(xml_data)
 
     def total(self):
         return sum(len(e) for e in self.entries.values())
@@ -333,7 +243,32 @@ class PopulateData:
             return
 
         new_entries = self.entries.setdefault(model, list())
-        new_entries.extend(xml_as_dict(e, False) for e in list_elements)
+        new_entries.extend(xml_as_dict(e) for e in list_elements)
+
+    def add_from(self, xml_data):
+        """ Searches data file and add to dataset, selecting models and columns
+            based on tag names.
+
+            :param xml_data: `ElementTree` object, a file-like object or a path
+            pointing to a XML file.
+        """
+        self.set_input(xml_data)
+        try:
+            root = self.input.getroot()
+        except AttributeError:
+            root = self.input
+
+        names_found = []
+        # Order of dataset needs to be maintained for foreign keys
+        for c in root:
+            if c.tag not in names_found:
+                if not hasattr(models, c.tag):
+                    raise ValueError("Elements with tag %r does not have a "
+                                     "matching model name." % c.tag)
+                names_found.append(c.tag)
+
+        for name in names_found:
+            self.add(name, getattr(models, name))
 
     def _new_temp_table(self, table):
         """ Creates a temporary table based on an existing table, excluding any
@@ -428,6 +363,17 @@ class DataCopy(object):
         else:
             self.metadata = reflect_metadata()
 
+    def _escape(self, value):
+        """ Remove trailing/leading spaces and escape backslash characters and
+            delimiters within values.
+        """
+        return (
+            str(value).strip()
+            .replace("\\", "\\\\")
+            .replace("\n", "\\" + "\n")
+            .replace(self.SEP, "\\" + self.SEP)
+        )
+
     def _parse_row(self, table, obj):
         """ Parses each object, excluding columns that have server defaults (eg
             sequences).
@@ -435,27 +381,21 @@ class DataCopy(object):
         row = []
         columns = []
         for col in table.columns:
-            if col.name in obj:
-                value = obj[col.name]
-                if value is not None:
-                    # Remove trailing/leading spaces and escape backslash
-                    # characters and delimiters within values
-                    value = (
-                        value.strip()
-                        .replace("\\", "\\\\")
-                        .replace("\n", "\\" + "\n")
-                        .replace(self.SEP, "\\" + self.SEP)
+            if col.name not in obj:
+                if not col.nullable and col.server_default is None:
+                    raise ValueError(
+                        "Non-nullable column %r for table %r does not have a "
+                        "default value; can't use row %r without this column." %
+                        (table.name, col.name, obj)
                     )
                 else:
-                    value = self.NULL
-                row.append(value)
-                columns.append(col.name)
-            elif not col.nullable and col.server_default is None:
-                raise ValueError(
-                    "Non-nullable column %r for table %r does not have a "
-                    "default value; can't use row %r without this column." %
-                    (table.name, col.name, obj)
-                )
+                    continue
+            if obj[col.name] is not None:
+                value = self._escape(obj[col.name])
+            else:
+                value = self.NULL
+            row.append(value)
+            columns.append(col.name)
 
         return row, columns
 
@@ -494,7 +434,7 @@ class DataCopy(object):
                 with open(fd, "w") as file_:
                     columns = self._write_copy_file(file_, table_name, chunk)
                 temp_files.append(path)
-        except:
+        except Exception:
             for path in temp_files:
                 os.remove(path)
             raise
@@ -509,9 +449,9 @@ class DataCopy(object):
             try:
                 cursor.copy_from(file_, table_name, sep=self.SEP,
                                  null=self.NULL, columns=columns)
-            except:
+            except Exception:
                 # Save copy file for debugging and raise again
-                error_file = "temp/error_data"
+                error_file = os.path.join(ROOT_DIR, "temp/error_data")
                 logger.error("Error occurred with COPY; saving file to "
                              "%r" % error_file)
                 logger.debug("Columns: %r" % columns)

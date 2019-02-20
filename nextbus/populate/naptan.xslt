@@ -36,11 +36,11 @@
             <xsl:otherwise><xsl:value-of select="n:StopAreaType"/></xsl:otherwise>
           </xsl:choose>
         </stop_area_type>
-        <easting py_type="int"><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
-        <northing py_type="int"><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
-        <longitude py_type="float"><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
-        <latitude py_type="float"><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
-        <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
+        <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
+        <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
+        <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
+        <latitude><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
+        <modified><xsl:value-of select="@ModificationDateTime"/></modified>
       </StopArea>
     </xsl:if>
   </xsl:template>
@@ -85,19 +85,19 @@
         </crossing>
         <xsl:choose>
           <xsl:when test="boolean(n:Descriptor/n:Indicator)">
-            <indicator py_null="false"><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
-            <short_ind py_null="false"><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
+            <indicator default=""><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
+            <short_ind default=""><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
           </xsl:when>
           <xsl:otherwise>
-            <indicator py_null="false"/>
-            <short_ind py_null="false"/>
+            <indicator default=""/>
+            <short_ind default=""/>
           </xsl:otherwise>
         </xsl:choose>
         <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>
-        <easting py_type="int"><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
-        <northing py_type="int"><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
-        <longitude py_type="float"><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
-        <latitude py_type="float"><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
+        <easting><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
+        <northing><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
+        <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
+        <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
         <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
         <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
         <stop_area_ref>
@@ -106,7 +106,7 @@
           </xsl:if>
         </stop_area_ref>
         <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
-        <modified py_type="datetime"><xsl:value-of select="@ModificationDateTime"/></modified>
+        <modified><xsl:value-of select="@ModificationDateTime"/></modified>
       </StopPoint>
     </xsl:if>
   </xsl:template>

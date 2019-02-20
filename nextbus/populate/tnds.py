@@ -637,6 +637,7 @@ def _commit_tnds_region(transform, archive, region, delete=False,
     str_region = transform.strparam(region)
 
     del_ = delete
+    # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
 
     for i, file_ in enumerate(file_ops.iter_archive(archive)):
@@ -651,20 +652,7 @@ def _commit_tnds_region(transform, archive, region, delete=False,
                 utils.logger.error(error_message)
             raise
 
-        tnds.set_input(new_data)
-        tnds.add("Operator", models.Operator)
-        tnds.add("LocalOperator", models.LocalOperator)
-        tnds.add("Service", models.Service)
-        tnds.add("JourneyPattern", models.JourneyPattern)
-        tnds.add("JourneyLink", models.JourneyLink)
-        tnds.add("Journey", models.Journey)
-        tnds.add("JourneySpecificLink", models.JourneySpecificLink)
-        tnds.add("Organisation", models.Organisation)
-        tnds.add("OperatingDate", models.OperatingDate)
-        tnds.add("OperatingPeriod", models.OperatingPeriod)
-        tnds.add("Organisations", models.Organisations)
-        tnds.add("SpecialPeriod", models.SpecialPeriod)
-        tnds.add("BankHolidays", models.BankHolidays)
+        tnds.add_from(new_data)
 
         if tnds.total() > rollover:
             tnds.commit(delete=del_, exclude=excluded, clear=True)

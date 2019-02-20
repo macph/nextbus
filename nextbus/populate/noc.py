@@ -68,12 +68,8 @@ def commit_noc_data(file_=None):
         :param file_: Path to raw data in XML form
     """
     path = download_noc_data() if file_ is None else file_
-    new_data = _get_noc_data(path)
     noc = utils.PopulateData()
-    noc.set_input(new_data)
-
-    noc.add("Operator", models.Operator)
-    noc.add("LocalOperator", models.LocalOperator)
+    noc.add_from(_get_noc_data(path))
     noc.commit(delete=True)
 
     if file_ is None:

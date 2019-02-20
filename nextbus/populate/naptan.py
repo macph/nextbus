@@ -419,10 +419,7 @@ def commit_naptan_data(archive=None, list_files=None):
     for file_ in iter_files:
         file_name = file_.name if hasattr(file_, "name") else file_
         utils.logger.info("Parsing file %r" % file_name)
-        new_data = _get_naptan_data(file_)
-        naptan.set_input(new_data)
-        naptan.add("StopArea", models.StopArea)
-        naptan.add("StopPoint", models.StopPoint)
+        naptan.add_from(_get_naptan_data(file_))
 
     naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas

@@ -1285,7 +1285,7 @@ def test_median(collection, expected):
     ],
 }.items())
 def test_graph_draw_before_order(key, expected):
-    assert draw_graph(graph_from_key(key), order=False) == expected
+    assert draw_graph(graph_from_key(key), order=False, json=False) == expected
 
 
 @pytest.mark.parametrize("key, expected", {
@@ -1415,7 +1415,7 @@ def test_graph_draw_before_order(key, expected):
     ],
 }.items())
 def test_graph_draw_after_order(key, expected):
-    assert draw_graph(graph_from_key(key), order=True) == expected
+    assert draw_graph(graph_from_key(key), order=True, json=False) == expected
 
 
 def test_limit_not_hit(complex_graph):

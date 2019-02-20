@@ -792,7 +792,7 @@ def _draw_paths(layout):
         layout.paths[v] = _draw_paths_for(layout.rows[v])
 
 
-def draw_graph(graph, order=True, max_columns=None):
+def draw_graph(graph, order=True, max_columns=None, json=False):
     """ Draws graph.
 
         The graph is laid out in steps:
@@ -810,6 +810,7 @@ def draw_graph(graph, order=True, max_columns=None):
         crossings.
         :param max_columns: Maximum number of columns. If a row is detected to
         exceed this maximum, the calculations stop.
+        :param json: Outputs all data in lists compatible with JSON.
         :returns: A list of tuples of the form (vertex, column, paths) where
         paths is the set of all paths between specific columns in that row.
     """
@@ -821,7 +822,15 @@ def draw_graph(graph, order=True, max_columns=None):
 
     _draw_paths(gl)
 
-    data = [(v, gl.rows[v].column, sorted(gl.paths[v])) for v in gl.sequence]
+    data = []
+    for v in gl.sequence:
+        if json:
+            paths = sorted(list(p) for p in gl.paths[v])
+            row = [v, gl.rows[v].column, paths]
+        else:
+            row = v, gl.rows[v].column, sorted(gl.paths[v])
+
+        data.append(row)
 
     return data
 
@@ -1220,15 +1229,16 @@ class Graph:
         """
         return self.analyse()[1]
 
-    def draw(self, max_columns=None):
+    def draw(self, max_columns=None, json=True):
         """ Lays out graph using sequence.
 
             :param max_columns: Maximum number of columns. If any row exceeds
             this maximum no layout will be returned.
+            :param json: Outputs all data in lists compatible with JSON.
             :returns: List of dictionaries, ordered using sequence, with
             vertex name, column and lines before/after.
         """
-        return draw_graph(self, max_columns=max_columns)
+        return draw_graph(self, max_columns=max_columns, json=json)
 
 
 def service_graph_stops(service_id, direction):
@@ -1365,7 +1375,7 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     graph, stops = service_graph_stops(service.id, reverse_)
     paths, sequence = graph.analyse()
     try:
-        layout = graph.draw(max_columns)
+        layout = graph.draw(max_columns, json=True)
     except MaxColumnError:
         layout = None
 
@@ -1375,7 +1385,7 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         "geometry": {
             "type": "MultiLineString",
             "coordinates": [
-                [(stops[v].longitude, stops[v].latitude) for v in p]
+                [[stops[v].longitude, stops[v].latitude] for v in p]
                 for p in paths if len(p) > 1
             ]
         }

@@ -8,7 +8,7 @@ import pytest
 
 from nextbus.populate.utils import xslt_func
 from nextbus.populate.tnds import (
-    days_week, weeks_month, RowIds, _get_tnds_transform
+    bank_holidays, days_week, weeks_month, RowIds, _get_tnds_transform
 )
 
 
@@ -54,6 +54,24 @@ def test_weeks_month(weeks, expected):
         nodes.append(n)
 
     assert weeks_month(None, nodes) == expected
+
+
+@pytest.mark.parametrize("holidays, region, expected", [
+    (["AllBankHolidays"], "L", 65274),
+    (["AllBankHolidays"], "S", 65406),
+    (["AllHolidaysExceptChristmas"], "L", 250),
+    (["AllHolidaysExceptChristmas"], "S", 382),
+    (["HolidayMondays"], "L", 240),
+    (["HolidayMondays"], "S", 368),
+    (["EasterMonday", "MayDay", "SpringBank"], "L", 112),
+    (["LateSummerBankHolidayNotScotland"], "S", 0)
+])
+def test_bank_holidays(holidays, region, expected):
+    elements = "".join("<%s/>" % h for h in holidays)
+    node = et.XML("<DaysOfOperation>%s</DaysOfOperation>" % elements)
+    nodes = [node]
+
+    assert bank_holidays(None, nodes, region) == expected
 
 
 def test_transform_tnds(asserts):

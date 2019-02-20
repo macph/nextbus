@@ -1007,12 +1007,12 @@
     <operational>1</operational>
   </SpecialPeriod>
   <BankHolidays>
-    <holidays>65534</holidays>
+    <holidays>65274</holidays>
     <journey_ref>4</journey_ref>
     <operational>0</operational>
   </BankHolidays>
   <BankHolidays>
-    <holidays>65534</holidays>
+    <holidays>65274</holidays>
     <journey_ref>5</journey_ref>
     <operational>1</operational>
   </BankHolidays>
@@ -1022,7 +1022,7 @@
     <operational>0</operational>
   </BankHolidays>
   <BankHolidays>
-    <holidays>2032</holidays>
+    <holidays>1776</holidays>
     <journey_ref>8</journey_ref>
     <operational>1</operational>
   </BankHolidays>

@@ -528,19 +528,20 @@
   <xsl:template name="bank_holidays">
     <xsl:param name="id"/>
     <xsl:param name="refs"/>
-    <xsl:for-each select="$refs">
-      <xsl:variable name="operational">
-        <xsl:choose>
-          <xsl:when test="txc:DaysOfOperation">1</xsl:when>
-          <xsl:otherwise>0</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
+    <xsl:if test="$refs/txc:DaysOfOperation">
       <BankHolidays>
-        <holidays><xsl:value-of select="func:bank_holidays(./*)"/></holidays>
+        <holidays><xsl:value-of select="func:bank_holidays($refs/txc:DaysOfOperation, $region)"/></holidays>
         <journey_ref><xsl:value-of select="$id"/></journey_ref>
-        <operational><xsl:value-of select="$operational"/></operational>
+        <operational>1</operational>
       </BankHolidays>
-    </xsl:for-each>
+    </xsl:if>
+    <xsl:if test="$refs/txc:DaysOfNonOperation">
+      <BankHolidays>
+        <holidays><xsl:value-of select="func:bank_holidays($refs/txc:DaysOfNonOperation, $region)"/></holidays>
+        <journey_ref><xsl:value-of select="$id"/></journey_ref>
+        <operational>0</operational>
+      </BankHolidays>
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="txc:VehicleJourney" mode="bank_holidays">

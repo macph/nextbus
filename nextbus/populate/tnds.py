@@ -219,12 +219,12 @@ def days_week(_, nodes=None):
         "MondayToSunday":   0b11111110
     }
 
-    try:
+    if isinstance(nodes, et._Element):
+        element = nodes
+    elif nodes:
         element = nodes[0]
-    except IndexError:
-        element = None  # No element returned
-    except TypeError:
-        element = nodes  # Single element instead of a list
+    else:
+        element = None
 
     if element is not None:
         week = 0
@@ -254,12 +254,11 @@ def weeks_month(_, nodes):
         "fifth":  0b10000,
     }
 
-    try:
+    if isinstance(nodes, et._Element):
+        element = nodes
+    elif nodes and nodes[0]:
         element = nodes[0]
-    except IndexError:
-        element = None
-
-    if element is None:
+    else:
         return
 
     ns = {"txc": element.xpath("namespace-uri(.)")}
@@ -275,7 +274,7 @@ def weeks_month(_, nodes):
 
 
 @utils.xslt_func
-def bank_holidays(_, nodes):
+def bank_holidays(_, nodes, region):
     """ Gets bank holidays from a DaysOfOperation or DaysOfNonOperation
         element within a BankHolidayOperation element for a Journey.
     """
@@ -303,19 +302,24 @@ def bank_holidays(_, nodes):
         "NewYearsEve":                      0b1000000000000000
     }
 
-    try:
+    if isinstance(nodes, et._Element):
+        element = nodes
+    elif nodes:
         element = nodes[0]
-    except IndexError:
-        element = None  # No element returned
-    except TypeError:
-        element = nodes  # Single element instead of a list
+    else:
+        element = []
 
     hols = 0
-    if element is not None:
-        ns = {"txc": element.xpath("namespace-uri(.)")}
-        for d in element.xpath("./*", namespaces=ns):
-            tag = et.QName(d).localname
-            hols |= holidays.get(tag, 0)
+    for d in element:
+        hols |= holidays.get(et.QName(d).localname, 0)
+
+    if region == "S":
+        hols &= ~holidays["LateSummerBankHolidayNotScotland"]
+    else:
+        hols &= ~(
+            holidays["Jan2ndScotland"] |
+            holidays["AugustBankHolidayScotland"]
+        )
 
     return hols
 

@@ -30,7 +30,7 @@ LIST_COUNTRIES = [
 ]
 
 
-def download_nspl_data(atco_codes=None):
+def download_nspl_data():
     """ Downloads NSPL data from Camden's Socrata API. Requires an app token,
         which can be obtained from Camden's open data site. For more info, see
         https://dev.socrata.com/foundry/opendata.camden.gov.uk/ry6e-hbqy
@@ -38,23 +38,10 @@ def download_nspl_data(atco_codes=None):
         The ``CAMDEN_API_TOKEN`` key in application config is used for access,
         and while it is not necessary it will raise throttling limits on access
         to the API.
-
-        :param atco_codes: List of ATCO codes used to filter areas. If None,
-        all postcodes in Great Britain (outwith IoM, Channel Islands and
-        Northern Ireland) are retrieved.
     """
     token = current_app.config.get("CAMDEN_API_TOKEN")
     headers = {"X-App-Token": token} if token is not None else {}
-
-    if atco_codes:
-        codes = []
-        cond = "local_authority_code='%s'"
-        with open(os.path.join(ROOT_DIR, LA_JSON), "r") as laf:
-            for local_auth in json.load(laf):
-                if int(local_auth["atco_area_code"]) in atco_codes:
-                    codes.append(cond % local_auth["la_code"])
-    else:
-        codes = ["country_code='%s'" % c for c in LIST_COUNTRIES]
+    codes = ["country_code='%s'" % c for c in LIST_COUNTRIES]
 
     params = {
         "$select": ", ".join(LIST_COLUMNS),
@@ -67,23 +54,20 @@ def download_nspl_data(atco_codes=None):
     return new
 
 
-def _get_dict_local_auth(atco_codes=None):
+def _get_dict_local_authorities():
     """ Opens JSON file with local authority data and create a dict with local
         authority codes as keys.
 
-        :param atco_codes: List of ATCO codes to filter by, or None to include
-        everything
         :returns: Dict with local authority codes as keys
     """
     with open(os.path.join(ROOT_DIR, LA_JSON), "r") as file_:
         la_data = json.load(file_)
 
-    local_auth = {}
+    local_authorities = {}
     for row in la_data:
-        if not atco_codes or int(row["atco_area_code"]) in atco_codes:
-            local_auth[row.pop("la_code")] = row
+        local_authorities[row.pop("la_code")] = row
 
-    return local_auth
+    return local_authorities
 
 
 def commit_nspl_data(file_=None):
@@ -93,14 +77,9 @@ def commit_nspl_data(file_=None):
         :param file_: Path for JSON file. If None, initiates download from
         the Camden Open Data API.
     """
-    atco_codes = current_app.config.get("ATCO_CODES")
-    if atco_codes is not None and not isinstance(atco_codes, list):
-        raise ValueError("ATCO codes must be set to either None or a list of "
-                         "codes to filter.")
-
     downloaded_file = None
     if file_ is None:
-        downloaded_file = download_nspl_data(atco_codes)
+        downloaded_file = download_nspl_data()
         nspl_path = downloaded_file
     else:
         nspl_path = file_
@@ -110,10 +89,10 @@ def commit_nspl_data(file_=None):
         data = json.load(json_file)
 
     postcodes = []
-    local_auth = _get_dict_local_auth(atco_codes)
+    local_authorities = _get_dict_local_authorities()
     utils.logger.info("Parsing %d postcodes" % len(data))
     for row in data:
-        local_authority = local_auth[row["local_authority_code"]]
+        local_authority = local_authorities[row["local_authority_code"]]
         postcodes.append({
             "index":            "".join(row["postcode_3"].split()),
             "text":             row["postcode_3"],

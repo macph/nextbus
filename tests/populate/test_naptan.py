@@ -17,12 +17,10 @@ from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 NPTG_ALL = os.path.join(TEST_DIR, "NPTG_all.xml")
 NPTG_RAW = os.path.join(TEST_DIR, "NPTG_raw.xml")
-NPTG_TRAM = os.path.join(TEST_DIR, "NPTG_tram.xml")
 NAPTAN_ALL = os.path.join(TEST_DIR, "NaPTAN_all.xml")
 NAPTAN_RAW = os.path.join(TEST_DIR, "NaPTAN_raw.xml")
 NAPTAN_RAW_370 = os.path.join(TEST_DIR, "NaPTAN_raw_370.xml")
 NAPTAN_RAW_940 = os.path.join(TEST_DIR, "NaPTAN_raw_940.xml")
-NAPTAN_TRAM = os.path.join(TEST_DIR, "NaPTAN_tram.xml")
 
 
 PARSER = et.XMLParser(remove_blank_text=True)
@@ -31,13 +29,6 @@ PARSER = et.XMLParser(remove_blank_text=True)
 def test_nptg_transform_all(asserts):
     data = _get_nptg_data(NPTG_RAW)
     expected = et.parse(NPTG_ALL, et.XMLParser(remove_blank_text=True))
-
-    asserts.xml_elements_equal(data.getroot(), expected.getroot())
-
-
-def test_nptg_transform_tram_only(asserts):
-    data = _get_nptg_data(NPTG_RAW, atco_codes=[940])
-    expected = et.parse(NPTG_TRAM, PARSER)
 
     asserts.xml_elements_equal(data.getroot(), expected.getroot())
 

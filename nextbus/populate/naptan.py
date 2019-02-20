@@ -5,7 +5,6 @@ import collections
 import functools
 import operator
 import os
-import zipfile
 
 import lxml.etree as et
 import pyparsing as pp
@@ -22,29 +21,11 @@ IND_MAX_CHARS = 5
 IND_MAX_WORDS = 2
 
 
-def download_naptan_data(atco_codes=None):
+def download_naptan_data():
     """ Downloads NaPTAN data from the DfT. Comes in a zipped file.
-
-        :param atco_codes: List of ATCO codes used to filter areas. If None,
-        all data in Great Britain (outwith IoM, Channel Islands and Northern
-        Ireland) are retrieved.
     """
-    params = {"format": "xml"}
-    if atco_codes:
-        params["LA"] = "|".join(str(i) for i in atco_codes)
-
-    new = file_ops.download(NAPTAN_URL, directory="temp", params=params)
-
-    if not zipfile.is_zipfile(new):
-        # An error has occurred with the download - supposed to be a zip
-        # archive. Try again with a full file download
-        utils.logger.warning("Download failed - trying again with full "
-                             "dataset")
-        os.remove(new)
-        del params["LA"]
-        new = file_ops.download(NAPTAN_URL, directory="temp", params=params)
-
-    return new
+    return file_ops.download(NAPTAN_URL, directory="temp",
+                             params={"format": "xml"})
 
 
 def _create_ind_parser():
@@ -159,23 +140,10 @@ def _create_ind_parser():
     return parse_indicator
 
 
-def _setup_naptan_functions(list_area_codes=None, list_locality_codes=None):
-    """ Sets up XSLT extension functions to filter stop points and areas as
-        well as parsing indicators for stop points.
+def _setup_naptan_functions():
+    """ Sets up XSLT extension functions to parse indicators for stop points.
     """
-    areas = list_area_codes
-    localities = list_locality_codes
     ind_parser = _create_ind_parser()
-
-    @utils.xslt_text_func
-    def in_admin_area(_, admin_area_ref):
-        """ Checks if stop area is in list of admin areas. """
-        return areas is None or admin_area_ref in areas
-
-    @utils.xslt_text_func
-    def in_locality(_, locality_ref):
-        """ Checks if stop point is in list of localities. """
-        return localities is None or locality_ref in localities
 
     @utils.xslt_text_func
     def parse_ind(_, indicator):
@@ -384,8 +352,7 @@ def commit_naptan_data(archive=None, list_files=None):
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
     with utils.database_connection() as conn:
-        query_area = conn.execute(db.select([models.AdminArea.code,
-                                             models.AdminArea.atco_code]))
+        query_area = conn.execute(db.select([models.AdminArea.code]))
         query_local = conn.execute(db.select([models.Locality.code]))
 
     areas = query_area.fetchall()
@@ -395,12 +362,6 @@ def commit_naptan_data(archive=None, list_files=None):
                          "cannot be added without the required locality data. "
                          "Populate the database with NPTG data first.")
 
-    atco_codes = utils.get_atco_codes()
-    local_codes = set(l.code for l in areas) if atco_codes else None
-    area_codes = set(a.code for a in localities) if atco_codes else None
-    # Use full list of ATCO codes for downloading NaPTAN data
-    all_atco_codes = set(a.atco_code for a in areas)
-
     downloaded = None
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
@@ -409,11 +370,11 @@ def commit_naptan_data(archive=None, list_files=None):
     elif list_files is not None:
         iter_files = iter(list_files)
     else:
-        downloaded = download_naptan_data(all_atco_codes)
+        downloaded = download_naptan_data()
         iter_files = file_ops.iter_archive(downloaded)
 
     # Go through data and create objects for committing to database
-    _setup_naptan_functions(area_codes, local_codes)
+    _setup_naptan_functions()
     naptan = utils.PopulateData()
 
     for file_ in iter_files:

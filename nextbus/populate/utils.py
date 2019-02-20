@@ -11,7 +11,6 @@ import shutil
 import tempfile
 import types
 
-from flask import current_app
 import lxml.etree as et
 import psycopg2.sql
 from sqlalchemy.dialects import postgresql
@@ -181,26 +180,6 @@ def l_split(_, text, char):
 def r_split(_, text, char):
     """ Strips string to left of and including specified characters."""
     return text.split(char)[-1]
-
-
-def get_atco_codes():
-    """ Helper function to get list of ATCO codes from config. """
-    atco_codes = current_app.config.get("ATCO_CODES")
-    if atco_codes is None:
-        codes = atco_codes
-    elif isinstance(atco_codes, list):
-        # Add ATCO area code 940 for trams
-        try:
-            codes = [int(i) for i in atco_codes]
-        except ValueError as err:
-            raise ValueError("All ATCO codes must be integers.") from err
-        if 940 not in codes:
-            codes.append(940)
-    else:
-        raise ValueError("ATCO codes must be set to either None or a list of "
-                         "codes to filter.")
-
-    return codes
 
 
 class PopulateData:

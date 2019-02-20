@@ -24,25 +24,23 @@
   </xsl:template>
 
   <xsl:template match="n:StopArea">
-    <xsl:if test="func:in_admin_area(n:AdministrativeAreaRef)">
-      <StopArea>
-        <code><xsl:value-of select="func:upper(n:StopAreaCode)"/></code>
-        <name><xsl:value-of select="func:replace(n:Name, '  ', ' / ')"/></name>
-        <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
-        <stop_area_type>
-          <xsl:choose>
-            <!-- Stop type GPBS regularly mispelled as GBPS -->
-            <xsl:when test="n:StopAreaType='GBPS'">GPBS</xsl:when>
-            <xsl:otherwise><xsl:value-of select="n:StopAreaType"/></xsl:otherwise>
-          </xsl:choose>
-        </stop_area_type>
-        <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
-        <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
-        <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
-        <latitude><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
-        <modified><xsl:value-of select="@ModificationDateTime"/></modified>
-      </StopArea>
-    </xsl:if>
+    <StopArea>
+      <code><xsl:value-of select="func:upper(n:StopAreaCode)"/></code>
+      <name><xsl:value-of select="func:replace(n:Name, '  ', ' / ')"/></name>
+      <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
+      <stop_area_type>
+        <xsl:choose>
+          <!-- Stop type GPBS regularly mispelled as GBPS -->
+          <xsl:when test="n:StopAreaType='GBPS'">GPBS</xsl:when>
+          <xsl:otherwise><xsl:value-of select="n:StopAreaType"/></xsl:otherwise>
+        </xsl:choose>
+      </stop_area_type>
+      <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
+      <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
+      <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
+      <latitude><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
+      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+    </StopArea>
   </xsl:template>
 
   <xsl:template name="stop-descriptor">
@@ -62,52 +60,50 @@
   </xsl:template>
 
   <xsl:template match="n:StopPoint">
-    <xsl:if test="func:in_locality(n:Place/n:NptgLocalityRef)">
-      <StopPoint>
-        <atco_code><xsl:value-of select="func:upper(n:AtcoCode)"/></atco_code>
-        <naptan_code><xsl:value-of select="func:lower(n:NaptanCode)"/></naptan_code>
-        <!-- Forward slash character is not allowed in NaPTAN data; was removed leaving 2 spaces -->
-        <name><xsl:value-of select="func:replace(n:Descriptor/n:CommonName, '  ', ' / ')"/></name>
-        <landmark>
-          <xsl:call-template name="stop-descriptor">
-            <xsl:with-param name="desc" select="n:Descriptor/n:Landmark"/>
-          </xsl:call-template>
-        </landmark>
-        <street>
-          <xsl:call-template name="stop-descriptor">
-            <xsl:with-param name="desc" select="n:Descriptor/n:Street"/>
-          </xsl:call-template>
-        </street>
-        <crossing>
-          <xsl:call-template name="stop-descriptor">
-            <xsl:with-param name="desc" select="n:Descriptor/n:Crossing"/>
-          </xsl:call-template>
-        </crossing>
-        <xsl:choose>
-          <xsl:when test="boolean(n:Descriptor/n:Indicator)">
-            <indicator default=""><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
-            <short_ind default=""><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
-          </xsl:when>
-          <xsl:otherwise>
-            <indicator default=""/>
-            <short_ind default=""/>
-          </xsl:otherwise>
-        </xsl:choose>
-        <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>
-        <easting><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
-        <northing><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
-        <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
-        <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
-        <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
-        <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
-        <stop_area_ref>
-          <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
-            <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
-          </xsl:if>
-        </stop_area_ref>
-        <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
-        <modified><xsl:value-of select="@ModificationDateTime"/></modified>
-      </StopPoint>
-    </xsl:if>
+    <StopPoint>
+      <atco_code><xsl:value-of select="func:upper(n:AtcoCode)"/></atco_code>
+      <naptan_code><xsl:value-of select="func:lower(n:NaptanCode)"/></naptan_code>
+      <!-- Forward slash character is not allowed in NaPTAN data; was removed leaving 2 spaces -->
+      <name><xsl:value-of select="func:replace(n:Descriptor/n:CommonName, '  ', ' / ')"/></name>
+      <landmark>
+        <xsl:call-template name="stop-descriptor">
+          <xsl:with-param name="desc" select="n:Descriptor/n:Landmark"/>
+        </xsl:call-template>
+      </landmark>
+      <street>
+        <xsl:call-template name="stop-descriptor">
+          <xsl:with-param name="desc" select="n:Descriptor/n:Street"/>
+        </xsl:call-template>
+      </street>
+      <crossing>
+        <xsl:call-template name="stop-descriptor">
+          <xsl:with-param name="desc" select="n:Descriptor/n:Crossing"/>
+        </xsl:call-template>
+      </crossing>
+      <xsl:choose>
+        <xsl:when test="boolean(n:Descriptor/n:Indicator)">
+          <indicator default=""><xsl:value-of select="n:Descriptor/n:Indicator"/></indicator>
+          <short_ind default=""><xsl:value-of select="func:parse_ind(n:Descriptor/n:Indicator)"/></short_ind>
+        </xsl:when>
+        <xsl:otherwise>
+          <indicator default=""/>
+          <short_ind default=""/>
+        </xsl:otherwise>
+      </xsl:choose>
+      <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>
+      <easting><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
+      <northing><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
+      <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
+      <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
+      <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
+      <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
+      <stop_area_ref>
+        <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
+          <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
+        </xsl:if>
+      </stop_area_ref>
+      <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
+      <modified><xsl:value-of select="@ModificationDateTime"/></modified>
+    </StopPoint>
   </xsl:template>
 </xsl:transform>

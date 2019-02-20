@@ -28,9 +28,14 @@ def _create_row(model, element):
         :returns: Number of rows created.
     """
     data = utils.xml_as_dict(element)
-    # Check if types match DateTime and use datetime parser
+
+    if not data:
+        raise ValueError("Each <create> element requires at least one sub "
+                         "element with field entries.")
+
     for key in data:
         column = model.__table__.columns.get(key)
+        # Check if types match DateTime and use datetime parser
         if isinstance(column.type, db.DateTime) and data.get(key) is not None:
             data[key] = dp.parse(data[key])
 
@@ -52,8 +57,8 @@ def _delete_row(model, element):
 
     count = model.query.filter_by(**element.attrib).delete()
     if count == 0:
-        logger.warning("No rows matching %r for model %r" %
-                       (element.attrib, model.__name__))
+        logger.warning("%s: No rows matching %r found." %
+                       (model.__name__, element.attrib))
 
     return count
 
@@ -66,6 +71,7 @@ def _replace_row(model, element):
         :param element: A ``replace`` XML element.
         :returns: Number of rows replaced.
     """
+    name = model.__name__
     if not element.keys():
         raise ValueError("Each <replace> element requires at least one XML "
                          "attribute to filter rows.")
@@ -73,8 +79,8 @@ def _replace_row(model, element):
     matching = model.query.filter_by(**element.attrib)
     matching_entries = matching.all()
     if not matching_entries:
-        logger.warning("No rows matching %r for model %r" %
-                       (element.attrib, model.__name__))
+        logger.warning("%s: No rows matching %r found." %
+                       (name, element.attrib))
         return 0
 
     updated_values = {}
@@ -86,16 +92,20 @@ def _replace_row(model, element):
         # Checks if new values already exist
         if existing == {new_value}:
             logger.warning(
-                "%s.%s: %r for %r already matches." %
-                (model.__name__, column, new_value, element.attrib)
+                "%s: %s %r for %r already matches." %
+                (name, column, new_value, element.attrib)
             )
             continue
         # Gives a warning if set value does not match the existing
         # value, suggesting it may have been changed in the dataset
-        if old_value and any(e != old_value for e in existing):
+        if old_value and not all(e == old_value for e in existing):
+            if len(existing) > 1:
+                values = "values %r" % sorted(existing)
+            else:
+                values = "value %r" % next(iter(existing))
             logger.warning(
-                "%s.%s: %r for %r does not match %s." %
-                (model.__name__, column, old_value, element.attrib, existing)
+                "%s: %s %r for %r does not match existing %s." %
+                (name, column, old_value, element.attrib, values)
             )
         updated_values[column] = new_value
 
@@ -162,11 +172,5 @@ def modify_data(xml_file=None):
             for element in table.xpath("replace"):
                 replace += _replace_row(model, element)
 
-    def add_s(n):
-        """ Add 's' to words plural. """
-        return "s" if n != 1 else ""
-
-    logger.info(
-        "%d row%s created, %d row%s deleted and %d row%s replaced" %
-        (create, add_s(create), delete, add_s(delete), replace, add_s(replace))
-    )
+    logger.info("Rows: %d created, %d deleted and %d replaced." %
+                (create, delete, replace))

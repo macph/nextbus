@@ -32,7 +32,12 @@ class Config(object):
 
 
 class DevelopmentConfig(Config):
-    """ Config for developing and testing. """
+    """ Config for developing. """
     SQLALCHEMY_DATABASE_URI = "postgresql://localhost/nextbus"
-    TEST_DATABASE_URI = "postgresql://localhost/nextbus_test"
     SECRET_KEY = "sup3r sekr3t k3y"
+
+
+class TestConfig(DevelopmentConfig):
+    """ Config for testing. """
+    TEST_DATABASE_URI = "postgresql://localhost/nextbus_test"
+    TESTING = True

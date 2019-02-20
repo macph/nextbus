@@ -23,6 +23,9 @@ setup(
         'werkzeug',
         'wtforms'
     ],
+    tests_require=[
+        'pytest'
+    ],
     entry_points={
         'console_scripts': ['nxb=nextbus.commands:cli']
     }

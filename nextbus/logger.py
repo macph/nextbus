@@ -3,6 +3,10 @@ Logging tools for the nextbus package.
 """
 import logging
 import logging.config
+import os
+
+
+from definitions import ROOT_DIR
 
 
 app_logger = logging.getLogger("nextbus")
@@ -40,7 +44,7 @@ PROD_LOG_CONFIG = {
                     "level": "INFO"},
         "file":    {"class": "logging.handlers.RotatingFileHandler",
                     "backupCount": 4,
-                    "filename": "nxb.log",
+                    "filename": os.path.join(ROOT_DIR, "nxb.log"),
                     "formatter": "precise",
                     "level": "INFO",
                     "maxBytes": 2 * 1024 * 1024}
@@ -68,7 +72,7 @@ DEBUG_LOG_CONFIG = {
                     "formatter": "brief",
                     "level": "DEBUG"},
         "file":    {"class": "logging.FileHandler",
-                    "filename": "nxb_debug.log",
+                    "filename": os.path.join(ROOT_DIR, "nxb_debug.log"),
                     "formatter": "precise",
                     "level": "DEBUG",
                     "mode": "w"}

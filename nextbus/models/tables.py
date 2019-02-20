@@ -1,8 +1,6 @@
 """
 Models for the nextbus database.
 """
-from sqlalchemy.ext import hybrid
-
 from nextbus import db, location
 from nextbus.models import utils
 
@@ -28,6 +26,19 @@ class ServiceMode(utils.BaseModel):
     name = db.Column(db.Text, nullable=False, unique=True)
 
 
+@db.event.listens_for(ServiceMode.__table__, "after_create")
+def _insert_service_modes(target, connection, **kw):
+    """ Inserts service mode IDs and names after creating lookup table. """
+    statement = target.insert().values([
+        {"id": 1, "name": "bus"},
+        {"id": 2, "name": "coach"},
+        {"id": 3, "name": "tram"},
+        {"id": 4, "name": "metro"},
+        {"id": 5, "name": "underground"}
+    ])
+    connection.execute(statement)
+
+
 class BankHoliday(utils.BaseModel):
     """ Lookup table for bank holidays. """
     __tablename__ = "bank_holiday"
@@ -37,6 +48,79 @@ class BankHoliday(utils.BaseModel):
 
     dates = db.relationship("BankHolidayDate", backref="bank_holiday",
                             innerjoin=True, lazy="raise")
+
+
+@db.event.listens_for(BankHoliday.__table__, "after_create")
+def _insert_bank_holidays(target, connection, **kw):
+    """ Inserts bank holiday IDs and names after creating lookup table. """
+    statement = target.insert().values([
+        {"id": 1, "name": "NewYearsDay"},
+        {"id": 2, "name": "Jan2ndScotland"},
+        {"id": 3, "name": "GoodFriday"},
+        {"id": 4, "name": "EasterMonday"},
+        {"id": 5, "name": "MayDay"},
+        {"id": 6, "name": "SpringBank"},
+        {"id": 7, "name": "LateSummerBankHolidayNotScotland"},
+        {"id": 8, "name": "AugustBankHolidayScotland"},
+        {"id": 9, "name": "ChristmasDay"},
+        {"id": 10, "name": "BoxingDay"},
+        {"id": 11, "name": "ChristmasDayHoliday"},
+        {"id": 12, "name": "BoxingDayHoliday"},
+        {"id": 13, "name": "NewYearsDayHoliday"},
+        {"id": 14, "name": "ChristmasEve"},
+        {"id": 15, "name": "NewYearsEve"},
+    ])
+    connection.execute(statement)
+
+
+class BankHolidayDate(utils.BaseModel):
+    """ Bank holiday dates. """
+    __tablename__ = "bank_holiday_date"
+
+    holiday_ref = db.Column(
+        db.Integer,
+        db.ForeignKey("bank_holiday.id"),
+        primary_key=True, index=True
+    )
+    date = db.Column(db.Date, primary_key=True)
+
+
+@db.event.listens_for(BankHolidayDate.__table__, "after_create")
+def _insert_bank_holiday_dates(target, connection, **kw):
+    """ Inserts bank holiday dates after creating table. """
+    statement = target.insert().values([
+        {"holiday_ref": 13, "date": "2017-01-02"},
+        {"holiday_ref": 2, "date": "2017-01-02"},
+        {"holiday_ref": 3, "date": "2017-04-14"},
+        {"holiday_ref": 4, "date": "2017-04-17"},
+        {"holiday_ref": 5, "date": "2017-05-01"},
+        {"holiday_ref": 6, "date": "2017-05-29"},
+        {"holiday_ref": 8, "date": "2017-08-05"},
+        {"holiday_ref": 7, "date": "2017-08-28"},
+        {"holiday_ref": 9, "date": "2017-12-25"},
+        {"holiday_ref": 10, "date": "2017-12-26"},
+        {"holiday_ref": 1, "date": "2018-01-01"},
+        {"holiday_ref": 2, "date": "2018-01-02"},
+        {"holiday_ref": 3, "date": "2018-03-30"},
+        {"holiday_ref": 4, "date": "2018-04-02"},
+        {"holiday_ref": 5, "date": "2018-05-07"},
+        {"holiday_ref": 6, "date": "2018-05-28"},
+        {"holiday_ref": 8, "date": "2018-08-06"},
+        {"holiday_ref": 7, "date": "2018-08-27"},
+        {"holiday_ref": 9, "date": "2018-12-25"},
+        {"holiday_ref": 10, "date": "2018-12-26"},
+        {"holiday_ref": 1, "date": "2019-01-01"},
+        {"holiday_ref": 2, "date": "2019-01-02"},
+        {"holiday_ref": 3, "date": "2019-04-19"},
+        {"holiday_ref": 4, "date": "2019-04-22"},
+        {"holiday_ref": 5, "date": "2019-05-06"},
+        {"holiday_ref": 6, "date": "2019-05-27"},
+        {"holiday_ref": 8, "date": "2019-08-05"},
+        {"holiday_ref": 7, "date": "2019-08-26"},
+        {"holiday_ref": 9, "date": "2019-12-25"},
+        {"holiday_ref": 10, "date": "2019-12-26"},
+    ])
+    connection.execute(statement)
 
 
 class Region(utils.BaseModel):
@@ -900,18 +984,6 @@ class SpecialPeriod(utils.BaseModel):
     __table_args__ = (
         db.CheckConstraint("date_start <= date_end"),
     )
-
-
-class BankHolidayDate(utils.BaseModel):
-    """ Bank holiday dates. """
-    __tablename__ = "bank_holiday_date"
-
-    holiday_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("bank_holiday.id"),
-        primary_key=True, index=True
-    )
-    date = db.Column(db.Date, primary_key=True)
 
 
 class BankHolidays(utils.BaseModel):

@@ -20,6 +20,7 @@ gunicorn = "*"
 
 [dev-packages]
 pylint = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.7"

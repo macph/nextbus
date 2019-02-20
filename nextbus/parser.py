@@ -14,6 +14,16 @@ SET_PUNCT = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
 RE_INVALID_CHAR = re.compile(r"[^\x00-\x3b\x3d\x3f-\x7f\xa1-\xff]")
 
 
+class QueryTooShort(Exception):
+    """ Raised if query is too short. """
+    def __init__(self, query, msg=None):
+        if msg is None:
+            msg = "Query %r is too short or has invalid characters" % query
+        super().__init__(msg)
+        self.query = query
+        self.too_short = True
+
+
 class SearchNotDefined(Exception):
     """ Raised if parsed search query is not defined enough, ie it does not
         have terms that restricts the scope of the query. """
@@ -23,6 +33,14 @@ class SearchNotDefined(Exception):
         super().__init__(msg)
         self.query = query
         self.not_defined = True
+
+
+def validate_characters(query):
+    """ Strips out all punctuation and whitespace by using character sets and
+        check if the remaining set has enough characters.
+    """
+    if not set(query) & SET_ALPHANUM:
+        raise QueryTooShort(query)
 
 
 def _fix_parentheses(query, opening="(", closing=")"):
@@ -80,7 +98,7 @@ class ParseResult(object):
         """
         if not self.result:
             return None
-        if defined and not self.check_tree():
+        if not self.check_tree():
             raise SearchNotDefined(self.query)
         try:
             return self.data.stringify(defined)
@@ -109,13 +127,14 @@ class ParseResult(object):
 
 class Operator(object):
     """ Base class for operators in a search query. """
-    operator, rank = None, None
-    operands = list()
+    operator = None
+    rank = None
 
     def __init__(self):
         if self.operator is None or self.rank is None:
             raise NotImplementedError("The operator and rank must be defined "
                                       "with a new subclass.")
+        self.operands = []
 
     def __repr__(self):
         return "%s:%r" % (self.operator, self.operands)
@@ -155,37 +174,16 @@ class Operator(object):
         raise NotImplementedError
 
 
-class UnaryOperator(Operator):
-    """ Base class for unary operators in a search query. """
+class Not(Operator):
+    """ Unary NOT operator. """
+    operator, rank = "!", 3
+
     def __init__(self, tokens):
         super().__init__()
         self.operands = [tokens[0][1]]
 
     def stringify(self, defined=False, recursive=False):
-        """ Returns the parsed query in string form. """
         return self.operator + self.combine_operands(defined, recursive)[0]
-
-    def defined(self, recursive=False):
-        raise NotImplementedError
-
-
-class BinaryOperator(Operator):
-    """ Base class for unary operators in a search query. """
-    def __init__(self, tokens):
-        super().__init__()
-        self.operands = tokens[0][::2]
-
-    def stringify(self, defined=False, recursive=False):
-        """ Returns the parsed query in string form. """
-        return self.operator.join(self.combine_operands(defined, recursive))
-
-    def defined(self, recursive=False):
-        raise NotImplementedError
-
-
-class Not(UnaryOperator):
-    """ Unary NOT operator. """
-    operator, rank = "!", 3
 
     def defined(self, recursive=False):
         """ All terms behind a NOT operator are undefined. If recursive is
@@ -198,23 +196,32 @@ class Not(UnaryOperator):
             return False
 
 
-class FollowedBy(BinaryOperator):
+class FollowedBy(Operator):
     """ Binary operator for phrases. """
     operator, rank = "<->", 2
 
     def __init__(self, tokens):
-        super().__init__(tokens)
-        # Override the operands
+        super().__init__()
         self.operands = tokens[0].strip("\"'").split()
+
+    def stringify(self, defined=False, recursive=False):
+        return self.operator.join(self.combine_operands(defined, recursive))
 
     def defined(self, recursive=False):
         """ A phrase is always defined. """
         return True
 
 
-class And(BinaryOperator):
+class And(Operator):
     """ Binary AND operator. """
     operator, rank = "&", 1
+
+    def __init__(self, tokens):
+        super().__init__()
+        self.operands = tokens[0][::2]
+
+    def stringify(self, defined=False, recursive=False):
+        return self.operator.join(self.combine_operands(defined, recursive))
 
     def defined(self, recursive=False):
         """ Only undefined if all terms are undefined. """
@@ -222,9 +229,16 @@ class And(BinaryOperator):
                    for op in self.operands)
 
 
-class Or(BinaryOperator):
+class Or(Operator):
     """ Binary OR operator. """
     operator, rank = "|", 0
+
+    def __init__(self, tokens):
+        super().__init__()
+        self.operands = tokens[0][::2]
+
+    def stringify(self, defined=False, recursive=False):
+        return self.operator.join(self.combine_operands(defined, recursive))
 
     def defined(self, recursive=False):
         """ All terms must be defined. """

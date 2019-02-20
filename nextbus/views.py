@@ -175,7 +175,7 @@ def search_results(query=None):
         return render_template("search.html", query=query)
 
     # Check if query has enough alphanumeric characters, else raise
-    search.validate_characters(query)
+    parser.validate_characters(query)
     # Set up form and retrieve request arguments
     filters = forms.FilterResults(request.args)
     try:
@@ -219,8 +219,8 @@ def search_invalid_parameters(error):
     return render_template("search.html", query=error.query, error=error), 400
 
 
-@page.errorhandler(search.QueryTooShort)
 @page.errorhandler(search.NoPostcode)
+@page.errorhandler(parser.QueryTooShort)
 @page.errorhandler(parser.SearchNotDefined)
 def search_bad_query(error):
     """ Query was too short or non-existent postcode was passed. Not an error

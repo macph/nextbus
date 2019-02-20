@@ -7,7 +7,7 @@ import reprlib
 from flask import current_app
 
 from nextbus import db, models, ts_parser
-from nextbus.parser import SET_ALPHANUM
+
 
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
@@ -23,16 +23,6 @@ class NoPostcode(Exception):
         super().__init__(msg)
         self.query = query
         self.postcode = postcode
-
-
-class QueryTooShort(Exception):
-    """ Raised if query is too short. """
-    def __init__(self, query, msg=None):
-        if msg is None:
-            msg = "Query %r is too short or has invalid characters" % query
-        super().__init__(msg)
-        self.query = query
-        self.too_short = True
 
 
 class InvalidParameters(Exception):
@@ -184,11 +174,3 @@ def filter_args(query, admin_areas=None):
                              % (query, types, args))
 
     return types, args
-
-
-def validate_characters(query):
-    """ Strips out all punctuation and whitespace by using character sets and
-        check if the remaining set has enough characters.
-    """
-    if not set(query) & SET_ALPHANUM:
-        raise QueryTooShort(query)

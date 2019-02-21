@@ -3,6 +3,7 @@ Draws a route graph for a service.
 """
 import collections
 from collections import abc
+import functools
 import itertools
 
 from nextbus import db, models
@@ -198,9 +199,6 @@ def _analyse_graph(graph):
     stack.extend((v, True) for v in reversed(diameter))
     stack.extend((v, False) for v in diameter)
 
-    def sort_path(path):
-        return tuple(graph.sort(i) for i in path)
-
     while stack:
         vertex, forward = stack.pop()
 
@@ -212,7 +210,7 @@ def _analyse_graph(graph):
             continue
 
         # Add paths to list
-        longest = max(sorted(new_paths, key=sort_path), key=len)
+        longest = max(sorted(new_paths, key=graph.path_sort), key=len)
         g.remove_path(longest)
         paths.append(longest)
 
@@ -380,7 +378,7 @@ class _Layout:
 
     def copy(self):
         """ Makes a copy of the layout for modification. """
-        layout = _Layout(self.g, self.sequence)
+        layout = _Layout(self.g)
         layout.copy_from(self)
 
         return layout
@@ -835,6 +833,27 @@ def draw_graph(graph, order=True, max_columns=None, json=False):
     return data
 
 
+def _memoize_graph(graph, method):
+    """ Wraps graph method in a function that remembers adjacency list and last
+        result.
+    """
+    adj = None
+    result = None
+
+    @functools.wraps(method)
+    def _method(*args, **kwargs):
+        nonlocal adj, result
+
+        new_adj = graph.adj
+        if adj != new_adj:
+            result = method(*args, **kwargs)
+            adj = new_adj
+
+        return result
+
+    return _method
+
+
 class Graph:
     """ Directed graph.
 
@@ -852,15 +871,14 @@ class Graph:
                 self.add_vertex(v)
 
         if sort is not None:
-            self.sort = sort
+            self._sort = sort
         else:
             def do_nothing(item):
                 return item
-            self.sort = do_nothing
+            self._sort = do_nothing
 
-        self._adj = None
-        self._sequence = None
-        self._paths = None
+        self.analyse = _memoize_graph(self, self.analyse)
+        self.draw = _memoize_graph(self, self.draw)
 
     def __repr__(self):
         return "<Graph(%s)>" % (repr(set(self)) if self else "")
@@ -944,9 +962,24 @@ class Graph:
         """ All vertices without incoming edges. """
         return self.tails - self.heads
 
+    @property
+    def sort(self):
+        """ Ranking function for sorting vertices. """
+        return self._sort
+
+    @property
+    def path_sort(self):
+        """ Function for sorting paths by their rankings. """
+        sort = self._sort
+
+        def path_sort(path):
+            return tuple(sort(u) for u in path)
+
+        return path_sort
+
     def copy(self):
         """ Makes a copy of the graph. """
-        return Graph(self.edges, self.isolated, self.sort)
+        return Graph(self.edges, self.isolated, self._sort)
 
     def clean_copy(self):
         """ Makes a copy of the graph with no self-edges. """
@@ -1093,8 +1126,8 @@ class Graph:
         for e, i in edges.items():
             groups[i].append(e)
 
-        connected = [Graph(s, sort=self.sort) for s in groups.values()]
-        isolated = [Graph(singles=[v], sort=self.sort) for v in self.isolated]
+        connected = [Graph(s, sort=self._sort) for s in groups.values()]
+        isolated = [Graph(singles=[v], sort=self._sort) for v in self.isolated]
 
         if connected or isolated:
             return connected + isolated
@@ -1120,7 +1153,7 @@ class Graph:
 
         # Add all immediately adjacent paths to queue
         queue.extendleft(
-            Path([v, w]) for w in sorted(self.following(v), key=self.sort)
+            Path([v, w]) for w in sorted(self.following(v), key=self._sort)
         )
 
         while queue:
@@ -1135,7 +1168,7 @@ class Graph:
             if u != v:
                 # Add all following paths to queue
                 queue.extendleft(p.append_with(w) for w in
-                                 sorted(self.following(u), key=self.sort))
+                                 sorted(self.following(u), key=self._sort))
 
         # Find all vertices not covered by BFS
         for u in self.vertices - paths.keys():
@@ -1184,13 +1217,10 @@ class Graph:
         for v in sorted(self):
             paths.extend(self._search_paths(v).values())
 
-        def sort_path(path):
-            return tuple(self.sort(u) for u in path)
-
         if paths:
             max_len = max(len(p) for p in paths)
             longest_paths = sorted((p for p in paths if len(p) == max_len),
-                                   key=sort_path)
+                                   key=self.path_sort)
             return longest_paths[0]
         else:
             return Path()
@@ -1201,20 +1231,12 @@ class Graph:
 
             The results are cached if the adjacency list does not change.
         """
-        if (self._adj == self.adj and self._sequence is not None and
-                self._paths is not None):
-            return self._paths, self._sequence
-
         paths, sequence = [], []
         # Start with the largest connected graph and analyse each
         for g in sorted(self.split(), key=len, reverse=True):
             new_paths, new_sequence = _analyse_graph(g)
             paths.extend(new_paths)
             sequence.extend(new_sequence)
-
-        self._adj = self.adj
-        self._paths = paths
-        self._sequence = sequence
 
         return paths, sequence
 

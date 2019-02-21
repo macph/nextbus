@@ -36,25 +36,20 @@ def bad_request(status, message):
 @api.route("/live/<atco_code>")
 def stop_get_times(atco_code=None):
     """ Requests and retrieve bus times. """
-    if atco_code:
-        matching_stop = (db.session.query(models.StopPoint.atco_code)
-                         .filter_by(atco_code=atco_code).one_or_none())
-        if not matching_stop:
-            current_app.logger.warning("API accessed with invalid ATCO code %s"
-                                       % atco_code)
-            return bad_request(404, "ATCO code does not exist")
-    else:
-        current_app.logger.warning("API accessed without ATCO code %s" %
-                                   atco_code)
-        return bad_request(400, "ATCO code is required.")
+    matching_stop = (db.session.query(models.StopPoint.atco_code)
+                     .filter_by(atco_code=atco_code).one_or_none())
+    if not matching_stop:
+        current_app.logger.warning("API accessed with invalid ATCO code %s."
+                                   % atco_code)
+        return bad_request(404, "ATCO code does not exist.")
 
     try:
         times = tapi.get_nextbus_times(atco_code)
     except (HTTPError, ValueError):
         # Error came up when accessing the external API or it can't be accessed
         current_app.logger.error("Error occurred when retrieving live times "
-                                 "with data %r" % atco_code, exc_info=True)
-        return bad_request(503, "There was a problem with the external API")
+                                 "with data %r." % atco_code, exc_info=True)
+        return bad_request(503, "There was a problem with the external API.")
 
     response = jsonify(times)
     # Set headers to ensure data is up to date
@@ -70,7 +65,7 @@ def get_stops_tile(coord):
     try:
         x, y = map(int, coord.split(","))
     except ValueError:
-        return bad_request(400, "API accessed with invalid args: %r" % coord)
+        return bad_request(400, "API accessed with invalid args: %r." % coord)
 
     stops = models.StopPoint.within_box(
         location.tile_to_box(x, y, location.TILE_ZOOM),
@@ -119,30 +114,29 @@ class StarredStop(MethodView):
     """
     def get(self, naptan_code):
         if naptan_code is None:
-            return jsonify({"stops": session.get("stops")})
+            return jsonify({"stops": session.get("stops", [])})
 
         sms = naptan_code.lower()
         stop = models.StopPoint.query.filter_by(naptan_code=sms).one_or_none()
         if stop is not None:
             return jsonify({"stop": sms})
         else:
-            return bad_request(404, "SMS code %r does not exist" % sms)
+            return bad_request(404, "SMS code %r does not exist." % sms)
 
     def post(self, naptan_code):
         if naptan_code is None:
-            return bad_request(400, "API accessed without valid SMS code")
+            return bad_request(400, "API accessed without valid SMS code.")
 
         sms = naptan_code.lower()
         if "stops" in session and sms in session["stops"]:
-            return bad_request(400, "Cookie already exists")
-        elif "stops" in session:
-            stop = models.StopPoint.query.filter_by(
-                naptan_code=sms).one_or_none()
-            if stop is not None:
-                session["stops"].append(sms)
-                session.modified = True
-            else:
-                return bad_request(404, "SMS code %r does not exist" % sms)
+            return bad_request(400, "Cookie already exists.")
+
+        stop = models.StopPoint.query.filter_by(naptan_code=sms).one_or_none()
+        if stop is None:
+            return bad_request(404, "SMS code %r does not exist." % sms)
+        if "stops" in session:
+            session["stops"].append(sms)
+            session.modified = True
         else:
             session["stops"] = [sms]
             session.permanent = True
@@ -152,7 +146,7 @@ class StarredStop(MethodView):
 
     def delete(self, naptan_code):
         if "stops" not in session:
-            return bad_request(400, "No cookie has been set")
+            return bad_request(400, "No cookie has been set.")
 
         sms = naptan_code.lower() if naptan_code is not None else None
         if naptan_code is None:
@@ -163,7 +157,7 @@ class StarredStop(MethodView):
             session["stops"].remove(sms)
             session.modified = True
         else:
-            return bad_request(404, "SMS code %r not found within cookie data"
+            return bad_request(404, "SMS code %r not found within cookie data."
                                % sms)
 
         return "", 204

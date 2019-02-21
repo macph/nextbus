@@ -6,8 +6,8 @@ import datetime
 import re
 import string
 
-from flask import (abort, Blueprint, current_app, g, render_template, redirect,
-                   request, session, url_for)
+from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
+                   redirect, request, session, url_for)
 from werkzeug.urls import url_encode
 
 from nextbus import (db, forms, graph, location, models, parser, search,
@@ -21,7 +21,7 @@ REMOVE_BRACKETS = re.compile(r"\s*\([^)]*\)\s*")
 page = Blueprint("page", __name__, template_folder="templates")
 
 
-class EntityNotFound(Exception):
+class NotFound(Exception):
     """ Used to initiate a 404 with custom message. """
     pass
 
@@ -252,8 +252,7 @@ def list_in_region(region_code):
     region = models.Region.query.get(region_code.upper())
 
     if region is None:
-        raise EntityNotFound("Region with code '%s' does not exist."
-                             % region_code)
+        raise NotFound("Region with code '%s' does not exist." % region_code)
     if region.code != region_code:
         return redirect(url_for(".list_in_region", region_code=region.code),
                         code=302)
@@ -275,7 +274,7 @@ def list_in_area(area_code):
     )
 
     if area is None:
-        raise EntityNotFound("Area with code '%s' does not exist." % area_code)
+        raise NotFound("Area with code '%s' does not exist." % area_code)
 
     # Show list of localities with stops if districts do not exist
     if not area.districts:
@@ -298,8 +297,8 @@ def list_in_district(district_code):
     )
 
     if district is None:
-        raise EntityNotFound("District with code '%s' does not exist."
-                             % district_code)
+        raise NotFound("District with code '%s' does not exist."
+                       % district_code)
 
     group_local = _group_objects(district.list_localities(), attr="name",
                                  default="Places")
@@ -327,8 +326,7 @@ def list_in_locality(locality_code):
     )
 
     if locality is None:
-        raise EntityNotFound("Place with code '%s' does not exist."
-                             % locality_code)
+        raise NotFound("Place with code '%s' does not exist." % locality_code)
     if locality.code != locality_code:
         code = locality.code
         return redirect(url_for(".list_in_locality", locality_code=code),
@@ -355,8 +353,8 @@ def list_near_location(coords):
     latitude, longitude = coords
     # Quick check to ensure coordinates are within range of Great Britain
     if not location.check_bounds(latitude, longitude):
-        raise EntityNotFound("The latitude and longitude coordinates are "
-                             "nowhere near Great Britain!")
+        raise NotFound("The latitude and longitude coordinates are too far "
+                       "away near Great Britain.")
 
     stops = models.StopPoint.in_range(latitude, longitude,
                                       db.undefer(models.StopPoint.lines))
@@ -372,7 +370,7 @@ def list_near_postcode(code):
     postcode = models.Postcode.query.get(index_postcode)
 
     if postcode is None:
-        raise EntityNotFound("Postcode '%s' does not exist." % code)
+        raise NotFound("Postcode '%s' does not exist." % code)
     if postcode.text != code:
         # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
         return redirect(url_for(".list_near_postcode", code=postcode.text),
@@ -395,8 +393,8 @@ def stop_area(stop_area_code):
     )
 
     if area is None:
-        raise EntityNotFound("Bus stop with NaPTAN code '%s' does not exist."
-                             % stop_area_code)
+        raise NotFound("Bus stop with NaPTAN code '%s' does not exist."
+                       % stop_area_code)
     if area.code != stop_area_code:
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=302)
@@ -426,8 +424,8 @@ def stop_naptan(naptan_code):
     )
 
     if stop is None:
-        raise EntityNotFound("Bus stop with SMS code '%s' does not exist."
-                             % naptan_code)
+        raise NotFound("Bus stop with SMS code '%s' does not exist."
+                       % naptan_code)
     if stop.naptan_code != naptan_code:
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=302)
@@ -451,8 +449,8 @@ def stop_atco(atco_code=""):
     )
 
     if stop is None:
-        raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
-                             % atco_code)
+        raise NotFound("Bus stop with ATCO code '%s' does not exist."
+                       % atco_code)
     if stop.atco_code != atco_code:
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=302)
@@ -475,7 +473,7 @@ def _query_service(service_id, reverse=None):
     )
 
     if line is None:
-        raise EntityNotFound("Service '%s' does not exist." % service_id)
+        raise NotFound("Service '%s' does not exist." % service_id)
 
     # Check line patterns - is there more than 1 direction?
     is_reverse, mirrored = line.has_mirror(reverse)
@@ -557,8 +555,8 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
     if atco_code is not None:
         stop = models.StopPoint.query.get(atco_code.upper())
         if stop is None:
-            raise EntityNotFound("Bus stop with ATCO code '%s' does not exist."
-                                 % atco_code)
+            raise NotFound("Bus stop with ATCO code '%s' does not exist."
+                           % atco_code)
         stop_atco_code = stop.atco_code
     else:
         stop_atco_code = None
@@ -570,7 +568,7 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
             .get(service_id)
         )
         if line is None:
-            raise EntityNotFound("Service '%s' does not exist." % service_id)
+            raise NotFound("Service '%s' does not exist." % service_id)
 
         is_reverse, _ = line.has_mirror(reverse)
     else:
@@ -634,19 +632,21 @@ def show_map_service_direction_stop(service_id, reverse, atco_code,
     return _show_map(service_id, reverse, atco_code, coords)
 
 
-@page.app_errorhandler(EntityNotFound)
+@page.app_errorhandler(NotFound)
 @page.app_errorhandler(404)
 def not_found_msg(error):
     """ Returned in case of an invalid URL, with message. Can be called with
         EntityNotFound, eg if the correct URL is used but the wrong value is
         given.
     """
-    if isinstance(error, EntityNotFound):
-        message = str(error)
-    else:
-        message = "There's nothing here!"
+    message = str(error) if isinstance(error, NotFound) else None
 
-    return render_template("not_found.html", message=message), 404
+    if request.path.startswith("/api"):
+        if message is None:
+            message = "API endpoint %r does not exist." % request.path
+        return jsonify({"message": message}), 404
+    else:
+        return render_template("not_found.html", message=message), 404
 
 
 @page.app_errorhandler(500)
@@ -654,4 +654,7 @@ def error_msg(error):
     """ Returned in case an internal server error (500) occurs, with message.
         Note that this page does not appear in debug mode.
     """
-    return render_template("error.html", message=error), 500
+    if request.path.startswith("/api"):
+        return jsonify({"message": error}), 500
+    else:
+        return render_template("error.html", message=error), 500

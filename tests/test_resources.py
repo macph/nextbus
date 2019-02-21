@@ -211,6 +211,15 @@ def test_service_json(load_db):
     assert graph.service_json(645, False) == SERVICE_JSON
 
 
+def test_api_bad_parameter(client):
+    response = client.get("/api/does_not_exist/")
+    expected = {"message": "API endpoint '/api/does_not_exist/' does not "
+                           "exist."}
+
+    assert response.status_code == 404
+    assert json.loads(response.data) == expected
+
+
 def test_service_api(client):
     response = client.get("/api/route/645/outbound")
 
@@ -232,14 +241,6 @@ def test_live_data_api(client):
     assert response.status_code == 200
     assert response.cache_control.private
     assert response.cache_control.max_age == 60
-
-
-def test_live_data_api_bad_parameter(client):
-    response = client.get("/api/live/")
-    expected = {"message": "ATCO code is required."}
-
-    assert response.status_code == 404
-    assert json.loads(response.data) == expected
 
 
 def test_live_data_api_not_found(client):

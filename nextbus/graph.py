@@ -23,10 +23,15 @@ class LayoutError(Exception):
     pass
 
 
-class Path(abc.MutableSequence):
+def _coalesce(*args):
+    """ Returns first non-null argument, or None if all are null. """
+    return next((a for a in args if a is not None), None)
+
+
+class Path(abc.Sequence):
     """ Immutable path as sequence of vertices. """
     def __init__(self, vertices=None):
-        self._v = list(vertices) if vertices is not None else []
+        self._v = tuple(vertices) if vertices is not None else ()
 
     def __repr__(self):
         return "<Path(%r, cyclic=%s)>" % (self._v, self.cyclic)
@@ -41,35 +46,67 @@ class Path(abc.MutableSequence):
         return len(self._v)
 
     def __eq__(self, other):
-        return list(self) == list(other)
+        if not hasattr(other, "_v"):
+            return False
+        elif self._v == other._v:
+            return True
+        elif len(self._v) != len(other._v):
+            return False
+        elif not self.cyclic or not other.cyclic:
+            return False
+        else:
+            list_ = other._v[:-1]
+            return any(sublist == list_ for sublist in self._slice())
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __setitem__(self, index, value):
-        self._v[index] = value
-
-    def __delitem__(self, index):
-        del self._v[index]
-
-    def insert(self, index, value):
-        self._v.insert(index, value)
-
     @property
     def cyclic(self):
-        return len(self) > 1 and self[0] == self[-1]
+        return len(self._v) > 1 and self._v[0] == self._v[-1]
 
     @property
     def edges(self):
-        return [(self[i], self[i+1]) for i in range(len(self) - 1)]
+        return [(self._v[i], self._v[i+1]) for i in range(len(self._v) - 1)]
+
+    def _slice(self, length=None):
+        """ Yields slices of path of a set length. If the path is cyclic the
+            slice will wrap around the list.
+        """
+        list_ = self._v[:-1] if self.cyclic else self._v[:]
+        len_a = len(list_)
+        len_b = _coalesce(length, len_a)
+
+        if len_a < len_b:
+            return
+        elif self.cyclic:
+            for i in range(len_a):
+                sub = list_[i:i + len_b]
+                if i + len_b > len_a:
+                    sub += list_[:i + len_b - len_a]
+                yield sub
+        else:
+            for i in range(len_a - len_b + 1):
+                yield list_[i:i + len_b]
+
+    def contains_edge(self, edge):
+        """ Checks if edge is in path. """
+        return edge in self.edges
+
+    def contains_path(self, path):
+        """ Checks if path is within this path. """
+        if not self:
+            return False
+        elif self == path:
+            return True
+        elif path.cyclic:
+            return False
+        else:
+            return any(sublist == path._v for sublist in self._slice(len(path)))
 
     def make_acyclic(self):
         """ Create an acyclic path by removing the last vertex. """
         return Path(self[:-1]) if self.cyclic else Path(self)
-
-    def prepend(self, vertex):
-        """ Adds vertex to start of path. """
-        self.insert(0, vertex)
 
     def prepend_with(self, vertex):
         """ Returns copy of this path but with an vertex appended. """

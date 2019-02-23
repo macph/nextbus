@@ -12,17 +12,16 @@ from nextbus.graph import (
 
 @pytest.fixture
 def linear_path():
-    return Path([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    return Path([0, 1, 2, 3, 4])
 
 
 @pytest.fixture
 def cyclic_path():
-    return Path([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0])
+    return Path([0, 1, 2, 3, 4, 0])
 
 
 def test_path_edges(linear_path):
-    assert linear_path.edges == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6),
-                                 (6, 7), (7, 8), (8, 9)]
+    assert linear_path.edges == [(0, 1), (1, 2), (2, 3), (3, 4)]
 
 
 def test_path_not_cyclic(linear_path):
@@ -33,6 +32,40 @@ def test_path_cyclic(cyclic_path):
     assert cyclic_path.cyclic
 
 
+def test_paths_equal(linear_path):
+    assert linear_path == Path(range(5))
+
+
+def test_paths_cycles_equal(cyclic_path):
+    assert cyclic_path == Path([0, 1, 2, 3, 4, 0])
+    assert cyclic_path == Path([3, 4, 0, 1, 2, 3])
+
+
+def test_path_contains_edge(linear_path):
+    assert linear_path.contains_edge((2, 3))
+
+
+def test_paths_not_contains_edge(linear_path):
+    assert not linear_path.contains_edge((4, 0))
+
+
+@pytest.mark.parametrize("main, sub, expected", [
+    (Path(), Path(), False),
+    (Path(), Path([0, 1]), False),
+    (Path([0, 1]), Path([0, 1]), True),
+    (Path([0, 1]), Path([0, 1, 2]), False),
+    (Path([0, 1]), Path([0, 1, 0]), False),
+    (Path([0, 1, 2, 3, 4]), Path([1, 2, 3]), True),
+    (Path([0, 1, 2, 3, 4]), Path([3, 4, 0]), False),
+    (Path([0, 1, 2, 0]), Path([0, 1, 2, 0]), True),
+    (Path([0, 1, 2, 0]), Path([0, 1, 2, 0, 1]), False),
+    (Path([0, 1, 2, 3, 4, 0]), Path([0, 1, 2, 3]), True),
+    (Path([0, 1, 2, 3, 4, 0]), Path([3, 4, 0, 1]), True),
+])
+def test_path_contains(main, sub, expected):
+    assert main.contains_path(sub) is expected
+
+
 def test_path_make_not_cyclic(linear_path):
     assert linear_path.make_acyclic() == linear_path
 
@@ -41,22 +74,12 @@ def test_path_make_cyclic(linear_path, cyclic_path):
     assert cyclic_path.make_acyclic() == linear_path
 
 
-def test_path_prepend(linear_path):
-    linear_path.prepend(-1)
-    assert linear_path._v == list(range(-1, 10))
-
-
-def test_path_append(linear_path):
-    linear_path.append(10)
-    assert linear_path._v == list(range(11))
-
-
 def test_path_prepend_with(linear_path):
-    assert linear_path.prepend_with(-1)._v == list(range(-1, 10))
+    assert linear_path.prepend_with(-1) == Path(range(-1, 5))
 
 
 def test_path_append_with(linear_path):
-    assert linear_path.append_with(10)._v == list(range(11))
+    assert linear_path.append_with(5) == Path(range(6))
 
 
 def test_path_empty():
@@ -68,15 +91,15 @@ def test_path_empty():
 
 
 def test_path_split_left(linear_path):
-    assert linear_path.split((0, 1)) == [Path(range(1, 10))]
+    assert linear_path.split((0, 1)) == [Path(range(1, 5))]
 
 
 def test_path_split_right(linear_path):
-    assert linear_path.split((8, 9)) == [Path(range(9))]
+    assert linear_path.split((3, 4)) == [Path(range(4))]
 
 
 def test_path_split_middle(linear_path):
-    assert linear_path.split((4, 5)) == [Path(range(5)), Path(range(5, 10))]
+    assert linear_path.split((2, 3)) == [Path(range(3)), Path(range(3, 5))]
 
 
 def test_path_wrong_edge(linear_path):

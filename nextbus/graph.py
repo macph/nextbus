@@ -203,7 +203,7 @@ def _analyse_graph(graph):
         vertex, forward = stack.pop()
 
         try:
-            new_paths = g.search_paths(vertex, forward).values()
+            new_paths = g.search_paths(vertex, forward=forward).values()
         except KeyError:
             continue
         if not any(new_paths):
@@ -1134,8 +1134,9 @@ class Graph:
         else:
             return [Graph()]
 
-    def _search_paths(self, v, target=None):
-        """ Does a BFS to find shortest paths in graph starting at vertex `v`.
+    def search_paths(self, v, t=None, forward=True):
+        """ Does BFS on graph to find shortest paths from vertex v to all other
+            vertices (including itself), or vice versa if forward is False.
 
             If target vertex `t` is None, all paths are searched and returned as
             a dictionary of vertices with shortest paths. Otherwise, only the
@@ -1145,16 +1146,19 @@ class Graph:
         """
         if v not in self:
             raise KeyError(v)
-        if target is not None and target not in self:
+        if t is not None and t not in self:
             raise KeyError(v)
 
         paths = {}
         queue = collections.deque()
 
         # Add all immediately adjacent paths to queue
-        queue.extendleft(
-            Path([v, w]) for w in sorted(self.following(v), key=self._sort)
-        )
+        if forward:
+            adjacent = sorted(self.following(v), key=self._sort)
+            queue.extendleft(Path([v, w]) for w in adjacent)
+        else:
+            adjacent = sorted(self.preceding(v), key=self._sort)
+            queue.extendleft(Path([u, v]) for u in adjacent)
 
         while queue:
             p = queue.pop()
@@ -1162,32 +1166,23 @@ class Graph:
             if u in paths:
                 # A shorter path was already found
                 continue
+
             paths[u] = p
-            if target is not None and u == target:
+            if t is not None and u == t:
                 break
-            if u != v:
-                # Add all following paths to queue
-                queue.extendleft(p.append_with(w) for w in
-                                 sorted(self.following(u), key=self._sort))
+            # Add all adjacent paths to queue
+            if u != v and forward:
+                adjacent = sorted(self.following(u), key=self._sort)
+                queue.extendleft(p.append_with(w) for w in adjacent)
+            elif u != v:
+                adjacent = sorted(self.preceding(u), key=self._sort)
+                queue.extendleft(p.prepend_with(w) for w in adjacent)
 
         # Find all vertices not covered by BFS
         for u in self.vertices - paths.keys():
             paths[u] = Path()
 
-        return paths if target is None else {target: paths[target]}
-
-    def search_paths(self, v, forward=True):
-        """ Does BFS on graph to find shortest paths from vertex v to all other
-            vertices (including itself), or vice versa if forward is False.
-
-            Edges following vertices are sorted to give a consistent result.
-        """
-        if forward:
-            paths = self._search_paths(v)
-        else:
-            paths = {u: self._search_paths(u, v)[v] for u in self}
-
-        return paths
+        return paths if t is None else {t: paths[t]}
 
     def shortest_path(self, v1, v2):
         """ Finds the shortest path between a pair of vertices in the graph
@@ -1201,7 +1196,7 @@ class Graph:
         if v2 not in self:
             raise KeyError(v2)
 
-        paths_from = self._search_paths(v1, v2)
+        paths_from = self.search_paths(v1, t=v2)
 
         return paths_from[v2] if paths_from[v2] else None
 
@@ -1215,7 +1210,7 @@ class Graph:
         paths = []
 
         for v in sorted(self):
-            paths.extend(self._search_paths(v).values())
+            paths.extend(self.search_paths(v).values())
 
         if paths:
             max_len = max(len(p) for p in paths)

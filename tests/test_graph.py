@@ -721,22 +721,26 @@ def test_graph_diameter(key, expected):
     ],
     "path with loop": [
         Path([0, 1, 2, 5, 6, 7]),
-        Path([2, 3, 4, 5])
+        Path([2, 3, 4]),
+        Path([4, 5])
     ],
     "crossed paths": [
         Path([0, 1, 4, 6, 7]),
-        Path([1, 2]),
+        Path([1, 2, 3]),
         Path([1, 5]),
-        Path([2, 3, 5, 6]),
-        Path([3, 4])
+        Path([3, 4]),
+        Path([3, 5]),
+        Path([5, 6])
     ],
     "complex graph": [
-        Path([0, 1, 9]),
+        Path([0, 1]),
         Path([1, 2]),
-        Path([1, 5, 7, 8]),
+        Path([1, 5, 7]),
+        Path([1, 9]),
         Path([2, 3, 4, 8, 9, 10]),
         Path([3, 7]),
-        Path([4, 5, 6])
+        Path([4, 5, 6]),
+        Path([7, 8])
     ],
     "self cycle": [Path([0, 1, 2, 3])],
     "simple cycle": [Path([0, 1, 2, 3, 0])],

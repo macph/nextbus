@@ -4,10 +4,21 @@ Testing the graph module for service diagrams.
 import pytest
 
 from nextbus.graph import (
-    Path, Graph, _Layout, _rearrange_cycles, MaxColumnError, LayoutError,
-    _set_lines, _draw_paths_between, draw_graph, _median,
-    _count_crossings, _count_all_crossings
+    Path, Graph, Layout, LayoutRow, _coalesce, _rearrange_cycles, _median,
+    MaxColumnError, LayoutError
 )
+
+
+@pytest.mark.parametrize("args, expected", [
+    ((), None),
+    ((1,), 1),
+    ((None,), None),
+    ((1, None), 1),
+    ((None, 1), 1),
+    ((0, 1), 0),
+])
+def test_coalesce(args, expected):
+    assert _coalesce(*args) == expected
 
 
 @pytest.fixture
@@ -849,18 +860,12 @@ def test_graph_sequence_inverted(key, expected):
 
 @pytest.fixture
 def simple_layout(simple_graph):
-    gl = _Layout(simple_graph)
-    _set_lines(gl)
-
-    return gl
+    return Layout(simple_graph, ordered=False)
 
 
 @pytest.fixture
 def complex_layout(complex_cycle_graph):
-    gl = _Layout(complex_cycle_graph)
-    _set_lines(gl)
-
-    return gl
+    return Layout(complex_cycle_graph, ordered=False)
 
 
 def row_as_tuple(row):
@@ -882,7 +887,7 @@ def test_layout_row_copy(complex_layout):
 
 
 def test_layout_row_copy_another_layout(complex_layout):
-    layout = _Layout(complex_layout.g)
+    layout = complex_layout.copy()
     row = complex_layout.rows[4]
     copy = row.copy(layout)
 
@@ -1064,8 +1069,7 @@ def test_layout_incoming(complex_layout, vertex, direct, cyclic, expected):
     ],
 }.items())
 def test_set_rows(key, expected):
-    gl = _Layout(graph_from_key(key))
-    _set_lines(gl)
+    gl = Layout(graph_from_key(key), ordered=False)
 
     assert [row_as_tuple(gl.rows[v]) for v in gl.sequence] == expected
 
@@ -1087,10 +1091,7 @@ def test_set_rows(key, expected):
     "complex cycles": {(3, 4), (5, 6), (2, 1), (0, 2), (7, 3), (9, 5)},
 }.items())
 def test_cycles(key, expected):
-    gl = _Layout(graph_from_key(key))
-    _set_lines(gl)
-
-    assert gl.cycles == expected
+    assert Layout(graph_from_key(key), ordered=False).cycles == expected
 
 
 def test_no_rearrange(complex_layout):
@@ -1146,8 +1147,10 @@ def test_rearrange_mismatch(complex_layout):
     ([{1}, {1}, {2}], [{2}, {1}], {(0, 1), (1, 1), (2, 0)}),
     ([{2, 3}, {2, 3}], [{2}, {3}], {(0, 0), (0, 1), (1, 0), (1, 1)}),
 ], ids=repr)
-def test_draw_paths_between(start, end, expected):
-    assert _draw_paths_between(start, end) == expected
+def test_draw_lines(simple_layout, start, end, expected):
+    row = LayoutRow(simple_layout, 0, 0, start, end, {}, {})
+
+    assert row.lines() == expected
 
 
 @pytest.mark.parametrize("start, end, expected", [
@@ -1156,8 +1159,10 @@ def test_draw_paths_between(start, end, expected):
     ([{1}, {1}, {2}], [{2}, {1}], 2),
     ([{2, 3}, {2, 3}], [{2}, {3}], 1),
 ], ids=repr)
-def test_count_crossings(start, end, expected):
-    assert _count_crossings(start, end) == expected
+def test_count_crossings(simple_layout, start, end, expected):
+    row = LayoutRow(simple_layout, 0, 0, start, end, {}, {})
+
+    assert row.count_crossings() == expected
 
 
 @pytest.mark.parametrize("key, expected", {
@@ -1170,10 +1175,9 @@ def test_count_crossings(start, end, expected):
     "complex cycles": 0,
 }.items())
 def test_cycles(key, expected):
-    gl = _Layout(graph_from_key(key))
-    _set_lines(gl)
+    gl = Layout(graph_from_key(key), ordered=False)
 
-    assert _count_all_crossings(gl) == expected
+    assert gl.crossings() == expected
 
 
 @pytest.mark.parametrize("collection, expected", [
@@ -1187,262 +1191,254 @@ def test_median(collection, expected):
 
 @pytest.mark.parametrize("key, expected", {
     "empty": [],
-    "single": [(0, 0, [])],
+    "single": [[0, 0, []]],
     "simple": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, []],
     ],
     "two paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, []),
-        (10, 0, [(0, 0, 0, None)]),
-        (11, 0, [(0, 0, 0, None)]),
-        (12, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, []],
+        [10, 0, [[0, 0, 0, None]]],
+        [11, 0, [[0, 0, 0, None]]],
+        [12, 0, []],
     ],
     "merged paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (7, 1, [(0, 0, 0, None)]),
-        (8, 0, [(0, 0, 0, None)]),
-        (9, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [7, 1, [[0, 0, 0, None]]],
+        [8, 0, [[0, 0, 0, None]]],
+        [9, 0, []],
     ],
     "path with loop": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (4, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None)]),
-        (7, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [4, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None]]],
+        [7, 0, []],
     ],
     "crossed paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (2, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (0, 1, 0, None), (1, 0, 0, None),
-                (1, 1, 0, None)]),
-        (4, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (5, 0, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None)]),
-        (7, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [2, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [0, 1, 0, None], [1, 0, 0, None], [1, 1, 0, None]]],
+        [4, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [5, 0, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None]]],
+        [7, 0, []],
     ],
     "complex graph": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (2, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 1, 0, None), (1, 2, 0, None)]),
-        (4, 2, [(0, 0, 0, None), (0, 3, 0, None), (1, 1, 0, None),
-                (2, 2, 0, None), (2, 3, 0, None)]),
-        (5, 3, [(0, 0, 0, None), (1, 1, 0, None), (2, 2, 0, None),
-                (3, 1, 0, None), (3, 3, 0, None)]),
-        (6, 3, [(0, 0, 0, None), (1, 1, 0, None), (2, 2, 0, None)]),
-        (7, 1, [(0, 0, 0, None), (1, 1, 0, None), (2, 1, 0, None)]),
-        (8, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (9, 0, [(0, 0, 0, None)]),
-        (10, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [2, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 1, 0, None], [1, 2, 0, None]]],
+        [4, 2, [[0, 0, 0, None], [0, 3, 0, None], [1, 1, 0, None], [2, 2, 0, None], [2, 3, 0, None]]],
+        [5, 3, [[0, 0, 0, None], [1, 1, 0, None], [2, 2, 0, None], [3, 1, 0, None], [3, 3, 0, None]]],
+        [6, 3, [[0, 0, 0, None], [1, 1, 0, None], [2, 2, 0, None]]],
+        [7, 1, [[0, 0, 0, None], [1, 1, 0, None], [2, 1, 0, None]]],
+        [8, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [9, 0, [[0, 0, 0, None]]],
+        [10, 0, []],
     ],
     "self cycle": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, []],
     ],
     "simple cycle": [
-        (None, None, [(0, 0, 1, 3)]),
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, -1, 0)]),
+        [None, None, [[0, 0, 1, 3]]],
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, -1, 0]]],
     ],
     "starting cycle": [
-        (None, None, [(0, 0, 1, 3)]),
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, -1, 0), (0, 1, 0, None)]),
-        (4, 1, [(1, 0, 0, None)]),
-        (5, 0, []),
+        [None, None, [[0, 0, 1, 3]]],
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, -1, 0], [0, 1, 0, None]]],
+        [4, 1, [[1, 0, 0, None]]],
+        [5, 0, []],
     ],
     "ending cycle": [
-        (0, 0, [(0, 1, 0, None)]),
-        (1, 1, [(0, 0, 1, 5), (1, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, -1, 2)]),
+        [0, 0, [[0, 1, 0, None]]],
+        [1, 1, [[0, 0, 1, 5], [1, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, -1, 2]]],
     ],
     "crossed cycles": [
-        (None, None, [(0, 0, 1, 0)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 1, 0, None)]),
-        (2, 1, [(0, 0, 1, 12), (1, 0, 0, None)]),
-        (0, 0, [(0, 0, -1, 3), (0, 1, 0, None)]),
-        (13, 1, [(1, 0, 0, None)]),
-        (14, 0, [(0, 0, 0, None)]),
-        (15, 0, [(0, 0, 0, None)]),
-        (11, 0, [(0, 0, 0, None)]),
-        (12, 0, [(0, 0, -1, 0)]),
+        [None, None, [[0, 0, 1, 0]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 1, 0, None]]],
+        [2, 1, [[0, 0, 1, 12], [1, 0, 0, None]]],
+        [0, 0, [[0, 0, -1, 3], [0, 1, 0, None]]],
+        [13, 1, [[1, 0, 0, None]]],
+        [14, 0, [[0, 0, 0, None]]],
+        [15, 0, [[0, 0, 0, None]]],
+        [11, 0, [[0, 0, 0, None]]],
+        [12, 0, [[0, 0, -1, 0]]],
     ],
     "complex cycles": [
-        (None, None, [(0, 1, 1, 3)]),
-        (4, 1, [(0, 1, 1, 5), (1, 1, 0, None)]),
-        (6, 1, [(0, 1, 1, 2), (1, 1, 0, None)]),
-        (1, 1, [(0, 0, 1, 0), (1, 0, 0, None)]),
-        (2, 0, [(0, 1, -1, 1), (0, 2, 0, None), (1, 2, 1, 7)]),
-        (3, 2, [(0, 0, 1, 9), (2, 0, 0, None), (2, 1, -1, 4)]),
-        (5, 0, [(0, 0, -1, 6), (0, 1, 0, None)]),
-        (7, 1, [(1, 0, 0, None), (1, 1, -1, 3), (1, 2, 0, None)]),
-        (9, 2, [(0, 0, 0, None), (2, 0, 0, None), (2, 1, 0, None),
-                (2, 2, -1, 5)]),
-        (8, 0, [(1, 0, 0, None)]),
-        (0, 0, [(0, 0, -1, 2)]),
+        [None, None, [[0, 1, 1, 3]]],
+        [4, 1, [[0, 1, 1, 5], [1, 1, 0, None]]],
+        [6, 1, [[0, 1, 1, 2], [1, 1, 0, None]]],
+        [1, 1, [[0, 0, 1, 0], [1, 0, 0, None]]],
+        [2, 0, [[0, 1, -1, 1], [0, 2, 0, None], [1, 2, 1, 7]]],
+        [3, 2, [[0, 0, 1, 9], [2, 0, 0, None], [2, 1, -1, 4]]],
+        [5, 0, [[0, 0, -1, 6], [0, 1, 0, None]]],
+        [7, 1, [[1, 0, 0, None], [1, 1, -1, 3], [1, 2, 0, None]]],
+        [9, 2, [[0, 0, 0, None], [2, 0, 0, None], [2, 1, 0, None], [2, 2, -1, 5]]],
+        [8, 0, [[1, 0, 0, None]]],
+        [0, 0, [[0, 0, -1, 2]]],
     ],
 }.items())
 def test_graph_draw_before_order(key, expected):
-    assert draw_graph(graph_from_key(key), order=False, json=False) == expected
+    assert Layout(graph_from_key(key), ordered=False).serialize() == expected
 
 
 @pytest.mark.parametrize("key, expected", {
     "empty": [],
-    "single": [(0, 0, [])],
+    "single": [[0, 0, []]],
     "simple": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, []],
     ],
     "two paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, []),
-        (10, 0, [(0, 0, 0, None)]),
-        (11, 0, [(0, 0, 0, None)]),
-        (12, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, []],
+        [10, 0, [[0, 0, 0, None]]],
+        [11, 0, [[0, 0, 0, None]]],
+        [12, 0, []],
     ],
     "merged paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (7, 1, [(0, 0, 0, None)]),
-        (8, 0, [(0, 0, 0, None)]),
-        (9, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [7, 1, [[0, 0, 0, None]]],
+        [8, 0, [[0, 0, 0, None]]],
+        [9, 0, []],
     ],
     "path with loop": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (4, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None)]),
-        (7, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [4, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None]]],
+        [7, 0, []],
     ],
     "crossed paths": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (2, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (0, 1, 0, None), (1, 0, 0, None),
-                (1, 1, 0, None)]),
-        (4, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (5, 0, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (6, 0, [(0, 0, 0, None)]),
-        (7, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [2, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [0, 1, 0, None], [1, 0, 0, None], [1, 1, 0, None]]],
+        [4, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [5, 0, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [6, 0, [[0, 0, 0, None]]],
+        [7, 0, []],
     ],
     "complex graph": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None), (0, 1, 0, None)]),
-        (2, 1, [(0, 0, 0, None), (1, 1, 0, None)]),
-        (3, 1, [(0, 0, 0, None), (1, 1, 0, None), (1, 2, 0, None)]),
-        (4, 2, [(0, 0, 0, None), (0, 2, 0, None), (1, 1, 0, None),
-                (2, 2, 0, None), (2, 3, 0, None)]),
-        (5, 2, [(0, 0, 0, None), (1, 1, 0, None), (2, 1, 0, None),
-                (2, 2, 0, None), (3, 3, 0, None)]),
-        (6, 2, [(0, 0, 0, None), (1, 1, 0, None), (3, 2, 0, None)]),
-        (7, 1, [(0, 0, 0, None), (1, 1, 0, None), (2, 1, 0, None)]),
-        (8, 1, [(0, 0, 0, None), (1, 0, 0, None)]),
-        (9, 0, [(0, 0, 0, None)]),
-        (10, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None], [0, 1, 0, None]]],
+        [2, 1, [[0, 0, 0, None], [1, 1, 0, None]]],
+        [3, 1, [[0, 0, 0, None], [1, 1, 0, None], [1, 2, 0, None]]],
+        [4, 2, [[0, 0, 0, None], [0, 2, 0, None], [1, 1, 0, None], [2, 2, 0, None], [2, 3, 0, None]]],
+        [5, 2, [[0, 0, 0, None], [1, 1, 0, None], [2, 1, 0, None], [2, 2, 0, None], [3, 3, 0, None]]],
+        [6, 2, [[0, 0, 0, None], [1, 1, 0, None], [3, 2, 0, None]]],
+        [7, 1, [[0, 0, 0, None], [1, 1, 0, None], [2, 1, 0, None]]],
+        [8, 1, [[0, 0, 0, None], [1, 0, 0, None]]],
+        [9, 0, [[0, 0, 0, None]]],
+        [10, 0, []],
     ],
     "self cycle": [
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, []),
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, []],
     ],
     "simple cycle": [
-        (None, None, [(0, 0, 1, 3)]),
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, -1, 0)]),
+        [None, None, [[0, 0, 1, 3]]],
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, -1, 0]]],
     ],
     "starting cycle": [
-        (None, None, [(0, 0, 1, 3)]),
-        (0, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, -1, 0), (0, 1, 0, None)]),
-        (4, 1, [(1, 0, 0, None)]),
-        (5, 0, []),
+        [None, None, [[0, 0, 1, 3]]],
+        [0, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, -1, 0], [0, 1, 0, None]]],
+        [4, 1, [[1, 0, 0, None]]],
+        [5, 0, []],
     ],
     "ending cycle": [
-        (0, 0, [(0, 1, 0, None)]),
-        (1, 1, [(0, 0, 1, 5), (1, 0, 0, None)]),
-        (2, 0, [(0, 0, 0, None)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, -1, 2)]),
+        [0, 0, [[0, 1, 0, None]]],
+        [1, 1, [[0, 0, 1, 5], [1, 0, 0, None]]],
+        [2, 0, [[0, 0, 0, None]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, -1, 2]]],
     ],
     "crossed cycles": [
-        (None, None, [(0, 0, 1, 0)]),
-        (3, 0, [(0, 0, 0, None)]),
-        (4, 0, [(0, 0, 0, None)]),
-        (5, 0, [(0, 0, 0, None)]),
-        (1, 0, [(0, 1, 0, None)]),
-        (2, 1, [(0, 0, 1, 12), (1, 0, 0, None)]),
-        (0, 0, [(0, 0, -1, 3), (0, 1, 0, None)]),
-        (13, 1, [(1, 0, 0, None)]),
-        (14, 0, [(0, 0, 0, None)]),
-        (15, 0, [(0, 0, 0, None)]),
-        (11, 0, [(0, 0, 0, None)]),
-        (12, 0, [(0, 0, -1, 0)]),
+        [None, None, [[0, 0, 1, 0]]],
+        [3, 0, [[0, 0, 0, None]]],
+        [4, 0, [[0, 0, 0, None]]],
+        [5, 0, [[0, 0, 0, None]]],
+        [1, 0, [[0, 1, 0, None]]],
+        [2, 1, [[0, 0, 1, 12], [1, 0, 0, None]]],
+        [0, 0, [[0, 0, -1, 3], [0, 1, 0, None]]],
+        [13, 1, [[1, 0, 0, None]]],
+        [14, 0, [[0, 0, 0, None]]],
+        [15, 0, [[0, 0, 0, None]]],
+        [11, 0, [[0, 0, 0, None]]],
+        [12, 0, [[0, 0, -1, 0]]],
     ],
     "complex cycles": [
-        (None, None, [(0, 1, 1, 3)]),
-        (4, 1, [(0, 1, 1, 5), (1, 1, 0, None)]),
-        (6, 1, [(0, 1, 1, 2), (1, 1, 0, None)]),
-        (1, 1, [(0, 0, 1, 0), (1, 0, 0, None)]),
-        (2, 0, [(0, 1, -1, 1), (0, 2, 0, None), (1, 2, 1, 7)]),
-        (3, 2, [(0, 0, 1, 9), (2, 0, 0, None), (2, 1, -1, 4)]),
-        (5, 0, [(0, 0, -1, 6), (0, 1, 0, None)]),
-        (7, 1, [(1, 0, 0, None), (1, 1, -1, 3), (1, 2, 0, None)]),
-        (9, 2, [(0, 0, 0, None), (2, 0, 0, None), (2, 1, 0, None),
-                (2, 2, -1, 5)]),
-        (8, 0, [(1, 0, 0, None)]),
-        (0, 0, [(0, 0, -1, 2)]),
+        [None, None, [[0, 1, 1, 3]]],
+        [4, 1, [[0, 1, 1, 5], [1, 1, 0, None]]],
+        [6, 1, [[0, 1, 1, 2], [1, 1, 0, None]]],
+        [1, 1, [[0, 0, 1, 0], [1, 0, 0, None]]],
+        [2, 0, [[0, 1, -1, 1], [0, 2, 0, None], [1, 2, 1, 7]]],
+        [3, 2, [[0, 0, 1, 9], [2, 0, 0, None], [2, 1, -1, 4]]],
+        [5, 0, [[0, 0, -1, 6], [0, 1, 0, None]]],
+        [7, 1, [[1, 0, 0, None], [1, 1, -1, 3], [1, 2, 0, None]]],
+        [9, 2, [[0, 0, 0, None], [2, 0, 0, None], [2, 1, 0, None], [2, 2, -1, 5]]],
+        [8, 0, [[1, 0, 0, None]]],
+        [0, 0, [[0, 0, -1, 2]]],
     ],
 }.items())
 def test_graph_draw_after_order(key, expected):
-    assert draw_graph(graph_from_key(key), order=True, json=False) == expected
+    assert Layout(graph_from_key(key), ordered=True).serialize() == expected
 
 
 def test_limit_not_hit(complex_graph):

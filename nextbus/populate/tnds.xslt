@@ -355,33 +355,30 @@
   </xsl:template>
 
   <xsl:template match="txc:ServicedOrganisation" mode="excluded_days">
+    <xsl:variable name="code" select="txc:OrganisationCode"/>
     <xsl:for-each select="//txc:DateExclusion">
-      <OperatingDate>
-        <id><xsl:value-of select="func:add_id('OperatingDate')"/></id>
-        <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
+      <ExcludedDate>
+        <id><xsl:value-of select="func:add_id('ExcludedDate')"/></id>
+        <org_ref><xsl:value-of select="concat($region, $code)"/></org_ref>
         <date><xsl:value-of select="current()"/></date>
         <working>
           <xsl:choose>
-            <xsl:when test="ancestor::txc:WorkingDays">0</xsl:when>
-            <xsl:otherwise>1</xsl:otherwise>
+            <xsl:when test="ancestor::txc:WorkingDays">1</xsl:when>
+            <xsl:otherwise>0</xsl:otherwise>
           </xsl:choose>
         </working>
-      </OperatingDate>
+      </ExcludedDate>
     </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="txc:ServicedOrganisation" mode="operating_periods">
+    <xsl:variable name="code" select="txc:OrganisationCode"/>
     <xsl:for-each select=".//txc:DateRange">
       <OperatingPeriod>
         <id><xsl:value-of select="func:add_id('OperatingPeriod')"/></id>
-        <org_ref><xsl:value-of select="concat($region, ancestor::txc:ServicedOrganisation/txc:OrganisationCode)"/></org_ref>
+        <org_ref><xsl:value-of select="concat($region, $code)"/></org_ref>
         <date_start><xsl:value-of select="txc:StartDate"/></date_start>
-        <date_end>
-          <xsl:choose>
-            <xsl:when test="boolean(txc:EndDate)"><xsl:value-of select="txc:EndDate"/></xsl:when>
-            <xsl:otherwise><xsl:value-of select="txc:StartDate"/></xsl:otherwise>
-          </xsl:choose>
-        </date_end>
+        <date_end><xsl:value-of select="txc:EndDate"/></date_end>
         <working>
           <xsl:choose>
             <xsl:when test="ancestor::txc:WorkingDays">1</xsl:when>

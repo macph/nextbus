@@ -90,11 +90,11 @@ def _query_journeys(service_id, direction, date):
                       models.OperatingPeriod.working) &
                    (models.OperatingPeriod.date_start <= p_date) &
                    (models.OperatingPeriod.date_end >= p_date))
-        .outerjoin(models.OperatingDate,
-                   (models.Organisation.code == models.OperatingDate.org_ref) &
+        .outerjoin(models.ExcludedDate,
+                   (models.Organisation.code == models.ExcludedDate.org_ref) &
                    (models.Organisations.working ==
-                    models.OperatingDate.working) &
-                   (models.OperatingDate.date == p_date))
+                    models.ExcludedDate.working) &
+                   (models.ExcludedDate.date == p_date))
         .filter(
             # Match journey patterns on service ID and direction
             models.JourneyPattern.service_ref == p_service_id,

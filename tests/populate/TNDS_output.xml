@@ -887,24 +887,24 @@
   <Organisation>
     <code>Y1</code>
   </Organisation>
-  <OperatingDate>
+  <ExcludedDate>
     <id>1</id>
     <org_ref>Y1</org_ref>
     <date>2018-02-26</date>
-    <working>0</working>
-  </OperatingDate>
-  <OperatingDate>
+    <working>1</working>
+  </ExcludedDate>
+  <ExcludedDate>
     <id>2</id>
     <org_ref>Y1</org_ref>
     <date>2018-04-16</date>
-    <working>1</working>
-  </OperatingDate>
-  <OperatingDate>
+    <working>0</working>
+  </ExcludedDate>
+  <ExcludedDate>
     <id>3</id>
     <org_ref>Y1</org_ref>
     <date>2018-07-13</date>
-    <working>1</working>
-  </OperatingDate>
+    <working>0</working>
+  </ExcludedDate>
   <OperatingPeriod>
     <id>1</id>
     <org_ref>Y1</org_ref>
@@ -937,7 +937,7 @@
     <id>5</id>
     <org_ref>Y1</org_ref>
     <date_start>2018-06-04</date_start>
-    <date_end>2018-07-23</date_end>
+    <date_end/>
     <working>0</working>
   </OperatingPeriod>
   <Organisations>

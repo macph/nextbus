@@ -908,7 +908,7 @@ class Organisation(utils.BaseModel):
 
     periods = db.relationship("OperatingPeriod", backref="organisation",
                               lazy="raise")
-    excluded = db.relationship("OperatingDate", backref="organisation",
+    excluded = db.relationship("ExcludedDate", backref="organisation",
                                lazy="raise")
     journeys = db.relationship("Journey", secondary="organisations",
                                backref="organisations", lazy="raise")
@@ -932,11 +932,9 @@ class Organisations(utils.BaseModel):
     working = db.Column(db.Boolean, nullable=False)
 
 
-class OperatingDate(utils.BaseModel):
-    """ Dates to be excluded from operating periods. As they are not related
-        to operating periods they will have higher priority.
-    """
-    __tablename__ = "operating_date"
+class ExcludedDate(utils.BaseModel):
+    """ Dates to be excluded from operating periods. """
+    __tablename__ = "excluded_date"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     org_ref = db.Column(
@@ -959,7 +957,7 @@ class OperatingPeriod(utils.BaseModel):
         nullable=False, index=True
     )
     date_start = db.Column(db.Date, nullable=False)
-    date_end = db.Column(db.Date, nullable=False)
+    date_end = db.Column(db.Date, nullable=True)
     working = db.Column(db.Boolean, nullable=False)
 
     __table_args__ = (

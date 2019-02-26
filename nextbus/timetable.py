@@ -65,36 +65,49 @@ def _query_journeys(service_id, direction, date):
         .join(models.Journey,
               models.JourneyPattern.id == models.Journey.pattern_ref)
         # Match special period if they fall within date range
-        .outerjoin(models.SpecialPeriod,
-                   (models.Journey.id == models.SpecialPeriod.journey_ref) &
-                   (models.SpecialPeriod.date_start <= p_date) &
-                   (models.SpecialPeriod.date_end >= p_date))
+        .outerjoin(
+            models.SpecialPeriod,
+            (models.Journey.id == models.SpecialPeriod.journey_ref) &
+            (models.SpecialPeriod.date_start <= p_date) &
+            (models.SpecialPeriod.date_end >= p_date)
+        )
         # Match bank holidays on the same day
-        .outerjoin(models.BankHolidays,
-                   models.Journey.id == models.BankHolidays.journey_ref)
-        .outerjoin(models.BankHolidayDate,
-                   _in_bit_array(models.BankHolidays.holidays,
-                                 models.BankHolidayDate.holiday_ref) &
-                   (models.BankHolidayDate.date == p_date))
+        .outerjoin(
+            models.BankHolidays,
+            models.Journey.id == models.BankHolidays.journey_ref
+        )
+        .outerjoin(
+            models.BankHolidayDate,
+            _in_bit_array(models.BankHolidays.holidays,
+                          models.BankHolidayDate.holiday_ref) &
+            (models.BankHolidayDate.date == p_date)
+        )
         # Match organisations working/holiday periods - can be operational
         # during holiday or working periods associated with organisation so
         # working attributes need to match (eg journey running during holidays
         # must match with operating periods for holidays or vice versa)
-        .outerjoin(models.Organisations,
-                   models.Journey.id == models.Organisations.journey_ref)
-        .outerjoin(models.Organisation,
-                   models.Organisations.org_ref == models.Organisation.code)
-        .outerjoin(models.OperatingPeriod,
-                   (models.Organisation.code == models.OperatingPeriod.org_ref)
-                   & (models.Organisations.working ==
-                      models.OperatingPeriod.working) &
-                   (models.OperatingPeriod.date_start <= p_date) &
-                   (models.OperatingPeriod.date_end >= p_date))
-        .outerjoin(models.ExcludedDate,
-                   (models.Organisation.code == models.ExcludedDate.org_ref) &
-                   (models.Organisations.working ==
-                    models.ExcludedDate.working) &
-                   (models.ExcludedDate.date == p_date))
+        .outerjoin(
+            models.Organisations,
+            models.Journey.id == models.Organisations.journey_ref
+        )
+        .outerjoin(
+            models.Organisation,
+            models.Organisations.org_ref == models.Organisation.code
+        )
+        .outerjoin(
+            models.OperatingPeriod,
+            (models.Organisation.code == models.OperatingPeriod.org_ref) &
+            (models.Organisations.working == models.OperatingPeriod.working) &
+            (models.OperatingPeriod.date_start <= p_date) &
+            (models.OperatingPeriod.date_end.is_(None) |
+             (models.OperatingPeriod.date_end >= p_date))
+        )
+        .outerjoin(
+            models.ExcludedDate,
+            (models.Organisation.code == models.ExcludedDate.org_ref) &
+            (models.Organisations.working == models.ExcludedDate.working) &
+            (models.ExcludedDate.date == p_date)
+        )
         .filter(
             # Match journey patterns on service ID and direction
             models.JourneyPattern.service_ref == p_service_id,
@@ -120,31 +133,36 @@ def _query_journeys(service_id, direction, date):
                  (timezones.c.tz == "BST") | (timezones.c.tz == "GMT"))
             ], else_=timezones.c.tz == "Europe/London"),
             # In order of precedence:
-            # - Do not run on bank holidays or special dates (check with HAVING)
-            # - Run on bank holidays or special dates
-            # - Do not run during organisation working/holiday periods
+            # - Do not run on special days
+            # - Do not run on bank holidays
+            # - Run on special days
+            # - Run on bank holidays
+            # - Do not run during organisation working or holiday periods
             # - Run during organisation working or holiday periods
-            # - Run on specific weeks of month
-            # - Run on specific days of week
-            (models.SpecialPeriod.id.isnot(None) &
-             models.SpecialPeriod.operational) |
-            (models.BankHolidayDate.date.isnot(None) &
-             models.BankHolidays.operational) |
-            (models.Organisations.org_ref.is_(None) |
-             models.Organisations.operational) &
+            # - Run or not run on specific weeks of month
+            # - Run or not run on specific days of week
+            models.SpecialPeriod.id.isnot(None) |
+            models.BankHolidayDate.date.isnot(None) |
             (models.Journey.weeks.is_(None) |
              _in_bit_array(models.Journey.weeks, week)) &
             _in_bit_array(models.Journey.days, weekday)
         )
         .group_by(models.Journey.id, departure)
-        # Exclusion from bank holidays or special dates take precedence over
-        # others so only include journey if neither bank holiday or special
-        # period have matching records excluding this date
+        # Bank holidays and special dates have precedence over others so only
+        # include journeys if all references are either null or are operational
+        # Include non-null references in WHERE so they can be checked here
+        # Check organisation working/holiday periods here after grouping as
+        # there can be multiple periods for an organisation.
         .having(db.func.bool_and(
-            (models.SpecialPeriod.id.is_(None) |
-             models.SpecialPeriod.operational) &
-            (models.BankHolidayDate.date.is_(None) |
-             models.BankHolidays.operational)
+            db.case([
+                (models.SpecialPeriod.id.isnot(None),
+                 models.SpecialPeriod.operational),
+                (models.BankHolidayDate.holiday_ref.isnot(None),
+                 models.BankHolidays.operational),
+                (models.OperatingPeriod.id.isnot(None) &
+                 models.ExcludedDate.id.is_(None),
+                 models.Organisations.operational)
+            ], else_=True)
         ))
     )
 
@@ -269,22 +287,41 @@ class TimetableStop:
     """ Represents a cell in the timetable with arrival, departure and timing
         status.
     """
-    __slots__ = ("stop_point_ref", "arrive", "depart", "timing", "utc_arrive",
+    __slots__ = ("stop", "arrive", "depart", "timing", "utc_arrive",
                  "utc_depart")
 
-    def __init__(self, row_data):
-        self.stop_point_ref = row_data.stop_point_ref
-        self.arrive = row_data.arrive
-        self.depart = row_data.depart
-        self.timing = row_data.timing_point
-        self.utc_arrive = row_data.utc_arrive
-        self.utc_depart = row_data.utc_depart
+    def __init__(self, stop_point_ref, arrive, depart, timing_point, utc_arrive,
+                 utc_depart):
+        self.stop = stop_point_ref
+        self.arrive = arrive
+        self.depart = depart
+        self.timing = timing_point
+        self.utc_arrive = utc_arrive
+        self.utc_depart = utc_depart
 
     def __repr__(self):
         return "<TimetableStop(%r, %r, %r, %r)>" % (
-            self.stop_point_ref, self.arrive, self.depart, self.timing
+            self.stop, self.arrive, self.depart, self.timing
         )
 
+    def __eq__(self, other):
+        return all([
+            self.stop == other.stop,
+            self.arrive == other.arrive,
+            self.depart == other.depart,
+            self.timing == other.timing,
+            self.utc_arrive == other.utc_arrive,
+            self.utc_depart == other.utc_depart
+        ])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    @classmethod
+    def from_row(cls, row):
+        """ Creates TimetableStop instance from row returned from query. """
+        return cls(row.stop_point_ref, row.arrive, row.depart, row.timing_point,
+                   row.utc_arrive, row.utc_depart)
 
 class TimetableJourney(abc.MutableSequence):
     """ Journey for timetable, represented as one or more columns.
@@ -303,9 +340,9 @@ class TimetableJourney(abc.MutableSequence):
 
         self._stops = []
         if add:
-            self._stops.append(TimetableStop(first_row))
+            self._stops.append(TimetableStop.from_row(first_row))
             for row in other_rows:
-                self.append(TimetableStop(row))
+                self.append(TimetableStop.from_row(row))
 
     def __repr__(self):
         return "<TimetableJourney(%r, %r, %r, %r)>" % (
@@ -320,14 +357,14 @@ class TimetableJourney(abc.MutableSequence):
 
     def __setitem__(self, index, value):
         self._check(value)
-        self._stops[index] = TimetableStop(value)
+        self._stops[index] = TimetableStop.from_row(value)
 
     def __delitem__(self, index):
         del self._stops[index]
 
     def insert(self, index, value):
         self._check(value)
-        self._stops.insert(index, TimetableStop(value))
+        self._stops.insert(index, TimetableStop.from_row(value))
 
     def _check(self, row):
         if any([self.journey_id != row.journey_id,
@@ -351,11 +388,11 @@ class TimetableJourney(abc.MutableSequence):
         col = 0
 
         for row in self:
-            if row.stop_point_ref not in sequence:
+            if row.stop not in sequence:
                 raise ValueError("Row %r stop point ref does not exist in "
                                  "sequence." % row)
             # Skip over sequence until the next stop in journey
-            while index < len_ and row.stop_point_ref != sequence[index]:
+            while index < len_ and row.stop != sequence[index]:
                 columns[col].append(None)
                 index += 1
             # Add new column, starting the sequence over
@@ -363,7 +400,7 @@ class TimetableJourney(abc.MutableSequence):
                 columns.append([])
                 index = 0
                 col += 1
-            while row.stop_point_ref != sequence[index]:
+            while row.stop != sequence[index]:
                 columns[col].append(None)
                 index += 1
 
@@ -380,15 +417,15 @@ class TimetableJourney(abc.MutableSequence):
 
 class TimetableRow:
     """ Row in timetable with stop point ref and timing status. """
-    __slots__ = "stop_point_ref", "times", "timing"
+    __slots__ = ("stop", "times", "timing")
 
     def __init__(self, stop_point_ref, list_times):
-        self.stop_point_ref = stop_point_ref
+        self.stop = stop_point_ref
         self.times = list_times
         self.timing = any(t is not None and t.timing for t in self.times)
 
     def __repr__(self):
-        return "<TimetableRow(%r, %r)>" % (self.stop_point_ref, self.timing)
+        return "<TimetableRow(%r, %r)>" % (self.stop, self.timing)
 
 
 class Timetable:
@@ -438,8 +475,8 @@ class Timetable:
         """
         for stop in self.sequence:
             try:
-                row_a = next(r for r in journey_a if r.stop_point_ref == stop)
-                row_b = next(r for r in journey_b if r.stop_point_ref == stop)
+                row_a = next(r for r in journey_a if r.stop == stop)
+                row_b = next(r for r in journey_b if r.stop == stop)
             except StopIteration:
                 continue
 

@@ -77,7 +77,7 @@
                     </tr>
                     {% endif %}
                     {%- for r in timetable.rows %}
-                    {%- set stop = timetable.stops[r.stop_point_ref] -%}
+                    {%- set stop = timetable.stops[r.stop] -%}
                     <tr class="timetable__row{{ ' timetable__row--major' if r.timing else ' timetable__row--hidden' }}">
                         <th>
                             <div class="timetable__stop">

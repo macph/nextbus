@@ -1,6 +1,8 @@
 """
 Models for the nextbus database.
 """
+import re
+
 from nextbus import db, location
 from nextbus.models import utils
 
@@ -652,6 +654,8 @@ class Operator(utils.BaseModel):
     """ Bus/metro service operator. """
     __tablename__ = "operator"
 
+    SPLIT_ADDRESS = re.compile(r"\s*,\s*")
+
     code = db.Column(db.Text, primary_key=True)
     region_ref = db.Column(
         db.VARCHAR(2),
@@ -665,10 +669,10 @@ class Operator(utils.BaseModel):
         nullable=False, index=True
     )
     licence_name = db.deferred(db.Column(db.Text, nullable=True))
-    email = db.deferred(db.Column(db.Text))
-    address = db.deferred(db.Column(db.Text))
-    website = db.deferred(db.Column(db.Text))
-    twitter = db.deferred(db.Column(db.Text))
+    email = db.deferred(db.Column(db.Text), group="contacts")
+    address = db.deferred(db.Column(db.Text), group="contacts")
+    website = db.deferred(db.Column(db.Text), group="contacts")
+    twitter = db.deferred(db.Column(db.Text), group="contacts")
 
     local_codes = db.relationship(
         "LocalOperator",
@@ -682,6 +686,13 @@ class Operator(utils.BaseModel):
         secondary="local_operator",
         lazy="raise"
     )
+
+    @property
+    def split_address(self):
+        if "address" not in db.inspect(self).unloaded:
+            return self.SPLIT_ADDRESS.split(self.address)
+        else:
+            return None
 
 
 class LocalOperator(utils.BaseModel):

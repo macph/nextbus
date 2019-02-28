@@ -1295,6 +1295,29 @@ button:focus {
   font-size: 0.7rem;
 }
 
+
+/*
+ *  LIST OF OPERATORS
+ */
+
+.operators {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -10px;
+}
+
+.operator {
+  flex: 1 0 240px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.operator > p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /*
  *  JS MAP CONTAINER
  */

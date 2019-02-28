@@ -125,6 +125,27 @@
             <p>No services run on this day.</p>
             {%- endif %}
         </section>
+        <section class="card">
+            <h2>Operators</h2>
+            <div class="operators">
+                {% for o in service.operators|sort(attribute='name') %}
+                {% set break = joiner('<br>'|safe) %}
+                <div class="operator">
+                    <p><strong>{{ o.name }}</strong></p>
+                    {% if o.address %}
+                    <p>{{ o.split_address|join('<br>'|safe) }}</p>
+                    {% endif %}
+                    {% if o.website or o.email or o.twitter %}
+                    <p>
+                        {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
+                        {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
+                        {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter }}">{{ o.twitter }}</a>{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}

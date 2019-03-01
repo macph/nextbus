@@ -11,7 +11,6 @@ from nextbus import db, models, ts_parser
 
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
-NAMES_ONLY = False
 PAGE_LENGTH = 25
 
 
@@ -141,7 +140,7 @@ def search_all(query, types=None, admin_areas=None, page=1):
             raise InvalidParameters(query, "page", page)
 
         try:
-            res = models.FTS.search(parsed, types, admin_areas, NAMES_ONLY)
+            res = models.FTS.search(parsed, types, admin_areas)
         except ValueError as err:
             if "Invalid values for type" in str(err):
                 raise InvalidParameters(query, "type", types)
@@ -168,7 +167,7 @@ def filter_args(query, admin_areas=None):
     :returns: Tuple of two dicts: the result types and administrative areas
     """
     parsed = ts_parser(query)
-    types, args = models.FTS.matching_types(parsed, admin_areas, NAMES_ONLY)
+    types, args = models.FTS.matching_types(parsed, admin_areas)
 
     current_app.logger.debug("Search query %r have possible filters %r and %r"
                              % (query, types, args))

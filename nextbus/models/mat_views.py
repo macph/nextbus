@@ -21,7 +21,7 @@ def _select_natural_sort():
     num = db.union(stop_ind, service_line, other_num).alias("num")
 
     regex = (
-        db.func.regexp_matches(num.c.string, "0*(\\d+)|(\D+)", "g")
+        db.func.regexp_matches(num.c.string, r"0*(\d+)|(\D+)", "g")
         .alias("r")
     )
     # Make a column alias with text array type
@@ -95,7 +95,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             null.label("admin_area_ref"),
             null.label("admin_area_name"),
-            db.cast(pg.array([]), pg.ARRAY(db.Text)).label("admin_areas"),
+            db.cast(pg.array(()), pg.ARRAY(db.Text)).label("admin_areas"),
             _tsvector_column((Region.name, "A")).label("vector")
         ])
         .where(Region.code != 'GB')
@@ -114,7 +114,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array([AdminArea.code]).label("admin_areas"),
+            pg.array((AdminArea.code,)).label("admin_areas"),
             _tsvector_column((AdminArea.name, "A")).label("vector")
         ])
         .where(AdminArea.region_ref != 'GB')
@@ -133,7 +133,7 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array([AdminArea.code]).label("admin_areas"),
+            pg.array((AdminArea.code,)).label("admin_areas"),
             _tsvector_column(
                 (District.name, "A"),
                 (AdminArea.name, "B")
@@ -158,7 +158,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array([AdminArea.code]).label("admin_areas"),
+            pg.array((AdminArea.code,)).label("admin_areas"),
             _tsvector_column(
                 (Locality.name, "A"),
                 (db.func.coalesce(District.name, ""), "B"),
@@ -188,7 +188,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array([AdminArea.code]).label("admin_areas"),
+            pg.array((AdminArea.code,)).label("admin_areas"),
             _tsvector_column(
                 (StopArea.name, "A"),
                 (db.func.coalesce(Locality.name, ""), "C"),
@@ -219,7 +219,7 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array([AdminArea.code]).label("admin_areas"),
+            pg.array((AdminArea.code,)).label("admin_areas"),
             _tsvector_column(
                 (StopPoint.name, "A"),
                 (StopPoint.street, "B"),
@@ -312,15 +312,6 @@ class FTS(utils.MaterializedView):
         - ``admin_areas`` Array of admin area refs to filter with
         - ``vector`` The tsvector value to be searched over
 
-        A threshold for rankings can be set such that only results with name
-        or street that matches the query are included. For example, a stop with
-        name matching 'Westminster' will be included, but a stop within
-        Westminster locality whose name does not match 'Westminster' will not.
-        - District: ``rank > 0.5``
-        - Locality: ``rank > 0.5``
-        - StopArea: ``rank > 0.5``
-        - StopPoint: ``rank > 0.25``
-
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
@@ -341,8 +332,6 @@ class FTS(utils.MaterializedView):
                    "place": {"locality"}, "stop": {"stop_area", "stop_point"},
                    "service": {"service"}}
 
-    MINIMUM_AREA_RANK = 0.5
-    MINIMUM_STOP_RANK = 0.25
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
     def __repr__(self):
@@ -364,19 +353,16 @@ class FTS(utils.MaterializedView):
             :param query: String suitable for ``to_tsquery()`` function.
             :returns: Expression to be used in a query.
         """
-        tsquery = db.func.to_tsquery("english", query)
-
-        return db.func.ts_rank(cls.WEIGHTS, cls.vector, tsquery)
+        return db.func.ts_rank(cls.WEIGHTS, cls.vector,
+                               db.func.to_tsquery("english", query))
 
     @classmethod
-    def _apply_filters(cls, match, types=None, areas=None, rank=None):
+    def _apply_filters(cls, match, types=None, areas=None):
         """ Apply filters to a search expression if they are specified.
 
             :param match: The original query expression
             :param types: Types, ie 'stop', 'place' and 'area' to filter by
             :param areas: Administrative area codes to filter by
-            :param rank: Rank function used to filter results above a threshold
-            set by ``MINIMUM_AREA_RANK`` and ``MINIMUM_STOP_RANK``.
             :returns: Query expression with added filters, if any
         """
         if types and set(types) - cls.TYPES.keys():
@@ -391,25 +377,16 @@ class FTS(utils.MaterializedView):
         if areas:
             match = match.filter(cls.admin_areas.overlap(areas))
 
-        if rank is not None:
-            match = match.filter(
-                (cls.table_name == StopPoint.__tablename__) &
-                (rank > cls.MINIMUM_STOP_RANK) |
-                (rank > cls.MINIMUM_AREA_RANK)
-            )
-
         return match
 
     @classmethod
-    def search(cls, query, types=None, admin_areas=None, names_only=True):
+    def search(cls, query, types=None, admin_areas=None):
         """ Creates an expression for searching queries, excluding stop points
-            within areas that already match and results of low rank.
+            within areas that already match.
 
             :param query: A ParseResult object or a string.
             :param types: Set with values 'area', 'place' or 'stop'.
             :param admin_areas: List of administrative area codes to filter by.
-            :param names_only: Sets thresholds for search rankings such that
-            only results that match the higher weighted lexemes are retained.
             :returns: Query expression to be executed.
         """
         try:
@@ -435,14 +412,13 @@ class FTS(utils.MaterializedView):
             )
             .order_by(db.desc(rank), cls.name, NaturalSort.index)
         )
-        # Add filters for rank, types or admin area
-        match = cls._apply_filters(match, types, admin_areas,
-                                   rank if names_only else None)
+        # Add filters for types or admin area
+        match = cls._apply_filters(match, types, admin_areas)
 
         return match
 
     @classmethod
-    def matching_types(cls, query, admin_areas=None, names_only=True):
+    def matching_types(cls, query, admin_areas=None):
         """ Finds all admin areas and table names covering matching results for
             a query.
 
@@ -451,46 +427,35 @@ class FTS(utils.MaterializedView):
 
             :param query: A ParseResult object or a string.
             :param admin_areas: Filter by admin areas to get matching types
-            :param names_only: Sets thresholds for search rankings such that
-            only results that match the higher weighted lexemes are retained.
             :returns: A tuple with a dict of types and a dict with
             administrative area references and names
         """
         try:
             string = query.to_string()
-            string_not = query.to_string(defined=True)
         except AttributeError:
-            string = string_not = query
+            string = query
+
+        array_t = pg.array_agg(db.distinct(cls.table_name))
+        if admin_areas:
+            # Filter array of tables by whether aggregated rows' admin areas
+            # match those already selected
+            array_t = array_t.filter(cls.admin_areas.overlap(admin_areas))
+
+        array = pg.array((AdminArea.code, AdminArea.name))
+        array_a = pg.array_agg(db.distinct(array))
 
         expr = (
-            db.session.query(
-                pg.array_agg(db.distinct(cls.table_name)).label("tables"),
-                pg.array_agg(db.distinct(
-                    pg.array([AdminArea.code, AdminArea.name])
-                )).label("areas")
-            )
+            db.session.query(array_t.label("tables"), array_a.label("areas"))
             .select_from(db.func.unnest(cls.admin_areas).alias("unnest_areas"))
             .join(AdminArea, db.column("unnest_areas") == AdminArea.code)
             .filter(cls.match(string))
         )
-        if names_only:
-            expr = cls._apply_filters(expr, rank=cls.ts_rank(string_not))
 
         # All data should have been aggregated into one row
         result = expr.one()
-
-        if result.tables is not None:
-            tables = set(result.tables)
-            if admin_areas:
-                tables &= set(admin_areas)
-            types = {t: n for t, n in cls.TYPES.items()
-                     if tables & cls.TYPE_TABLES[t]}
-        else:
-            types = {}
-
-        if result.areas is not None:
-            areas = dict(result.areas)
-        else:
-            areas = {}
+        tables = set(result.tables) if result.tables is not None else set()
+        types = {t: n for t, n in cls.TYPES.items()
+                 if tables & cls.TYPE_TABLES[t]}
+        areas = dict(result.areas) if result.areas is not None else {}
 
         return types, areas

@@ -16,19 +16,6 @@ def table_name(model):
     return db.literal_column("'%s'" % model.__tablename__)
 
 
-class BaseModel(db.Model):
-    """ Adds functionality to the Flask-SQLAlchemy model class. """
-    __abstract__ = True
-    __table__ = None
-
-    def _asdict(self):
-        """ Returns a dictionary of currently loaded columns in a model object.
-            Any deferred columns or relationships will not be included.
-        """
-        return {attr: value for attr, value in self.__dict__.items()
-                if attr in self.__table__.columns}
-
-
 class _CreateMatView(sa.schema.DDLElement):
     """ Creates materialized view with a command. """
     def __init__(self, name, selectable, with_data=False):
@@ -53,25 +40,30 @@ class _RefreshMatView(sa.schema.DDLElement):
 @sa_compiler.compiles(_CreateMatView)
 def _compile_create_mat_view(clause, compiler):
     statement = "CREATE MATERIALIZED VIEW %s AS %s WITH %s"
+    name = compiler.preparer.quote(clause.name)
     selectable = compiler.sql_compiler.process(clause.selectable,
                                                literal_binds=True)
     with_data = "DATA" if clause.with_data else "NO DATA"
 
-    return statement % (clause.name, selectable, with_data)
+    return statement % (name, selectable, with_data)
 
 
 @sa_compiler.compiles(_DropMatView)
-def _compile_drop_mat_view(clause, _):
-    return "DROP MATERIALIZED VIEW IF EXISTS " + clause.name
+def _compile_drop_mat_view(clause, compiler):
+    statement = "DROP MATERIALIZED VIEW IF EXISTS "
+    name = compiler.preparer.quote(clause.name)
+
+    return statement + name
 
 
 @sa_compiler.compiles(_RefreshMatView)
-def _compile_refresh_mat_view(clause, _):
+def _compile_refresh_mat_view(clause, compiler):
     statement = "REFRESH MATERIALIZED VIEW "
     if clause.concurrently:
         statement += "CONCURRENTLY "
+    name = compiler.preparer.quote(clause.name)
 
-    return statement + clause.name
+    return statement + name
 
 
 def create_mat_view(name, selectable, metadata=db.metadata):
@@ -108,16 +100,17 @@ def create_mat_view(name, selectable, metadata=db.metadata):
     return table
 
 
-class MaterializedView(BaseModel):
+class MaterializedView(db.Model):
     """ ORM class for a materialized view. """
     __abstract__ = True
 
     @classmethod
     def refresh(cls, concurrently=False):
         """ Refreshes materialized view. Must be committed in a transaction. """
+        name = cls.__table__.fullname
+
         db.session.flush()
-        db.session.execute(_RefreshMatView(cls.__table__.fullname,
-                                           concurrently))
+        db.session.execute(_RefreshMatView(name, concurrently))
 
 
 def refresh_mat_views(concurrently=False):
@@ -162,7 +155,7 @@ def _compile_values(element, compiler, asfrom=False, **kw):
     if asfrom and element.alias_name is not None:
         expression = "(%s) AS %s (%s)" % (
             expression,
-            element.alias_name,
+            compiler.preparer.quote(element.alias_name),
             ", ".join(column.name for column in element.columns)
         )
     elif asfrom:

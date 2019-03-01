@@ -20,7 +20,7 @@ _link = db.table("journey_link", db.column("pattern_ref"),
                  db.column("stop_point_ref"))
 
 
-class ServiceMode(utils.BaseModel):
+class ServiceMode(db.Model):
     """ Lookup table for service modes, eg bus and tram. """
     __tablename__ = "service_mode"
 
@@ -41,7 +41,7 @@ def _insert_service_modes(target, connection, **kw):
     connection.execute(statement)
 
 
-class BankHoliday(utils.BaseModel):
+class BankHoliday(db.Model):
     """ Lookup table for bank holidays. """
     __tablename__ = "bank_holiday"
 
@@ -75,7 +75,7 @@ def _insert_bank_holidays(target, connection, **kw):
     connection.execute(statement)
 
 
-class BankHolidayDate(utils.BaseModel):
+class BankHolidayDate(db.Model):
     """ Bank holiday dates. """
     __tablename__ = "bank_holiday_date"
 
@@ -125,7 +125,7 @@ def _insert_bank_holiday_dates(target, connection, **kw):
     connection.execute(statement)
 
 
-class Region(utils.BaseModel):
+class Region(db.Model):
     """ NPTG region. """
     __tablename__ = "region"
 
@@ -161,7 +161,7 @@ class Region(utils.BaseModel):
         return query_areas.all()
 
 
-class AdminArea(utils.BaseModel):
+class AdminArea(db.Model):
     """ NPTG administrative area. """
     __tablename__ = "admin_area"
 
@@ -207,7 +207,7 @@ class AdminArea(utils.BaseModel):
         return query_local.all()
 
 
-class District(utils.BaseModel):
+class District(db.Model):
     """ NPTG district. """
     __tablename__ = "district"
 
@@ -240,7 +240,7 @@ class District(utils.BaseModel):
         return query_local.all()
 
 
-class Locality(utils.BaseModel):
+class Locality(db.Model):
     """ NPTG locality. """
     __tablename__ = "locality"
 
@@ -324,7 +324,7 @@ class Locality(utils.BaseModel):
         return query.all()
 
 
-class StopArea(utils.BaseModel):
+class StopArea(db.Model):
     """ NaPTAN stop areas, eg bus interchanges. """
     __tablename__ = "stop_area"
 
@@ -381,7 +381,7 @@ def _array_lines(code):
     return db.func.array(subquery)
 
 
-class StopPoint(utils.BaseModel):
+class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = "stop_point"
 
@@ -611,7 +611,7 @@ class StopPoint(utils.BaseModel):
         return json
 
 
-class Postcode(utils.BaseModel):
+class Postcode(db.Model):
     """ Postcodes with coordinates, derived from the NSPL data. """
     __tablename__ = "postcode"
 
@@ -650,7 +650,7 @@ class Postcode(utils.BaseModel):
         return StopPoint.in_range(self.latitude, self.longitude, *options)
 
 
-class Operator(utils.BaseModel):
+class Operator(db.Model):
     """ Bus/metro service operator. """
     __tablename__ = "operator"
 
@@ -695,7 +695,7 @@ class Operator(utils.BaseModel):
             return None
 
 
-class LocalOperator(utils.BaseModel):
+class LocalOperator(db.Model):
     """ Operator codes within regions for each operator. """
     __tablename__ = "local_operator"
 
@@ -719,7 +719,7 @@ class LocalOperator(utils.BaseModel):
     )
 
 
-class Service(utils.BaseModel):
+class Service(db.Model):
     """ Service group. """
     __tablename__ = "service"
 
@@ -771,7 +771,7 @@ class Service(utils.BaseModel):
         return reverse, has_mirror
 
 
-class JourneyPattern(utils.BaseModel):
+class JourneyPattern(db.Model):
     """ Sequences of timing links. """
     __tablename__ = "journey_pattern"
 
@@ -808,7 +808,7 @@ class JourneyPattern(utils.BaseModel):
                                lazy="raise")
 
 
-class JourneyLink(utils.BaseModel):
+class JourneyLink(db.Model):
     """ Stop with timing and journey info..
 
         Each stop has the following fields:
@@ -845,7 +845,7 @@ class JourneyLink(utils.BaseModel):
     )
 
 
-class JourneySpecificLink(utils.BaseModel):
+class JourneySpecificLink(db.Model):
     """ Journey timing link for a specific journey. """
     __tablename__ = "journey_specific_link"
 
@@ -870,7 +870,7 @@ class JourneySpecificLink(utils.BaseModel):
     )
 
 
-class Journey(utils.BaseModel):
+class Journey(db.Model):
     """ Individual vehicle journey for a service. """
     __tablename__ = "journey"
 
@@ -911,7 +911,7 @@ class Journey(utils.BaseModel):
                                    lazy="raise")
 
 
-class Organisation(utils.BaseModel):
+class Organisation(db.Model):
     """ Organisation with operating and non-operating periods. """
     __tablename__ = "organisation"
 
@@ -925,7 +925,7 @@ class Organisation(utils.BaseModel):
                                backref="organisations", lazy="raise")
 
 
-class Organisations(utils.BaseModel):
+class Organisations(db.Model):
     """ Associated table for journeys and organisations. """
     __tablename__ = "organisations"
 
@@ -943,7 +943,7 @@ class Organisations(utils.BaseModel):
     working = db.Column(db.Boolean, nullable=False)
 
 
-class ExcludedDate(utils.BaseModel):
+class ExcludedDate(db.Model):
     """ Dates to be excluded from operating periods. """
     __tablename__ = "excluded_date"
 
@@ -957,7 +957,7 @@ class ExcludedDate(utils.BaseModel):
     working = db.Column(db.Boolean, nullable=False)
 
 
-class OperatingPeriod(utils.BaseModel):
+class OperatingPeriod(db.Model):
     """ List of operating periods. """
     __tablename__ = "operating_period"
 
@@ -976,7 +976,7 @@ class OperatingPeriod(utils.BaseModel):
     )
 
 
-class SpecialPeriod(utils.BaseModel):
+class SpecialPeriod(db.Model):
     """ Special days specified by journeys. """
     __tablename__ = "special_period"
 
@@ -995,7 +995,7 @@ class SpecialPeriod(utils.BaseModel):
     )
 
 
-class BankHolidays(utils.BaseModel):
+class BankHolidays(db.Model):
     """ Bank holidays associated with journeys """
     __tablename__ = "bank_holidays"
 

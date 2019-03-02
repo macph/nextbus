@@ -66,7 +66,7 @@ GEOJSON_3 = {
 }
 
 
-def test_single_stop(load_db):
+def test_single_stop(db_loaded):
     stop = (
         db.session.query(models.StopPoint)
         .options(db.joinedload(models.StopPoint.locality))
@@ -76,14 +76,14 @@ def test_single_stop(load_db):
     assert stop.to_geojson() == GEOJSON_3
 
 
-def test_single_stop_no_locality(load_db):
+def test_single_stop_no_locality(db_loaded):
     stop = db.session.query(models.StopPoint).get("490008638S")
 
     with pytest.raises(sa.exc.InvalidRequestError):
         stop.to_geojson()
 
 
-def test_multiple_stops(load_db):
+def test_multiple_stops(db_loaded):
     stops = (
         db.session.query(models.StopPoint)
         .options(db.joinedload(models.StopPoint.locality))
@@ -149,7 +149,7 @@ STOP_POINT_JSON = {
 }
 
 
-def test_full_json(load_db):
+def test_full_json(db_loaded):
     stop = (
         db.session.query(models.StopPoint)
         .options(db.joinedload(models.StopPoint.locality)
@@ -162,14 +162,14 @@ def test_full_json(load_db):
     assert stop.to_full_json() == STOP_POINT_JSON
 
 
-def test_stop_data(client):
+def test_stop_data(client, db_loaded):
     response = client.get("/api/stop/490000015G")
 
     assert response.status_code == 200
     assert json.loads(response.data) == STOP_POINT_JSON
 
 
-def test_stop_data_not_found(client):
+def test_stop_data_not_found(client, db_loaded):
     response = client.get("/api/stop/490000015F")
     expected = {"message": "Stop point '490000015F' does not exist."}
 
@@ -207,11 +207,11 @@ SERVICE_JSON = {
 }
 
 
-def test_service_json(load_db):
+def test_service_json(db_loaded):
     assert graph.service_json(645, False) == SERVICE_JSON
 
 
-def test_api_bad_parameter(client):
+def test_api_bad_parameter(client, db_loaded):
     response = client.get("/api/does_not_exist/")
     expected = {"message": "API endpoint '/api/does_not_exist/' does not "
                            "exist."}
@@ -220,14 +220,14 @@ def test_api_bad_parameter(client):
     assert json.loads(response.data) == expected
 
 
-def test_service_api(client):
+def test_service_api(client, db_loaded):
     response = client.get("/api/route/645/outbound")
 
     assert response.status_code == 200
     assert json.loads(response.data) == SERVICE_JSON
 
 
-def test_service_api_not_found(client):
+def test_service_api_not_found(client, db_loaded):
     response = client.get("/api/route/646/outbound")
     expected = {"message": "Service '646' does not exist."}
 
@@ -235,7 +235,7 @@ def test_service_api_not_found(client):
     assert json.loads(response.data) == expected
 
 
-def test_live_data_api(client):
+def test_live_data_api(client, db_loaded):
     response = client.get("/api/live/490000015G")
 
     assert response.status_code == 200
@@ -243,7 +243,7 @@ def test_live_data_api(client):
     assert response.cache_control.max_age == 60
 
 
-def test_live_data_api_not_found(client):
+def test_live_data_api_not_found(client, db_loaded):
     response = client.get("/api/live/490000015F")
     expected = {"message": "ATCO code does not exist."}
 
@@ -251,7 +251,7 @@ def test_live_data_api_not_found(client):
     assert json.loads(response.data) == expected
 
 
-def test_stops_tile(client):
+def test_stops_tile(client, db_loaded):
     response = client.get("/api/tile/x,y")
     expected = {"message": "API accessed with invalid args: 'x,y'."}
 
@@ -259,7 +259,7 @@ def test_stops_tile(client):
     assert json.loads(response.data) == expected
 
 
-def test_stops_tile_empty(client):
+def test_stops_tile_empty(client, db_loaded):
     response = client.get("/api/tile/0,0")
 
     assert response.status_code == 200
@@ -267,7 +267,7 @@ def test_stops_tile_empty(client):
                                          "features": []}
 
 
-def test_stops_tile_with_stops(client):
+def test_stops_tile_with_stops(client, db_loaded):
     response = client.get("/api/tile/16392,10892")
     expected_1 = {
         "type": "FeatureCollection",
@@ -282,14 +282,14 @@ def test_stops_tile_with_stops(client):
     assert json.loads(response.data) in [expected_1, expected_2]
 
 
-def test_starred_stops_nothing(client):
+def test_starred_stops_nothing(client, db_loaded):
     response = client.get("/api/starred/")
 
     assert response.status_code == 200
     assert json.loads(response.data) == {"stops": []}
 
 
-def test_starred_stops_add_delete_one(client):
+def test_starred_stops_add_delete_one(client, db_loaded):
     add = client.post("/api/starred/53272")
     assert add.status_code == 204
 
@@ -309,7 +309,7 @@ def test_starred_stops_add_delete_one(client):
     assert json.loads(get.data) == {"stops": []}
 
 
-def test_starred_stops_stop_not_found(client):
+def test_starred_stops_stop_not_found(client, db_loaded):
     add = client.post("/api/starred/53270")
     expected = {"message": "SMS code '53270' does not exist."}
 
@@ -317,13 +317,13 @@ def test_starred_stops_stop_not_found(client):
     assert json.loads(add.data) == expected
 
 
-def test_starred_stops_post_nothing(client):
+def test_starred_stops_post_nothing(client, db_loaded):
     add = client.post("/api/starred/")
 
     assert add.status_code == 405
 
 
-def test_starred_stops_delete_nothing(client):
+def test_starred_stops_delete_nothing(client, db_loaded):
     add = client.delete("/api/starred/")
     expected = {"message": "No cookie has been set."}
 
@@ -331,7 +331,7 @@ def test_starred_stops_delete_nothing(client):
     assert json.loads(add.data) == expected
 
 
-def test_starred_stops_delete_wrong_sms(client):
+def test_starred_stops_delete_wrong_sms(client, db_loaded):
     add = client.post("/api/starred/53272")
     assert add.status_code == 204
 
@@ -342,7 +342,7 @@ def test_starred_stops_delete_wrong_sms(client):
     assert json.loads(delete.data) == expected
 
 
-def test_starred_stops_add_two_stops(client):
+def test_starred_stops_add_two_stops(client, db_loaded):
     add = client.post("/api/starred/76193")
     assert add.status_code == 204
 
@@ -358,7 +358,7 @@ def test_starred_stops_add_two_stops(client):
     assert json.loads(get.data) == {"stop": "76193"}
 
 
-def test_starred_delete_all(client):
+def test_starred_delete_all(client, db_loaded):
     add = client.post("/api/starred/76193")
     assert add.status_code == 204
 

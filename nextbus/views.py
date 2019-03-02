@@ -6,8 +6,8 @@ import datetime
 import re
 import string
 
-from flask import (abort, Blueprint, current_app, g, jsonify, render_template,
-                   redirect, request, session, url_for)
+from flask import (abort, Blueprint, current_app, g, jsonify, Markup,
+                   render_template, redirect, request, session, url_for)
 from werkzeug.urls import url_encode
 
 from nextbus import (db, forms, graph, location, models, parser, search,
@@ -23,7 +23,14 @@ page = Blueprint("page", __name__, template_folder="templates")
 
 class NotFound(Exception):
     """ Used to initiate a 404 with custom message. """
-    pass
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        try:
+            return self.message.striptags()
+        except AttributeError:
+            return self.message
 
 
 def _group_objects(list_, attr=None, key=None, default=None,
@@ -67,7 +74,8 @@ def _get_starred_stops():
 
     starred = (
         models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True))
+        .options(db.joinedload(models.StopPoint.locality, innerjoin=True),
+                 db.joinedload(models.StopPoint.admin_area, innerjoin=True))
         .filter(models.StopPoint.naptan_code.in_(session["stops"]))
         .all()
     )
@@ -204,7 +212,8 @@ def search_results(query=None):
         # List of results
         types, areas = search.filter_args(query, filters.area.data)
         filters.add_choices(types, areas)
-        if not filters.validate():
+        # Groups will have already been checked so only check areas here
+        if not filters.area.validate(filters):
             raise search.InvalidParameters(query, "area",
                                            filters.area.data)
 
@@ -252,7 +261,8 @@ def list_in_region(region_code):
     region = models.Region.query.get(region_code.upper())
 
     if region is None:
-        raise NotFound("Region with code '%s' does not exist." % region_code)
+        raise NotFound(Markup("Region with code <strong>%s</strong> does not "
+                              "exist.") % region_code)
     if region.code != region_code:
         return redirect(url_for(".list_in_region", region_code=region.code),
                         code=302)
@@ -274,7 +284,8 @@ def list_in_area(area_code):
     )
 
     if area is None:
-        raise NotFound("Area with code '%s' does not exist." % area_code)
+        raise NotFound(Markup("Area with code <strong>%s</strong> does not "
+                              "exist.") % area_code)
 
     # Show list of localities with stops if districts do not exist
     if not area.districts:
@@ -297,8 +308,8 @@ def list_in_district(district_code):
     )
 
     if district is None:
-        raise NotFound("District with code '%s' does not exist."
-                       % district_code)
+        raise NotFound(Markup("District with code <strong>%s</strong> does not "
+                              "exist.") % district_code)
 
     group_local = _group_objects(district.list_localities(), attr="name",
                                  default="Places")
@@ -326,7 +337,8 @@ def list_in_locality(locality_code):
     )
 
     if locality is None:
-        raise NotFound("Place with code '%s' does not exist." % locality_code)
+        raise NotFound(Markup("Place with code <strong>%s</strong> does not "
+                              "exist.") % locality_code)
     if locality.code != locality_code:
         code = locality.code
         return redirect(url_for(".list_in_locality", locality_code=code),
@@ -353,8 +365,8 @@ def list_near_location(coords):
     latitude, longitude = coords
     # Quick check to ensure coordinates are within range of Great Britain
     if not location.check_bounds(latitude, longitude):
-        raise NotFound("The latitude and longitude coordinates are too far "
-                       "away near Great Britain.")
+        raise NotFound("Latitude and longitude coordinates are too far from "
+                       "Great Britain.")
 
     stops = models.StopPoint.in_range(latitude, longitude,
                                       db.undefer(models.StopPoint.lines))
@@ -370,7 +382,8 @@ def list_near_postcode(code):
     postcode = models.Postcode.query.get(index_postcode)
 
     if postcode is None:
-        raise NotFound("Postcode '%s' does not exist." % code)
+        raise NotFound(Markup("Postcode <strong>%s</strong> does not exist.")
+                       % code)
     if postcode.text != code:
         # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
         return redirect(url_for(".list_near_postcode", code=postcode.text),
@@ -393,7 +406,7 @@ def stop_area(stop_area_code):
     )
 
     if area is None:
-        raise NotFound("Bus stop with NaPTAN code '%s' does not exist."
+        raise NotFound(Markup("Stop area <strong>%s</strong> does not exist.")
                        % stop_area_code)
     if area.code != stop_area_code:
         return redirect(url_for(".stop_area", stop_area_code=area.code),
@@ -403,6 +416,7 @@ def stop_area(stop_area_code):
         db.session.query(models.StopPoint)
         .options(db.undefer(models.StopPoint.lines))
         .filter(models.StopPoint.stop_area_ref == area.code)
+        .order_by(models.StopPoint.ind_index)
         .all()
     )
 
@@ -424,8 +438,8 @@ def stop_naptan(naptan_code):
     )
 
     if stop is None:
-        raise NotFound("Bus stop with SMS code '%s' does not exist."
-                       % naptan_code)
+        raise NotFound(Markup("Stop with SMS code <strong>%s</strong> does not "
+                              "exist.") % naptan_code)
     if stop.naptan_code != naptan_code:
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=302)
@@ -449,8 +463,8 @@ def stop_atco(atco_code=""):
     )
 
     if stop is None:
-        raise NotFound("Bus stop with ATCO code '%s' does not exist."
-                       % atco_code)
+        raise NotFound(Markup("Stop with ATCO code <strong>%s</strong> does "
+                              "not exist.") % atco_code)
     if stop.atco_code != atco_code:
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=302)
@@ -475,7 +489,8 @@ def _query_service(service_id, reverse=None):
     )
 
     if line is None:
-        raise NotFound("Service '%s' does not exist." % service_id)
+        raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
+                       % service_id)
 
     # Check line patterns - is there more than 1 direction?
     is_reverse, mirrored = line.has_mirror(reverse)
@@ -570,7 +585,8 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
             .get(service_id)
         )
         if line is None:
-            raise NotFound("Service '%s' does not exist." % service_id)
+            raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
+                           % service_id)
 
         is_reverse, _ = line.has_mirror(reverse)
     else:
@@ -638,17 +654,21 @@ def show_map_service_direction_stop(service_id, reverse, atco_code,
 @page.app_errorhandler(404)
 def not_found_msg(error):
     """ Returned in case of an invalid URL, with message. Can be called with
-        EntityNotFound, eg if the correct URL is used but the wrong value is
-        given.
+        NotFound, eg if the correct URL is used but the wrong value is given.
     """
-    message = str(error) if isinstance(error, NotFound) else None
-
     if request.path.startswith("/api"):
-        if message is None:
+        # Respond with JSON data with message and 404 code
+        if isinstance(error, NotFound):
+            message = str(error)
+        else:
             message = "API endpoint %r does not exist." % request.path
-        return jsonify({"message": message}), 404
+        response = jsonify({"message": message}), 404
     else:
-        return render_template("not_found.html", message=message), 404
+        # Respond with 404 page
+        message = error.message if isinstance(error, NotFound) else None
+        response = render_template("not_found.html", message=message), 404
+
+    return response
 
 
 @page.app_errorhandler(500)

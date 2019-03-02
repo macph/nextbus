@@ -134,7 +134,7 @@
             <p>Page {{ request.args.get("page") }} is out of range for this search query.</p>
             <p><a href="?">Go back to page 1</a></p>
             {% endif %}
-            {% elif results is defined and (f_types or f_areas) %}
+            {% elif results is defined and (filters.group.choices or filters.area.choices) %}
             <h2>No results found</h2>
             <p>No matching results for <strong>{{ query }}</strong> with the filters you selected.</p>
             <p><a href="?">Reset filters</a></p>

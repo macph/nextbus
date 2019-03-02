@@ -91,7 +91,7 @@ def asserts():
     return Asserts
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def app():
     """ Creates app during test, using test database URI if applicable. """
     config = os.environ.get(CONFIG_ENV)
@@ -127,19 +127,22 @@ def with_app(app):
 
 
 @pytest.fixture
-def create_db(with_app):
-    """ Runs test in application context and with all tables created in DB. """
-    try:
-        db.create_all()
-        yield
-
-    finally:
-        db.session.remove()
-        db.drop_all()
+def client(app):
+    """ Runs test client for test. """
+    with app.test_client() as client:
+        yield client
 
 
-@pytest.fixture
-def load_db(create_db):
+@pytest.fixture(scope="module")
+def db_status():
+    class DBStatus:
+        def __init__(self):
+            self.loaded = False
+
+    return DBStatus()
+
+
+def _load_db_data():
     """ Loads test data into DB. """
     for table, data in TEST_DATA.items():
         db.session.execute(db.metadata.tables[table].insert().values(data))
@@ -147,7 +150,36 @@ def load_db(create_db):
     db.session.commit()
 
 
+@pytest.fixture(scope="module")
+def db_loaded(app, db_status):
+    """ Creates DB tables and load data for tests on module level. """
+    with app.app_context():
+        try:
+            db.create_all()
+            _load_db_data()
+            db_status.loaded = True
+            yield
+        finally:
+            db.session.remove()
+            db.drop_all()
+            db_status.loaded = False
+
+
 @pytest.fixture
-def client(app, load_db):
-    with app.test_client() as client:
-        yield client
+def create_db(app, db_status):
+    """ Creates DB tables for a test. """
+    if db_status.loaded:
+        raise Exception("Database is already loaded at the module level.")
+    with app.app_context():
+        try:
+            db.create_all()
+            yield
+        finally:
+            db.session.remove()
+            db.drop_all()
+
+
+@pytest.fixture
+def load_db(create_db):
+    """ Creates and loads DB data for a test. """
+    _load_db_data()

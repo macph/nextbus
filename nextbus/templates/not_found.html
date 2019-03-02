@@ -8,12 +8,11 @@
 {% endblock %}
 
 {% block heading %}
-<h1>There's nothing here!</h1>
+<h1>404 — Page not found</h1>
 {% endblock %}
 
 {% block content %}
 <section class="card">
-    <h2>404 - Page not found</h2>
     {% if message %}<p>{{ message }}</p>{% endif %}
     <p>If you typed in the address by hand, or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
     <p>You can try searching or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>

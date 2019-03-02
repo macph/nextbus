@@ -3,13 +3,12 @@
 {% block title %}Cripes, a 500.{% endblock %}
 
 {% block heading %}
-<h1>Something went wrong</h1>
+<h1>500 — server error</h1>
 {% endblock %}
 
 {% block content %}
 <section class="card">
-    <h2>500 - server error</h2>
-    <p>Something went wrong with the server! Don't worry about it, the administrator has already been notified.</p>
+    <p>Something went wrong with the server! Don't worry about it, the administrator has been notified.</p>
     <p>You can <a href="{{ url_for('page.index') }}">go back to the home page</a> and try again.</p>
 </section>
 {% endblock %}

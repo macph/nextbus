@@ -359,11 +359,8 @@ def test_starred_stops_add_two_stops(client, db_loaded):
 
 
 def test_starred_delete_all(client, db_loaded):
-    add = client.post("/api/starred/76193")
-    assert add.status_code == 204
-
-    add = client.post("/api/starred/76241")
-    assert add.status_code == 204
+    client.post("/api/starred/76193")
+    client.post("/api/starred/76241")
 
     delete = client.delete("/api/starred/")
     assert delete.status_code == 204
@@ -371,3 +368,46 @@ def test_starred_delete_all(client, db_loaded):
     get = client.get("/api/starred/")
     assert get.status_code == 200
     assert json.loads(get.data) == {"stops": []}
+
+
+def test_starred_swap(client, db_loaded):
+    client.post("/api/starred/53272")
+    client.post("/api/starred/76193")
+    client.post("/api/starred/76241")
+
+    get = client.get("/api/starred/")
+    assert get.status_code == 200
+    assert json.loads(get.data) == {"stops": ["53272", "76193", "76241"]}
+
+    patch = client.patch("/api/starred/53272/2")
+    assert patch.status_code == 204
+
+    get = client.get("/api/starred/")
+    assert get.status_code == 200
+    assert json.loads(get.data) == {"stops": ["76193", "76241", "53272"]}
+
+
+def test_starred_no_index(client, db_loaded):
+    client.post("/api/starred/76193")
+    client.post("/api/starred/76241")
+
+    patch = client.patch("/api/starred/76193")
+    assert patch.status_code == 405
+
+
+def test_starred_not_in_list(client, db_loaded):
+    client.post("/api/starred/76193")
+    client.post("/api/starred/76241")
+
+    patch = client.patch("/api/starred/53272/2")
+    assert patch.status_code == 400
+    assert json.loads(patch.data) == {"message": "Stop '53272' not in list."}
+
+
+def test_starred_out_of_range(client, db_loaded):
+    client.post("/api/starred/76193")
+    client.post("/api/starred/76241")
+
+    patch = client.patch("/api/starred/76241/5")
+    assert patch.status_code == 400
+    assert json.loads(patch.data) == {"message": "Index 5 out of range [0, 1]."}

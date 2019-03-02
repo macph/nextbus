@@ -110,6 +110,7 @@ class StarredStop(MethodView):
 
         GET: Send list of starred stops by NaPTAN code
         POST: Add starred NaPTAN code to cookie list
+        PATCH: Move starred NaPTAN code to new index in list
         DELETE: Delete starred NaPTAN code from cookie list
     """
     def get(self, naptan_code):
@@ -144,6 +145,26 @@ class StarredStop(MethodView):
 
         return "", 204
 
+    def patch(self, naptan_code, index):
+        if "stops" not in session:
+            return bad_request(400, "No cookie has been set.")
+
+        sms = naptan_code.lower()
+        if sms not in session["stops"]:
+            return bad_request(400, "Stop %r not in list." % sms)
+
+        len_ = len(session["stops"])
+        if index not in range(len_):
+            return bad_request(400, "Index %d out of range [0, %d]." %
+                               (index, len_ - 1))
+
+        if session["stops"].index(sms) != index:
+            session["stops"].remove(sms)
+            session["stops"].insert(index, sms)
+            session.modified = True
+
+        return "", 204
+
     def delete(self, naptan_code):
         if "stops" not in session:
             return bad_request(400, "No cookie has been set.")
@@ -168,3 +189,6 @@ api.add_url_rule("/starred/", view_func=StarredStop.as_view("starred"),
 api.add_url_rule("/starred/<naptan_code>",
                  view_func=StarredStop.as_view("starred_stop"),
                  methods=["GET", "POST", "DELETE"])
+api.add_url_rule("/starred/<naptan_code>/<int:index>",
+                 view_func=StarredStop.as_view("starred_stop_index"),
+                 methods=["PATCH"])

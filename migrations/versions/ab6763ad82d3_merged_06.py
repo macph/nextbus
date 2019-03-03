@@ -1,4 +1,5 @@
-"""merged migrations for 0.6
+"""
+Merged migrations for 0.6
 
 Revision ID: ab6763ad82d3
 Revises:

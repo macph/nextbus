@@ -726,7 +726,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     code = db.Column(db.Text)
     line = db.Column(db.Text, nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text, nullable=False)
     mode = db.Column(
         db.Integer,
         db.ForeignKey("service_mode.id"),

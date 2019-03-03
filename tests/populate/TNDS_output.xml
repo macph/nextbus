@@ -15,7 +15,7 @@
     <id>1</id>
     <code>YSCO120</code>
     <line>120</line>
-    <description>Halfway – Fulwood</description>
+    <description default="">Halfway – Fulwood</description>
     <mode>1</mode>
   </Service>
   <JourneyPattern>

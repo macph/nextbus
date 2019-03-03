@@ -88,7 +88,7 @@
         </xsl:choose>
       </code>
       <line><xsl:value-of select="func:l_split(txc:Lines/txc:Line[1]/txc:LineName, '|')"/></line>
-      <description>
+      <description default="">
         <xsl:if test="txc:Description">
           <xsl:value-of select="func:format_description(txc:Description)"/>
         </xsl:if>

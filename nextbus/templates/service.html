@@ -30,8 +30,8 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--buttons card--minor">
-            <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
             <a class="button" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}"><span>Timetable</span></a>
+            <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
         </section>
     </div>
     <div class="column-3">

@@ -1758,6 +1758,10 @@ function Panel(stopMap, mapPanel, cookieSet) {
 
         let actions = element('section',
             {className: 'card card--minor card--panel card--buttons'},
+            element('a',
+                {className: 'button', href: timetableURL},
+                element('span', 'Timetable')
+            ),
             element('button',
                 {className: 'button', onclick: function() {
                     this.blur();
@@ -1771,10 +1775,6 @@ function Panel(stopMap, mapPanel, cookieSet) {
                     self.stopMap.update({service: null});
                 }},
                 element('span', 'Close service')
-            ),
-            element('a',
-                {className: 'button', href: timetableURL},
-                element('span', 'Timetable')
             )
         );
 

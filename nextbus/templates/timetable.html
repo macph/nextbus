@@ -30,8 +30,8 @@
 <div class="columns">
     <div class="column-1">
         <section class="card card--buttons card--minor">
-            <a class="button" href="{{ url_for('.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
             <a class="button" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}"><span>Diagram</span></a>
+            <a class="button" href="{{ url_for('.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
         </section>
         {% if mirrored -%}
         <ul class="tabs tabs--2">

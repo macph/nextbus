@@ -182,7 +182,7 @@
       <id><xsl:value-of select="func:add_id('JourneyLink', $file, $jp/@id, @id, 's')"/></id>
       <pattern_ref><xsl:value-of select="func:get_id('JourneyPattern', $file, $jp/@id)"/></pattern_ref>
       <stop_point_ref>
-        <xsl:if test="func:stop_exists(txc:From/txc:StopPointRef)">
+        <xsl:if test="func:stop_exists($file, txc:From/txc:StopPointRef)">
           <xsl:value-of select="txc:From/txc:StopPointRef"/>
         </xsl:if>
       </stop_point_ref>
@@ -214,7 +214,7 @@
       <id><xsl:value-of select="func:add_id('JourneyLink', $file, $jp/@id, @id, 'e')"/></id>
       <pattern_ref><xsl:value-of select="func:get_id('JourneyPattern', $file, $jp/@id)"/></pattern_ref>
       <stop_point_ref>
-        <xsl:if test="func:stop_exists(txc:To/txc:StopPointRef)">
+        <xsl:if test="func:stop_exists($file, txc:To/txc:StopPointRef)">
           <xsl:value-of select="txc:To/txc:StopPointRef"/>
         </xsl:if>
       </stop_point_ref>

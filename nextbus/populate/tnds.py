@@ -342,13 +342,14 @@ def setup_tnds_functions():
                          "the database to be populated from NOC data first.")
 
     @utils.xslt_text_func
-    def stop_exists(_, code):
+    def stop_exists(_, file_, code):
         """ Check if stop point exists. """
         nonlocal set_not_exists
         exists = code in set_stops
         if not exists and code not in set_not_exists:
             set_not_exists.add(code)
-            utils.logger.warning("Stop code %r does not exist." % code)
+            utils.logger.warning("Stop ATCO code %r in file %r does not exist."
+                                 % (code, file_))
 
         return exists
 

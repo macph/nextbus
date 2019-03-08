@@ -142,8 +142,8 @@
   <xsl:template match="txc:JourneyPattern" mode="journey_links">
     <xsl:variable name="jp" select="."/>
     <xsl:variable name="links">
-      <xsl:for-each select="key('key_sections', txc:JourneyPatternSectionRefs)/txc:JourneyPatternTimingLink">
-        <xsl:copy-of select="."/>
+      <xsl:for-each select="txc:JourneyPatternSectionRefs">
+        <xsl:copy-of select="key('key_sections', .)/txc:JourneyPatternTimingLink"/>
       </xsl:for-each>
     </xsl:variable>
     <xsl:apply-templates select="exsl:node-set($links)/txc:JourneyPatternTimingLink[1]" mode="start">

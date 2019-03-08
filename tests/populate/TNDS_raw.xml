@@ -599,8 +599,118 @@
         <RunTime>PT120S</RunTime>
       </JourneyPatternTimingLink>
     </JourneyPatternSection>
-    <JourneyPatternSection id="JPS_YSCO120-77">
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80964">
+    <!-- Split into sections and placed in 'wrong' order - should be put back together properly at pattern level -->
+    <JourneyPatternSection id="JPS-77-1">
+      <JourneyPatternTimingLink id="JPS-77-1_80970">
+        <From>
+          <StopPointRef>370020775</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020790</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80970</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-1_80971">
+        <From>
+          <StopPointRef>370020790</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020773</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80971</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-1_80972">
+        <From>
+          <StopPointRef>370020773</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370020778</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80972</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-1_80973">
+        <From>
+          <StopPointRef>370020778</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021137</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80973</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+    <JourneyPatternSection id="JPS-77-2">
+      <JourneyPatternTimingLink id="JPS-77-2_80974">
+        <From>
+          <StopPointRef>370021137</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021135</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80974</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT60S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-2_80975">
+        <From>
+          <StopPointRef>370021135</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021132</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80975</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-2_80976">
+        <From>
+          <StopPointRef>370021132</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021131</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>YSCO120_006_80976</RouteLinkRef>
+        <Direction>outbound</Direction>
+        <RunTime>PT0S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPS-77-2_80977">
+        <From>
+          <StopPointRef>370021131</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To>
+          <StopPointRef>370021128</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+          <Activity>setDown</Activity>
+        </To>
+        <RouteLinkRef>YSCO120_006_80977</RouteLinkRef>
+        <!-- Should inherit Direction from RouteLink or JourneyPattern -->
+        <RunTime>PT120S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+    <JourneyPatternSection id="JPS-77-3">
+      <JourneyPatternTimingLink id="JPS-77-3_80964">
         <From>
           <StopPointRef>370022831</StopPointRef>
           <TimingStatus>PTP</TimingStatus>
@@ -614,7 +724,7 @@
         <Direction>outbound</Direction>
         <RunTime>PT60S</RunTime>
       </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80965">
+      <JourneyPatternTimingLink id="JPS-77-3_80965">
         <From>
           <StopPointRef>370022881</StopPointRef>
           <TimingStatus>OTH</TimingStatus>
@@ -627,7 +737,7 @@
         <Direction>outbound</Direction>
         <RunTime>PT180S</RunTime>
       </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80966">
+      <JourneyPatternTimingLink id="JPS-77-3_80966">
         <From>
           <StopPointRef>370023697</StopPointRef>
           <TimingStatus>OTH</TimingStatus>
@@ -640,7 +750,7 @@
         <Direction>outbound</Direction>
         <RunTime>PT120S</RunTime>
       </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80967">
+      <JourneyPatternTimingLink id="JPS-77-3_80967">
         <From>
           <StopPointRef>370020360</StopPointRef>
           <TimingStatus>OTH</TimingStatus>
@@ -654,7 +764,7 @@
         <Direction>outbound</Direction>
         <RunTime>PT60S</RunTime>
       </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80968">
+      <JourneyPatternTimingLink id="JPS-77-3_80968">
         <From>
           <StopPointRef>370020378</StopPointRef>
           <TimingStatus>OTH</TimingStatus>
@@ -668,7 +778,7 @@
         <Direction>outbound</Direction>
         <RunTime>PT180S</RunTime>
       </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80969">
+      <JourneyPatternTimingLink id="JPS-77-3_80969">
         <From>
           <StopPointRef>370020377</StopPointRef>
           <TimingStatus>OTH</TimingStatus>
@@ -680,111 +790,6 @@
         <RouteLinkRef>YSCO120_006_80969</RouteLinkRef>
         <Direction>outbound</Direction>
         <RunTime>PT180S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80970">
-        <From>
-          <StopPointRef>370020775</StopPointRef>
-          <TimingStatus>PTP</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370020790</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80970</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT60S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80971">
-        <From>
-          <StopPointRef>370020790</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370020773</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80971</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT120S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80972">
-        <From>
-          <StopPointRef>370020773</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370020778</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80972</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT60S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80973">
-        <From>
-          <StopPointRef>370020778</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370021137</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80973</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT60S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80974">
-        <From>
-          <StopPointRef>370021137</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370021135</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80974</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT60S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80975">
-        <From>
-          <StopPointRef>370021135</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370021132</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80975</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT120S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80976">
-        <From>
-          <StopPointRef>370021132</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370021131</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </To>
-        <RouteLinkRef>YSCO120_006_80976</RouteLinkRef>
-        <Direction>outbound</Direction>
-        <RunTime>PT0S</RunTime>
-      </JourneyPatternTimingLink>
-      <JourneyPatternTimingLink id="JPS_YSCO120-77_80977">
-        <From>
-          <StopPointRef>370021131</StopPointRef>
-          <TimingStatus>OTH</TimingStatus>
-        </From>
-        <To>
-          <StopPointRef>370021128</StopPointRef>
-          <TimingStatus>PTP</TimingStatus>
-          <Activity>setDown</Activity>
-        </To>
-        <RouteLinkRef>YSCO120_006_80977</RouteLinkRef>
-        <!-- Should inherit Direction from RouteLink or JourneyPattern -->
-        <RunTime>PT120S</RunTime>
       </JourneyPatternTimingLink>
     </JourneyPatternSection>
   </JourneyPatternSections>
@@ -840,10 +845,11 @@
             </SpecialDaysOperation>
           </OperatingProfile>
         </JourneyPattern>
-        <JourneyPattern id="JPS_YSCO120-77">
+        <JourneyPattern id="JPS-77">
           <Direction>outbound</Direction>
-          <JourneyPatternSectionRefs>JPS-73</JourneyPatternSectionRefs>
-          <JourneyPatternSectionRefs>JPS_YSCO120-77</JourneyPatternSectionRefs>
+          <JourneyPatternSectionRefs>JPS-77-3</JourneyPatternSectionRefs>
+          <JourneyPatternSectionRefs>JPS-77-1</JourneyPatternSectionRefs>
+          <JourneyPatternSectionRefs>JPS-77-2</JourneyPatternSectionRefs>
         </JourneyPattern>
       </StandardService>
     </Service>
@@ -1037,7 +1043,7 @@
       <VehicleJourneyCode>72118</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <JourneyPatternRef>JPS-77</JourneyPatternRef>
       <DepartureTime>14:32:00</DepartureTime>
     </VehicleJourney>
     <VehicleJourney>
@@ -1078,7 +1084,7 @@
       <VehicleJourneyCode>72119</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <JourneyPatternRef>JPS-77</JourneyPatternRef>
       <Note>
         <NoteCode>SCHD</NoteCode>
         <NoteText>School Days Only</NoteText>
@@ -1109,7 +1115,7 @@
       <VehicleJourneyCode>72287</VehicleJourneyCode>
       <ServiceRef>YSCO120</ServiceRef>
       <LineRef>0</LineRef>
-      <JourneyPatternRef>JPS_YSCO120-77</JourneyPatternRef>
+      <JourneyPatternRef>JPS-77</JourneyPatternRef>
       <DepartureTime>16:32:00</DepartureTime>
     </VehicleJourney>
   </VehicleJourneys>

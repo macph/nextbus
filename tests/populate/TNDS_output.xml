@@ -283,7 +283,7 @@
   <JourneyLink>
     <id>21</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021129</stop_point_ref>
+    <stop_point_ref>370022831</stop_point_ref>
     <run_time/>
     <wait_arrive/>
     <wait_leave>PT0S</wait_leave>
@@ -295,7 +295,7 @@
   <JourneyLink>
     <id>22</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021130</stop_point_ref>
+    <stop_point_ref>370022881</stop_point_ref>
     <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
@@ -307,8 +307,8 @@
   <JourneyLink>
     <id>23</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021134</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370023697</stop_point_ref>
+    <run_time>PT180S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -319,8 +319,8 @@
   <JourneyLink>
     <id>24</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021136</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370020360</stop_point_ref>
+    <run_time>PT120S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -331,20 +331,20 @@
   <JourneyLink>
     <id>25</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021138</stop_point_ref>
+    <stop_point_ref>370020378</stop_point_ref>
     <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
     <principal_point>0</principal_point>
-    <stopping>1</stopping>
+    <stopping>0</stopping>
     <sequence>5</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>26</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020764</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370020377</stop_point_ref>
+    <run_time>PT180S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -355,19 +355,19 @@
   <JourneyLink>
     <id>27</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020789</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370020775</stop_point_ref>
+    <run_time>PT180S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
+    <timing_point>1</timing_point>
+    <principal_point>1</principal_point>
     <stopping>1</stopping>
     <sequence>7</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>28</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020771</stop_point_ref>
+    <stop_point_ref>370020790</stop_point_ref>
     <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
@@ -379,19 +379,19 @@
   <JourneyLink>
     <id>29</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020772</stop_point_ref>
+    <stop_point_ref>370020773</stop_point_ref>
     <run_time>PT120S</run_time>
     <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT60S</wait_leave>
-    <timing_point>1</timing_point>
-    <principal_point>1</principal_point>
+    <wait_leave>PT0S</wait_leave>
+    <timing_point>0</timing_point>
+    <principal_point>0</principal_point>
     <stopping>1</stopping>
     <sequence>9</sequence>
   </JourneyLink>
   <JourneyLink>
     <id>30</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020376</stop_point_ref>
+    <stop_point_ref>370020778</stop_point_ref>
     <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
@@ -403,8 +403,8 @@
   <JourneyLink>
     <id>31</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370023677</stop_point_ref>
-    <run_time>PT180S</run_time>
+    <stop_point_ref>370021137</stop_point_ref>
+    <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -415,7 +415,7 @@
   <JourneyLink>
     <id>32</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020361</stop_point_ref>
+    <stop_point_ref>370021135</stop_point_ref>
     <run_time>PT60S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
@@ -427,8 +427,8 @@
   <JourneyLink>
     <id>33</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020362</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370021132</stop_point_ref>
+    <run_time>PT120S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -439,8 +439,8 @@
   <JourneyLink>
     <id>34</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370022796</stop_point_ref>
-    <run_time>PT60S</run_time>
+    <stop_point_ref>370021131</stop_point_ref>
+    <run_time>PT0S</run_time>
     <wait_arrive>PT0S</wait_arrive>
     <wait_leave>PT0S</wait_leave>
     <timing_point>0</timing_point>
@@ -451,234 +451,6 @@
   <JourneyLink>
     <id>35</id>
     <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370023176</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>15</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>36</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370027392</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>16</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>37</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370023715</stop_point_ref>
-    <run_time>PT180S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>1</timing_point>
-    <principal_point>1</principal_point>
-    <stopping>1</stopping>
-    <sequence>17</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>38</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370022816</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>18</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>39</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370022788</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>19</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>40</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370070005</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>1</timing_point>
-    <principal_point>1</principal_point>
-    <stopping>1</stopping>
-    <sequence>20</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>41</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370022881</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>21</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>42</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370023697</stop_point_ref>
-    <run_time>PT180S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>22</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>43</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020360</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>23</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>44</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020378</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>0</stopping>
-    <sequence>24</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>45</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020377</stop_point_ref>
-    <run_time>PT180S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>25</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>46</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020775</stop_point_ref>
-    <run_time>PT180S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>1</timing_point>
-    <principal_point>1</principal_point>
-    <stopping>1</stopping>
-    <sequence>26</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>47</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020790</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>27</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>48</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020773</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>28</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>49</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370020778</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>29</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>50</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021137</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>30</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>51</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021135</stop_point_ref>
-    <run_time>PT60S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>31</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>52</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021132</stop_point_ref>
-    <run_time>PT120S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>32</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>53</id>
-    <pattern_ref>2</pattern_ref>
-    <stop_point_ref>370021131</stop_point_ref>
-    <run_time>PT0S</run_time>
-    <wait_arrive>PT0S</wait_arrive>
-    <wait_leave>PT0S</wait_leave>
-    <timing_point>0</timing_point>
-    <principal_point>0</principal_point>
-    <stopping>1</stopping>
-    <sequence>33</sequence>
-  </JourneyLink>
-  <JourneyLink>
-    <id>54</id>
-    <pattern_ref>2</pattern_ref>
     <stop_point_ref>370021128</stop_point_ref>
     <run_time>PT120S</run_time>
     <wait_arrive>PT0S</wait_arrive>
@@ -686,7 +458,7 @@
     <timing_point>1</timing_point>
     <principal_point>1</principal_point>
     <stopping>1</stopping>
-    <sequence>34</sequence>
+    <sequence>15</sequence>
   </JourneyLink>
   <Journey>
     <id>1</id>

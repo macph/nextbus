@@ -157,12 +157,10 @@ def search_query():
             # Pass along to search results page to process
             return redirect(url_for(".search_results", query=query))
 
-        if result.is_stop():
-            stop_code = result.stop.atco_code
-            return redirect(url_for(".stop_atco", atco_code=stop_code))
-        elif result.is_postcode():
-            return redirect(url_for(".list_near_postcode",
-                                    code=result.postcode.text))
+        if isinstance(result, models.StopPoint):
+            return redirect(url_for(".stop_atco", atco_code=result.atco_code))
+        elif isinstance(result, models.Postcode):
+            return redirect(url_for(".list_near_postcode", code=result.text))
         else:
             return redirect(url_for(".search_results", query=query))
 
@@ -186,16 +184,12 @@ def search_results(query=None):
     parser.validate_characters(query)
     # Set up form and retrieve request arguments
     filters = forms.FilterResults(request.args)
+    groups = filters.group.data if filters.group.data else None
+    areas = filters.area.data if filters.area.data else None
     try:
         # Do the search; raise errors if necessary
-        result = search.search_all(
-            query,
-            types=filters.group.data if filters.group.data else None,
-            admin_areas=filters.area.data if filters.area.data else None,
-            page=filters.page.data
-        )
-        if not result:
-            raise ValueError
+        result = search.search_all(query, groups=groups, admin_areas=areas,
+                                   page=filters.page.data)
     except ValueError:
         current_app.logger.error("Query %r resulted in an parsing error" %
                                  query, exc_info=True)
@@ -203,22 +197,20 @@ def search_results(query=None):
         return
 
     # Redirect to postcode or stop if one was found
-    if result.is_stop():
-        return redirect(url_for(".stop_atco", atco_code=result.stop.atco_code))
-    elif result.is_postcode():
+    if isinstance(result, models.StopPoint):
+        return redirect(url_for(".stop_atco", atco_code=result.atco_code))
+    elif isinstance(result, models.Postcode):
         return redirect(url_for(".list_near_postcode",
-                                code=result.postcode.text))
+                                code=result.text))
     else:
         # List of results
-        types, areas = search.filter_args(query, filters.area.data)
-        filters.add_choices(types, areas)
+        filters.add_choices(*search.filter_args(query, areas))
         # Groups will have already been checked so only check areas here
         if not filters.area.validate(filters):
-            raise search.InvalidParameters(query, "area",
-                                           filters.area.data)
+            raise search.InvalidParameters(query, "area", filters.area.data)
 
-        return render_template("search.html", query=query,
-                               results=result.list, filters=filters)
+        return render_template("search.html", query=query, results=result,
+                               filters=filters)
 
 
 @page.errorhandler(search.InvalidParameters)

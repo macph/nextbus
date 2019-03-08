@@ -326,11 +326,11 @@ class FTS(utils.MaterializedView):
         db.Index("ix_fts_areas_gin", "admin_areas", postgresql_using="gin")
     )
 
-    TYPES = {"area": "Areas", "place": "Places", "stop": "Stops",
-             "service": "Services"}
-    TYPE_TABLES = {"area": {"region", "admin_area", "district"},
-                   "place": {"locality"}, "stop": {"stop_area", "stop_point"},
-                   "service": {"service"}}
+    GROUP_NAMES = {"area": "Areas", "place": "Places", "stop": "Stops",
+                   "service": "Services"}
+    GROUPS = {"area": {"region", "admin_area", "district"},
+              "place": {"locality"}, "stop": {"stop_area", "stop_point"},
+              "service": {"service"}}
 
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
@@ -357,35 +357,34 @@ class FTS(utils.MaterializedView):
                                db.func.to_tsquery("english", query))
 
     @classmethod
-    def _apply_filters(cls, match, types=None, areas=None):
+    def _apply_filters(cls, match, groups=None, areas=None):
         """ Apply filters to a search expression if they are specified.
 
             :param match: The original query expression
-            :param types: Types, ie 'stop', 'place' and 'area' to filter by
+            :param groups: Groups, eg 'stop' or 'area'
             :param areas: Administrative area codes to filter by
             :returns: Query expression with added filters, if any
         """
-        if types and set(types) - cls.TYPES.keys():
-            raise ValueError("Invalid values for type parameter.")
-
-        if types:
+        if groups is not None:
+            if set(groups) - cls.GROUP_NAMES.keys():
+                raise ValueError("Groups %r contain invalid values." % groups)
             tables = []
-            for type_ in types:
-                tables.extend(cls.TYPE_TABLES[type_])
+            for g in groups:
+                tables.extend(cls.GROUPS[g])
             match = match.filter(cls.table_name.in_(tables))
 
-        if areas:
+        if areas is not None:
             match = match.filter(cls.admin_areas.overlap(areas))
 
         return match
 
     @classmethod
-    def search(cls, query, types=None, admin_areas=None):
+    def search(cls, query, groups=None, admin_areas=None):
         """ Creates an expression for searching queries, excluding stop points
             within areas that already match.
 
             :param query: A ParseResult object or a string.
-            :param types: Set with values 'area', 'place' or 'stop'.
+            :param groups: Set with values 'area', 'place' or 'stop'.
             :param admin_areas: List of administrative area codes to filter by.
             :returns: Query expression to be executed.
         """
@@ -412,22 +411,22 @@ class FTS(utils.MaterializedView):
             )
             .order_by(db.desc(rank), cls.name, NaturalSort.index)
         )
-        # Add filters for types or admin area
-        match = cls._apply_filters(match, types, admin_areas)
+        # Add filters for groups or admin area
+        match = cls._apply_filters(match, groups, admin_areas)
 
         return match
 
     @classmethod
-    def matching_types(cls, query, admin_areas=None):
+    def matching_groups(cls, query, admin_areas=None):
         """ Finds all admin areas and table names covering matching results for
             a query.
 
-            The areas and types are sorted into two sets, to be used for
+            The areas and groups are sorted into two sets, to be used for
             filtering.
 
             :param query: A ParseResult object or a string.
-            :param admin_areas: Filter by admin areas to get matching types
-            :returns: A tuple with a dict of types and a dict with
+            :param admin_areas: Filter by admin areas to get matching groups
+            :returns: A tuple with a dict of groups and a dict with
             administrative area references and names
         """
         try:
@@ -436,26 +435,29 @@ class FTS(utils.MaterializedView):
             string = query
 
         array_t = pg.array_agg(db.distinct(cls.table_name))
-        if admin_areas:
+        if admin_areas is not None:
             # Filter array of tables by whether aggregated rows' admin areas
             # match those already selected
             array_t = array_t.filter(cls.admin_areas.overlap(admin_areas))
 
-        array = pg.array((AdminArea.code, AdminArea.name))
-        array_a = pg.array_agg(db.distinct(array))
+        array_areas = pg.array((AdminArea.code, AdminArea.name))
+        array_a = pg.array_agg(db.distinct(array_areas))
 
-        expr = (
-            db.session.query(array_t.label("tables"), array_a.label("areas"))
+        result = (
+            db.session.query(
+                array_t.label("tables"),
+                array_a.label("areas")
+            )
             .select_from(db.func.unnest(cls.admin_areas).alias("unnest_areas"))
             .join(AdminArea, db.column("unnest_areas") == AdminArea.code)
             .filter(cls.match(string))
+            .one()
         )
 
         # All data should have been aggregated into one row
-        result = expr.one()
         tables = set(result.tables) if result.tables is not None else set()
-        types = {t: n for t, n in cls.TYPES.items()
-                 if tables & cls.TYPE_TABLES[t]}
+        groups = {g: n for g, n in cls.GROUP_NAMES.items()
+                  if tables & cls.GROUPS[g]}
         areas = dict(result.areas) if result.areas is not None else {}
 
-        return types, areas
+        return groups, areas

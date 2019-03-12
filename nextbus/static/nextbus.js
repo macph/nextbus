@@ -31,20 +31,20 @@ const LAYOUT_DOM_PARA_START = 36 + 12;
  */
 function addGeolocation(LocationURL, activateElement) {
     if (!navigator.geolocation) {
-        console.log('Browser does not support geolocation.');
+        console.debug('Browser does not support geolocation.');
         return;
     }
 
     let success = function(position) {
         let latitude = position.coords.latitude.toFixed(6);
         let longitude = position.coords.longitude.toFixed(6);
-        console.log('Current coordinates (' + latitude + ', ' + longitude + ')');
+        console.debug('Current coordinates (' + latitude + ', ' + longitude + ')');
         // Direct to list of stops
         window.location.href = LocationURL + latitude + ',' + longitude;
     };
 
     let error = function(err) {
-        console.log('Geolocation error: ' + err);
+        console.debug('Geolocation error: ' + err);
     };
 
     activateElement.addEventListener('click', function() {
@@ -168,7 +168,6 @@ function getTransitionEnd(element) {
 function addSearchBarEvents() {
     let barHidden = true;
     let searchButton = document.getElementById('header-search-button');
-    let searchButtonText = searchButton.querySelector('span');
     let searchBar = document.getElementById('header-search-bar');
     let searchBarInput = document.getElementById('search-form');
     let searchBarTransitionEnd = getTransitionEnd(searchBar);
@@ -180,7 +179,7 @@ function addSearchBarEvents() {
 
     let openSearchBar = function() {
         searchBar.classList.add('search-bar--open');
-        searchButtonText.textContent = 'Close';
+        searchButton.textContent = 'Close';
         searchButton.blur();
         barHidden = false;
         searchBar.addEventListener(searchBarTransitionEnd, transitionCallback);
@@ -188,7 +187,7 @@ function addSearchBarEvents() {
 
     let closeSearchBar = function() {
         searchBar.classList.remove('search-bar--open');
-        searchButtonText.textContent = 'Search';
+        searchButton.textContent = 'Search';
         searchBarInput.blur();
         barHidden = true;
     };
@@ -452,7 +451,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE) {
                 if (request.status === 200) {
-                    console.log('Request for stop ' + self.atcoCode + ' successful');
+                    console.debug('Request for stop ' + self.atcoCode + ' successful');
                     self.data = JSON.parse(request.responseText);
                     self.isLive = true;
                     self.printData();
@@ -568,8 +567,8 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
             removeSubElements(self.table);
             // Add table
             self.table.appendChild(table);
-            console.log('Created table with ' + self.data.services.length +
-                        ' services for stop "' + self.atcoCode + '".');
+            console.debug('Created table with ' + self.data.services.length +
+                          ' services for stop "' + self.atcoCode + '".');
 
         } else if (self.data !== null) {
             removeSubElements(self.table);
@@ -578,10 +577,10 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
             } else {
                 self.headingTime.textContent = 'No services found';
             }
-            console.log('No services found for stop ' + self.atcoCode + '.');
+            console.debug('No services found for stop ' + self.atcoCode + '.');
         } else {
             self.headingTime.textContent = 'Updating...';
-            console.log('No data received yet when printed for stop ' + self.atcoCode);
+            console.debug('No data received yet when printed for stop ' + self.atcoCode);
         }
     };
 
@@ -615,7 +614,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
         });
         let dtReq = new Date(self.data.isoDate);
         let overDue = Math.round((dtNow - dtReq) / 60000);
-        console.log('Live data overdue ' + overDue + ' minutes.');
+        console.debug('Live data overdue ' + overDue + ' minutes.');
     };
 
     /**
@@ -768,6 +767,28 @@ function MapCache(max) {
 function detectIE() {
     let ua = window.navigator.userAgent;
     return (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1);
+}
+
+
+/**
+ * Creates control for map with content, title and action
+ * @param {function} action Function called when on button click
+ * @param {Element|string} content Content of button to be displayed
+ * @param {string} [title] Title for control button
+ */
+function mapControl(action, content, title) {
+    let titleText = (title != null) ? title : '';
+    let CustomControl = L.Control.extend({
+        options: {position: 'topleft'},
+        onAdd: function() {
+            return element('div',
+                {className: 'leaflet-bar leaflet-control'},
+                element('a', {title: titleText, href: '#', onclick: action}, content)
+            );
+        }
+    });
+
+    return new CustomControl();
 }
 
 
@@ -1356,6 +1377,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
     this.container = this.mapPanel.parentNode;
     this.starred = new StarredStops(cookieSet, null);
     this.activeStops = new Map();
+    this.currentMapControl = null;
 
     this.currentStop = null;
     this.currentService = null;
@@ -1450,10 +1472,14 @@ function Panel(stopMap, mapPanel, cookieSet) {
     };
 
     /**
-     * Clears all subelements from panel
+     * Clears all subelements and map control from panel
      */
     this.clearPanel = function() {
         removeSubElements(self.mapPanel);
+        if (self.currentMapControl != null) {
+            self.stopMap.map.removeControl(self.currentMapControl);
+            self.currentMapControl = null;
+        }
     };
 
     /**
@@ -1503,35 +1529,6 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setStopPanelData = function(data) {
-        let nav = null;
-        if (self.currentService !== null) {
-            let data = self.stopMap.routeLayer.data;
-
-            nav = element('nav',
-                element('ul',
-                    {className: 'breadcrumbs breadcrumbs--trailing'},
-                    element('li',
-                        element('span',
-                            {className: 'anchor', onclick: function() {
-                                self.stopMap.update({stop: null});
-                                return false;
-                            }},
-                            'Service ' + data.line
-                        )
-                    )
-                )
-            );
-        }
-
-        let heading = element('div',
-            {className: 'heading-stop'},
-            element('div',
-                {className: 'indicator area-' + data.adminAreaRef},
-                createIndicator(data)
-            ),
-            element('h1', data.name)
-        );
-
         let headingText = null,
             hasBearing = (data.bearing !== null && self.directions.hasOwnProperty(data.bearing)),
             hasStreet = (data.street !== null);
@@ -1549,10 +1546,38 @@ function Panel(stopMap, mapPanel, cookieSet) {
             headingText = element('p', element('strong', data.street));
         }
 
+        let leaveTitle, leaveText;
+        if (self.currentService !== null) {
+            let data = self.stopMap.routeLayer.data;
+            leaveTitle = 'Back to service ' + data.line;
+            leaveText = 'U';
+        } else {
+            leaveTitle = 'Close stop panel';
+            leaveText = 'X';
+        }
+
         let headingOuter = element('div',
-            {className: 'heading heading--panel', id:  'panel-heading-outer'},
-            nav,
-            heading,
+            {className: 'heading heading--panel'},
+            element('button',
+                {
+                    className: 'button button--action',
+                    title: leaveTitle,
+                    onclick: function() {
+                        this.blur();
+                        self.stopMap.update({stop: null});
+                        return false;
+                    }
+                },
+                leaveText
+            ),
+            element('div',
+                {className: 'heading-stop'},
+                element('div',
+                    {className: 'indicator area-' + data.adminAreaRef},
+                    createIndicator(data)
+                ),
+                element('h1', data.name)
+            ),
             headingText
         );
 
@@ -1642,19 +1667,10 @@ function Panel(stopMap, mapPanel, cookieSet) {
         );
 
         let actions = element('section',
-            {className: 'card card--minor card--panel card--buttons'},
-            element('button',
-                {className: 'button', onclick: function() {
-                    this.blur();
-                    self.stopMap.map.flyTo(
-                        L.latLng(data.latitude, data.longitude), 18
-                    );
-                }},
-                element('span', 'Fly to stop')
-            ),
+            {className: 'card card--minor card--panel'},
             element('a',
                 {className: 'button', href: STOP_PAGE_URL + data.atcoCode},
-                element('span', 'Stop page')
+                'Stop page'
             )
         );
         self.clearPanel();
@@ -1705,10 +1721,16 @@ function Panel(stopMap, mapPanel, cookieSet) {
             }
             let starred = element('button',
                 {className: 'button', onclick: starredAction},
-                element('span', starredText)
+                starredText
             );
             actions.appendChild(starred);
         });
+
+        // Add control for zooming into stop view
+        self.currentMapControl = mapControl(function() {
+            self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
+        }, 'S', 'Fly to stop');
+        self.stopMap.map.addControl(self.currentMapControl);
     };
 
     /**
@@ -1725,8 +1747,35 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setServicePanelData = function(data) {
+        let listOperators = null;
+        if (data.operators) {
+            listOperators = [];
+            data.operators.forEach(function(op, i) {
+                listOperators.push(element('strong', op));
+                if (i < data.operators.length - 2) {
+                    listOperators.push(', ');
+                } else if (i === data.operators.length - 2) {
+                    listOperators.push(' and ');
+                }
+            });
+        }
+
+        let direction = (data.reverse) ? 'inbound' : 'outbound',
+            timetableURL = TIMETABLE_URL.replace('//', '/' + data.service + '/' + direction + '/');
+
         let headingOuter = element('div',
-            {className: 'heading heading--panel', id: 'panel-heading-outer'},
+            {className: 'heading heading--panel'},
+            element('button',
+                {
+                    className: 'button button--action',
+                    title: 'Close service panel',
+                    onclick: function() {
+                        this.blur();
+                        self.stopMap.update({service: null});
+                    }
+                },
+                'X'
+            ),
             element('div',
                 {className: 'heading-service'},
                 element('div',
@@ -1738,43 +1787,20 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 ),
                 element('h1', data.description)
             ),
-        );
-
-        if (data.operators) {
-            let listOperators = [];
-            data.operators.forEach(function(op, i) {
-                listOperators.push(element('strong', op));
-                if (i < data.operators.length - 2) {
-                    listOperators.push(', ');
-                } else if (i === data.operators.length - 2) {
-                    listOperators.push(' and ');
-                }
-            });
-            headingOuter.appendChild(element('p', 'Operated by ', listOperators));
-        }
-
-        let direction = (data.reverse) ? 'inbound' : 'outbound',
-            timetableURL = TIMETABLE_URL.replace('//', '/' + data.service + '/' + direction + '/');
-
-        let actions = element('section',
-            {className: 'card card--minor card--panel card--buttons'},
-            element('a',
-                {className: 'button', href: timetableURL},
-                element('span', 'Timetable')
-            ),
-            element('button',
-                {className: 'button', onclick: function() {
-                    this.blur();
-                    self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
-                }},
-                element('span', 'Fit on map')
-            ),
-            element('button',
-                {className: 'button', onclick: function() {
-                    this.blur();
-                    self.stopMap.update({service: null});
-                }},
-                element('span', 'Close service')
+            element('div',
+                {className: 'heading-subtitle'},
+                element('p',
+                    {className: 'heading-subtitle__operator'},
+                    'Operated by ',
+                    listOperators
+                ),
+                element('div',
+                    {className: 'heading-subtitle__buttons'},
+                    element('a',
+                        {className: 'button', href: timetableURL},
+                        'Timetable'
+                    )
+                )
             )
         );
 
@@ -1788,7 +1814,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                          onclick: (data.reverse) ? function() {
                              map.update({service: {id: data.service, reverse: false}});
                          } : null},
-                        element('span', 'Inbound')
+                        element('span', 'Outbound')
                     )
                 ),
                 element('li',
@@ -1797,7 +1823,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                          onclick: (data.reverse) ? null : function() {
                              map.update({service: {id: data.service, reverse: true}});
                          }},
-                        element('span', 'Outbound')
+                        element('span', 'Inbound')
                     )
                 )
             );
@@ -1867,11 +1893,16 @@ function Panel(stopMap, mapPanel, cookieSet) {
 
         self.clearPanel();
         self.mapPanel.appendChild(headingOuter);
-        self.mapPanel.appendChild(actions);
         if (tabs) {
             self.mapPanel.appendChild(tabs);
         }
         self.mapPanel.appendChild(list);
+
+        // Add control for fitting service to map
+        self.currentMapControl = mapControl(function() {
+            self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
+        }, 'S', 'Fit route to map');
+        self.stopMap.map.addControl(self.currentMapControl);
 
         if (data.stops) {
             resizeIndicator('indicator');
@@ -1902,11 +1933,13 @@ function Panel(stopMap, mapPanel, cookieSet) {
  * @param {string} mapContainer ID for map container element
  * @param {string} mapPanel ID for map panel element
  * @param {boolean} cookieSet Whether the cookie has been set or not
+ * @param {boolean} useGeolocation Enable geolocation on this map
  */
-function StopMap(mapContainer, mapPanel, cookieSet) {
+function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
     let self = this;
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
+    this.geolocation = useGeolocation;
 
     this.map = null;
     this.tileLayer = L.tileLayer(
@@ -1914,7 +1947,10 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
         {
             minZoom: MAP_ZOOM_MIN,
             maxZoom: MAP_ZOOM_MAX,
-            subdomains: 'abcd'
+            subdomains: 'abcd',
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+                'contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         }
     );
 
@@ -1928,6 +1964,16 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
     this.currentService = null;
 
     this._initComponents = function(stop, service, fitStop, fitService) {
+        self.tileLayer.addTo(self.map);
+        self.stopLayer.init();
+
+        self.update({
+            stop: stop,
+            service: service,
+            fitStop: fitStop,
+            fitService: fitService
+        });
+
         self.map.on('zoomend', function() {
             if (self.map.getZoom() <= TILE_ZOOM) {
                 self.stopLayer.removeAllTiles();
@@ -1942,20 +1988,15 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
             self.setURL();
         });
 
-        self.map.on('click', function() {
-            self.panel.stopAllLoops();
-            self.update({stop: null});
-        });
+        if (self.geolocation) {
+            self.map.on('locationfound', function (e) {
+                self.map.setView([e.latitude, e.longitude], TILE_ZOOM + 1);
+            });
 
-        self.tileLayer.addTo(self.map);
-        self.stopLayer.init();
-
-        self.update({
-            stop: stop,
-            service: service,
-            fitStop: fitStop,
-            fitService: fitService
-        });
+            self.map.addControl(mapControl(function () {
+                self.map.locate();
+            }, 'G', 'Set map to your location'));
+        }
     };
 
     /**
@@ -1975,8 +2016,7 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
             maxBounds: L.latLngBounds(
                 L.latLng(MAP_BOUNDS_NW),
                 L.latLng(MAP_BOUNDS_SE)
-            ),
-            attributionControl: false
+            )
         };
 
         if (options && options.latitude && options.longitude && options.zoom) {
@@ -2008,37 +2048,33 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
         };
 
         if (options && options.service && options.stop) {
-            let stopSet = false,
-                routeSet = false,
-                fitStop = false,
-                fitService = false;
+            let fitStop = null,
+                fitService = null;
 
             // We want to wait for both stop and route to load before finishing init
             let finishInit = function() {
-                if (stopSet && routeSet) {
+                if (fitStop != null && fitService != null) {
                     self._initComponents(stop, service, fitStop, fitService);
                 }
             };
 
             self.stops.retrieve(stop, function() {
-                stopSet = true;
                 fitStop = fit;
                 finishInit();
             }, function(request) {
-                console.log('Problem with request for stop', stop, request);
-                stopSet = true;
+                console.debug('Problem with request for stop', stop, request);
+                fitStop = false;
                 setDefault();
                 finishInit();
             });
 
             self.services.retrieve(service, function() {
                 self.routeLayer.set(service, false);
-                routeSet = true;
-                fitService = fit;
+                fitService = false;
                 finishInit();
             }, function(request) {
-                console.log('Problem with request for service', service, request);
-                routeSet = true;
+                console.debug('Problem with request for service', service, request);
+                fitService = false;
                 setDefault();
                 finishInit();
             });
@@ -2047,7 +2083,7 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
             self.stops.retrieve(stop, function() {
                 self._initComponents(stop, service, fit, false);
             }, function(request) {
-                console.log('Problem with request for stop', stop, request);
+                console.debug('Problem with request for stop', stop, request);
                 setDefault();
                 self._initComponents(stop, service);
             });
@@ -2057,7 +2093,7 @@ function StopMap(mapContainer, mapPanel, cookieSet) {
                 self.routeLayer.set(service, fit);
                 self._initComponents(stop, service, false, fit);
             }, function(request) {
-                console.log('Problem with request for service', service, request);
+                console.debug('Problem with request for service', service, request);
                 setDefault();
                 self._initComponents(stop, service);
             });

@@ -3,9 +3,9 @@
 {% block title %}Map{% endblock %}
 
 {% block head %}
-{{ super() }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+{{ super() }}
 {% endblock %}
 
 {% block outer_header %}
@@ -17,16 +17,13 @@
     <div id="map" class="full-map"></div>
     <div class="map-panel">
         <div id="panel-content" class="map-panel__content">
-            <div id="panel-heading-outer" class="heading heading--panel">
+            <div class="heading heading--panel">
                 <h2 id="panel-heading">Loading map...</h2>
             </div>
         </div>
         <div class="map-panel__footer">
             <footer class="footer footer--panel">
                 <div>
-                    <p class="footer__text">
-                        A <a href="https://leafletjs.com">Leaflet map</a>. Data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and imagery © <a href="https://carto.com/attributions">CARTO</a>.
-                    </p>
                     <p class="footer__text">
                         &copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a>
                     </p>
@@ -56,7 +53,8 @@
     let map = new StopMap(
         'map',
         'panel-content',
-        {{ ('stops' in session)|tojson }}
+        {{ ('stops' in session)|tojson }},
+        {{ config.get('GEOLOCATION_ENABLED')|tojson }}
     );
     let options = {};
     {% if stop_atco_code -%}

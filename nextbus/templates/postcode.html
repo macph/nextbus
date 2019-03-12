@@ -8,13 +8,15 @@
 {% endblock %}
 
 {% block heading %}
-<h1>Postcode {{ postcode.text }}, {{ postcode.district.name|d(postcode.admin_area.name) }} </h1>
+<div class="heading-with-button">
+  <h1>Postcode {{ postcode.text }}, {{ postcode.district.name|d(postcode.admin_area.name) }} </h1>
+  <a class="button" href="{{ url_for('page.show_map', coords=(postcode.latitude, postcode.longitude, 16)) }}">Map</a>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="columns">
-    <div class="column-1 column--empty"></div>
-    <div class="column-3">
+    <div class="column-1">
         <section class="card">
             <form class="form" action="{{ g.action }}" method="post" name="search">
                 {% set aria = {'aria-label': 'Find a bus stop'} %}
@@ -27,15 +29,6 @@
                 {{ g.form.submit_query(id='submit-form') }}
             </form>
         </section>
-    </div>
-</div>
-<div class="columns">
-    <div class="column-1">
-        <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map', coords=(postcode.latitude, postcode.longitude, 16)) }}"><span>View on map</span></a>
-        </section>
-    </div>
-    <div class="column-3">
         <section class="card">
             <h2>Stops nearby</h2>
             {% if list_stops|length > 0 %}

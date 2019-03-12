@@ -117,16 +117,16 @@ a,
 
 a:visited,
 .anchor:visited {
-    text-decoration: none;
-    color: rgb(0, 33, 113);
+  text-decoration: none;
+  color: rgb(0, 33, 113);
 }
 
 a:hover,
 .anchor:hover {
-    text-decoration: underline;
-    text-decoration-skip-ink: auto;
-    -webkit-text-decoration-skip: skip;
-    cursor: pointer;
+  text-decoration: underline;
+  text-decoration-skip-ink: auto;
+  -webkit-text-decoration-skip: skip;
+  cursor: pointer;
 }
 
 /*
@@ -218,6 +218,7 @@ button:focus {
  */
 
 .button {
+  display: block;
   height: 36px;
   width: 100%;
   margin: 15px 0;
@@ -225,10 +226,8 @@ button:focus {
   box-sizing: border-box;
   background: rgb(224, 224, 224);
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
+  line-height: 36px;
+  text-align: center;
   font-family: inherit;
   font-size: 1.7rem;
   color: inherit;
@@ -248,6 +247,18 @@ button:focus {
 .button:focus {
   background: rgb(255, 167, 38);
   color: white !important;
+}
+
+.button--action {
+  float: right;
+  margin: 0 0 0 5px;
+  padding: 0;
+  width: 36px;
+  background: transparent;
+}
+
+.button--action:active {
+  padding: 0;
 }
 
 /*
@@ -295,7 +306,6 @@ button:focus {
   padding: 5px 15px;
   background: white;
   border: none;
-  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); */
 }
 
 /* Transparent & no shadow with multiple columns; no difference in mobile */
@@ -319,18 +329,6 @@ button:focus {
 
 .card--relative {
   position: relative;
-}
-
-.card--buttons {
-  display: flex;
-  flex-flow: row wrap;
-  padding-left: calc(15px - 8px);
-  padding-right: calc(15px - 8px);
-}
-
-.card--buttons > .button {
-  flex: 1 1 240px;
-  margin: 8px;
 }
 
 /*
@@ -401,10 +399,8 @@ button:focus {
 }
 
 .header > a {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   padding: 10px 15px;
+  text-align: center;
   color: white;
 }
 
@@ -466,7 +462,7 @@ button:focus {
 
 .heading-inline {
   display: flex;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   align-items: baseline;
   margin: 10px -10px;
 }
@@ -477,6 +473,24 @@ button:focus {
 
 .heading-inline--right {
   justify-content: space-between;
+}
+
+/*
+ *  HEADING WITH BUTTONS
+ */
+.heading-with-button {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: baseline;
+}
+
+.heading-with-button > h1 {
+  flex: 4 1 auto;
+}
+
+.heading-with-button > .button {
+  flex: 1 1 160px;
+  margin-top: 0;
 }
 
 /*
@@ -527,6 +541,32 @@ button:focus {
 .heading-stop + p {
   margin-top: -10px;
 }
+
+.heading-subtitle {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  margin: -10px -10px 10px;
+}
+
+.heading-subtitle__operator {
+  flex: 1 1 auto;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.heading-subtitle__buttons {
+  display: flex;
+  flex: 1 0 auto;
+  justify-content: stretch;
+  margin: 2px;
+}
+
+.heading-subtitle__buttons > .button {
+  flex: 1 1 160px;
+  margin: 0 8px;
+}
+
 
 /*
  *  SEARCH FORM
@@ -801,13 +841,10 @@ button:focus {
   text-align: right;
 }
 
-/*
- *  INDEX LISTS
- */
-
 /* Indices for long lists */
 /* https://codeburst.io/how-to-create-horizontal-scrolling-containers-d8069651e9c6 */
 .list-index {
+  flex: 1 1 auto;
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -1413,7 +1450,13 @@ button:focus {
 }
 
 .footer--panel {
-  height: 108px;
+  height: 54px;
+}
+
+/* Override Leaflet styles */
+
+.leaflet-control-attribution {
+  font-family: 'europa', sans-serif;
 }
 
 /*
@@ -1536,7 +1579,7 @@ button:focus {
   }
 
   .map-panel {
-    flex: 0 0 360px;
+    flex: 0 0 400px;
     height: calc(100vh - 48px - 15px); /* Full height w/o header and padding */
     overflow-y: auto; /* Scroll if content overflows */
     box-shadow: 10px 0 20px rgba(0, 0, 0, 0.2);

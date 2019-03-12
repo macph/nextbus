@@ -21,18 +21,18 @@
   </div>
   <h1>{{ service.description }}</h1>
 </div>
-{% if service.operators|length > 0 -%}
-<p>Operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}</p>
-{%- endif %}
+<div class="heading-subtitle">
+  <p class="heading-subtitle__operator">{% if service.operators|length > 0 %}Operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
+  <div class="heading-subtitle__buttons">
+    <a class="button" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}">Diagram</a>
+    <a class="button" href="{{ url_for('.show_map_service_direction', service_id=service.id, reverse=reverse) }}">Map</a>
+  </div>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="columns">
     <div class="column-1">
-        <section class="card card--buttons card--minor">
-            <a class="button" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}"><span>Diagram</span></a>
-            <a class="button" href="{{ url_for('.show_map_service_direction', service_id=service.id, reverse=reverse) }}"><span>Map</span></a>
-        </section>
         {% if mirrored -%}
         <ul class="tabs tabs--2">
             {% if not reverse -%}

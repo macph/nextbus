@@ -19,19 +19,15 @@
         <li><a href="{{ url_for('page.list_in_locality', locality_code=stop_area.locality.code) }}">{{ stop_area.locality.name }}</a></li>
     </ul>
 </nav>
-<h1>{{ stop_area.name }}</h1>
+<div class="heading-with-button">
+    <h1>{{ stop_area.name }}</h1>
+    <a class="button" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}">Map</a>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="columns">
-    <div class="column-1 column--empty">
-        <div class="column-1">
-            <section class="card card--minor">
-                <a class="button" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}"><span>View on map</span></a>
-            </section>
-        </div>
-    </div>
-    <div class="column-3">
+    <div class="column-1">
         <section class="card">
             <h2>Stops</h2>
             {% if stops|length > 0 %}

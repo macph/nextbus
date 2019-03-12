@@ -21,22 +21,20 @@
         <li>{{ locality.name }}</li>
     </ul>
 </nav>
-<h1>{{ place_name }}</h1>
+<div class="heading-with-button">
+    <h1>{{ place_name }}</h1>
+    <a class="button" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">Map</a>
+</div>
 {% endblock %}
 
 {% block content %}
 <div class="columns">
     <div class="column-1">
         <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}"><span>View on map</span></a>
-        </section>
-        {% if stops|length > 1 %}
-        <section class="card card--minor">
+            {% if stops|length > 1 %}
             {{ f.print_index(stops) }}
+            {% endif %}
         </section>
-        {% endif %}
-    </div>
-    <div class="column-3">
         <section class="card">
             <div class="heading-inline heading-inline--right">
                 <h2>Stops</h2>

@@ -71,16 +71,16 @@
     </div>
     <div class="column-1">
         <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}"><span>View on map</span></a>
+            <a class="button" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}">Map</a>
             {% if 'stops' not in session %}
             <div id="cookie-request-info" class="hidden" style="margin: -5px 0;">
                 <p>This will add a cookie to your device with a list of starred stops. No other identifiable information is stored. If you're happy with this, click again.</p>
             </div>
-            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');"><span>Add starred stop</span></button>
+            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');">Add starred stop</button>
             {% elif stop.naptan_code not in session['stops'] %}
-            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');"><span>Add starred stop</span></button>
+            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');">Add starred stop</button>
             {% else %}
-            <button class="button" onclick="starred.remove(this, '{{ stop.naptan_code }}');"><span>Remove starred stop</span></button>
+            <button class="button" onclick="starred.remove(this, '{{ stop.naptan_code }}');">Remove starred stop</button>
             {% endif %}
         </section>
         <section class="card card--aside">

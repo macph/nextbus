@@ -10,6 +10,12 @@ const MAP_CENTRE_GB = [54.00366, -2.547855];
 const MAP_BOUNDS_NW = [61, 2];
 const MAP_BOUNDS_SE = [49, -8];
 
+// Minimum number of degree places required to represent latitude and longitude at set zoom level
+// Calculated using
+// 1 degree longitude at equator = 111 320 m
+// 1 pixel at zoom level 0 = 156 412 m
+const MAP_DEG_ACCURACY = [0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7];
+
 const CACHE_LIMIT = 64;
 const TILE_ZOOM = 15;
 
@@ -767,6 +773,21 @@ function MapCache(max) {
 function detectIE() {
     let ua = window.navigator.userAgent;
     return (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1);
+}
+
+
+/**
+ * Rounds floating point number to a set number of decimal places
+ * @param {number} float
+ * @param {number} places
+ * @returns {number}
+ */
+function roundTo(float, places) {
+    if (places < 0 || Math.round(places) !== places) {
+        throw RangeError('Number of places must be a positive integer.');
+    }
+    let pow = Math.pow(10, places);
+    return Math.round(float * pow) / pow;
 }
 
 
@@ -2212,9 +2233,11 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
         }
 
         let centre = self.map.getCenter(),
-            coords = [centre.lat, centre.lng, self.map.getZoom()].join(',');
+            zoom = self.map.getZoom(),
+            accuracy = MAP_DEG_ACCURACY[zoom],
+            coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy), zoom];
 
-        let newURL = MAP_URL + routeURL + stopURL + coords;
+        let newURL = MAP_URL + routeURL + stopURL + coords.join(',');
         history.replaceState(null, null, newURL);
     };
 }

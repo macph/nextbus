@@ -450,6 +450,13 @@ class StopPoint(db.Model):
 
         return repr_text
 
+    @property
+    def long_name(self):
+        if self.indicator:
+            return "%s (%s)" % (self.name, self.indicator)
+        else:
+            return self.name
+
     @classmethod
     def within_box(cls, box, *options):
         """ Finds all stop points within a box with latitude and longitude
@@ -504,7 +511,6 @@ class StopPoint(db.Model):
 
             :returns: JSON-serializable dict.
         """
-        title_ind = " (%s)" % self.indicator if self.indicator else ""
         geojson = {
             "type": "Feature",
             "geometry": {
@@ -513,7 +519,7 @@ class StopPoint(db.Model):
             },
             "properties": {
                 "atcoCode": self.atco_code,
-                "title": self.name + title_ind,
+                "title": self.long_name,
                 "name": self.name,
                 "indicator": self.short_ind,
                 "street": self.street,
@@ -568,12 +574,10 @@ class StopPoint(db.Model):
         """ Produces full data for stop point in JSON format, including services
             and locality data.
         """
-        title_ind = " (%s)" % self.indicator if self.indicator else ""
-
         json = {
             "atcoCode": self.atco_code,
             "naptanCode": self.naptan_code,
-            "title": self.name + title_ind,
+            "title": self.long_name,
             "name": self.name,
             "indicator": self.short_ind,
             "street": self.street,

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import 'functions.html' as f %}
+{% set name = stop.long_name if stop else ('Service %s'|format(service.description) if service else none) %}
 {% block title %}Map{% endblock %}
 
 {% block head %}
@@ -57,16 +58,16 @@
         {{ config.get('GEOLOCATION_ENABLED')|tojson }}
     );
     let options = {};
-    {% if stop_atco_code -%}
-    options.stop = '{{ stop_atco_code }}';
+    {% if stop -%}
+    options.stop = '{{ stop.atco_code }}';
     {%- endif %}
     {% if latitude and longitude and zoom -%}
     options.latitude = {{ latitude }};
     options.longitude = {{ longitude }};
     options.zoom = {{ zoom }};
     {%- endif %}
-    {% if service_id -%}
-    options.service = {{ service_id }};
+    {% if service -%}
+    options.service = {{ service.id }};
     options.reverse = {{ reverse|tojson }};
     {%- endif %}
     map.init(options);

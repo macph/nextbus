@@ -149,8 +149,8 @@ def search_query():
     """
     g.form.process(request.form)
 
-    if g.form.submit_query.data and g.form.search_query.data:
-        query = g.form.search_query.data
+    if g.form.submit.data and g.form.search.data:
+        query = g.form.search.data
         try:
             result = search.search_code(query)
         except search.NoPostcode:
@@ -468,7 +468,7 @@ def _query_service(service_id, reverse=None):
     """ Finds service as well as all journey patterns and local operators
         associated with the service.
     """
-    line = (
+    sv = (
         models.Service.query
         .join(models.Service.patterns)
         .join(models.JourneyPattern.operator)
@@ -480,14 +480,14 @@ def _query_service(service_id, reverse=None):
         .one_or_none()
     )
 
-    if line is None:
+    if sv is None:
         raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
                        % service_id)
 
     # Check line patterns - is there more than 1 direction?
-    is_reverse, mirrored = line.has_mirror(reverse)
+    is_reverse, mirrored = sv.has_mirror(reverse)
 
-    return line, is_reverse, mirrored
+    return sv, is_reverse, mirrored
 
 
 @page.route("/service/<service_id>")
@@ -496,27 +496,27 @@ def service(service_id, reverse=None):
     """ Shows service with ID and optional direction, which is outbound by
         default.
     """
-    line, is_reverse, mirrored = _query_service(service_id, reverse)
+    sv, is_reverse, mirrored = _query_service(service_id, reverse)
 
     if reverse is None or reverse != is_reverse:
         return redirect(url_for(".service", service_id=service_id,
                                 reverse=is_reverse))
 
     destinations = {
-        "origin": {p.origin for p in line.patterns
+        "origin": {p.origin for p in sv.patterns
                    if p.direction == is_reverse},
-        "destination": {p.destination for p in line.patterns
+        "destination": {p.destination for p in sv.patterns
                         if p.direction == is_reverse}
     }
 
-    s_graph, d_stops = graph.service_graph_stops(line.id, is_reverse)
+    s_graph, d_stops = graph.service_graph_stops(sv.id, is_reverse)
     sequence = s_graph.sequence()
     try:
         layout = s_graph.draw(max_columns=graph.MAX_COLUMNS).serialize()
     except graph.MaxColumnError:
         layout = None
 
-    return render_template("service.html", service=line, dest=destinations,
+    return render_template("service.html", service=sv, dest=destinations,
                            reverse=is_reverse, mirrored=mirrored,
                            sequence=sequence, stops=d_stops, layout=layout)
 
@@ -525,7 +525,7 @@ def service(service_id, reverse=None):
 @page.route("/service/<service_id>/<direction:reverse>/timetable")
 def service_timetable(service_id, reverse=None):
     """ Shows timetable for service with ID and optional direction. """
-    line, is_reverse, mirrored = _query_service(service_id, reverse)
+    sv, is_reverse, mirrored = _query_service(service_id, reverse)
 
     if reverse is None or reverse != is_reverse:
         return redirect(url_for(".service_timetable", service_id=service_id,
@@ -536,12 +536,12 @@ def service_timetable(service_id, reverse=None):
         # Set to today by default
         select_date.date.data = datetime.date.today()
 
-    select_date.set_dates(line)
+    select_date.set_dates(sv)
     select_date.validate()
 
-    tt_data = timetable.Timetable(line.id, is_reverse, select_date.date.data)
+    tt_data = timetable.Timetable(sv.id, is_reverse, select_date.date.data)
 
-    return render_template("timetable.html", service=line, reverse=is_reverse,
+    return render_template("timetable.html", service=sv, reverse=is_reverse,
                            mirrored=mirrored, timetable=tt_data,
                            select_date=select_date)
 
@@ -564,24 +564,24 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
     if atco_code is not None:
         stop = models.StopPoint.query.get(atco_code.upper())
         if stop is None:
-            raise NotFound("Bus stop with ATCO code '%s' does not exist."
-                           % atco_code)
-        stop_atco_code = stop.atco_code
+            raise NotFound(Markup("Stop with ATCO code <strong>%s</strong> "
+                                  "does not exist.") % atco_code)
     else:
-        stop_atco_code = None
+        stop = None
 
     if service_id is not None:
-        line = (
+        sv = (
             models.Service.query
             .options(db.joinedload(models.Service.patterns))
             .get(service_id)
         )
-        if line is None:
+        if sv is None:
             raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
                            % service_id)
 
-        is_reverse, _ = line.has_mirror(reverse)
+        is_reverse, _ = sv.has_mirror(reverse)
     else:
+        sv = None
         is_reverse = None
 
     # TODO: Add redirect for incorrect capitalisation, etc
@@ -593,8 +593,7 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
         latitude, longitude, zoom = None, None, None
 
     return render_template("map.html", latitude=latitude, longitude=longitude,
-                           zoom=zoom, stop_atco_code=stop_atco_code,
-                           service_id=service_id, reverse=is_reverse)
+                           zoom=zoom, stop=stop, service=sv, reverse=is_reverse)
 
 
 @page.route("/map/")

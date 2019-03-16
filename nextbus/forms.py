@@ -8,10 +8,10 @@ import wtforms.fields.html5 as html5_fields
 
 class SearchPlaces(FlaskForm):
     """ Full text search for places, stops and postcodes. """
-    search_query = html5_fields.SearchField(
+    search = html5_fields.SearchField(
         "search", validators=[validators.InputRequired()]
     )
-    submit_query = fields.SubmitField("Search")
+    submit = fields.SubmitField("Search")
 
 
 class MultipleCheckboxField(fields.SelectMultipleField):

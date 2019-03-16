@@ -32,10 +32,7 @@ def test_about(client):
 
 
 def _search(client, query):
-    return client.post(
-        "/search",
-        data={"search_query": query, "submit_query": True}
-    )
+    return client.post("/search", data={"search": query, "submit": True})
 
 
 def test_search_query(client, db_loaded):

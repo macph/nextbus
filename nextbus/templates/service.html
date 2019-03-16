@@ -24,8 +24,12 @@
 <div class="heading-subtitle">
   <p class="heading-subtitle__operator">{% if service.operators|length > 0 %}Operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
   <div class="heading-subtitle__buttons">
-    <a class="button" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a>
-    <a class="button" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}">Map</a>
+    <a class="button button--action" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}" title="Timetable">
+      <img src="{{ url_for('static', filename='icons/sharp-date_range-24px.svg') }}" alt="Timetable">
+    </a>
+    <a class="button button--action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">
+      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+    </a>
   </div>
 </div>
 {% endblock %}
@@ -36,11 +40,11 @@
         {% if mirrored %}
         <ul class="tabs tabs--2">
             {% if not reverse %}
-            <li><div class="tab tab--active"><span>Outbound</span></div></li>
+            <li><div class="tab tab--active">Outbound</div></li>
             <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>
             {% else %}
             <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}">Outbound</a></li>
-            <li><div class="tab tab--active"><span>Inbound</span></div></li>
+            <li><div class="tab tab--active">Inbound</div></li>
             {% endif %}
         </ul>
         {% endif %}
@@ -60,7 +64,7 @@
                 <div id={{ 'c' + stop.atco_code }}>
                     <div class="item--stop">
                         {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
-                        <div class="item__label">{{ stop.name }}</div>
+                        <span class="item__label">{{ stop.name }}</span>
                     </div>
                     {% if stop.street and stop.street != stop.locality.name %}
                     <p>{{ stop.street }}, {{ stop.locality.name }}</p>

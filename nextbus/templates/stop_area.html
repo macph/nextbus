@@ -21,7 +21,9 @@
 </nav>
 <div class="heading-with-button">
     <h1>{{ stop_area.name }}</h1>
-    <a class="button" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}">Map</a>
+    <a class="button button--action" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}" title="View on map">
+      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+    </a>
 </div>
 {% endblock %}
 
@@ -36,7 +38,7 @@
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
                     {{ f.print_stop_indicator(s) }}
-                    <div class="item__label">{{ s.name }}</div>
+                    <span class="item__label">{{ s.name }}</span>
                 </div>
                 <p>
                     {% for l in s.lines %}
@@ -51,7 +53,7 @@
             {% else %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop">
                 {{ f.print_stop_indicator(s) }}
-                <div class="item__label">{{ s.name }}</div>
+                <span class="item__label">{{ s.name }}</span>
             </a>
             {% endif %}
             {% endcall %}

@@ -173,10 +173,13 @@ function getTransitionEnd(element) {
  */
 function addSearchBarEvents() {
     let barHidden = true;
-    let searchButton = document.getElementById('header-search-button');
-    let searchBar = document.getElementById('header-search-bar');
-    let searchBarInput = document.getElementById('search-form');
-    let searchBarTransitionEnd = getTransitionEnd(searchBar);
+
+    let searchButton = document.getElementById('header-search-button'),
+        searchBar = document.getElementById('header-search-bar'),
+        searchBarInput = document.getElementById('search-form'),
+        searchBarTransitionEnd = getTransitionEnd(searchBar),
+        searchSVG = document.getElementById('header-search-open'),
+        closeSVG = document.getElementById('header-search-close');
 
     let transitionCallback = function() {
         searchBar.removeEventListener(searchBarTransitionEnd, transitionCallback);
@@ -185,7 +188,9 @@ function addSearchBarEvents() {
 
     let openSearchBar = function() {
         searchBar.classList.add('search-bar--open');
-        searchButton.textContent = 'Close';
+        searchSVG.style.display = 'none';
+        closeSVG.style.display = '';
+        searchButton.title = 'Close';
         searchButton.blur();
         barHidden = false;
         searchBar.addEventListener(searchBarTransitionEnd, transitionCallback);
@@ -193,17 +198,15 @@ function addSearchBarEvents() {
 
     let closeSearchBar = function() {
         searchBar.classList.remove('search-bar--open');
-        searchButton.textContent = 'Search';
+        searchSVG.style.display = '';
+        closeSVG.style.display = 'none';
+        searchButton.title = 'Search';
         searchBarInput.blur();
         barHidden = true;
     };
 
     searchButton.addEventListener('click', function() {
-        if (barHidden) {
-            openSearchBar();
-        } else {
-            closeSearchBar();
-        }
+        (barHidden) ? openSearchBar() : closeSearchBar();
     });
 
     document.addEventListener('click', function(event) {
@@ -792,19 +795,25 @@ function roundTo(float, places) {
 
 
 /**
- * Creates control for map with content, title and action
- * @param {function} action Function called when on button click
- * @param {Element|string} content Content of button to be displayed
- * @param {string} [title] Title for control button
+ * Creates control for map with buttons for each content, title and action
+ * @param {{action: function, content: Element|string, title: ?string}} actions List of actions
  */
-function mapControl(action, content, title) {
-    let titleText = (title != null) ? title : '';
+function mapControl(...actions) {
+    let buttons = actions.map(function(a) {
+        let titleText = (a.title != null) ? a.title : '';
+        return element('a',
+            {role: 'button', title: titleText, 'aria-label': titleText,
+                  onclick: a.action, ondblclick: a.action},
+            a.content
+        );
+    });
+
     let CustomControl = L.Control.extend({
         options: {position: 'topleft'},
         onAdd: function() {
             return element('div',
-                {className: 'leaflet-bar leaflet-control'},
-                element('a', {title: titleText, href: '#', onclick: action}, content)
+                {className: 'leaflet-bar leaflet-control leaflet-control-custom'},
+                buttons
             );
         }
     });
@@ -912,9 +921,9 @@ function createIndicator(stopData) {
     if (stopData.indicator !== '') {
         ind = element('span', stopData.indicator);
     } else if (stopData.stopType === 'BCS' || stopData.stopType === 'BCT') {
-        ind = element('img', {src: BUS_SVG, width: '28', alt: 'Bus stop'});
+        ind = element('img', {src: STATIC + 'img/bus-white.svg', width: '28', alt: 'Bus stop'});
     } else if (stopData.stopType === 'PLT') {
-        ind = element('img', {src: TRAM_SVG, width: '28', alt: 'Tram stop'});
+        ind = element('img', {src: STATIC + 'img/tram-white.svg', width: '28', alt: 'Tram stop'});
     } else {
         ind = null;
     }
@@ -1567,21 +1576,23 @@ function Panel(stopMap, mapPanel, cookieSet) {
             headingText = element('p', element('strong', data.street));
         }
 
-        let leaveTitle, leaveText;
+        let leaveTitle, leaveSrc, leaveAlt;
         if (self.currentService !== null) {
             let data = self.stopMap.routeLayer.data;
             leaveTitle = 'Back to service ' + data.line;
-            leaveText = 'U';
+            leaveSrc = 'icons/sharp-timeline-24px.svg';
+            leaveAlt = 'Back';
         } else {
             leaveTitle = 'Close stop panel';
-            leaveText = 'X';
+            leaveSrc = 'icons/sharp-close-24px.svg';
+            leaveAlt = 'Close';
         }
 
         let headingOuter = element('div',
             {className: 'heading heading--panel'},
             element('button',
                 {
-                    className: 'button button--action',
+                    className: 'button button--action button--action--float',
                     title: leaveTitle,
                     onclick: function() {
                         this.blur();
@@ -1589,7 +1600,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                         return false;
                     }
                 },
-                leaveText
+                element('img', {src: STATIC + leaveSrc, alt: leaveAlt})
             ),
             element('div',
                 {className: 'heading-stop'},
@@ -1748,10 +1759,14 @@ function Panel(stopMap, mapPanel, cookieSet) {
         });
 
         // Add control for zooming into stop view
-        self.currentMapControl = mapControl(function() {
-            self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
-        }, 'S', 'Fly to stop');
-        self.stopMap.map.addControl(self.currentMapControl);
+        self.currentMapControl = mapControl({
+            action: function() {
+                self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
+            },
+            content: element('img', {src: STATIC + 'icons/sharp-zoom_out_map-24px.svg', alt: 'F'}),
+            title: 'Fly to stop'
+        });
+        self.currentMapControl.addTo(self.stopMap.map);
     };
 
     /**
@@ -1788,14 +1803,14 @@ function Panel(stopMap, mapPanel, cookieSet) {
             {className: 'heading heading--panel'},
             element('button',
                 {
-                    className: 'button button--action',
+                    className: 'button button--action button--action--float',
                     title: 'Close service panel',
                     onclick: function() {
                         this.blur();
                         self.stopMap.update({service: null});
                     }
                 },
-                'X'
+                element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
             ),
             element('div',
                 {className: 'heading-service'},
@@ -1835,7 +1850,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                          onclick: (data.reverse) ? function() {
                              map.update({service: {id: data.service, reverse: false}});
                          } : null},
-                        element('span', 'Outbound')
+                        'Outbound'
                     )
                 ),
                 element('li',
@@ -1844,7 +1859,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                          onclick: (data.reverse) ? null : function() {
                              map.update({service: {id: data.service, reverse: true}});
                          }},
-                        element('span', 'Inbound')
+                        'Inbound'
                     )
                 )
             );
@@ -1920,10 +1935,14 @@ function Panel(stopMap, mapPanel, cookieSet) {
         self.mapPanel.appendChild(list);
 
         // Add control for fitting service to map
-        self.currentMapControl = mapControl(function() {
-            self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
-        }, 'S', 'Fit route to map');
-        self.stopMap.map.addControl(self.currentMapControl);
+        self.currentMapControl = mapControl({
+            action: function() {
+                self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
+            },
+            content: element('img', {src: STATIC + 'icons/sharp-zoom_out_map-24px.svg', alt: 'F'}),
+            title: 'Fit route to map'
+        });
+        self.currentMapControl.addTo(self.stopMap.map);
 
         if (data.stops) {
             resizeIndicator('indicator');
@@ -1941,10 +1960,6 @@ function Panel(stopMap, mapPanel, cookieSet) {
 }
 
 
-// TODO: Add scroll action to point on map while service panel is active?
-// Eg: if a service panel is active and showing diagram, hovering a stop on the map should scroll
-// the same entry on diagram into view, like hovering that entry centers the point on map.
-// TODO: Add option to show stops on specified route only. Should this be optional?
 // TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
 
 
@@ -1984,9 +1999,55 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
     this.currentStop = null;
     this.currentService = null;
 
+    this._addMapControls = function() {
+        let ZoomControl = L.Control.Zoom.extend({
+            options: {
+                position: 'topleft'
+            },
+            onAdd: function (map) {
+                let containerClass = 'leaflet-control-zoom leaflet-bar leaflet-control-custom',
+                    icons = STATIC + 'icons/',
+                    container = element('div', {className: containerClass}),
+                    zoomIn = element('img', {src: icons + 'sharp-add-24px.svg', alt: '+'}),
+                    zoomOut = element('img', {src: icons + 'sharp-remove-24px.svg', alt: '-'});
+
+                this._zoomInButton  = this._createButton(zoomIn.outerHTML, this.options.zoomInTitle,
+                    'leaflet-control-zoom-in', container, this._zoomIn);
+                this._zoomOutButton = this._createButton(zoomOut.outerHTML, this.options.zoomOutTitle,
+                    'leaflet-control-zoom-out', container, this._zoomOut);
+
+                this._updateDisabled();
+                map.on('zoomend zoomlevelschange', this._updateDisabled, this);
+
+                return container;
+            },
+        });
+
+        new ZoomControl().addTo(self.map);
+
+        if (self.geolocation) {
+            self.map.on('locationfound', function (e) {
+                self.map.setView([e.latitude, e.longitude], TILE_ZOOM + 1);
+                self.update({stop: null, service: null});
+            });
+            mapControl({
+                action: function() {
+                    self.map.locate();
+                },
+                content: element('img', {src: STATIC + 'icons/sharp-my_location-24px.svg', alt: 'G'}),
+                title: 'Set map to your location'
+            }).addTo(self.map);
+        }
+    };
+
     this._initComponents = function(stop, service, fitStop, fitService) {
         self.tileLayer.addTo(self.map);
         self.stopLayer.init();
+
+        // Set map view to centre of GB at min zoom if not set yet
+        if (self.map.getZoom() == null) {
+            self.map.setView(L.latLng(MAP_CENTRE_GB), MAP_ZOOM_MIN);
+        }
 
         self.update({
             stop: stop,
@@ -1995,7 +2056,7 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             fitService: fitService
         });
 
-        self.map.on('zoomend', function() {
+        self.map.on('zoomend zoomlevelschange', function() {
             if (self.map.getZoom() <= TILE_ZOOM) {
                 self.stopLayer.removeAllTiles();
             } else {
@@ -2008,16 +2069,6 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             self.stopLayer.updateTiles();
             self.setURL();
         });
-
-        if (self.geolocation) {
-            self.map.on('locationfound', function (e) {
-                self.map.setView([e.latitude, e.longitude], TILE_ZOOM + 1);
-            });
-
-            self.map.addControl(mapControl(function () {
-                self.map.locate();
-            }, 'G', 'Set map to your location'));
-        }
     };
 
     /**
@@ -2037,7 +2088,8 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             maxBounds: L.latLngBounds(
                 L.latLng(MAP_BOUNDS_NW),
                 L.latLng(MAP_BOUNDS_SE)
-            )
+            ),
+            zoomControl: false
         };
 
         if (options && options.latitude && options.longitude && options.zoom) {
@@ -2053,6 +2105,7 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
 
         // Create map
         self.map = L.map(self.mapContainer.id, mapOptions);
+        self._addMapControls();
 
         // Set options for updating map - fit to stop or route if lat long zoom are not specified
         let fit = !(options.latitude && options.longitude && options.zoom),
@@ -2061,12 +2114,6 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
         if (options && options.service) {
             service = {id: options.service, reverse: options.reverse}
         }
-
-        let setDefault = function() {
-            if (self.map.getZoom() == null) {
-                self.map.setView(L.latLng(MAP_CENTRE_GB), MAP_ZOOM_MIN);
-            }
-        };
 
         if (options && options.service && options.stop) {
             let fitStop = null,
@@ -2085,7 +2132,6 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             }, function(request) {
                 console.debug('Problem with request for stop', stop, request);
                 fitStop = false;
-                setDefault();
                 finishInit();
             });
 
@@ -2096,7 +2142,6 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             }, function(request) {
                 console.debug('Problem with request for service', service, request);
                 fitService = false;
-                setDefault();
                 finishInit();
             });
 
@@ -2105,7 +2150,6 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
                 self._initComponents(stop, service, fit, false);
             }, function(request) {
                 console.debug('Problem with request for stop', stop, request);
-                setDefault();
                 self._initComponents(stop, service);
             });
 
@@ -2115,12 +2159,10 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
                 self._initComponents(stop, service, false, fit);
             }, function(request) {
                 console.debug('Problem with request for service', service, request);
-                setDefault();
                 self._initComponents(stop, service);
             });
 
         } else {
-            setDefault();
             self._initComponents(stop, service);
         }
     };

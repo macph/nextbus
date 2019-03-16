@@ -1,22 +1,35 @@
 {# Functions for templates #}
 
+{# Sets up search form #}
+{% macro search_form(query=none, class=none) -%}
+<form class="form{% if class %} {{ class }}{% endif %}" action="{{ g.action }}" method="post" name="search">
+    {% set aria = {'aria-label': 'Find a bus stop'} %}
+    {% set q = query if query is not none else '' %}
+    {{ g.form.hidden_tag() }}
+    {{ g.form.search(placeholder="Find a bus stop...", id='search-form', value=q, required=g.form.search.flags.required, **aria) }}
+    <button id="submit-form" name="submit" type="submit" title="Search" value="1">
+        <img src="{{ url_for('static', filename='icons/sharp-search-24px.svg') }}" width="20px" height="20px" alt="Search">
+    </button>
+</form>
+{%- endmacro %}
+
 {# Replaces header with search functionality #}
 {% macro add_search_bar(map=true) -%}
 <div class="outer-header">
     <header class="header">
         <a class="header__home" href="{{ url_for('page.index') }}">nextbus</a>
         {% if map %}
-        <a class="header__right" href="{{ url_for('page.show_map') }}">Map</a>
+        <a class="header__right" href="{{ url_for('page.show_map') }}" title="Map">
+          <img src="{{ url_for('static', filename='icons/sharp-map-24px-white.svg') }}" alt="Map">
+        </a>
         {% endif %}
-        <a id="header-search-button" class="header__right">Search</a>
+        <a id="header-search-button" class="header__right" title="Search">
+          <img id="header-search-open" src="{{ url_for('static', filename='icons/sharp-search-24px-white.svg') }}" alt="Search">
+          <img id="header-search-close" style="display: none" src="{{ url_for('static', filename='icons/sharp-close-24px-white.svg') }}" alt="Close">
+        </a>
     </header>
     <div id="header-search-bar" class="hidden search-bar">
-        <form class="form search-bar__form" action="{{ g.action }}" method="post" name="search">
-            {% set aria = {'aria-label': 'Find a bus stop'} %}
-            {{ g.form.hidden_tag() }}
-            {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
-            {{ g.form.submit_query(id='submit-form') }}
-        </form>
+        {{ search_form(class='search-bar__form') }}
     </div>
 </div>
 <script>
@@ -84,11 +97,6 @@
 {%- endmacro %}
 
 
-{% macro stop_full_name(stop) -%}
-{{ stop.name }}{{ ' (%s)'|format(stop.indicator) if stop.indicator }}
-{%- endmacro %}
-
-
 {% macro stop_description(stop) -%}
 {% set dir = {"N": "northbound", "NE": "northeast bound", "E": "eastbound", "SE": "southeast bound",
               "S": "southbound", "SW": "southwest bound", "W": "westbound", "NW": "northwest bound"} %}
@@ -98,39 +106,5 @@
 <strong>{{ stop.street }}</strong>
 {% elif stop.bearing is not none %}
 {{ dir.get(stop.bearing, "")|capitalize }}
-{% endif %}
-{%- endmacro %}
-
-
-{% macro print_list_stops_dist(list_stops, warning=true) -%}
-{% if list_stops|length > 0 %}
-<div class="list list-stops-services">
-    {% for stop, distance in list_stops %}
-    <div id="stop{{ stop.atco_code }}" class="item-stop-services">
-        <div class="item-stop-services-row">
-            <div class="item-stop-services-head item-stop-dist">
-                {{ print_stop_indicator(stop) }}
-                <div class="stop-label">{{ stop.name }}</div>
-                <div class="stop-label stop-dist">{{ '%.0f m'|format(distance) }}</div>
-            </div>
-            <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item-arrow"></a>
-        </div>
-        <div class="item-stop-services-content">
-            <p>
-                {% set pipe = joiner() %}
-                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
-             -->{% if stop.naptan_code is not none %}{{ pipe() }}SMS code <strong>{{ stop.naptan_code }}</strong>{% endif %}
-            </p>
-            <div class="heading-inline">
-                <h2 class="stop-live-time">Retrieving live data...</h2>
-                <span class="stop-live-countdown"></span>
-            </div>
-            <div class="stop-live-services"></div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-{% elif warning %}
-<p>No stops found.</p>
 {% endif %}
 {%- endmacro %}

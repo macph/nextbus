@@ -1,5 +1,5 @@
-{% import 'functions.html' as f %}
 {% extends 'base.html' %}
+{% import 'functions.html' as f %}
 {% block outer_title %}nextbus{% endblock %}
 
 {% block main %}
@@ -7,33 +7,20 @@
     <div class="search-box-above"></div>
     <div>
         <div class="heading">
-            <h2>Live bus times in Great Britain</h2>
+            <h1>Live bus times in Great Britain</h1>
         </div>
         <section class="card card--max-width search-box">
-            <form class="form" action="{{ g.action }}" method="post" name="search">
-                {% set aria = {'aria-label': 'Find a bus stop'} %}
-                {{ g.form.hidden_tag() }}
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', autofocus=true, required=g.form.search_query.flags.required, **aria) }}
-                {{ g.form.submit_query(id='submit-form') }}
-            </form>
+            {{ f.search_form() }}
             <ul id="search-box-links" class="search-box__links">
                 <li><a href="{{ url_for('page.list_regions') }}">Browse all regions</a></li>
                 <li><a id="expand-help-content">Help with searching</a></li>
             </ul>
             <div id="help-content" class="hidden">
                 <h3>What can I search?</h3>
-                <p>
-                    A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.
-                </p>
-                <p>
-                    A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.
-                </p>
-                <p>
-                    <strong>Stop names, streets, areas</strong>&mdash;the names of stops or areas can be searched. You can add place, town or city names to help narrow down your search.
-                </p>
-                <p>
-                  <strong>Lines</strong>&mdash;bus and metro lines can be searched. You can add place names to find lines covering these places only.
-                </p>
+                <p>A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.</p>
+                <p>A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.</p>
+                <p><strong>Stop names, streets, areas</strong>&mdash;the names of stops or areas can be searched. You can add place, town or city names to help narrow down your search.</p>
+                <p><strong>Services</strong>&mdash;bus and metro lines can be searched. You can add place names to find lines covering these places only.</p>
             </div>
         </section>
         <section class="card card--max-width">
@@ -42,7 +29,7 @@
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
                     {{ f.print_stop_indicator(s) }}
-                    <div class="item__label">{{ s.name }}</div>
+                    <span class="item__label">{{ s.name }}</span>
                 </div>
                 <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
             </a>
@@ -64,25 +51,23 @@
     let helpLink = document.getElementById('expand-help-content');
     let helpContent = document.getElementById('help-content');
     helpLink.onclick = function() {
+        this.blur();
         helpContent.style.height = (helpHidden) ? helpContent.scrollHeight + 'px' : '';
         helpHidden = !helpHidden;
     };
     window.addEventListener('resize', function() {
         if (!helpHidden) {
-        // Reset height, otherwise scrollHeight's value will just increase
-        helpContent.style.height = 'auto';
-        helpContent.style.height = helpContent.scrollHeight + 'px';
+            // Reset height, otherwise scrollHeight's value will just increase
+            helpContent.style.height = 'auto';
+            helpContent.style.height = helpContent.scrollHeight + 'px';
         }
     })
 </script>
 {% if config.get('GEOLOCATION_ENABLED') %}
 <script>
     let firstLink = document.getElementById('search-box-links').children[0];
-    let geoLink = document.createElement('li');
-    let geoAnchor = document.createElement('a');
-    geoAnchor.textContent = 'Find nearby stops';
-    addGeolocation('{{ url_for("page.list_near_location", coords="") }}', geoAnchor);
-    geoLink.appendChild(geoAnchor);
+    let geoLink = element('li', element('a', 'Find nearby stops'));
+    addGeolocation('{{ url_for("page.list_near_location", coords="") }}', geoLink.firstChild);
     firstLink.insertAdjacentElement('afterend', geoLink);
 </script>
 {% endif %}

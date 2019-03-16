@@ -25,9 +25,7 @@
         <div class="map-panel__footer">
             <footer class="footer footer--panel">
                 <div>
-                    <p class="footer__text">
-                        &copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a>
-                    </p>
+                    <p class="footer__text">&copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a></p>
                 </div>
             </footer>
         </div>
@@ -40,8 +38,7 @@
 
 {% block script %}
 <script>
-    const BUS_SVG = "{{ url_for('static', filename='img/bus-white.svg') }}";
-    const TRAM_SVG = "{{ url_for('static', filename='img/tram-white.svg') }}";
+    const STATIC = "{{ url_for('static', filename='') }}";
     const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     const MAP_URL = "{{ url_for('page.show_map') }}";
     const STOP_URL = "{{ url_for('api.get_stop', atco_code='') }}";

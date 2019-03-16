@@ -33,6 +33,7 @@ class DevelopmentConfig(Config):
     """ Config for developing. """
     SQLALCHEMY_DATABASE_URI = "postgresql://localhost/nextbus"
     SECRET_KEY = "sup3r sekr3t k3y"
+    GEOLOCATION_ENABLED = True
 
 
 class TestConfig(DevelopmentConfig):

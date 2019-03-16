@@ -31,13 +31,12 @@
         <section class="card">
             <form class="form" action="{{ g.action }}" method="post" name="search">
                 {% set aria = {'aria-label': 'Find a bus stop'} %}
+                {% set q = query if query is not none else '' %}
                 {{ g.form.hidden_tag() }}
-                {% if query is not none %}
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required, **aria) }}
-                {% else %}
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
-                {% endif %}
-                {{ g.form.submit_query(id='submit-form') }}
+                {{ g.form.search(placeholder="Find a bus stop...", id='search-form', value=q, required=g.form.search.flags.required, **aria) }}
+                <button id="submit-form" name="submit" type="submit" value="1">
+                    <img src="{{ url_for('static', filename='icons/sharp-search-24px.svg') }}" width="20px" height="20px" alt="Search">
+                </button>
             </form>
         </section>
     </div>
@@ -103,7 +102,7 @@
             <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
                     {{ f.print_stop_indicator(item) }}
-                    <div class="item__label">{{ item.name }}</div>
+                    <span class="item__label">{{ item.name }}</span>
                 </div>
                 {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
                 {% if item.street %}
@@ -119,7 +118,7 @@
                       <span class="line__text">{{ item.short_ind }}</span>
                   </div>
               </div>
-              <div class="item__label">{{ truncate_description(item.name) }}</div>
+              <span class="item__label">{{ truncate_description(item.name) }}</span>
             </a>
             {% endif %}
             {% endcall %}

@@ -1,6 +1,22 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
+{% macro print_items(group) -%}
+{% call(s) f.print_list(group, 'list--stops') %}
+{% if s.table_name == 'stop_point' %}
+<a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
+    {{ f.print_stop_indicator(s) }}
+    <span class="item__label">{{ s.name }}</span>
+</a>
+{% elif s.table_name == 'stop_area' %}
+<a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
+    {{ f.print_stop_indicator(s, reverse=true) }}
+    <span class="item__label">{{ s.name }}</span>
+</a>
+{% endif %}
+{% endcall %}
+{%- endmacro %}
+
 {% set place_name = locality.name + ', ' + (locality.district.name if locality.district is not none else locality.admin_area.name) %}
 {% block title %}{{ place_name }}{% endblock %}
 
@@ -23,7 +39,9 @@
 </nav>
 <div class="heading-with-button">
     <h1>{{ place_name }}</h1>
-    <a class="button" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">Map</a>
+    <a class="button button--action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}" title="View on map">
+      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+    </a>
 </div>
 {% endblock %}
 
@@ -47,35 +65,11 @@
             {% if stops|length > 1 %}
             {% call(name, group) f.print_groups(stops|dictsort) %}
             <h3 id="{{ name }}">{{ name }}</h3>
-            {% call(s) f.print_list(group, 'list--stops') %}
-            {% if s.table_name == 'stop_point' %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s) }}
-                <div class="item__label">{{ s.name }}</div>
-            </a>
-            {% elif s.table_name == 'stop_area' %}
-            <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s, reverse=true) }}
-                <div class="item__label">{{ s.name }}</div>
-            </a>
-            {% endif %}
-            {% endcall %}
+            {{ print_items(group) }}
             {% endcall %}
             {% elif stops %}
             {% for _, group in stops.items() %}
-            {% call(s) f.print_list(group, 'list--stops') %}
-            {% if s.table_name == 'stop_point' %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s) }}
-                <div class="item__label">{{ s.name }}</div>
-            </a>
-            {% elif s.table_name == 'stop_area' %}
-            <a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
-                {{ f.print_stop_indicator(s, reverse=true) }}
-                <div class="item__label">{{ s.name }}</div>
-            </a>
-            {% endif %}
-            {% endcall %}
+            {{ print_items(group) }}
             {% endfor %}
             {% else %}
             <p>No bus stops found.</p>

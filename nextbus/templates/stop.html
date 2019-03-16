@@ -22,6 +22,9 @@
 <div class="heading-stop">
     {{ f.print_stop_indicator(stop) }}
     <h1>{{ stop.name }}</h1>
+    <a class="button button--action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">
+      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+    </a>
 </div>
 {% if stop.street or stop.bearing %}
 <p>{{ f.stop_description(stop) }}</p>

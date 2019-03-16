@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
-{% block title %}Location{% endblock %}
+{% block title %}Stops nearby{% endblock %}
 
 {% block outer_header %}
 {{ f.add_search_bar() }}
@@ -10,7 +10,9 @@
 {% block heading %}
 <div class="heading-with-button">
     <h1>Stops nearby</h1>
-    <a class="button" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}">Map</a>
+    <a class="button button--action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}" title="View on map">
+      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+    </a>
 </div>
 {% endblock %}
 
@@ -18,16 +20,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card">
-            <form class="form" action="{{ g.action }}" method="post" name="search">
-                {% set aria = {'aria-label': 'Find a bus stop'} %}
-                {{ g.form.hidden_tag() }}
-                {% if query is not none %}
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', value=query, required=g.form.search_query.flags.required, **aria) }}
-                {% else %}
-                {{ g.form.search_query(placeholder="Find a bus stop...", id='search-form', required=g.form.search_query.flags.required, **aria) }}
-                {% endif %}
-                {{ g.form.submit_query(id='submit-form') }}
-            </form>
+            {{ f.search_form() }}
         </section>
         <section class="card">
             <h2>Stops</h2>
@@ -36,12 +29,9 @@
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
                     {{ f.print_stop_indicator(s) }}
-                    <div class="item__label">{{ s.name }}</div>
-                    <div class="item__dist">{{ '%.0f m'|format(s.distance) }}</div>
+                    <span class="item__label">{{ s.name }}{% if s.street and s.street not in s.name and s.name not in s.street %}, {{ s.street }}{% endif %}</span>
+                    <span class="item__dist">{{ '%.0f m'|format(s.distance) }}</span>
                 </div>
-                {% if s.street %}
-                <p>{{ s.street }}</p>
-                {% endif %}
                 {% if s.lines %}
                 <p>
                 {% for l in s.lines %}

@@ -63,48 +63,71 @@ function addGeolocation(LocationURL, activateElement) {
  * Sends requests to modify cookie data with list of starred stops
  * @constructor
  * @param {boolean} cookieSet Whether cookie has been set in first place or not
- * @param {HTMLElement} info Info element to show for setting cookie data
+ * @param {function} [onAdd] Called when starred stop is added
+ * @param {function} [onRemove] Called when starred stop is removed
  */
-function StarredStops(cookieSet, info) {
+function StarredStops(cookieSet, onAdd, onRemove) {
     let self = this;
     this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
-    this.info = info;
+    this.onAdd = onAdd;
+    this.onRemove = onRemove;
     this.data = null;
     this.active = false;
     this.r = new XMLHttpRequest();
 
-    this._confirm = function(element, code) {
-        let resizeInfo = function() {
-            self.info.style.height = 'auto';
-            self.info.style.height = self.info.scrollHeight + 'px';
-        };
-        self.info.style.height = self.info.scrollHeight + 'px';
-        window.addEventListener('resize', resizeInfo);
+    this.confirm = function(code) {
+        let modalBackground = element('div', {className: 'modal-background'});
+        let modal = element('div',
+            {className: 'modal'},
+            element('p',
+                'A new list of starred stops will be created on your device as a cookie. No ' +
+                'other identifiable information is stored. Happy with this?'
+            )
+        );
+        document.body.style.overflow = 'hidden';
+        modalBackground.appendChild(modal);
+        document.body.appendChild(modalBackground)
 
-        element.blur();
-        element.textContent = 'Confirm starred stop';
-        element.onclick = function() {
-            self.set = true;
-            self.add(element, code, function() {
-                self.info.style.height = 0 + 'px';
-                window.removeEventListener('resize', resizeInfo);
-            });
-        };
+        let close = element('button',
+            {
+                className: 'button button--action button--float',
+                title: 'Close this dialog',
+                onclick: function() {
+                    document.body.style.overflow = '';
+                    document.body.removeChild(modalBackground);
+                }
+            },
+            element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
+        );
+        let confirm = element('button',
+            {
+                className: 'button',
+                onclick: function() {
+                    self.set = true;
+                    self.add(code);
+                    document.body.style.overflow = '';
+                    document.body.removeChild(modalBackground);
+                }
+            },
+            'Confirm starred stop'
+        );
+        modal.insertBefore(close, modal.firstChild);
+        modal.appendChild(confirm);
     };
 
-    this.get = function(callback) {
+    this.get = function(onGet) {
         self.r.onload = function() {
             let newData = JSON.parse(self.r.responseText);
             self.data = newData.stops;
-            callback();
+            onGet();
         };
         self.r.open("GET", STARRED_URL, true);
         self.r.send();
     };
 
-    this.add = function(element, code, callback) {
+    this.add = function(code) {
         if (!self.set) {
-            self._confirm(element, code);
+            self.confirm(code);
             return;
         }
         if (self.active) {
@@ -112,13 +135,8 @@ function StarredStops(cookieSet, info) {
         }
         self.r.onload = function() {
             self.active = false;
-            element.blur();
-            element.onclick = function(event) {
-                self.remove(event.target, code);
-            };
-            element.textContent = 'Remove starred stop';
-            if (typeof callback !== 'undefined') {
-                callback();
+            if (self.onAdd != null) {
+                self.onAdd();
             }
         };
         self.r.open("POST", STARRED_URL + code, true);
@@ -126,19 +144,14 @@ function StarredStops(cookieSet, info) {
         self.r.send();
     };
 
-    this.remove = function(element, code, callback) {
+    this.remove = function(code) {
         if (self.active || !self.set) {
             return;
         }
         self.r.onload = function() {
             self.active = false;
-            element.blur();
-            element.onclick = function(event) {
-                self.add(event.target, code);
-            };
-            element.textContent = 'Add starred stop';
-            if (typeof callback !== 'undefined') {
-                callback();
+            if (self.onRemove != null) {
+                self.onRemove();
             }
         };
         self.r.open("DELETE", STARRED_URL + code, true);
@@ -1559,6 +1572,30 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setStopPanelData = function(data) {
+        let leaveTitle, leaveSrc, leaveAlt;
+        if (self.currentService !== null) {
+            let data = self.stopMap.routeLayer.data;
+            leaveTitle = 'Back to service ' + data.line;
+            leaveSrc = STATIC + 'icons/sharp-timeline-24px.svg';
+            leaveAlt = 'Back';
+        } else {
+            leaveTitle = 'Close stop panel';
+            leaveSrc = STATIC + 'icons/sharp-close-24px.svg';
+            leaveAlt = 'Close';
+        }
+        let closePanel = element('button',
+            {
+                className: 'button button--action button--float',
+                title: leaveTitle,
+                onclick: function() {
+                    this.blur();
+                    self.stopMap.update({stop: null});
+                    return false;
+                }
+            },
+            element('img', {src: leaveSrc, alt: leaveAlt})
+        );
+
         let headingText = null,
             hasBearing = (data.bearing !== null && self.directions.hasOwnProperty(data.bearing)),
             hasStreet = (data.street !== null);
@@ -1576,39 +1613,15 @@ function Panel(stopMap, mapPanel, cookieSet) {
             headingText = element('p', element('strong', data.street));
         }
 
-        let leaveTitle, leaveSrc, leaveAlt;
-        if (self.currentService !== null) {
-            let data = self.stopMap.routeLayer.data;
-            leaveTitle = 'Back to service ' + data.line;
-            leaveSrc = 'icons/sharp-timeline-24px.svg';
-            leaveAlt = 'Back';
-        } else {
-            leaveTitle = 'Close stop panel';
-            leaveSrc = 'icons/sharp-close-24px.svg';
-            leaveAlt = 'Close';
-        }
-
         let headingOuter = element('div',
             {className: 'heading heading--panel'},
-            element('button',
-                {
-                    className: 'button button--action button--action--float',
-                    title: leaveTitle,
-                    onclick: function() {
-                        this.blur();
-                        self.stopMap.update({stop: null});
-                        return false;
-                    }
-                },
-                element('img', {src: STATIC + leaveSrc, alt: leaveAlt})
-            ),
             element('div',
                 {className: 'heading-stop'},
                 element('div',
                     {className: 'indicator area-' + data.adminAreaRef},
                     createIndicator(data)
                 ),
-                element('h1', data.name)
+                element('h1', data.name),
             ),
             headingText
         );
@@ -1695,23 +1708,17 @@ function Panel(stopMap, mapPanel, cookieSet) {
             {className: 'card card--panel'},
             element('h2', 'Stop Information'),
             infoLine,
-            element('p', 'SMS code ', element('strong', data.naptanCode))
+            element('p', 'SMS code ', element('strong', data.naptanCode)),
+            element('p', element('a', {href: STOP_PAGE_URL + data.atcoCode}, 'Stop page'))
         );
 
-        let actions = element('section',
-            {className: 'card card--minor card--panel'},
-            element('a',
-                {className: 'button', href: STOP_PAGE_URL + data.atcoCode},
-                'Stop page'
-            )
-        );
         self.clearPanel();
+        self.mapPanel.appendChild(closePanel);
         self.mapPanel.appendChild(headingOuter);
         resizeIndicator('indicator');
         self.mapPanel.appendChild(liveTimes);
         self.mapPanel.appendChild(services);
         self.mapPanel.appendChild(stopInfo);
-        self.mapPanel.appendChild(actions);
 
         self.getStop(
             data.atcoCode,
@@ -1722,40 +1729,43 @@ function Panel(stopMap, mapPanel, cookieSet) {
         );
 
         self.starred.get(function() {
-            let codeInList;
-            if (!self.starred.set) {
-                let info = element('div',
-                    {className: 'hidden', style: {margin: '-5px 10px'}},
-                    element('p',
-                        'This will add a cookie to your device with a list of starred stops. No ' +
-                        'other identifiable information is stored. If you\'re happy with this, ' +
-                        'click again.'
-                    )
-                );
-                actions.appendChild(info);
-                self.starred.info = info;
-                codeInList = false;
-            } else {
-                codeInList = self.starred.data.indexOf(data.naptanCode) > -1;
-            }
-
-            let starredAction, starredText;
-            if (!self.starred.set || !codeInList) {
-                starredAction = function() {
-                    self.starred.add(starred, data.naptanCode);
-                };
-                starredText = 'Add starred stop';
-            } else {
-                starredAction = function() {
-                    self.starred.remove(starred, data.naptanCode);
-                };
-                starredText = 'Remove starred stop';
-            }
-            let starred = element('button',
-                {className: 'button', onclick: starredAction},
-                starredText
+            let codeInList = (self.starred.set && self.starred.data.indexOf(data.naptanCode) > -1);
+            let addText = 'Add starred stop',
+                removeStarred = 'Remove starred stop';
+            let notStarred = element('img',
+                {src: STATIC + 'icons/baseline-star_border-24px.svg', alt: addText}
             );
-            actions.appendChild(starred);
+            let starred = element('img',
+                {src: STATIC + 'icons/baseline-star-24px.svg', alt: removeStarred}
+            );
+
+            let starredButton = element('button',
+                {className: 'button button--action button--float'},
+                notStarred,
+                starred
+            );
+            self.mapPanel.insertBefore(starredButton, headingOuter);
+
+            self.starred.onAdd = function() {
+                starredButton.blur();
+                starredButton.title = removeStarred;
+                starredButton.onclick = function() {
+                    self.starred.remove(data.naptanCode);
+                };
+                notStarred.style.display = 'none';
+                starred.style.display = '';
+            };
+            self.starred.onRemove = function() {
+                starredButton.blur();
+                starredButton.title = addText;
+                starredButton.onclick = function() {
+                    self.starred.add(data.naptanCode);
+                };
+                starred.style.display = 'none';
+                notStarred.style.display = '';
+            };
+            // Set up button
+            (codeInList) ? self.starred.onAdd() : self.starred.onRemove();
         });
 
         // Add control for zooming into stop view
@@ -1783,6 +1793,18 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setServicePanelData = function(data) {
+        let closePanel = element('button',
+            {
+                className: 'button button--action button--float',
+                title: 'Close service panel',
+                onclick: function() {
+                    this.blur();
+                    self.stopMap.update({service: null});
+                }
+            },
+            element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
+        );
+
         let listOperators = null;
         if (data.operators) {
             listOperators = [];
@@ -1801,17 +1823,6 @@ function Panel(stopMap, mapPanel, cookieSet) {
 
         let headingOuter = element('div',
             {className: 'heading heading--panel'},
-            element('button',
-                {
-                    className: 'button button--action button--action--float',
-                    title: 'Close service panel',
-                    onclick: function() {
-                        this.blur();
-                        self.stopMap.update({service: null});
-                    }
-                },
-                element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
-            ),
             element('div',
                 {className: 'heading-service'},
                 element('div',
@@ -1825,16 +1836,15 @@ function Panel(stopMap, mapPanel, cookieSet) {
             ),
             element('div',
                 {className: 'heading-subtitle'},
-                element('p',
-                    {className: 'heading-subtitle__operator'},
-                    'Operated by ',
-                    listOperators
-                ),
+                element('p', 'Operated by ', listOperators),
                 element('div',
-                    {className: 'heading-subtitle__buttons'},
+                    {className: 'buttons'},
                     element('a',
-                        {className: 'button', href: timetableURL},
-                        'Timetable'
+                        {className: 'button button--action', href: timetableURL,
+                         title: 'Timetable'},
+                        element('img',
+                            {src: STATIC + 'icons/sharp-date_range-24px.svg', alt: 'Timetable'}
+                        ),
                     )
                 )
             )
@@ -1928,6 +1938,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         list.appendChild(listStops);
 
         self.clearPanel();
+        self.mapPanel.appendChild(closePanel);
         self.mapPanel.appendChild(headingOuter);
         if (tabs) {
             self.mapPanel.appendChild(tabs);

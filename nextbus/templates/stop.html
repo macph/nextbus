@@ -26,15 +26,10 @@
         <a class="button button--action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">
             <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
         </a>
-        {% if 'stops' not in session or stop.naptan_code not in session.stops %}
-        <button class="button button--action" title="Star this stop">
-            <img src="{{ url_for('static', filename='icons/baseline-star_border-24px.svg') }}" alt="Add starred stop">
+        <button id="starred-button" class="button button--action" style="display: none;">
+            <img id="not-starred" src="{{ url_for('static', filename='icons/baseline-star_border-24px.svg') }}" alt="Add starred stop" style="display: none;">
+            <img id="is-starred" src="{{ url_for('static', filename='icons/baseline-star-24px.svg') }}" alt="Remove starred stop" style="display: none;">
         </button>
-        {% else %}
-        <button class="button button--action" title="Unstar this stop">
-            <img src="{{ url_for('static', filename='icons/baseline-star-24px.svg') }}" alt="Remove starred stop">
-        </button>
-        {% endif %}
     </div>
 </div>
 {% if stop.street or stop.bearing %}
@@ -108,13 +103,41 @@
 <script>
     resizeIndicator('indicator');
 
-    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
+    const STATIC = "{{ url_for('static', filename='') }}";
     const STARRED_URL = "{{ url_for('api.starred') }}";
+    let starredButton = document.getElementById('starred-button'),
+        isStarred = document.getElementById('is-starred'),
+        notStarred = document.getElementById('not-starred'),
+        addText = 'Add starred stop',
+        removeText = 'Remove starred stop';
+    let code = '{{ stop.naptan_code }}',
+        set = {{ ('stops' in session)|tojson }},
+        active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }};
+    let starred = new StarredStops(
+        set,
+        function() {
+            starredButton.blur();
+            starredButton.title = removeText;
+            starredButton.onclick = function() {
+                starred.remove(code);
+            };
+            notStarred.style.display = 'none';
+            isStarred.style.display = '';
+        },
+        function() {
+            starredButton.blur();
+            starredButton.title = addText;
+            starredButton.onclick = function() {
+                starred.add(code);
+            };
+            isStarred.style.display = 'none';
+            notStarred.style.display = '';
+        }
+    );
+    (active) ? starred.onAdd() : starred.onRemove();
+    starredButton.style.display = '';
 
-    let set = "{{ ('stops' in session)|tojson }}" === 'true';
-    let info = document.getElementById('cookie-request-info');
-    let starred = new StarredStops(set, info);
-
+    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
     let ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',

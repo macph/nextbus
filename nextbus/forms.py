@@ -19,14 +19,16 @@ class MultipleCheckboxField(fields.SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
-    def render_elements(self, **kwargs):
+    def render_elements(self, checked=None, **kwargs):
         """ Creates a list of elements with each checkbox input within its
-            associated label element.
+            associated label element. If checked is True or False, only elements
+            with checkboxes marked as such as selected.
         """
         list_elements = []
         for item in self:
-            label = item.label(str(item) + " " + item.label.text, **kwargs)
-            list_elements.append(label)
+            if checked is None or item.checked is checked:
+                label = item.label(str(item) + " " + item.label.text, **kwargs)
+                list_elements.append(label)
 
         return list_elements
 

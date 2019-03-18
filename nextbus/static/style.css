@@ -267,7 +267,22 @@ button:focus {
 
 .button--action--float {
   float: right;
-  margin: 0 0 0 5px;
+  margin-left: 5px;
+}
+
+/*
+ *  COLLECTION OF BUTTONS
+ */
+
+.buttons {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  margin: -8px -5px;
+}
+
+.buttons > .button {
+  margin: 8px 5px;
 }
 
 /*
@@ -490,15 +505,20 @@ button:focus {
 /*
  *  HEADING WITH BUTTONS
  */
-.heading-with-button {
+.heading-with-buttons {
   display: flex;
   flex-flow: row wrap;
   align-items: center;
+  margin: 8px -5px;
 }
 
-.heading-with-button > .button {
-  flex: none;
-  margin: 0 0 0 10px;
+.heading-with-buttons > h1 {
+  margin: 16px 5px;
+}
+
+.heading-with-buttons > .buttons {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /*
@@ -508,15 +528,20 @@ button:focus {
 .heading-stop {
   display: flex;
   align-items: center;
-  margin: 16px 0;
+  margin: 16px -5px;
 }
 
 .heading-stop > .indicator {
   font-size: 1.3rem;
+  margin: 0 5px;
 }
 
 .heading-stop > h1 {
-  margin: 0 0 0 10px;
+  margin: 0 5px;
+}
+
+.heading-stop > .buttons {
+  margin: -32px 0;
 }
 
 .heading-stop + p {
@@ -554,21 +579,16 @@ button:focus {
   display: flex;
   flex-flow: row wrap;
   align-items: center;
-  margin: -10px 0 10px;
+  margin: -10px -5px 10px;
 }
 
-.heading-subtitle__operator {
-  margin-right: 10px;
+.heading-subtitle > p {
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
-.heading-subtitle__buttons {
-  display: flex;
-  margin: 0 -5px;
-}
-
-.heading-subtitle__buttons > .button {
-  flex: none;
-  margin: 0 5px;
+.heading-subtitle > .buttons {
+  margin: 0;
 }
 
 
@@ -779,10 +799,14 @@ button:focus {
 }
 
 .filter-form__scrolling {
-  max-height: 360px;
+  max-height: 50vh;
   overflow-x: visible;
   overflow-y: auto;
-  margin: 10px 0;
+  margin: 0;
+}
+
+.filter-form__expanded {
+  margin-bottom: 10px;
 }
 
 .filter-list {
@@ -805,6 +829,7 @@ button:focus {
   -moz-hyphens: auto;
   -ms-hyphens: auto;
   hyphens: auto;
+  cursor: pointer;
 }
 
 .filter-item:hover {
@@ -1585,18 +1610,6 @@ button:focus {
   
   .list-index {
     flex-wrap: wrap;
-  }
-  
-  /* Show filter list on left regardless of hidden setting */
-  .filter-form-wrapper {
-    height: 100%;
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  
-  /* Don't need button for showing filter list */
-  #filter-show-button {
-    display: none;
   }
 }
 

@@ -8,11 +8,13 @@
 {% endblock %}
 
 {% block heading %}
-<div class="heading-with-button">
+<div class="heading-with-buttons">
     <h1>Stops nearby</h1>
-    <a class="button button--action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}" title="View on map">
-      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-    </a>
+    <div class="buttons">
+        <a class="button button--action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}" title="View on map">
+        <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+        </a>
+    </div>
 </div>
 {% endblock %}
 

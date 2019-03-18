@@ -22,9 +22,20 @@
 <div class="heading-stop">
     {{ f.print_stop_indicator(stop) }}
     <h1>{{ stop.name }}</h1>
-    <a class="button button--action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">
-      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-    </a>
+    <div class="buttons">
+        <a class="button button--action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">
+            <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+        </a>
+        {% if 'stops' not in session or stop.naptan_code not in session.stops %}
+        <button class="button button--action" title="Star this stop">
+            <img src="{{ url_for('static', filename='icons/baseline-star_border-24px.svg') }}" alt="Add starred stop">
+        </button>
+        {% else %}
+        <button class="button button--action" title="Unstar this stop">
+            <img src="{{ url_for('static', filename='icons/baseline-star-24px.svg') }}" alt="Remove starred stop">
+        </button>
+        {% endif %}
+    </div>
 </div>
 {% if stop.street or stop.bearing %}
 <p>{{ f.stop_description(stop) }}</p>
@@ -73,19 +84,6 @@
         </section>
     </div>
     <div class="column-1">
-        <section class="card card--minor">
-            <a class="button" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}">Map</a>
-            {% if 'stops' not in session %}
-            <div id="cookie-request-info" class="hidden" style="margin: -5px 0;">
-                <p>This will add a cookie to your device with a list of starred stops. No other identifiable information is stored. If you're happy with this, click again.</p>
-            </div>
-            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');">Add starred stop</button>
-            {% elif stop.naptan_code not in session['stops'] %}
-            <button class="button" onclick="starred.add(this, '{{ stop.naptan_code }}');">Add starred stop</button>
-            {% else %}
-            <button class="button" onclick="starred.remove(this, '{{ stop.naptan_code }}');">Remove starred stop</button>
-            {% endif %}
-        </section>
         <section class="card card--aside">
             <h2>Stop information</h2>
             <p>

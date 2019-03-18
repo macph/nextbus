@@ -37,11 +37,13 @@
         <li>{{ locality.name }}</li>
     </ul>
 </nav>
-<div class="heading-with-button">
+<div class="heading-with-buttons">
     <h1>{{ place_name }}</h1>
-    <a class="button button--action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}" title="View on map">
-      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-    </a>
+    <div class="buttons">
+        <a class="button button--action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}" title="View on map">
+        <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+        </a>
+    </div>
 </div>
 {% endblock %}
 

@@ -26,8 +26,7 @@
 
 {% block content %}
 <div class="columns">
-    <div class="column-1 column--empty"></div>
-    <div class="column-3">
+    <div class="column-1">
         <section class="card">
             <form class="form" action="{{ g.action }}" method="post" name="search">
                 {% set aria = {'aria-label': 'Find a bus stop'} %}
@@ -39,22 +38,29 @@
                 </button>
             </form>
         </section>
-    </div>
-</div>
-{% if query is not none %}
-<div class="columns">
-    {% if f_areas %}
-    <div class="column-1">
-        <section id="filter-box" class="card card--aside">
+        {% if query is not none %}
+        {% if f_areas %}
+        {% set checked_elements = filters.area.render_elements(class='filter-item', checked=true) %}
+        {% set unchecked_elements = filters.area.render_elements(class='filter-item', checked=false)%} 
+        <section id="filter-box" class="card">
             <div class="heading-inline heading-inline--right">
                 <h3>Filter by area</h3>
-                <button id="filter-show-button" class="filter-button">Show</button>
+                <button id="filter-show-button">Show</button>
             </div>
-            <div id="filter-wrapper" class="hidden filter-form-wrapper">
+            <div id="filter-wrapper" class="filter-form-wrapper">
                 <form id="filter-form" class="filter-form" method="get">
-                    <div class="filter-form__scrolling">
+                    {% if checked_elements %}
+                    <div class="filter-form__scrolling filter-form__expanded">
                         <ul class="filter-list">
-                            {% for element in filters.area.render_elements(class='filter-item') %}
+                            {% for element in checked_elements %}
+                            <li>{{ element }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <div id="filter-list" class="filter-form__scrolling hidden">
+                        <ul class="filter-list">
+                            {% for element in unchecked_elements %}
                             <li>{{ element }}</li>
                             {% endfor %}
                         </ul>
@@ -63,11 +69,7 @@
                 </form>
             </div>
         </section>
-    </div>
-    {% else %}
-    <div class="column-1 column--empty"></div>
-    {% endif %}
-    <div class="column-3">
+        {% endif %}
         {% if f_groups %}
         <ul class="tabs tabs--5">
             {{ group_tab(none, 'All results', 'group' not in request.args) }}
@@ -172,22 +174,19 @@
     resizeIndicator('indicator');
     revertColours('indicator--reversed');
 </script>
-{% if f_groups or f_areas %}
+{% if f_areas %}
 <script>
     let showFilter = false;
     let filterBox = document.getElementById('filter-box');
     let filterShow = document.getElementById('filter-show-button');
-    let filterList = document.getElementById('filter-wrapper');
+    let filterList = document.getElementById('filter-list');
 
     filterShow.addEventListener('click', function() {
         showFilter = !showFilter;
         filterShow.blur();
         filterShow.textContent = (showFilter) ? 'Hide' : 'Show';
         filterList.style.height = (showFilter) ? filterList.scrollHeight + 'px' : '';
-        filterList.style.marginTop = filterList.style.marginBottom = (showFilter) ? '10px': '';
-        if (showFilter) {
-            filterBox.scrollIntoView({behavior: 'smooth'});
-        }
+        filterList.classList.toggle("filter-form__expanded");
     });
     window.addEventListener('resize', function() {
         if (showFilter) {

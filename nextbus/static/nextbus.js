@@ -2691,6 +2691,10 @@ function setupGraph(container, data) {
     let containerElement = (container instanceof HTMLElement) ?
             container : document.getElementById(container);
 
+    if (data == null) {
+        return;
+    }
+
     data.forEach(function(v, r) {
         let id = (v[0] !== null) ? v[0] : 'Null';
         let div = document.getElementById('c' + id);

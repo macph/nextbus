@@ -437,18 +437,26 @@ class Timetable:
             self.sequence = list(sequence)
             self.stops = dict(dict_stops)
 
-        # Remove null values from start or end of sequence
-        if self.sequence[0] is None:
-            del self.sequence[0]
-        if self.sequence[-1] is None:
-            del self.sequence[-1]
+        if self.sequence:
+            # Remove null values from start or end of sequence
+            if self.sequence[0] is None:
+                del self.sequence[0]
+            if self.sequence[-1] is None:
+                del self.sequence[-1]
 
-        self.journeys = self._timetable_journeys(query_result)
-        self.head, self.rows, self.operators, self.notes = self._create_table()
+            self.journeys = self._timetable_journeys(query_result)
+            data = self._create_table()
+            self.head, self.rows, self.operators, self.notes = data
+        else:
+            self.journeys = []
+            self.head, self.rows, self.operators, self.notes = [], [], {}, {}
 
     def __repr__(self):
         return "<Timetable(%r, %r, %r)>" % (self.service_id, self.direction,
                                             self.date)
+
+    def __bool__(self):
+        return bool(self.sequence)
 
     def _compare_times(self, journey_a, journey_b):
         """ Compares two journeys based on UTC arrival/departure times at their

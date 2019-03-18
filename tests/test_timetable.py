@@ -421,6 +421,17 @@ def test_query_timetable_sunday(load_db):
     ]
 
 
+def test_timetable_empty():
+    service, direction, date = 0, False, datetime.date(2019, 3, 3)
+    tt = Timetable(service, direction, date, [], {})
+
+    assert not tt
+    assert tt.operators == {}
+    assert tt.notes == {}
+    assert tt.head == []
+    assert tt.rows == []
+
+
 def test_timetable_sunday(load_db):
     date = datetime.date(2019, 3, 3)
     tt = Timetable(SERVICE, DIRECTION, date)

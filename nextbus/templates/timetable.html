@@ -61,7 +61,7 @@
             <p>{{ e }}</p>
             {%- endfor -%}
             {%- endif %}
-            {% if timetable.head|length > 0 -%}
+            {% if timetable -%}
             <div class="timetable-wrapper">
                 <table class="timetable" id="tt">
                     {% if timetable.notes -%}
@@ -127,6 +127,8 @@
             {%- endif %}
             {%- elif not select_date.errors -%}
             <p>No services run on this day.</p>
+            {%- else -%}
+            <p>No stops found for this service.</p>
             {%- endif %}
         </section>
         <section class="card">

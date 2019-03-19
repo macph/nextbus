@@ -667,17 +667,26 @@ def _commit_tnds_region(transform, archive, region, delete=False,
     tnds.commit(delete=del_, exclude=excluded)
 
 
-def commit_tnds_data(directory=None, delete=True):
+def commit_tnds_data(directory=None, delete=True, warn=False):
     """ Commits TNDS data to database.
 
         :param directory: Directory where zip files with TNDS XML documents and
         named after region codes are contained. If None, they will be
         downloaded.
         :param delete: Truncate all data from TNDS tables before populating.
+        :param warn: Log warning if no FTP credentials exist. If False an error
+        will be raised instead.
     """
     if directory is None:
-        # Download required files and get region code from each filename
-        data = download_tnds_files()
+        try:
+            # Download required files and get region code from each filename
+            data = download_tnds_files()
+        except ValueError:
+            if warn:
+                utils.logger.warn("No TNDS FTP credentials are specified in "
+                                  "config; skipping over TNDS population.")
+            else:
+                raise
     else:
         regions = _get_regions()
         data = {}
@@ -691,9 +700,10 @@ def commit_tnds_data(directory=None, delete=True):
                                      (file_, directory))
 
     if not data:
-        raise ValueError("No files were passed - either specified directory "
-                         "did not contain any suitable archives or they failed "
-                         "to be downloaded.")
+        raise ValueError(
+            "No files were passed - either the directory specified did not "
+            "contain any suitable archives or their downloads failed."
+        )
 
     transform = _get_tnds_transform()
     setup_tnds_functions()

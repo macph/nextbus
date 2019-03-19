@@ -26,7 +26,7 @@ class Config(object):
     CAMDEN_APP_TOKEN = None         # App token to access Camden's NSPL API; only required to
                                     # bypass throtting limits
     TNDS_USERNAME = None            # FTP username password for TNDS files
-    TNDS_PASSWORD = None            #FTP access password for TNDS files
+    TNDS_PASSWORD = None            # FTP access password for TNDS files
 
 
 class DevelopmentConfig(Config):

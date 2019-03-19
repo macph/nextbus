@@ -168,8 +168,10 @@ def populate(ctx, **kw):
         if options["o"]:
             populate.commit_noc_data(file_=kw["noc_f"])
         if options["t"]:
+            # If using --all and TNDS credentials not loaded just log warning
             populate.commit_tnds_data(directory=kw["tnds_f"],
-                                      delete=not kw["tnds_keep"])
+                                      delete=not kw["tnds_keep"],
+                                      warn=kw["all_d"])
         if options["m"]:
             populate.modify_data()
         # Update views after population

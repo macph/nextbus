@@ -1,6 +1,6 @@
 # nextbus
 
-Live bus times in the UK.
+Live service times in the UK.
 
 This is a Flask web application running on a PostgreSQL DB via SQLAlchemy.
 
@@ -18,29 +18,17 @@ Enter the new folder and run
 pipenv install
 ```
 
-to setup the virtual environment and install the application and all related packages.
-
-Within the virtual enviroment the `nxb` command is available for accessing the application.
+to setup the virtual environment, install all related package and the application itself. The virtual environment can be started up with `pipenv shell` or a command run with `pipenv run`. The `nxb` command is available for accessing the application.
 
 ## Starting up
 
 Default config values can be found within `default_config.py` in the root directory. If new values are needed, like a different URI for the DB, a separate config file is required. Create a new Python config file in the `instance` folder:
 
 ```
-touch instance/config.py
+echo 'SQLALCHEMY_DATABASE_URI = "postgresql://scott:tiger@localhost"' > instance/new_config.py
 ```
 
-and set enviroment variable `APP_CONFIG` to `config.py`.
-
-PostgreSQL > 9.6 is required.
-
-By default all areas within Great Britain are loaded, but if you want to restrict the data to a specific area the `ATCO_CODES` parameter needs to be set as a list of codes. See [NaPTAN info](http://naptan.app.dft.gov.uk/datarequest/help) for more on ATCO codes. For example, London has a ATCO code `490`, so in the config file it can be set as
-
-```python
-ATCO_CODES = [490]
-```
-
-With the configuration set up, upgrade the database migrations:
+and set enviroment variable `APP_CONFIG` to `new_config.py` so the application will load config on start up. PostgreSQL must be at least v9.4 to support materialized views. With the configuration set up, run the database migrations:
 
 ```python
 nxb db upgrade
@@ -49,12 +37,10 @@ nxb db upgrade
 Populate with data:
 
 ```
-nxb populate -gnpm
+nxb populate --all
 ```
 
-which will download NPTG, NaPTAN and NSPL data and commits them, as well as doing some modifications.
-
-Run the development server with
+which will download NPTG, NaPTAN and NSPL data and commits them, as well as doing some modifications. If you've added TNDS FTP credentials to the config, TNDS service data will be added as well. Run the server in development mode with
 
 ```
 nxb run
@@ -63,5 +49,3 @@ nxb run
 ## App keys
 
 Live bus times are retrieved with [Transport API](transportapi.com) - a account is required to use application ID/key. Sample data is used as backup for testing if no key exists.
-
-[Mapbox](mapbox.com) is used for map data, which requires an application token.

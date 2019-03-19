@@ -509,10 +509,10 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     this.printData = function() {
         let clLive;
         if (self.isLive) {
-            clLive = 'service--live';
+            clLive = 'live-service--live';
         } else {
             self.updateOutdatedData();
-            clLive = 'service--estimated';
+            clLive = 'live-service--estimated';
         }
 
         if (self.data !== null && self.data.services.length > 0) {
@@ -522,68 +522,49 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 self.headingTime.textContent = 'Estimated times from ' + self.data.localTime;
             }
 
-            let table = element('div', {className: 'list-services'});
+            let table = element('table', {className: 'live-data'});
             for (let s = 0; s < self.data.services.length; s++) {
                 let service = self.data.services[s];
-                let row = s + 1;
 
-                // Cell showing bus line number
-                let cNum = element('div',
-                    {className: 'service service__line', style: {msGridRow: row}},
-                    element('div',
-                        {className: 'service service__line__inner area-' + self.adminAreaCode +
-                                    ((service.name.length > 6) ? ' service__line--small' : '')},
-                        element('span', service.name)
-                    )
-                );
-
-                // Destination
-                let cDest = element('div',
-                    {className: 'service service__destination', style: {msGridRow: row}},
-                    element('span', service.dest)
-                );
-
-                // Next bus due
-                let cNext = element('div',
-                    {className: 'service service__next', style: {msGridRow: row}},
-                    element('span',
-                        {className: (service.expected[0].live) ? clLive : ''},
-                        self._strDue(service.expected[0].secs)
-                    )
-                );
-
-                // Buses after
-                let cAfter, cAfterSpan;
-                // If number of expected services is 2, only need to show the 2nd service here
+                let afterSpan = null;
                 if (service.expected.length === 2) {
-                    cAfterSpan = element('span',
+                    afterSpan = element('span',
                         {className: (service.expected[1].live) ? clLive : ''},
                         self._strDue(service.expected[1].secs)
                     );
-                // Otherwise, show the 2nd and 3rd services
                 } else if (service.expected.length > 2) {
-                    cAfterSpan = element('span',
-                        element('span',
-                            {className: (service.expected[1].live) ? clLive : ''},
-                            self._strDue(service.expected[1].secs).replace(' min', '') + ' and'
-                        ),
-                        ' ',
-                        element('span',
-                            {className: (service.expected[2].live) ? clLive : ''},
-                            self._strDue(service.expected[2].secs)
-                        )
+                    let next = self._strDue(service.expected[1].secs);
+                    let first = element('span',
+                        {className: (service.expected[1].live) ? clLive : ''},
+                        (next === 'due') ? next + ', ' : next.replace(' min', ' and')
                     );
+                    let second = element('span',
+                        {className: (service.expected[2].live) ? clLive : ''},
+                        self._strDue(service.expected[2].secs)
+                    );
+                    afterSpan = [first, ' ', second];
                 }
-                cAfter = element('div',
-                    {className: 'service service__after', style: {msGridRow: row}},
-                    cAfterSpan
+
+                let row = element('tr',
+                    {className: 'live-service'},
+                    element('td',
+                        element('div',
+                            {className: 'line'},
+                            element('div',
+                                {className: 'line__inner area-' + self.adminAreaCode},
+                                element('span', {className: 'line__text'}, service.name)
+                            )
+                        )
+                    ),
+                    element('td', service.dest),
+                    element('td',
+                        {className: (service.expected[0].live) ? clLive : ''},
+                        self._strDue(service.expected[0].secs)
+                    ),
+                    element('td', afterSpan)
                 );
 
-                // Add the four cells to new table
-                table.appendChild(cNum);
-                table.appendChild(cDest);
-                table.appendChild(cNext);
-                table.appendChild(cAfter);
+                table.appendChild(row);
             }
             // Remove all existing elements
             removeSubElements(self.table);

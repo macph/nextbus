@@ -1,8 +1,8 @@
 """
 Interacts with Transport API to retrieve live bus times data.
 """
-import os
 import json
+import os
 
 import dateutil.parser
 import pytz
@@ -33,7 +33,6 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
         (or all if not grouping).
         :returns: a Python dict converted from JSON.
     """
-
     if current_app.config.get("TRANSPORT_API_ACTIVE"):
         parameters = {
             "group": "yes" if group else "no",
@@ -52,8 +51,8 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             # experimentation
             url = URL_FCC
 
-        current_app.logger.info("Requesting live data for ATCO code %s"
-                                % atco_code)
+        current_app.logger.debug("Requesting live data for ATCO code %s"
+                                 % atco_code)
         req = requests.get(url % atco_code, params=parameters)
         req.raise_for_status()
         try:
@@ -62,8 +61,6 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             raise ValueError("Data is expected to be in JSON format.") from err
         if data.get("error") is not None:
             raise ValueError("Error with data: " + data["error"])
-        current_app.logger.info("Received live data for ATCO code %s"
-                                % atco_code)
         current_app.logger.debug("Data received:\n" + repr(data))
 
     else:
@@ -73,90 +70,139 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             file_name = "samples/tapi_live.json"
         with open(os.path.join(ROOT_DIR, file_name), "r") as sample_file:
             data = json.load(sample_file)
-        current_app.logger.info("Received sample data from file '%s'" %
-                                file_name)
+        current_app.logger.debug("Received sample data from file '%s'" %
+                                 file_name)
 
     return data
 
 
-class _Services(object):
-    """ Helper class for parsing live service data.
+class Departure:
+    """ Holds data for each journey expected at a stop, with line, operator and
+        times.
 
-        :param request_date: Datetime object for when the live data was
-        requested.
+        :param data: Data for a departure.
+        :param dt_requested: Date time API call was requested at.
     """
-    CUT_OFF_MIN = 60
+    __slots__ = ("line", "name", "destination", "operator", "operator_name",
+                 "live", "expected", "datetime")
 
-    def __init__(self, request_date):
-        self.req_date = request_date
-        self.list = []
-
-    def add(self, line, service):
-        """ Adds service to list of services, or to a line/destination if it
-            already exists.
-
-            :param line: String for bus or tram route label, used for grouping
-            services
-            :param service: Dictionary object for each service.
-        """
-        exp_dt = (service["date"], service["aimed_departure_time"])
-        live_dt = (service["expected_departure_date"],
-                   service["expected_departure_time"])
-
-        if all(d is not None for d in exp_dt):
-            exp_date = GB_TZ.localize(dateutil.parser.parse("T".join(exp_dt)))
-        else:
-            exp_date = None
-
-        is_live = all(d is not None for d in live_dt)
-        if is_live:
-            live_date = GB_TZ.localize(
-                dateutil.parser.parse("T".join(live_dt))
-            )
-            exp_sec = (live_date - self.req_date).seconds
-            iso_date = live_date.isoformat()
-        elif exp_date is not None:
-            exp_sec = (exp_date - self.req_date).seconds
-            iso_date = exp_date.isoformat()
-        else:
-            # Record has no live or timetabled times? Skip over
-            return
-
-        if self.CUT_OFF_MIN and exp_sec > self.CUT_OFF_MIN * 60:
-            # Don't need services any further out than 60 minutes
-            return
-
+    def __init__(self, data, dt_requested):
+        self.line = data["line"]
+        self.name = data["line_name"]
         # Ignore all text after comma or opening parenthesis
-        new_dest = service["direction"].split(",")[0].split("(")[0]
-        sv_expected = {
-            "live": is_live,
-            "secs": exp_sec,
-            "expDate": iso_date
-        }
+        self.destination = data["direction"].split(",")[0].split("(")[0]
+        self.operator = data["operator"]
+        self.operator_name = data["operator_name"]
 
-        for new_sv in self.list:
-            if line == new_sv["line"] and new_dest == new_sv["dest"]:
-                new_sv["expected"].append(sv_expected)
-                break
+        exp = (data["date"], data["aimed_departure_time"])
+        live = (data["expected_departure_date"],
+                data["expected_departure_time"])
+
+        if None not in exp:
+            dt_exp = GB_TZ.localize(dateutil.parser.parse("T".join(exp)))
         else:
-            # No matching line and/or destination, create a new group
-            new_service = {
-                "line": line,
-                "name": service["line_name"],
-                "dest": new_dest,
-                "opName": service["operator_name"],
-                "opCode": service["operator"],
-                "expected": [sv_expected]
-            }
-            self.list.append(new_service)
+            dt_exp = None
 
-    def ordered_list(self):
-        """ Returns a list of lines, sorted by first service expected. """
-        for group in self.list:
-            group["expected"].sort(key=lambda sv: sv["secs"])
-        self.list.sort(key=lambda sg: sg["expected"][0]["secs"])
+        self.live = None not in live
+        if self.live:
+            dt_live = GB_TZ.localize(dateutil.parser.parse("T".join(live)))
+            self.expected = (dt_live - dt_requested).seconds
+            self.datetime = dt_live.isoformat()
+        elif dt_exp is not None:
+            self.expected = (dt_exp - dt_requested).seconds
+            self.datetime = dt_exp.isoformat()
+        else:
+            self.expected = None
+            self.datetime = None
 
-        return self.list
+    def __repr__(self):
+        return "<Departure(%r, %r, %r)>" % (
+            self.line, self.operator, self.datetime
+        )
+
+
+def _get_expected(journey):
+    return journey.expected
+
+
+def _first_expected(journeys):
+    return journeys[0].expected
+
+
+class LiveData:
+    """ Parses live service data.
+
+        :param data: Data passed from API.
+    """
+    __slots__ = ("atco_code", "naptan_code", "datetime", "services")
+
+    def __init__(self, data):
+        self.atco_code = data["atcocode"]
+        self.naptan_code = data["smscode"]
+        self.datetime = dateutil.parser.parse(data["request_time"])
+        if self.datetime.tzinfo is None:
+            # Assume naive datetime is UTC
+            self.datetime = UTC.localize(self.datetime)
+
+        self.services = self._group_journeys(data)
+
+    def __repr__(self):
+        return "<LiveData(%r, %r)>" % (self.atco_code, self.datetime)
+
+    def _group_journeys(self, data):
+        """ Group journeys by line, operator and destination and sorted by
+            departure time.
+        """
+        groups = {}
+        for departures in data["departures"].values():
+            for data in departures:
+                journey = Departure(data, self.datetime)
+                key = journey.line, journey.operator, journey.destination
+                if journey.expected is not None:
+                    groups.setdefault(key, []).append(journey)
+
+        for service in groups.values():
+            service.sort(key=_get_expected)
+
+        return sorted(groups.values(), key=_first_expected)
+
+    def to_json(self, max_minutes=60):
+        """ Serializes live data for stop as JSON.
+
+            :param max_minutes: Include only journeys expected to come before
+            this limit. If zero all journeys will be included.
+        """
+        services = []
+        for service in self.services:
+            first = service[0]
+            times = []
+            for j in service:
+                if max_minutes > 0 and j.expected > max_minutes * 60:
+                    continue
+                times.append({
+                    "live": j.live,
+                    "secs": j.expected,
+                    "expDate": j.datetime
+                })
+            if not times:
+                continue
+
+            services.append({
+                "line": first.line,
+                "name": first.name,
+                "dest": first.destination,
+                "opName": first.operator_name,
+                "opCode": first.operator,
+                "expected": times
+            })
+
+        return {
+            "atcoCode": self.atco_code,
+            "naptanCode": self.naptan_code,
+            "isoDate": self.datetime.isoformat(),
+            "localTime": self.datetime.astimezone(GB_TZ).strftime("%H:%M"),
+            "services": services
+        }
 
 
 def get_nextbus_times(atco_code, **kwargs):
@@ -172,30 +218,8 @@ def get_nextbus_times(atco_code, **kwargs):
     params["group"] = params.get("group", True)
     params["limit"] = params.get("limit", 6)
     data = get_live_data(atco_code, **params)
+    new_data = LiveData(data).to_json()
 
-    req_date = dateutil.parser.parse(data["request_time"])
-    if req_date.tzinfo is None:
-        # Assume naive datetime is UTC
-        req_date = UTC.localize(req_date)
-
-    services = _Services(req_date)
-    for line, group in data["departures"].items():
-        for sv in group:
-            try:
-                services.add(line, sv)
-            except:
-                current_app.logger.error("Error with request for stop. "
-                                         "Data from request:\n%r" % data,
-                                         exc_info=1)
-                raise
-
-    new_data = {
-        "atcoCode": data["atcocode"],
-        "naptanCode": data["smscode"],
-        "isoDate": req_date.isoformat(),
-        "localTime": req_date.astimezone(GB_TZ).strftime("%H:%M"),
-        "services": services.ordered_list()
-    }
     current_app.logger.debug("%d services for ATCO code %s:\n%r" %
                              (len(new_data["services"]), atco_code, new_data))
 

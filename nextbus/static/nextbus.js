@@ -142,6 +142,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         self.r.open("POST", STARRED_URL + code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
+        self.active = true;
     };
 
     this.remove = function(code) {
@@ -157,6 +158,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         self.r.open("DELETE", STARRED_URL + code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
+        self.active = true;
     };
 }
 
@@ -413,35 +415,42 @@ function removeSubElements(element) {
  * @constructor
  * @param {string} atcoCode ATCO code for stop
  * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
- * @param {(HTMLElement|string)} table Table element or ID in document
+ * @param {(HTMLElement|string)} container Table container element or ID in document
  * @param {(HTMLElement|string)} time Element or ID in document showing time when data was
  * retrieved
  * @param {(HTMLElement|string)} countdown Element or ID in document showing time before next
  * refresh
+ * @param {{code: string, name: string}[]} [operators] Optional list of operators
  */
-function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
+function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators) {
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
     this.url = LIVE_URL;
-    this.table = null;
+    this.container = null;
     this.headingTime = null;
     this.headingCountdown = null;
+    this.operators = null;
+    if (operators) {
+        self.operators = new Map();
+        operators.forEach(function(o) {
+            self.operators.set(o.code, o.name);
+        });
+    }
 
     /**
-     * Sets table, heading with time and subheading with countdown to specified elements
-     * @param {(HTMLElement|string)} table
+     * Sets container, heading with time and subheading with countdown to specified elements
+     * @param {(HTMLElement|string)} container
      * @param {(HTMLElement|string)} time
      * @param {(HTMLElement|string)} countdown
      */
-    this.setElements = function(table, time, countdown) {
-        self.table = (table instanceof HTMLElement) ? table : document.getElementById(table);
+    this.setElements = function(container, time, countdown) {
+        self.container = (container instanceof HTMLElement) ?
+            container : document.getElementById(container);
         self.headingTime = (time instanceof HTMLElement) ? time : document.getElementById(time);
         self.headingCountdown = (countdown instanceof HTMLElement) ?
             countdown : document.getElementById(countdown);
     };
-
-    this.setElements(table, time, countdown);
 
     /**
      * Live time data from API.
@@ -453,6 +462,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     this.isLive = true;
     this.loopActive = false;
     this.loopEnding = false;
+    this.setElements(container, time, countdown);
 
     /**
      * Called after live data is successfully received.
@@ -464,29 +474,29 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
      * Gets data from server, refreshing table
      * @param {afterLiveData} [after] Callback to be used upon successful request
      */
-    this.getData = function(after) {
+    this.get = function(after) {
         self.headingTime.textContent = 'Updating...';
         let request = new XMLHttpRequest();
         request.open('GET', self.url + self.atcoCode, true);
         request.setRequestHeader('Content-Type', 'charset=utf-8');
 
         request.onreadystatechange = function() {
-            if (request.readyState === XMLHttpRequest.DONE) {
-                if (request.status === 200) {
-                    console.debug('Request for stop ' + self.atcoCode + ' successful');
-                    self.data = JSON.parse(request.responseText);
-                    self.isLive = true;
-                    self.printData();
-                } else if (self.data != null) {
-                    self.isLive = false;
-                    self.printData();
-                } else {
-                    self.isLive = false;
-                    self.headingTime.textContent = 'No data available';
-                }
-                if (typeof after !== 'undefined') {
-                    after(self.atcoCode);
-                }
+            if (request.readyState !== XMLHttpRequest.DONE) {
+                return;
+            }
+            if (request.status === 200) {
+                self.data = JSON.parse(request.responseText);
+                self.isLive = true;
+                self.draw();
+            } else if (self.data != null) {
+                self.isLive = false;
+                self.draw();
+            } else {
+                self.isLive = false;
+                self.headingTime.textContent = 'No data available';
+            }
+            if (typeof after !== 'undefined') {
+                after(self.atcoCode);
             }
         };
 
@@ -494,93 +504,16 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     };
 
     /**
-     * Prints remaining seconds as 'due' or 'x min'
-     * @param {number} sec Remaining seconds
-     * @private
+     * Refreshes table with new data
      */
-    this._strDue = function(sec) {
-        let due = Math.round(sec / 60);
-        return (due < 2) ? 'due' : due + ' min';
-    };
-
-    /**
-     * Draws table from data
-     */
-    this.printData = function() {
-        let clLive;
-        if (self.isLive) {
-            clLive = 'live-service--live';
-        } else {
-            self.updateOutdatedData();
-            clLive = 'live-service--estimated';
+    this.draw = function() {
+        if (!self.isLive) {
+            self.estimate();
         }
-
-        if (self.data !== null && self.data.services.length > 0) {
-            if (self.isLive) {
-                self.headingTime.textContent = 'Live times at ' + self.data.localTime;
-            } else {
-                self.headingTime.textContent = 'Estimated times from ' + self.data.localTime;
-            }
-
-            let table = element('table', {className: 'live-data'});
-            for (let s = 0; s < self.data.services.length; s++) {
-                let service = self.data.services[s];
-
-                let afterSpan = null;
-                if (service.expected.length === 2) {
-                    afterSpan = element('span',
-                        {className: (service.expected[1].live) ? clLive : ''},
-                        self._strDue(service.expected[1].secs)
-                    );
-                } else if (service.expected.length > 2) {
-                    let next = self._strDue(service.expected[1].secs);
-                    let first = element('span',
-                        {className: (service.expected[1].live) ? clLive : ''},
-                        (next === 'due') ? next + ', ' : next.replace(' min', ' and')
-                    );
-                    let second = element('span',
-                        {className: (service.expected[2].live) ? clLive : ''},
-                        self._strDue(service.expected[2].secs)
-                    );
-                    afterSpan = [first, ' ', second];
-                }
-
-                let row = element('tr',
-                    {className: 'live-service'},
-                    element('td',
-                        element('div',
-                            {className: 'line'},
-                            element('div',
-                                {className: 'line__inner area-' + self.adminAreaCode},
-                                element('span', {className: 'line__text'}, service.name)
-                            )
-                        )
-                    ),
-                    element('td', service.dest),
-                    element('td',
-                        {className: (service.expected[0].live) ? clLive : ''},
-                        self._strDue(service.expected[0].secs)
-                    ),
-                    element('td', afterSpan)
-                );
-
-                table.appendChild(row);
-            }
-            // Remove all existing elements
-            removeSubElements(self.table);
-            // Add table
-            self.table.appendChild(table);
-            console.debug('Created table with ' + self.data.services.length +
-                          ' services for stop "' + self.atcoCode + '".');
-
-        } else if (self.data !== null) {
-            removeSubElements(self.table);
-            if (self.isLive) {
-                self.headingTime.textContent = 'No services expected at ' + self.data.localTime;
-            } else {
-                self.headingTime.textContent = 'No services found';
-            }
-            console.debug('No services found for stop ' + self.atcoCode + '.');
+        if (self.data != null && self.data.services.length > 0) {
+            self._drawTable();
+        } else if (self.data != null) {
+            self._drawEmpty();
         } else {
             self.headingTime.textContent = 'Updating...';
             console.debug('No data received yet when printed for stop ' + self.atcoCode);
@@ -588,9 +521,104 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     };
 
     /**
+     * Prints remaining seconds as 'due' or 'x min'
+     * @param {number} sec Remaining seconds
+     * @param {boolean} [min] Add 'min' to string, true by default
+     * @private
+     */
+    this._strDue = function(sec, min) {
+        let addMin = (min == null || min) ? ' min' : '';
+        return (sec < 90) ? 'due' : Math.round(sec / 60) + addMin;
+    };
+
+    /**
+     * Gets class name for this journey
+     * @param {boolean} isLive Whether this particular journey is tracked or not
+     * @private
+     */
+    this._classLive = function(isLive) {
+        return (!isLive) ? '' : (self.isLive) ? 'live-service--live' : 'live-service--estimated';
+    };
+
+    /**
+     * Draws table from data
+     * @private
+     */
+    this._drawTable = function() {
+        let message = (self.isLive) ? 'Live times at ' : 'Estimated times from ';
+        self.headingTime.textContent = message + self.data.localTime;
+
+        let table = element('table', {className: 'live-data'});
+        for (let s = 0; s < self.data.services.length; s++) {
+            let service = self.data.services[s];
+            let first = service.expected[0],
+                departures = Math.min(service.expected.length, 5),
+                after = [];
+
+            for (let n = 1; n < departures; n++) {
+                let expected = service.expected[n],
+                    mins = self._strDue(expected.secs, false);
+                if (departures - n > 2) {
+                    mins += ',';
+                } else if (departures - n > 1) {
+                    mins += (mins === 'due') ? ',' : ' and';
+                } else {
+                    mins += (mins === 'due') ? '' : ' min';
+                }
+                after.push(element('span',
+                    {className: self._classLive(expected.live)},
+                    mins
+                ));
+                if (departures - n > 1) {
+                    after.push(' ');
+                }
+            }
+
+            let row = element('tr',
+                {className: 'live-service'},
+                element('td',
+                    element('div',
+                        {className: 'line'},
+                        element('div',
+                            {className: 'line__inner area-' + self.adminAreaCode},
+                            element('span', {className: 'line__text'}, service.name)
+                        )
+                    )
+                ),
+                element('td', service.dest),
+                element('td', {className: self._classLive(first.live)}, self._strDue(first.secs)),
+                element('td', after),
+                element('td', service.opCode)
+            );
+
+            table.appendChild(row);
+        }
+        // Remove all existing elements
+        removeSubElements(self.container);
+        // Add table
+        self.container.appendChild(table);
+        console.debug('Created table with ' + self.data.services.length +
+                        ' services for stop "' + self.atcoCode + '".');
+    };
+
+    /**
+     * No data received, so display a message
+     * @private
+     */
+    this._drawEmpty = function() {
+        removeSubElements(self.container);
+        if (self.isLive) {
+            self.headingTime.textContent = 'No services expected at ' + self.data.localTime;
+        } else {
+            self.headingTime.textContent = 'No services found';
+        }
+        console.debug('No services found for stop ' + self.atcoCode + '.');
+    };
+
+    /**
      * Updates seconds remaining with current date/time if no data received
      */
-    this.updateOutdatedData = function() {
+    this.estimate = function() {
         let dtNow = new Date();
         // Loop backwards while removing services to avoid skipping other services
         let i = self.data.services.length;
@@ -602,13 +630,11 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                 let dtExp = new Date(e.expDate);
                 e.secs = Math.round((dtExp - dtNow) / 1000);
                 if (e.secs < 0) {
-                    // Remove services past their expected datetime
                     s.expected.splice(j, 1);
                 }
             }
             if (s.expected.length === 0) {
-                let index = self.data.services.indexOf(s);
-                self.data.services.splice(index, 1);
+                self.data.services.splice(i, 1);
             }
         }
         // Sort by time remaining on first service coming
@@ -635,7 +661,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
      * @param {callbackLiveData} [callbacks.interval] Called every interval after initial interval
      * @param {callbackLiveData} [callbacks.end] Called when interval finishes and loop stops
      */
-    this.startLoop = function(callbacks) {
+    this.start = function(callbacks) {
         let onInter, onStart, onEnd;
         if (typeof callbacks !== 'undefined') {
             onInter = callbacks.interval;
@@ -650,11 +676,11 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
             if (typeof onStart !== 'undefined') {
                 onStart(self.atcoCode);
             }
-            self.printData();
+            self.draw();
             return;
         }
 
-        self.getData(onStart);
+        self.get(onStart);
 
         let time = INTERVAL;
         self.loopActive = true;
@@ -670,7 +696,7 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
                         onEnd(self.atcoCode);
                     }
                 } else {
-                    self.getData(onInter);
+                    self.get(onInter);
                     time = INTERVAL;
                 }
             }
@@ -678,15 +704,11 @@ function LiveData(atcoCode, adminAreaCode, table, time, countdown) {
     };
 
     /**
-     * Sets the loop to not repeat after it runs out. Can be restarted with startLoop() again
-     * @param {callbackLiveData} callback - Calls function at same time
+     * Sets the loop to not repeat after it runs out. Can be restarted with start() again
      */
-    this.stopLoop = function(callback) {
+    this.stop = function() {
         if (self.loopActive) {
             self.loopEnding = true;
-        }
-        if (typeof callback !== 'undefined') {
-            callback(self.atcoCode);
         }
     };
 }
@@ -1426,8 +1448,9 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @param {(HTMLElement|string)} table Table element ID
      * @param {(HTMLElement|string)} time Heading element ID
      * @param {(HTMLElement|string)} countdown Countdown element ID
+     * @param {{code: string, name: string}[]} operators List of operators
      */
-    this.getStop = function(atcoCode, adminAreaRef, table, time, countdown) {
+    this.getStop = function(atcoCode, adminAreaRef, table, time, countdown, operators) {
         let live;
         if (!self.activeStops.has(atcoCode)) {
             live = new LiveData(
@@ -1435,7 +1458,8 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 adminAreaRef,
                 table,
                 time,
-                countdown
+                countdown,
+                operators
             );
             self.activeStops.set(atcoCode, live);
         } else {
@@ -1444,7 +1468,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         }
 
         self.stopAllLoops(atcoCode);
-        live.startLoop({
+        live.start({
             end: function(atcoCode) {
                 self.activeStops.delete(atcoCode);
             }
@@ -1460,7 +1484,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
     this.stopAllLoops = function(exceptCode) {
         self.activeStops.forEach(function(data, code) {
             if (typeof exceptCode === 'undefined' || code !== exceptCode) {
-                data.stopLoop();
+                data.stop();
             }
         });
     };
@@ -1708,7 +1732,8 @@ function Panel(stopMap, mapPanel, cookieSet) {
             data.adminAreaRef,
             'services',
             'live-time',
-            'live-countdown'
+            'live-countdown',
+            data.operators
         );
 
         self.starred.get(function() {

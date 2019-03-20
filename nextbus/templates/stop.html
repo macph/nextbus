@@ -143,8 +143,9 @@
         '{{ stop.admin_area_ref }}',
         'services',
         'liveTime',
-        'liveCountdown'
+        'liveCountdown',
+        {{ operators|tojson }}
     );
-    ld.startLoop();
+    ld.start();
 </script>
 {% endblock %}

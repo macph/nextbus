@@ -1074,12 +1074,20 @@ button:focus {
 .live-data {
   table-layout: auto;
   border-collapse: collapse;
-  width: 100%;
-  margin: 10px -5px;
+  width: calc(100% + 30px);
+  margin: 10px -15px;
 }
 
-.live-service > td {
+.live-data td {
   padding: 5px;
+}
+
+.live-data > tr > td:first-child {
+  padding-left: 15px;
+}
+
+.live-data > tr > td:last-child {
+  padding-right: 15px;
 }
 
 .live-service > td:nth-child(1) {
@@ -1105,8 +1113,9 @@ button:focus {
   white-space: nowrap;
 }
 
-.live-service-info {
-
+.live-service > td:nth-child(5) {
+  width: 54px;
+  font-size: 1.6rem;
 }
 
 .live-service--live {

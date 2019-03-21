@@ -79,14 +79,15 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         let modalBackground = element('div', {className: 'modal-background'});
         let modal = element('div',
             {className: 'modal'},
+            element('h2', 'Create a cookie?'),
             element('p',
                 'A new list of starred stops will be created on your device as a cookie. No ' +
-                'other identifiable information is stored. Happy with this?'
+                'other identifiable information is stored.'
             )
         );
         document.body.style.overflow = 'hidden';
         modalBackground.appendChild(modal);
-        document.body.appendChild(modalBackground)
+        document.body.appendChild(modalBackground);
 
         let close = element('button',
             {

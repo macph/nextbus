@@ -294,7 +294,7 @@ button:focus {
  */
 
 .modal-background {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 100;
@@ -304,15 +304,20 @@ button:focus {
 }
 
 .modal {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 
-  width: 100%;
+  width: calc(100% - 30px);
   max-width: 360px;
-  padding: 0 15px;
+  padding: 15px;
   background: white;
+}
+
+.modal > .button--float {
+  margin-top: 0;
+  margin-right: 0;
 }
 
 /*

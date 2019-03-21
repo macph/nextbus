@@ -3,6 +3,8 @@ Models for the nextbus database.
 """
 import re
 
+import sqlalchemy.dialects.postgresql as pg
+
 from nextbus import db, location
 from nextbus.models import utils
 
@@ -533,10 +535,11 @@ class StopPoint(db.Model):
         return geojson
 
     def get_services(self):
-        """ Queries all services at this stop, returning a list including the
-            origin and destination of these services, grouped by service ID and
-            direction. Services are also checked for whether they terminate at
-            this stop or not.
+        """ Queries and returns two datasets for services and operators at this
+            stoplist including the origin and destination of these services,
+            grouped by service ID and direction. Services are also checked for
+            whether they terminate at this stop or not. Operators are returned
+            as a dict of local operator codes and operator names.
         """
         # Checks if associated link is not last in sequence
         link = db.aliased(JourneyLink)
@@ -549,6 +552,7 @@ class StopPoint(db.Model):
 
         # Give service instance name in keyed tuple object
         service = db.aliased(Service, name="service")
+        operator = pg.array((LocalOperator.code, Operator.name))
         query_services = (
             db.session.query(
                 service,
@@ -557,23 +561,31 @@ class StopPoint(db.Model):
                 .label("origin"),
                 db.func.string_agg(JourneyPattern.destination.distinct(), ' / ')
                 .label("destination"),
-                db.case([(db.func.count(next_link) == 0, True)], else_=False)
-                .label("terminates")
+                (db.func.count(next_link) == 0).label("terminates"),
+                pg.array_agg(db.distinct(operator)).label("operators")
             )
             .join(service.patterns)
             .join(JourneyPattern.links)
+            .join(JourneyPattern.local_operator)
+            .join(LocalOperator.operator)
             .filter(JourneyLink.stop_point_ref == self.atco_code)
             .group_by(service.id, JourneyPattern.direction)
             .order_by(service.line_index, service.description,
                       JourneyPattern.direction)
         )
 
-        return query_services.all()
+        services = query_services.all()
+        operators = {}
+        for sv in services:
+            operators.update(sv.operators)
+
+        return services, operators
 
     def to_full_json(self):
         """ Produces full data for stop point in JSON format, including services
             and locality data.
         """
+        services, operators = self.get_services()
         json = {
             "atcoCode": self.atco_code,
             "naptanCode": self.naptan_code,
@@ -608,8 +620,12 @@ class StopPoint(db.Model):
                 "reverse": s.direction,
                 "origin": s.origin,
                 "destination": s.destination,
-                "terminates": s.terminates
-            } for s in self.get_services()]
+                "terminates": s.terminates,
+                "operatorCodes": list(operators)
+            } for s in services],
+            "operators": [{
+                "code": code, "name": name
+            } for code, name in operators.items()]
         }
 
         return json

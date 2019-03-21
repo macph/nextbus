@@ -849,7 +849,8 @@ function mapControl(...actions) {
  *     reverse: boolean,
  *     origin: string,
  *     destination: string,
- *     terminates: boolean
+ *     terminates: boolean,
+ *     operators: string[]
  * }} StopServiceData
  */
 
@@ -872,7 +873,8 @@ function mapControl(...actions) {
  *     adminArea: {code: string, name: string},
  *     district: ?{code: string, name: string},
  *     locality: {code: string, name: string},
- *     services: StopServiceData[]
+ *     services: StopServiceData[],
+ *     operators: {code: string, name: string}[]
  * }} StopPointData
  */
 

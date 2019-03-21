@@ -436,7 +436,11 @@ def stop_naptan(naptan_code):
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=302)
 
-    return render_template("stop.html", stop=stop, services=stop.get_services())
+    services, operators = stop.get_services()
+    list_operators = [{"code": c, "name": n} for c, n in operators.items()]
+
+    return render_template("stop.html", stop=stop, services=services,
+                           operators=list_operators)
 
 
 @page.route("/stop/atco/<atco_code>")
@@ -461,7 +465,11 @@ def stop_atco(atco_code=""):
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=302)
 
-    return render_template("stop.html", stop=stop, services=stop.get_services())
+    services, operators = stop.get_services()
+    list_operators = [{"code": c, "name": n} for c, n in operators.items()]
+
+    return render_template("stop.html", stop=stop, services=services,
+                           operators=list_operators)
 
 
 def _query_service(service_id, reverse=None):

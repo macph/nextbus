@@ -134,7 +134,8 @@ STOP_POINT_JSON = {
             "reverse": False,
             "origin": "Barking Station",
             "destination": "Dagenham Sunday Market",
-            "terminates": False
+            "terminates": False,
+            "operatorCodes": ["ATC"]
         },  {
             "id": 645,
             "description": "Barking – Dagenham Sunday Market",
@@ -143,9 +144,14 @@ STOP_POINT_JSON = {
             "reverse": True,
             "origin": "Dagenham Sunday Market",
             "destination": "Barking Station",
-            "terminates": True
+            "terminates": True,
+            "operatorCodes": ["ATC"]
         }
-    ]
+    ],
+    "operators": [{
+        "code": "ATC",
+        "name": "AT Coaches"
+    }]
 }
 
 

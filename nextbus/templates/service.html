@@ -8,9 +8,17 @@
 {% endblock %}
 
 {% block heading %}
+{% set slash = joiner(' / ') %}
 <nav>
     <ul class="breadcrumbs breadcrumbs--trailing">
         <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+        {% if service.regions %}
+        <li>
+            {% for r in service.regions|sort(attribute='name') %}
+            {{ slash() }}<a href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+            {% endfor %}
+        </li>
+        {%endif %}
     </ul>
 </nav>
 <div class="heading-service">

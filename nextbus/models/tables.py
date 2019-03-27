@@ -137,6 +137,8 @@ class Region(db.Model):
 
     areas = db.relationship("AdminArea", backref="region", innerjoin=True,
                             order_by="AdminArea.name", lazy="raise")
+    patterns = db.relationship("JourneyPattern", backref="region",
+                               innerjoin=True, lazy="raise")
 
     def __repr__(self):
         return "<Region(%r)>" % self.code
@@ -702,8 +704,10 @@ class Operator(db.Model):
     )
     patterns = db.relationship(
         "JourneyPattern",
-        backref=db.backref("operator", innerjoin=True, uselist=False),
+        backref=db.backref("operator", innerjoin=True, viewonly=True,
+                           uselist=False),
         secondary="local_operator",
+        viewonly=True,
         lazy="raise"
     )
 
@@ -734,7 +738,9 @@ class LocalOperator(db.Model):
 
     patterns = db.relationship(
         "JourneyPattern",
-        backref=db.backref("local_operator", innerjoin=True, uselist=False),
+        backref=db.backref("local_operator", innerjoin=True, uselist=False,
+                           viewonly=True),
+        viewonly=True,
         lazy="raise"
     )
 
@@ -761,7 +767,7 @@ class Service(db.Model):
                                innerjoin=True, lazy="raise")
     operators = db.relationship(
         "Operator",
-        backref=db.backref("services", uselist=True,
+        backref=db.backref("services", uselist=True, viewonly=True,
                            order_by="Service.line_index, Service.description"),
         primaryjoin="Service.id == JourneyPattern.service_ref",
         secondary="join(JourneyPattern, LocalOperator, "
@@ -769,6 +775,17 @@ class Service(db.Model):
                   "(JourneyPattern.region_ref == LocalOperator.region_ref))",
         secondaryjoin="LocalOperator.operator_ref == Operator.code",
         order_by="Operator.name",
+        viewonly=True,
+        lazy="raise"
+    )
+    regions = db.relationship(
+        "Region",
+        backref=db.backref("services", uselist=True,
+                           order_by="Service.line_index, Service.description"),
+        primaryjoin="Service.id == JourneyPattern.service_ref",
+        secondary="journey_pattern",
+        secondaryjoin="JourneyPattern.region_ref == Region.code",
+        order_by="Region.name",
         lazy="raise"
     )
 
@@ -805,7 +822,11 @@ class JourneyPattern(db.Model):
         nullable=False, index=True
     )
     local_operator_ref = db.Column(db.Text, nullable=False, index=True)
-    region_ref = db.Column(db.VARCHAR(2), nullable=False, index=True)
+    region_ref = db.Column(
+        db.VARCHAR(2),
+        db.ForeignKey("region.code", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
 
     direction = db.Column(db.Boolean, nullable=False, index=True)
     date_start = db.Column(db.Date, nullable=False)

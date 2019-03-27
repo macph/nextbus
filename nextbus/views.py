@@ -259,8 +259,9 @@ def list_in_region(region_code):
         return redirect(url_for(".list_in_region", region_code=region.code),
                         code=302)
 
-    return render_template("region.html", region=region,
-                           areas=region.list_areas())
+    areas = region.list_areas()
+
+    return render_template("region.html", region=region, areas=areas)
 
 
 @page.route("/list/area/<area_code>")
@@ -480,8 +481,10 @@ def _query_service(service_id, reverse=None):
         models.Service.query
         .join(models.Service.patterns)
         .join(models.JourneyPattern.operator)
+        .join(models.JourneyPattern.region)
         .options(db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators),
+                 db.contains_eager(models.Service.regions),
                  db.defaultload(models.Service.operators)
                  .undefer_group("contacts"))
         .filter(models.Service.id == service_id)

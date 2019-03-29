@@ -17,7 +17,8 @@
 {% endcall %}
 {%- endmacro %}
 
-{% set place_name = locality.name + ', ' + (locality.district.name if locality.district is not none else locality.admin_area.name) %}
+{% set area_name = locality.district.name|default(locality.admin_area.name) %}
+{% set place_name = (locality.name + ', ' + area_name) if locality.name != area_name else locality.name %}
 {% block title %}{{ place_name }}{% endblock %}
 
 {% block outer_header %}

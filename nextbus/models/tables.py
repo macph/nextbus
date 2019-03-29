@@ -291,7 +291,7 @@ class Locality(db.Model):
                 StopPoint.stop_type.label("stop_type"),
                 StopPoint.stop_area_ref.label("stop_area_ref")
             )
-            .filter(StopPoint.locality_ref == self.code)
+            .filter(StopPoint.locality_ref == self.code, StopPoint.active)
         )
 
         if group_areas:
@@ -313,7 +313,7 @@ class Locality(db.Model):
                 )
                 .join(StopArea.stop_points)
                 .group_by(StopArea.code)
-                .filter(StopArea.locality_ref == self.code)
+                .filter(StopArea.locality_ref == self.code, StopArea.active)
             )
             subquery = stops_outside_areas.union(stop_areas).subquery()
             query = (
@@ -345,6 +345,7 @@ class StopArea(db.Model):
         index=True
     )
     stop_area_type = db.Column(db.VARCHAR(4), nullable=False)
+    active = db.Column(db.Boolean, nullable=False, index=True)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     easting = db.deferred(db.Column(db.Integer, nullable=False))
@@ -414,6 +415,7 @@ class StopPoint(db.Model):
         index=True
     )
     stop_type = db.Column(db.VARCHAR(3), nullable=False)
+    active = db.Column(db.Boolean, nullable=False, index=True)
     bearing = db.Column(db.VARCHAR(2))
     latitude = db.Column(db.Float, nullable=False, index=True)
     longitude = db.Column(db.Float, nullable=False, index=True)
@@ -440,6 +442,7 @@ class StopPoint(db.Model):
         order_by="StopPoint.name, StopPoint.ind_index",
         lazy="raise"
     )
+    links = db.relationship("JourneyLink", backref="stop_point", lazy="raise")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -462,22 +465,25 @@ class StopPoint(db.Model):
             return self.name
 
     @classmethod
-    def within_box(cls, box, *options):
+    def within_box(cls, box, *options, active_only=True):
         """ Finds all stop points within a box with latitude and longitude
             coordinates for each side.
 
             :param box: BoundingBox object with north, east, south and west
             attributes
             :param options: Options for loading model instances, eg load_only
+            :param active_only: Active stops only
             :returns: Unordered list of StopPoint objects
         """
         query = cls.query
         if options:
             query = query.options(*options)
+        if active_only:
+            query = query.filter(cls.active)
         try:
             nearby_stops = query.filter(
-                db.between(StopPoint.latitude, box.south, box.north),
-                db.between(StopPoint.longitude, box.west, box.east)
+                db.between(cls.latitude, box.south, box.north),
+                db.between(cls.longitude, box.west, box.east)
             )
         except AttributeError:
             raise TypeError("Box %r is not a valid BoundingBox object." % box)
@@ -485,7 +491,7 @@ class StopPoint(db.Model):
         return nearby_stops.all()
 
     @classmethod
-    def in_range(cls, latitude, longitude, *options):
+    def in_range(cls, latitude, longitude, *options, active_only=True):
         """ Finds stop points in range of lat/long coordinates.
 
             Returns an ordered list of stop points and their distances from
@@ -494,11 +500,12 @@ class StopPoint(db.Model):
             :param latitude: Latitude of centre point
             :param longitude: Longitude of centre point
             :param options: Options for loading model instances, eg load_only
+            :param active_only: Active stops only
             :returns: List of StopPoint objects with distance attribute added
             and sorted.
         """
         box = location.bounding_box(latitude, longitude, MAX_DIST)
-        nearby_stops = cls.within_box(box, *options)
+        nearby_stops = cls.within_box(box, *options, active_only=active_only)
 
         stops = []
         for stop in nearby_stops:
@@ -602,6 +609,7 @@ class StopPoint(db.Model):
             "adminAreaRef": self.admin_area_ref,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "active": self.active,
             "adminArea": {
                 "code": self.admin_area.code,
                 "name": self.admin_area.name,

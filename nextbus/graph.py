@@ -1344,9 +1344,10 @@ def service_graph_stops(service_id, direction):
         .select_from(models.JourneyPattern)
         .join(models.JourneyPattern.links)
         .join(models.JourneyPattern.journeys)
+        .join(models.JourneyLink.stop_point)
         .filter(models.JourneyPattern.service_ref == service_id,
                 models.JourneyPattern.direction.is_(direction),
-                models.JourneyLink.stop_point_ref.isnot(None))
+                models.StopPoint.active)
         .group_by(models.JourneyPattern.id, models.JourneyLink.sequence,
                   models.JourneyLink.stop_point_ref)
         .subquery()

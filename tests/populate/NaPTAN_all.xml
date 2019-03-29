@@ -5,6 +5,7 @@
     <name>Sheffield Interchange</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GBCS</stop_area_type>
+    <active>1</active>
     <easting>435753</easting>
     <northing>387184</northing>
     <longitude>-1.46399376411</longitude>
@@ -16,6 +17,7 @@
     <name>Sheffield - Wicker</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GCLS</stop_area_type>
+    <active>1</active>
     <easting>435875</easting>
     <northing>387989</northing>
     <longitude>-1.46206869421</longitude>
@@ -27,6 +29,7 @@
     <name>Ecclesall Road/Rustlings Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
+    <active>1</active>
     <easting>433008</easting>
     <northing>385655</northing>
     <longitude>-1.50541639314</longitude>
@@ -38,6 +41,7 @@
     <name>Rustlings Road - Ecclesall Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
+    <active>1</active>
     <easting>432900</easting>
     <northing>385655</northing>
     <longitude>-1.50703936082</longitude>
@@ -49,6 +53,7 @@
     <name>Ecclesall Road - Greystones Road</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
+    <active>1</active>
     <easting>432834</easting>
     <northing>385314</northing>
     <longitude>-1.5080664623</longitude>
@@ -60,6 +65,7 @@
     <name>West Street - Fitzwilliam Street</name>
     <admin_area_ref>099</admin_area_ref>
     <stop_area_type>GPBS</stop_area_type>
+    <active>1</active>
     <easting>434721</easting>
     <northing>387159</northing>
     <longitude>-1.47950971677</longitude>
@@ -67,10 +73,23 @@
     <modified>2010-11-15T12:00:00</modified>
   </StopArea>
   <StopArea>
+    <code>370G100959</code>
+    <name>Glossop Road - Gell Street</name>
+    <admin_area_ref>099</admin_area_ref>
+    <stop_area_type>GPBS</stop_area_type>
+    <active>0</active>
+    <easting>434543</easting>
+    <northing>387152</northing>
+    <longitude>-1.48218620074</longitude>
+    <latitude>53.38009734114</latitude>
+    <modified>2016-07-18T09:21:34</modified>
+  </StopArea>
+  <StopArea>
     <code>940GZZSYSHU</code>
     <name>Sheffield Station - Hallam Univ (Supertram)</name>
     <admin_area_ref>147</admin_area_ref>
     <stop_area_type>GTMU</stop_area_type>
+    <active>1</active>
     <easting>435936</easting>
     <northing>386911</northing>
     <longitude>-1.46127383583</longitude>
@@ -82,6 +101,7 @@
     <name>West Street (Sheffield Supertram)</name>
     <admin_area_ref>147</admin_area_ref>
     <stop_area_type>GTMU</stop_area_type>
+    <active>1</active>
     <easting>434856</easting>
     <northing>387205</northing>
     <longitude>-1.47747532006</longitude>
@@ -103,6 +123,7 @@
     <longitude>-1.46464037211</longitude>
     <latitude>53.3802896499</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -123,6 +144,7 @@
     <longitude>-1.46464206231</longitude>
     <latitude>53.38015482699</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -143,6 +165,7 @@
     <longitude>-1.46456949377</longitude>
     <latitude>53.37994776163</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -163,6 +186,7 @@
     <longitude>-1.46448926164</longitude>
     <latitude>53.38035189342</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -183,6 +207,7 @@
     <longitude>-1.46446145165</longitude>
     <latitude>53.38017199475</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -203,6 +228,7 @@
     <longitude>-1.4644183844</longitude>
     <latitude>53.38001000506</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -223,6 +249,7 @@
     <longitude>-1.46439034947</longitude>
     <latitude>53.37984808276</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -243,6 +270,7 @@
     <longitude>-1.46416986434</longitude>
     <latitude>53.38064708809</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -263,6 +291,7 @@
     <longitude>-1.46414171716</longitude>
     <latitude>53.38049415394</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -283,6 +312,7 @@
     <longitude>-1.46411368297</longitude>
     <latitude>53.38033223159</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -303,6 +333,7 @@
     <longitude>-1.46408598738</longitude>
     <latitude>53.38014334464</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -323,6 +354,7 @@
     <longitude>-1.46404303438</longitude>
     <latitude>53.37997236663</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -343,6 +375,7 @@
     <longitude>-1.46403003288</longitude>
     <latitude>53.37981051169</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -363,6 +396,7 @@
     <longitude>-1.46388605658</longitude>
     <latitude>53.38050199541</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -383,6 +417,7 @@
     <longitude>-1.46385791052</longitude>
     <latitude>53.3803490612</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -403,6 +438,7 @@
     <longitude>-1.46384558669</longitude>
     <latitude>53.38013327709</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -423,6 +459,7 @@
     <longitude>-1.4638022961</longitude>
     <latitude>53.37998926357</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -443,6 +480,7 @@
     <longitude>-1.46377426352</longitude>
     <latitude>53.37982734113</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -463,6 +501,7 @@
     <longitude>-1.46354878376</longitude>
     <latitude>53.37982632866</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -483,6 +522,7 @@
     <longitude>-1.46358970243</longitude>
     <latitude>53.38015909433</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -503,6 +543,7 @@
     <longitude>-1.46361457342</longitude>
     <latitude>53.38057268618</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -523,6 +564,7 @@
     <longitude>-1.46364666994</longitude>
     <latitude>53.38041103373</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -543,6 +585,7 @@
     <longitude>-1.46361796031</longitude>
     <latitude>53.38030304042</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -563,6 +606,7 @@
     <longitude>-1.46357670259</longitude>
     <latitude>53.37999723935</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -583,6 +627,7 @@
     <longitude>-1.46454702362</longitude>
     <latitude>53.38054091504</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -603,6 +648,7 @@
     <longitude>-1.46468242643</longitude>
     <latitude>53.38053253325</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -623,6 +669,7 @@
     <longitude>-1.46465416481</longitude>
     <latitude>53.38038858741</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -643,6 +690,7 @@
     <longitude>-1.46451808621</longitude>
     <latitude>53.38045089833</latitude>
     <stop_type>BCS</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>370G100004</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -663,6 +711,7 @@
     <longitude>-1.47970655813</longitude>
     <latitude>53.38003263375</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>W</bearing>
     <stop_area_ref>370G100955</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -683,6 +732,7 @@
     <longitude>-1.47916266221</longitude>
     <latitude>53.3802549807</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>NE</bearing>
     <stop_area_ref>370G100955</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -703,8 +753,9 @@
     <longitude>-1.48268280526</longitude>
     <latitude>53.38005454947</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>W</bearing>
-    <stop_area_ref/>
+    <stop_area_ref>370G100959</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
     <modified>2011-04-06T09:44:28</modified>
   </StopPoint>
@@ -723,6 +774,7 @@
     <longitude>-1.50502390866</longitude>
     <latitude>53.36689089495</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>E</bearing>
     <stop_area_ref>370G100887</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -743,6 +795,7 @@
     <longitude>-1.50528166621</longitude>
     <latitude>53.36669421145</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>SW</bearing>
     <stop_area_ref>370G100887</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -763,6 +816,7 @@
     <longitude>-1.50810171222</longitude>
     <latitude>53.36453958185</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>N</bearing>
     <stop_area_ref>370G100890</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -783,6 +837,7 @@
     <longitude>-1.50802386665</longitude>
     <latitude>53.3634696052</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>S</bearing>
     <stop_area_ref>370G100890</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -803,6 +858,7 @@
     <longitude>-1.50736975817</longitude>
     <latitude>53.36676576344</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>W</bearing>
     <stop_area_ref>370G100888</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -823,6 +879,7 @@
     <longitude>-1.50688835988</longitude>
     <latitude>53.36680872034</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>E</bearing>
     <stop_area_ref>370G100888</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -843,6 +900,7 @@
     <longitude>-1.46162702086</longitude>
     <latitude>53.387979417</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -863,6 +921,7 @@
     <longitude>-1.46237142548</longitude>
     <latitude>53.38737153882</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -883,6 +942,7 @@
     <longitude>-1.46173351138</longitude>
     <latitude>53.38788102133</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -903,8 +963,9 @@
     <longitude>-1.4815394921</longitude>
     <latitude>53.38012150192</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>E</bearing>
-    <stop_area_ref/>
+    <stop_area_ref>370G100959</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
     <modified>2011-04-06T09:44:28</modified>
   </StopPoint>
@@ -923,6 +984,7 @@
     <longitude>-1.46322545701</longitude>
     <latitude>53.38641358974</latitude>
     <stop_type>BCT</stop_type>
+    <active>1</active>
     <bearing>N</bearing>
     <stop_area_ref>370G100020</stop_area_ref>
     <admin_area_ref>099</admin_area_ref>
@@ -943,6 +1005,7 @@
     <longitude>-1.46119879283</longitude>
     <latitude>53.37782924792</latitude>
     <stop_type>PLT</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>940GZZSYSHU</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
@@ -963,6 +1026,7 @@
     <longitude>-1.46136391014</longitude>
     <latitude>53.37784797006</latitude>
     <stop_type>PLT</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>940GZZSYSHU</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
@@ -983,6 +1047,7 @@
     <longitude>-1.47780767871</longitude>
     <latitude>53.3804198499</latitude>
     <stop_type>PLT</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>940GZZSYWTS</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>
@@ -1003,6 +1068,7 @@
     <longitude>-1.47714306938</longitude>
     <latitude>53.38067761465</latitude>
     <stop_type>PLT</stop_type>
+    <active>1</active>
     <bearing/>
     <stop_area_ref>940GZZSYWTS</stop_area_ref>
     <admin_area_ref>147</admin_area_ref>

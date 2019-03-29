@@ -203,6 +203,7 @@ def _select_fts_vectors():
             .outerjoin(District, District.code == Locality.district_ref)
             .join(AdminArea, AdminArea.code == StopArea.admin_area_ref)
         )
+        .where(StopArea.active)
         .group_by(StopArea.code, Locality.name, District.name, AdminArea.code)
     )
 
@@ -234,6 +235,7 @@ def _select_fts_vectors():
             .outerjoin(District, District.code == Locality.district_ref)
             .join(AdminArea, AdminArea.code == StopPoint.admin_area_ref)
         )
+        .where(StopPoint.active)
     )
 
     service = (
@@ -270,7 +272,9 @@ def _select_fts_vectors():
                   (JourneyPattern.region_ref == LocalOperator.region_ref))
             .join(Operator, LocalOperator.operator_ref == Operator.code)
             .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
-            .join(StopPoint, JourneyLink.stop_point_ref == StopPoint.atco_code)
+            .join(StopPoint,
+                  (JourneyLink.stop_point_ref == StopPoint.atco_code) &
+                  StopPoint.active)
             .join(Locality, StopPoint.locality_ref == Locality.code)
             .outerjoin(District, Locality.district_ref == District.code)
             .join(AdminArea, Locality.admin_area_ref == AdminArea.code)

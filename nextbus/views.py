@@ -408,7 +408,8 @@ def stop_area(stop_area_code):
     stops = (
         db.session.query(models.StopPoint)
         .options(db.undefer(models.StopPoint.lines))
-        .filter(models.StopPoint.stop_area_ref == area.code)
+        .filter(models.StopPoint.stop_area_ref == area.code,
+                models.StopPoint.active)
         .order_by(models.StopPoint.ind_index)
         .all()
     )

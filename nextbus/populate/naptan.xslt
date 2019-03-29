@@ -7,12 +7,12 @@
                exclude-result-prefixes="func re">
   <xsl:output method="xml" indent="yes"/>
   <xsl:param name="stops" select="n:NaPTAN/n:StopPoints/n:StopPoint[boolean(n:NaptanCode)] 
-    [@Status='active'][n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]
+    [n:StopClassification/n:StopType[.='BCT' or .='BCS' or .='PLT']]
     [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
-  <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
+  <xsl:param name="areas" select="n:NaPTAN/n:StopAreas/n:StopArea
     [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
     [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]"/>
-  <xsl:key name="key_stop_areas" match="n:NaPTAN/n:StopAreas/n:StopArea[@Status='active']
+  <xsl:key name="key_stop_areas" match="n:NaPTAN/n:StopAreas/n:StopArea
     [n:StopAreaType[.='GBPS' or .='GCLS' or .='GBCS' or .='GPBS' or .='GTMU']]
     [not(n:AdministrativeAreaRef[.='110' or .='143' or .='145' or .='146'])]/n:StopAreaCode" use="func:upper(.)"/>
 
@@ -35,6 +35,12 @@
           <xsl:otherwise><xsl:value-of select="n:StopAreaType"/></xsl:otherwise>
         </xsl:choose>
       </stop_area_type>
+      <active>
+        <xsl:choose>
+          <xsl:when test="@Status = 'active'">1</xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </active>
       <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
       <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
       <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
@@ -96,6 +102,12 @@
       <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
       <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
       <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
+      <active>
+        <xsl:choose>
+          <xsl:when test="@Status = 'active'">1</xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </active>
       <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
       <stop_area_ref>
         <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">

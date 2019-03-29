@@ -88,6 +88,7 @@
              -->{% if stop.landmark is not none and stop.landmark != stop.crossing %}{{ pipe() }}{{ stop.landmark }}{% endif %}
             </p>
             <p>SMS code <strong>{{ stop.naptan_code}}</strong></p>
+            {% if not stop.active %}<p>This stop is marked as inactive.</p>{% endif %}
         </section>
         {% if stop.stop_area_ref is not none %}
         <section class="card card--aside">

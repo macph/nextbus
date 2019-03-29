@@ -187,6 +187,7 @@ def test_remove_areas(load_db):
         code="490G00003616",
         name="Barking Town Centre",
         stop_area_type="GCLS",
+        active=True,
         easting=544229,
         northing=184176,
         longitude=0.07822732541,
@@ -232,7 +233,7 @@ def test_commit_naptan_data_no_nptg(create_db):
 NAPTAN_EXPECTED = {
     "a": [
         "370G100004", "370G100020", "370G100887", "370G100888", "370G100890",
-        "370G100955", "940GZZSYSHU", "940GZZSYWTS"
+        "370G100955", "370G100959", "940GZZSYSHU", "940GZZSYWTS"
     ],
     "p": [
         "370010113", "370010114", "370010115", "370010119", "370010120",

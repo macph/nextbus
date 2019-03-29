@@ -257,7 +257,9 @@ def _query_timetable(service_id, direction, date):
             .label("depart")
         )
         .select_from(times)
-        .filter(times.c.stop_point_ref.isnot(None), times.c.stopping)
+        .join(models.StopPoint,
+              times.c.stop_point_ref == models.StopPoint.atco_code)
+        .filter(models.StopPoint.active, times.c.stopping)
         .order_by(times.c.departure, times.c.journey_id, times.c.sequence)
     )
 

@@ -113,6 +113,7 @@ STOP_POINT_JSON = {
     "adminAreaRef": "082",
     "latitude": 51.54007091529,
     "longitude": 0.08238531544,
+    "active": True,
     "adminArea": {
         "code": "082",
         "name": "Greater London",

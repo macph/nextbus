@@ -893,6 +893,7 @@ function mapControl(...actions) {
  *     adminAreaRef: string,
  *     latitude: number,
  *     longitude: number,
+ *     active: boolean,
  *     adminArea: {code: string, name: string},
  *     district: ?{code: string, name: string},
  *     locality: {code: string, name: string},
@@ -1649,7 +1650,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
             element('h2', 'Services')
         );
 
-        if (data.services) {
+        if (data.services.length > 0) {
             let listNonTerminating = [],
                 listTerminating = [];
             data.services.forEach(function(s) {
@@ -1714,9 +1715,10 @@ function Panel(stopMap, mapPanel, cookieSet) {
 
         let stopInfo = element('section',
             {className: 'card card--panel'},
-            element('h2', 'Stop Information'),
+            element('h2', 'Stop information'),
             infoLine,
             element('p', 'SMS code ', element('strong', data.naptanCode)),
+            (data.active) ? null : element('p', 'This stop is marked as inactive.'),
             element('p', element('a', {href: STOP_PAGE_URL + data.atcoCode}, 'Stop page'))
         );
 

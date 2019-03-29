@@ -482,7 +482,8 @@ def _query_service(service_id, reverse=None):
         .join(models.Service.patterns)
         .join(models.JourneyPattern.operator)
         .join(models.JourneyPattern.region)
-        .options(db.contains_eager(models.Service.patterns),
+        .options(db.undefer(models.Service.mode_name),
+                 db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators),
                  db.contains_eager(models.Service.regions),
                  db.defaultload(models.Service.operators)

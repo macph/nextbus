@@ -762,6 +762,9 @@ class Service(db.Model):
     # Access to index for natural sort
     line_index = db.deferred(db.select([_natural_sort.c.index])
                              .where(_natural_sort.c.string == line))
+    # Get mode name for service
+    mode_name = db.deferred(db.select([ServiceMode.name])
+                            .where(ServiceMode.id == mode))
 
     patterns = db.relationship("JourneyPattern", backref="service",
                                innerjoin=True, lazy="raise")

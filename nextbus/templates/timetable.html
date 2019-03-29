@@ -22,7 +22,7 @@
   <h1>{{ service.description }}</h1>
 </div>
 <div class="heading-subtitle">
-  <p>{% if service.operators|length > 0 %}Operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
+    <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
   <div class="buttons">
     <a class="button button--action" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}" title="Diagram">
       <img src="{{ url_for('static', filename='icons/sharp-timeline-24px.svg') }}" alt="Diagram">

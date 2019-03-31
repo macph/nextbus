@@ -14,14 +14,6 @@ def _in_bit_array(array, col):
     return db.literal_column("1").op("<<")(col).op("&")(array) > 0
 
 
-def _set_timezone(timestamp, timezone):
-    """ Sets timestamp to a timezone specified, eg 'Europe/London'.
-
-        This operator has precedence over others such as +.
-    """
-    return timestamp.op("AT TIME ZONE", 100)(timezone)
-
-
 def _format_time(timestamp):
     """ SQL expression to format a date or timestamp as `HHMM`, eg 0730. """
     trunc_min = db.bindparam("trunc_min", "minute")
@@ -46,24 +38,26 @@ def _query_journeys(service_id, direction, date):
     week = db.cast(db.func.floor(db.extract("DAY", p_date) / 7), db.Integer)
     weekday = db.cast(db.extract("ISODOW", p_date), db.Integer)
 
-    # Add timezones BST, GMT and Europe/London (which can be either)
-    timezones = models.utils.values(
-        [db.column("tz", type_=db.Text)],
-        ("BST",), ("GMT",), ("Europe/London",),
-        alias_name="timezones"
-    )
-
-    # Set each journey departure to the correct timezone
-    departure = _set_timezone(p_date + models.Journey.departure,
-                              timezones.c.tz)
+    # PostgreSQL can repeat or skip times over daylight savings time changes in
+    # a time series so we generate one from 1 hour before to 1 hour after and
+    # exclude these times.
+    tz = db.bindparam("tz", "Europe/London")
+    one_hour = db.cast("1 hour", db.Interval)
+    departures = db.func.generate_series(
+        db.func.timezone(tz, p_date + models.Journey.departure) - one_hour,
+        db.func.timezone(tz, p_date + models.Journey.departure) + one_hour,
+        one_hour
+    ).alias("departures")
+    departure = db.column("departures")
 
     # Find all journeys and their departures
     journeys = (
         db.session.query(models.Journey.id.label("journey_id"),
                          departure.label("departure"))
-        .select_from(models.JourneyPattern, timezones)
-        .join(models.Journey,
-              models.JourneyPattern.id == models.Journey.pattern_ref)
+        .select_from(models.JourneyPattern)
+        .join(models.JourneyPattern.journeys)
+        # SQLAlchemy does not have CROSS JOIN so use INNER JOIN ON TRUE
+        .join(departures, db.true())
         # Match special period if they fall within date range
         .outerjoin(
             models.SpecialPeriod,
@@ -116,22 +110,9 @@ def _query_journeys(service_id, direction, date):
             models.JourneyPattern.date_start <= p_date,
             models.JourneyPattern.date_end.is_(None) |
             (models.JourneyPattern.date_end >= p_date),
-            # Check to see if departure falls within 0100 and 0200 when timezone
-            # changes on last Sunday of March or October
-            # If in March, this journey is skipped.
-            # If in October, this journey is repeated in both BST and GMT.
-            # Otherwise Europe/London is picked, setting BST/GMT automatically.
-            db.case([
-                ((db.extract("MONTH", p_date) == 3) &
-                 (db.extract("DAY", p_date) > 24) &
-                 (db.extract("ISODOW", p_date) == 7) &
-                 (db.extract("HOUR", models.Journey.departure) == 1), False),
-                ((db.extract("MONTH", p_date) == 10) &
-                 (db.extract("DAY", p_date) > 24) &
-                 (db.extract("ISODOW", p_date) == 7) &
-                 (db.extract("HOUR", models.Journey.departure) == 1),
-                 (timezones.c.tz == "BST") | (timezones.c.tz == "GMT"))
-            ], else_=timezones.c.tz == "Europe/London"),
+            # Filter out generated times 1 hour before and after departures
+            db.extract("HOUR", departure) ==
+            db.extract("HOUR", models.Journey.departure),
             # In order of precedence:
             # - Do not run on special days
             # - Do not run on bank holidays

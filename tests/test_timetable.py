@@ -96,7 +96,7 @@ def set_night_times(load_db):
         .filter(models.Journey.pattern_ref.in_(patterns))
         .update({
             "departure": models.Journey.departure -
-                         datetime.timedelta(hours=8, minutes=15)
+                datetime.timedelta(hours=8, minutes=15)
         }, synchronize_session=False)
     )
     db.session.commit()
@@ -124,7 +124,8 @@ def test_journeys_sunday_gmt(load_db):
     date = datetime.date(2019, 3, 3)
     assert date.isoweekday() == 7
 
-    result = _query_journeys(SERVICE, DIRECTION, date).all()
+    query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
+    result = query.all()
 
     assert result == _expected_journeys(
         400012,
@@ -137,7 +138,8 @@ def test_journeys_sunday_bst(load_db):
     date = datetime.date(2019, 4, 7)
     assert date.isoweekday() == 7
 
-    result = _query_journeys(SERVICE, DIRECTION, date).all()
+    query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
+    result = query.all()
 
     assert result == _expected_journeys(
         400012,
@@ -161,7 +163,8 @@ def test_journeys_bank_holiday(load_db):
     date = datetime.date(2019, 4, 22)
     assert date.isoweekday() == 1
 
-    result = _query_journeys(SERVICE, DIRECTION, date).all()
+    query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
+    result = query.all()
 
     assert result == _expected_journeys(
         400012,
@@ -321,7 +324,8 @@ def test_journeys_bank_holiday_week_month(load_db):
 
 def test_journeys_no_dst(set_night_times):
     date = datetime.date(2019, 3, 24)
-    result = _query_journeys(SERVICE, DIRECTION, date).all()
+    query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
+    result = query.all()
 
     assert result == _expected_journeys(
         400012,

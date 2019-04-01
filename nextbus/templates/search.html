@@ -28,15 +28,7 @@
 <div class="columns">
     <div class="column-1">
         <section class="card">
-            <form class="form" action="{{ g.action }}" method="post" name="search">
-                {% set aria = {'aria-label': 'Find a bus stop'} %}
-                {% set q = query if query is not none else '' %}
-                {{ g.form.hidden_tag() }}
-                {{ g.form.search(placeholder="Find a bus stop...", id='search-form', value=q, required=g.form.search.flags.required, **aria) }}
-                <button id="submit-form" name="submit" type="submit" value="1">
-                    <img src="{{ url_for('static', filename='icons/sharp-search-24px.svg') }}" width="20px" height="20px" alt="Search">
-                </button>
-            </form>
+            {{ f.search_form(query) }}
         </section>
         {% if query is not none %}
         {% if f_areas %}

@@ -162,10 +162,26 @@ input[type="text"] {
   width: 100%;
 }
 
-::placeholder,
-::-webkit-input-placeholder,
-::-moz-placeholder,
-:-moz-placeholder,
+::placeholder {
+  color: rgb(117, 117, 117);
+  opacity: 1;
+}
+
+::-webkit-input-placeholder {
+  color: rgb(117, 117, 117);
+  opacity: 1;
+}
+
+::-moz-placeholder {
+  color: rgb(117, 117, 117);
+  opacity: 1;
+}
+
+:-moz-placeholder {
+  color: rgb(117, 117, 117);
+  opacity: 1;
+}
+
 :-ms-input-placeholder {
   color: rgb(117, 117, 117);
   opacity: 1;
@@ -330,9 +346,6 @@ button:focus {
   flex-direction: column;
 }
 
-.columns--right {
-}
-
 /* Automatic height when in linear layout */
 .column-1,
 .column-2,
@@ -461,7 +474,7 @@ button:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 15px;
   height: 100%;
   color: white;
 }
@@ -690,7 +703,7 @@ button:focus {
   flex: 1;
   margin-right: 10px;
   padding: 5px 10px;
-  border: 1px solid white; /* rgb(0, 33, 113); */
+  border: 1px solid white;
 }
 
 /*
@@ -810,9 +823,6 @@ button:focus {
   font-weight: 700;
   background: white;
   cursor: auto;
-}
-
-.tab--active:hover {
 }
 
 .tab--active:hover {
@@ -1524,6 +1534,11 @@ button:focus {
   }
   
   .header {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .search-bar {
     padding-left: 10px;
     padding-right: 10px;
   }

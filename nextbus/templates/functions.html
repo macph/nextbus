@@ -2,7 +2,7 @@
 
 {# Sets up search form #}
 {% macro search_form(query=none, class=none) -%}
-<form class="form{% if class %} {{ class }}{% endif %}" action="{{ g.action }}" method="post" name="search">
+<form class="form{% if class %} {{ class }}{% endif %}" action="{{ g.action }}" method="post" name="search" autocomplete="off">
     {% set aria = {'aria-label': 'Find a bus stop'} %}
     {% set q = query if query is not none else '' %}
     {{ g.form.hidden_tag() }}

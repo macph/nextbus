@@ -312,7 +312,7 @@ function revertColours(...classes) {
 /**
  * Shorthand for creating a new element without namespace
  * @param {string} tag tag name
- * @param {?(object|HTMLElement|string|HTMLElement[]|string[])} attr object containing attributes
+ * @param {?(object|HTMLElement|string|HTMLElement[]|string[])} [attr] object containing attributes
  * for new element, eg style, but can also be first child element or array of children if no
  * attributes are required
  * @param  {...?(HTMLElement|string|HTMLElement[]|string[])} children child elements or array of
@@ -522,17 +522,6 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
     };
 
     /**
-     * Prints remaining seconds as 'due' or 'x min'
-     * @param {number} sec Remaining seconds
-     * @param {boolean} [min] Add 'min' to string, true by default
-     * @private
-     */
-    this._strDue = function(sec, min) {
-        let addMin = (min == null || min) ? ' min' : '';
-        return (sec < 90) ? 'due' : Math.round(sec / 60) + addMin;
-    };
-
-    /**
      * Gets class name for this journey
      * @param {boolean} isLive Whether this particular journey is tracked or not
      * @private
@@ -554,29 +543,33 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
             let service = self.data.services[s];
             let first = service.expected[0],
                 departures = Math.min(service.expected.length, 5),
-                after = [];
+                times = [],
+                timesAfter = [];
+
+            times.push(element('span',
+                {className: 'live-service--due ' + self._classLive(first.live)},
+                (first.secs < 90) ? 'due' : Math.round(first.secs / 60) + ' min'
+            ));
 
             for (let n = 1; n < departures; n++) {
                 let expected = service.expected[n],
-                    mins = self._strDue(expected.secs, false);
-                if (departures - n > 2) {
-                    mins += ',';
-                } else if (departures - n > 1) {
-                    mins += (mins === 'due') ? ',' : ' and';
-                } else {
-                    mins += (mins === 'due') ? '' : ' min';
-                }
-                after.push(element('span',
+                    fromEnd = departures - n,
+                    minutes = Math.round(expected.secs / 60) +
+                        ((fromEnd > 2) ? ',' : (fromEnd > 1) ? ' and' : ' min');
+                timesAfter.push(element('span',
                     {className: self._classLive(expected.live)},
-                    mins
+                    minutes
                 ));
-                if (departures - n > 1) {
-                    after.push(' ');
+                if (fromEnd > 1) {
+                    timesAfter.push(' ');
                 }
+            }
+            if (timesAfter.length > 0) {
+                times.push(element('br'));
+                times.push(element('span', {className: 'live-service--after'}, timesAfter));
             }
 
             let row = element('tr',
-                {className: 'live-service'},
                 element('td',
                     element('div',
                         {className: 'line'},
@@ -587,9 +580,9 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
                     )
                 ),
                 element('td', service.dest),
-                element('td', {className: self._classLive(first.live)}, self._strDue(first.secs)),
-                element('td', after),
-                element('td', service.opCode)
+                element('td', service.opCode),
+                element('td', self.operators.get(service.opCode) || service.opName || null),
+                element('td', times)
             );
 
             table.appendChild(row);
@@ -1642,7 +1635,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 element('h2', {id: 'live-time'}, 'Retrieving live data...'),
                 element('p', {id: 'live-countdown'})
             ),
-            element('div', {id: 'services'})
+            element('div', {id: 'services', className: 'services--panel'})
         );
 
         let services = element('section',
@@ -2311,7 +2304,7 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
  * Returns a SVG element with specified attributes
  * @param {string} tag SVG element tag
  * @param {object} [attr] Attributes for element
- * @returns {HTMLElement}
+ * @returns {SVGElement}
  * @private
  */
 function _createSVGNode(tag, attr) {

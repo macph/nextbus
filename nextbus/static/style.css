@@ -1097,40 +1097,40 @@ button:focus {
   padding: 5px;
 }
 
-.live-data > tr > td:first-child {
+.live-data > tr > td:nth-child(1) {
+  width: 48px;
   padding-left: 15px;
 }
 
-.live-data > tr > td:last-child {
-  padding-right: 15px;
-}
-
-.live-service > td:nth-child(1) {
-  width: 48px;
-}
-
-.live-service > td:nth-child(2) {
+.live-data > tr > td:nth-child(2) {
   font-size: 1.6rem;
 }
 
-.live-service > td:nth-child(3) {
+.live-data > tr > td:nth-child(3) {
+  font-size: 1.4rem;
+}
+
+.live-data > tr > td:nth-child(4) {
+  display: none;
+  font-size: 1.4rem;
+}
+
+.live-data > tr > td:nth-child(5) {
   min-width: 54px;
+  padding-right: 15px;
+}
+
+.live-service--due {
   font-size: 1.6rem;
   font-weight: 700;
 }
 
-.live-service > td:nth-child(4) {
-  min-width: 54px;
-  font-size: 1.4rem;
+.live-service--after {
+  font-size: 1.3rem;
 }
 
-.live-service > td:nth-child(4) > span {
+.live-service--after > span {
   white-space: nowrap;
-}
-
-.live-service > td:nth-child(5) {
-  width: 54px;
-  font-size: 1.6rem;
 }
 
 .live-service--live {
@@ -1554,6 +1554,14 @@ button:focus {
     margin-right: 10px;
   }
 
+  .live-data > tr > td:nth-child(3) {
+    display: none;
+  }
+
+  .live-data > tr > td:nth-child(4) {
+    display: table-cell;
+  }
+
   .timetable-wrapper {
     margin: 0;
   }
@@ -1563,7 +1571,7 @@ button:focus {
 @media screen and (min-width: 640px) {
   .content--center {
     align-items: center;
-    justify-content: stretch;
+    justify-content: space-around;
   }
 
   .search-box-above {
@@ -1665,4 +1673,11 @@ button:focus {
     padding-right: 15px;
   }
 
+  .services--panel > .live-data> tr > td:nth-child(3) {
+    display: table-cell;
+  }
+
+  .services--panel > .live-data > tr > td:nth-child(4) {
+    display: none;
+  }
 }

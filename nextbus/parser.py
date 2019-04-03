@@ -7,9 +7,9 @@ import pyparsing as pp
 from flask import current_app
 
 
-SET_ALPHANUM = set(pp.alphanums + pp.alphas8bit)
-SET_PRINT = set(pp.printables + pp.alphas8bit + pp.punc8bit)
-SET_PUNCT = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
+SET_ALPHANUMERIC = set(pp.alphanums + pp.alphas8bit)
+SET_PRINTABLE = set(pp.printables + pp.alphas8bit + pp.punc8bit)
+SET_PUNCTUATION = (set(pp.printables) - set(pp.alphanums)) | set(pp.punc8bit)
 # Captures all characters not within printable ASCII + extension, excluding <>
 RE_INVALID_CHAR = re.compile(r"[^\x00-\x3b\x3d\x3f-\x7f\xa1-\xff]")
 
@@ -39,7 +39,7 @@ def validate_characters(query):
     """ Strips out all punctuation and whitespace by using character sets and
         check if the remaining set has enough characters.
     """
-    if not set(query) & SET_ALPHANUM:
+    if not set(query) & SET_ALPHANUMERIC:
         raise QueryTooShort(query)
 
 
@@ -85,7 +85,7 @@ class ParseResult(object):
     def __repr__(self):
         return "<ParseResult(%r)>" % self.result
 
-    def to_string(self, defined=False):
+    def to_string(self, defined=False, raise_undefined=True):
         """ Returns the full parser result as a single string.
 
             If defined is True, only the portion that is defined (ie have
@@ -94,11 +94,13 @@ class ParseResult(object):
             as 'Downing Street'.
 
             :param defined: If True, return only defined terms.
+            :param raise_undefined: If True, raise SearchNotDefined if the
+            query is too broad
             :returns: A string to be used in search query.
         """
         if not self.result:
             return None
-        if not self.check_tree():
+        if raise_undefined and not self.check_tree():
             raise SearchNotDefined(self.query)
         try:
             return self.data.stringify(defined)
@@ -155,6 +157,8 @@ class Operator(object):
                     # Term undefined; skip
                     continue
                 string = op.stringify(defined, recursive)
+                if not string:
+                    continue
                 if self.rank > op.rank:
                     # Lower ranked operands need to be wrapped in parentheses
                     string = "(" + string + ")"
@@ -183,7 +187,8 @@ class Not(Operator):
         self.operands = [tokens[0][1]]
 
     def stringify(self, defined=False, recursive=False):
-        return self.operator + self.combine_operands(defined, recursive)[0]
+        strings = self.combine_operands(defined, recursive)
+        return self.operator + strings[0] if strings else ""
 
     def defined(self, recursive=False):
         """ All terms behind a NOT operator are undefined. If recursive is
@@ -208,8 +213,8 @@ class FollowedBy(Operator):
         return self.operator.join(self.combine_operands(defined, recursive))
 
     def defined(self, recursive=False):
-        """ A phrase is always defined. """
-        return True
+        """ Defined if phrase is not empty. """
+        return bool(self.operands)
 
 
 class And(Operator):
@@ -246,6 +251,24 @@ class Or(Operator):
                    for op in self.operands)
 
 
+class Empty(Operator):
+    """ Denotes an empty portion in a query, meant to be skipped over. """
+    operator, rank = "", 0
+
+    def __init__(self, _):
+        super().__init__()
+        self.operands = None
+
+    def __repr__(self):
+        return "Empty"
+
+    def stringify(self, defined=False, recursive=False):
+        return ""
+
+    def defined(self, recursive=False):
+        return False
+
+
 def create_tsquery_parser():
     """ Creates a function to parse query strings to make them suitable for the
         PostgreSQL ``to_tsquery()`` function.
@@ -272,39 +295,40 @@ def create_tsquery_parser():
 
         PostgreSQL's ``ts_rank()`` sometimes ignores operators within a tsquery
         value. It is uncertain whether this is intentional or not but it makes
-        filtering by rank difficult when NOT operators are used. As a result
-        a method is used to return a pair of strings - one to use for matching,
-        and the other with all NOT terms excluded for ranking.
+        filtering by rank difficult when NOT operators are used. The
+        ``to_string()`` method can return the defined portions of the query if
+        required.
     """
     # Operators
     and_, or_ = pp.CaselessKeyword("and"), pp.CaselessKeyword("or")
-    op_not = pp.CaselessKeyword("not") | pp.Literal("!")
-    op_and = pp.Optional(and_ | pp.Literal("&"), default="&")
-    op_or = or_ | pp.Literal("|")
+    o_not = pp.CaselessKeyword("not") | pp.Literal("!")
+    o_and = pp.Optional(and_ | pp.Literal("&"), default="&")
+    o_or = or_ | pp.Literal("|")
 
     # Exclude operators and parentheses from words
-    word_ = pp.Word("".join(SET_PRINT - set("()!&|")))
+    word_ = pp.Word("".join(SET_PRINTABLE - set("()!&|")))
     word = ~and_ + ~or_ + word_
-    # Exclude binary operators at start of strings
-    exclude_op = pp.Optional(pp.Word("|&")).suppress()
+    # Exclude binary operators and keywords at start of queries
+    exclude = pp.Optional(pp.Word("|&") | and_ | or_).suppress()
 
     # Declare empty parser and nested terms before before defining
     expression = pp.Forward()
-    term_0 = (pp.quotedString.setParseAction(FollowedBy) |
-              pp.Suppress("(") + expression + pp.Suppress(")") | word)
+    term_0 = (
+        pp.quotedString.setParseAction(FollowedBy) |
+        pp.Suppress("(") + expression + pp.Suppress(")") |
+        word
+    )
 
-    # NOT operators can be used recursively
-    term_not = pp.Forward()
-    term_not <<= pp.Group(op_not + (term_not | term_0)).setParseAction(Not)
-    term_1 = term_not | term_0
-    term_and = (pp.Group(term_1 + pp.OneOrMore(op_and + term_1))
-                .setParseAction(And))
-    term_2 = term_and | term_1
-    term_or = (pp.Group(term_2 + pp.OneOrMore(op_or + term_2))
-               .setParseAction(Or))
-    term_3 = term_or | term_2
+    # Build the expression. NOT operators can be used recursively
+    term_n = pp.Forward()
+    term_n <<= pp.Group(o_not + (term_n | term_0)).setParseAction(Not)
+    term_1 = term_n | term_0
+    term_a = pp.Group(term_1 + pp.OneOrMore(o_and + term_1)).setParseAction(And)
+    term_2 = term_a | term_1
+    term_o = pp.Group(term_2 + pp.OneOrMore(o_or + term_2)).setParseAction(Or)
+    term_3 = term_o | term_2
 
-    expression <<= exclude_op + term_3 | pp.Empty()
+    expression <<= exclude + term_3 | pp.Empty().setParseAction(Empty)
 
     def parser(query, fix_parentheses=True):
         """ Search query parser function for converting queries to strings

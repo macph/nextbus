@@ -24,6 +24,8 @@ def query_parser():
 
 
 @pytest.mark.parametrize("query, expected", [
+    ("Trafalgar () Square", "Trafalgar&Square"),
+    ("Trafalgar (Square)", "Trafalgar&Square"),
     ("(Trafalgar or Parliament) !(Square or Road)",
      "(Trafalgar|Parliament)&!(Square|Road)"),
     ("Great Titchfield Street and Oxford & Circus",
@@ -31,8 +33,10 @@ def query_parser():
     ("Trafalgar or Parliament | Leicester", "Trafalgar|Parliament|Leicester"),
     ("Parliament (not Road or !Square)", "Parliament&(!Road|!Square)"),
     ("Parliament not !Square", "Parliament&!!Square"),
+    ("Parliament '' Square", "Parliament&Square"),
     ("'Parliament Square' not Road", "Parliament<->Square&!Road"),
     ("\"Parliament and Square' or Road", "\"Parliament&Square'|Road"),
+    ("and Parliament Square", "Parliament&Square")
 ])
 def test_parser(query_parser, query, expected):
     assert query_parser(query).to_string(defined=False) == expected
@@ -65,6 +69,18 @@ def test_check_tree(query_parser, query, expected):
 def test_parser_raises(query_parser, query):
     with pytest.raises(parser.SearchNotDefined):
         query_parser(query).to_string()
+
+
+@pytest.mark.parametrize("query, expected", [
+    ("", ""),
+    ("()", ""),
+    ("''", ""),
+    ("!''", ""),
+    ("not Trafalgar", "!Trafalgar"),
+    ("not not Trafalgar", "!!Trafalgar"),
+])
+def test_parser_undefined(query_parser, query, expected):
+    assert query_parser(query).to_string(raise_undefined=False) == expected
 
 
 @pytest.mark.parametrize("query", [

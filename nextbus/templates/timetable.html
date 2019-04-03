@@ -49,11 +49,15 @@
         </ul>
         {%- endif %}
         <section class="card" id="timetable">
+            <h2>Timetable</h2>
             <div class="heading-inline heading-inline--right">
-                <h2>Timetable</h2>
+                <p style="margin-right: 10px;">{{ '{d:%A} {d.day} {d:%B} {d.year}'.format(d=select_date.date.data) }}</p>
                 <form method="GET" action="" class="form form--inline">
+                    <label>Change date:</label>
                     {{ select_date.date() }}
-                    <button>View</button>
+                    <button title="Go to timetable for this date">
+                      <img src="{{ url_for('static', filename='icons/sharp-arrow_forward-24px.svg') }}" alt="Go" width="20px" height="20px">
+                    </button>
                 </form>
             </div>
             {% if select_date.errors -%}

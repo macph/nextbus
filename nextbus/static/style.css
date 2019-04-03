@@ -231,6 +231,10 @@ button:focus {
   color: white;
 }
 
+label {
+  font-size: 1.6rem;
+}
+
 /*
  *  LINK BUTTONS
  */
@@ -539,11 +543,12 @@ button:focus {
   display: flex;
   flex-flow: row wrap;
   align-items: baseline;
-  margin: 10px -10px;
+  margin: 0 -10px;
 }
 
 .heading-inline > * {
-  margin: 0 10px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .heading-inline--right {
@@ -670,6 +675,11 @@ button:focus {
   height: 36px;
   margin-left: 10px;
   padding: 0 20px;
+}
+
+.form > label {
+  flex: none;
+  margin-right: 10px;
 }
 
 /*
@@ -1090,7 +1100,7 @@ button:focus {
   table-layout: auto;
   border-collapse: collapse;
   width: calc(100% + 30px);
-  margin: 10px -15px;
+  margin: 0px -15px 10px;
 }
 
 .live-data td {

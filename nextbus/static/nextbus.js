@@ -2,7 +2,7 @@
  * nextbus website functionality, copyright Ewan Macpherson 2017-18
  */
 
-const INTERVAL = 60;
+const INTERVAL = 90;
 
 const MAP_ZOOM_MIN = 7;
 const MAP_ZOOM_MAX = 19;

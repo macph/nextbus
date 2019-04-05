@@ -3,10 +3,6 @@
 
 {% block title %}Welp, a 404.{% endblock %}
 
-{% block outer_header %}
-{{ f.add_search_bar() }}
-{% endblock %}
-
 {% block heading %}
 <h1>404 — Page not found</h1>
 {% endblock %}
@@ -17,4 +13,8 @@
     <p>If you typed in the address by hand, or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
     <p>You can try searching or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
 </section>
+{% endblock %}
+
+{% block script %}
+{{ f.add_search_bar() }}
 {% endblock %}

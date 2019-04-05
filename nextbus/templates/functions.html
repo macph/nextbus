@@ -14,26 +14,13 @@
 {%- endmacro %}
 
 {# Replaces header with search functionality #}
-{% macro add_search_bar(map=true) -%}
-<div class="outer-header">
-    <header class="header">
-        <a class="header__home" href="{{ url_for('page.index') }}">nextbus</a>
-        {% if map %}
-        <a class="header__right" href="{{ url_for('page.show_map') }}" title="Map">
-          <img src="{{ url_for('static', filename='icons/sharp-map-24px-white.svg') }}" alt="Map">
-        </a>
-        {% endif %}
-        <a id="header-search-button" class="header__right" title="Search">
-          <img id="header-search-open" src="{{ url_for('static', filename='icons/sharp-search-24px-white.svg') }}" alt="Search">
-          <img id="header-search-close" style="display: none" src="{{ url_for('static', filename='icons/sharp-close-24px-white.svg') }}" alt="Close">
-        </a>
-    </header>
-    <div id="header-search-bar" class="hidden search-bar">
-        {{ search_form(class='search-bar__form') }}
-    </div>
-</div>
+{% macro add_search_bar() -%}
 <script>
-    addSearchBarEvents();
+    addSearchBar(
+        '{{ url_for('static', filename='') }}',
+        '{{ url_for('page.search_query') }}',
+        '{{ g.form.csrf_token.current_token }}'
+    );
 </script>
 {%- endmacro %}
 

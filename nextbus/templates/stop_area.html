@@ -3,10 +3,6 @@
 
 {% block title %}{{ stop_area.name }}{% endblock %}
 
-{% block outer_header %}
-{{ f.add_search_bar() }}
-{% endblock %}
-
 {% block heading %}
 <nav>
     <ul class="breadcrumbs breadcrumbs--trailing">
@@ -66,6 +62,7 @@
 {% endblock %}
 
 {% block script %}
+{{ f.add_search_bar() }}
 <script>
     resizeIndicator('indicator');
 </script>

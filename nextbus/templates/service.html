@@ -3,10 +3,6 @@
 
 {% block title %}{{ service.line }}: {{ truncate_description(service.description) }}{% endblock %}
 
-{% block outer_header %}
-{{ f.add_search_bar() }}
-{% endblock %}
-
 {% block heading %}
 {% set slash = joiner(' / ') %}
 <nav>
@@ -117,6 +113,7 @@
 {% endblock %}
 
 {% block script %}
+{{ f.add_search_bar() }}
 <script>
     resizeIndicator('indicator');
 </script>

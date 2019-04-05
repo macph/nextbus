@@ -185,53 +185,113 @@ function getTransitionEnd(element) {
 
 
 /**
- * Adds events for showing search bar for most pages
+ * Adds search bar to header
+ * @param {string} staticURL
+ * @param {string} searchURL
+ * @param {string} csrfToken
  */
-function addSearchBarEvents() {
-    let barHidden = true;
+function addSearchBar(staticURL, searchURL, csrfToken) {
+    let outerHeader = document.querySelector('.outer-header'),
+        header = outerHeader.querySelector('.header');
 
-    let searchButton = document.getElementById('header-search-button'),
-        searchBar = document.getElementById('header-search-bar'),
-        searchBarInput = document.getElementById('search-form'),
-        searchBarTransitionEnd = getTransitionEnd(searchBar),
-        searchSVG = document.getElementById('header-search-open'),
-        closeSVG = document.getElementById('header-search-close');
+    let open = element('img', {
+            src: staticURL + 'icons/sharp-search-24px-white.svg',
+            alt: 'Search'
+        }),
+        close = element('img', {
+            src: staticURL + 'icons/sharp-close-24px-white.svg',
+            style: {display: 'none'},
+            alt: 'Close'
+        }),
+        search = element('input', {
+            type: 'search',
+            name: 'search',
+            placeholder: 'Find a bus stop...',
+            required: true,
+            tabIndex: '-1'
+        }),
+        submit = element('button',
+            {type: 'submit', name: 'submit', title: 'Search', value: '1', tabIndex: '-1'},
+            element('img', {
+                src: staticURL + 'icons/sharp-search-24px-white.svg',
+                alt: 'Search',
+                width: 20,
+                height: 20
+            })
+        ),
+        csrf = element('input', {type: 'hidden', name: 'csrf_token', value: csrfToken}),
+        button = element('button', {className: 'header__right', title: 'Search'}, open, close);
 
-    let transitionCallback = function() {
-        searchBar.removeEventListener(searchBarTransitionEnd, transitionCallback);
-        searchBarInput.focus();
-    };
+    search.setAttribute('aria-label', 'Find a bus stop');
+    let bar = element('div',
+        {className: 'hidden search-bar'},
+        element('form',
+            {
+                className: 'form search-bar__form',
+                action: searchURL,
+                method: 'post',
+                name: 'search',
+                autocomplete: 'off'
+            },
+            (csrfToken != null) ? csrf : null,
+            search,
+            submit
+        )
+    );
 
-    let openSearchBar = function() {
-        searchBar.classList.add('search-bar--open');
-        searchSVG.style.display = 'none';
-        closeSVG.style.display = '';
-        searchButton.title = 'Close';
-        searchButton.blur();
+    header.appendChild(button);
+    outerHeader.appendChild(bar);
+
+    let barHidden = true,
+        transitionEnd = getTransitionEnd(bar),
+        escape = function(event) {
+            if (event.code === 'Escape') {
+                closeBar();
+            }
+        },
+        onOpen = function() {
+            bar.removeEventListener(transitionEnd, onOpen);
+            search.tabIndex = button.tabIndex = '0';
+            search.focus();
+        },
+        onClose = function() {
+            bar.removeEventListener(transitionEnd, onClose);
+            search.tabIndex = button.tabIndex = '-1';
+        };
+
+    let openBar = function() {
+        bar.style.display = '';
+        bar.classList.add('search-bar--open');
+        open.style.display = 'none';
+        close.style.display = '';
+        button.title = 'Close';
+        button.blur();
         barHidden = false;
-        searchBar.addEventListener(searchBarTransitionEnd, transitionCallback);
+        bar.addEventListener(transitionEnd, onOpen);
     };
 
-    let closeSearchBar = function() {
-        searchBar.classList.remove('search-bar--open');
-        searchSVG.style.display = '';
-        closeSVG.style.display = 'none';
-        searchButton.title = 'Search';
-        searchBarInput.blur();
+    let closeBar = function() {
+        bar.classList.remove('search-bar--open');
+        open.style.display = '';
+        close.style.display = 'none';
+        button.title = 'Search';
+        search.blur();
+        button.blur();
         barHidden = true;
+        bar.addEventListener(transitionEnd, onClose);
     };
 
-    searchButton.addEventListener('click', function() {
-        (barHidden) ? openSearchBar() : closeSearchBar();
+    button.addEventListener('click', function() {
+        (barHidden) ? openBar() : closeBar();
     });
 
     document.addEventListener('click', function(event) {
         if (event.target instanceof HTMLElement &&
-            !searchBar.contains(event.target) &&
-            !searchButton.contains(event.target) &&
+            !bar.contains(event.target) &&
+            !button.contains(event.target) &&
             !barHidden)
         {
-            closeSearchBar();
+            closeBar();
         }
     });
 }

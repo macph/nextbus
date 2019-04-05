@@ -21,10 +21,6 @@
 {% set place_name = (locality.name + ', ' + area_name) if locality.name != area_name else locality.name %}
 {% block title %}{{ place_name }}{% endblock %}
 
-{% block outer_header %}
-{{ f.add_search_bar() }}
-{% endblock %}
-
 {% block heading %}
 <nav>
     <ul class="breadcrumbs">
@@ -83,6 +79,7 @@
 {% endblock %}
 
 {% block script %}
+{{ f.add_search_bar() }}
 <script>
     resizeIndicator('indicator');
     revertColours('indicator--reversed');

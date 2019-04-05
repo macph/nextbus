@@ -13,16 +13,16 @@
         {% endblock %}
     </head>
     <body>
-        {% block outer_header %}
         <div class="outer-header">
             <header class="header">
                 <a class="header__home" href="{{ url_for('page.index') }}">nextbus</a>
+                {% block header %}
                 <a class="header__right" href="{{ url_for('page.show_map') }}" title="Map">
                   <img src="{{ url_for('static', filename='icons/sharp-map-24px-white.svg') }}" alt="Map">
                 </a>
+                {% endblock %}
             </header>
         </div>
-        {% endblock %}
         <div class="outer-content">
             {% block main %}
             <main class="content">

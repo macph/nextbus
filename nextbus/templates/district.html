@@ -2,10 +2,6 @@
 {% import 'functions.html' as f %}
 {% block title %}{{ district.name }} district{% endblock %}
 
-{% block outer_header %}
-{{ f.add_search_bar() }}
-{% endblock %}
-
 {% block heading %}
 <nav>
     <ul class="breadcrumbs">
@@ -46,4 +42,8 @@
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block script %}
+{{ f.add_search_bar() }}
 {% endblock %}

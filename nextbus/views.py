@@ -163,6 +163,8 @@ def search_query():
             return redirect(url_for(".list_near_postcode", code=result.text))
         else:
             return redirect(url_for(".search_results", query=query))
+    else:
+        return redirect(url_for(".search_results"))
 
 
 @page.route("/search/")
@@ -350,6 +352,13 @@ def list_in_locality(locality_code):
 
     return render_template("place.html", locality=locality, stops=stops,
                            grouped=group_areas)
+
+
+@page.route("/near/")
+def find_near_location():
+    """ Starts looking for nearby stops. """
+    return render_template("location.html", latitude=None, longitude=None,
+                           list_stops=None)
 
 
 @page.route("/near/<lat_long:coords>")

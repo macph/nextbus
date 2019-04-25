@@ -6,11 +6,13 @@
 {% block heading %}
 <div class="heading-with-buttons">
     <h1>Stops nearby</h1>
+    {% if list_stops is not none %}
     <div class="buttons">
         <a class="button button--action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}" title="View on map">
-        <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
+            <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
         </a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -22,7 +24,9 @@
         </section>
         <section class="card">
             <h2>Stops</h2>
-            {% if list_stops|length > 0 %}
+            {% if list_stops is none %}
+            <p>Searching for stops nearby...</p>
+            {% elif list_stops|length > 0 %}
             {% call(s) f.print_list(list_stops) %}
             <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
                 <div class="item--stop">
@@ -44,7 +48,7 @@
             </a>
             {% endcall %}
             {% else %}
-            <p>No stops found within 500 metres.</p>
+            <p>No stops found nearby.</p>
             {% endif %}
         </section>
     </div>
@@ -52,6 +56,22 @@
 {% endblock %}
 
 {% block script %}
+{% if list_stops is none %}
+<script>
+    if (!navigator.geolocation) {
+        console.debug('Browser does not support geolocation.');
+    }
+    let locationURL = "{{ url_for('page.find_near_location') }}";
+    navigator.geolocation.getCurrentPosition(function(position) {
+        let latitude = position.coords.latitude.toFixed(6);
+        let longitude = position.coords.longitude.toFixed(6);
+        console.debug('Current coordinates (' + latitude + ', ' + longitude + ')');
+        window.location.href = locationURL + latitude + ',' + longitude;
+    }, function(err) {
+        console.debug('Geolocation error: ' + err);
+    });
+</script>
+{% endif %}
 <script>
     resizeIndicator('indicator');
 </script>

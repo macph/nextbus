@@ -41,7 +41,7 @@ def stop_get_times(atco_code=None):
     if not matching_stop:
         current_app.logger.warning("API accessed with invalid ATCO code %s."
                                    % atco_code)
-        return bad_request(404, "ATCO code does not exist.")
+        return bad_request(404, "ATCO code %r does not exist." % atco_code)
 
     try:
         times = tapi.get_nextbus_times(atco_code)

@@ -1,87 +1,73 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
-{% macro print_items(group) -%}
-{% call(s) f.print_list(group, 'list--stops') %}
-{% if s.table_name == 'stop_point' %}
-<a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item--stop">
-    {{ f.print_stop_indicator(s) }}
-    <span class="item__label">{{ s.name }}</span>
-</a>
-{% elif s.table_name == 'stop_area' %}
-<a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item--stop">
-    {{ f.print_stop_indicator(s, reverse=true) }}
-    <span class="item__label">{{ s.name }}</span>
-</a>
-{% endif %}
-{% endcall %}
-{%- endmacro %}
-
 {% set area_name = locality.district.name|default(locality.admin_area.name) %}
 {% set place_name = (locality.name + ', ' + area_name) if locality.name != area_name else locality.name %}
 {% block title %}{{ place_name }}{% endblock %}
 
-{% block heading %}
-<nav>
-    <ul class="breadcrumbs">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
-        {% if locality.district is not none %}
-        <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
-        {% else %}
-        <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
-        {% endif %}
-        <li>{{ locality.name }}</li>
-    </ul>
-</nav>
-<div class="heading-with-buttons">
-    <h1>{{ place_name }}</h1>
-    <div class="buttons">
-        <a class="button button--action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}" title="View on map">
-        <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-        </a>
-    </div>
-</div>
-{% endblock %}
+{% macro print_items(group) -%}
+{% call(s) f.print_list(group, 'list-stops') -%}
+{% if s.table_name == 'stop_point' -%}
+<a href="{{ url_for('page.stop_atco', atco_code=s.code) }}" class="item item-stop">
+  {{ f.print_stop_indicator(s) }}
+  <span class="item-label">{{ s.name }}</span>
+</a>
+{%- elif s.table_name == 'stop_area' -%}
+<a href="{{ url_for('page.stop_area', stop_area_code=s.code) }}" class="item item-stop">
+  {{ f.print_stop_indicator(s, reverse=true) }}
+  <span class="item-label">{{ s.name }}</span>
+</a>
+{%- endif %}
+{%- endcall %}
+{%- endmacro %}
 
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        <section class="card card--minor">
-            {% if stops|length > 1 %}
-            {{ f.print_index(stops) }}
-            {% endif %}
-        </section>
-        <section class="card">
-            <div class="heading-inline heading-inline--right">
-                <h2>Stops</h2>
-                {% if grouped %}
-                <p><a href="?group=false">Ungroup stops</a></p>
-                {% elif grouped is not none %}
-                <p><a href="?group=true">Group stops</a></p>
-                {% endif %}
-            </div>
-            {% if stops|length > 1 %}
-            {% call(name, group) f.print_groups(stops|dictsort) %}
-            <h3 id="{{ name }}">{{ name }}</h3>
-            {{ print_items(group) }}
-            {% endcall %}
-            {% elif stops %}
-            {% for _, group in stops.items() %}
-            {{ print_items(group) }}
-            {% endfor %}
-            {% else %}
-            <p>No bus stops found.</p>
-            {% endif %}
-        </section>
+<nav>
+  <ul class="breadcrumbs breadcrumbs-trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
+    {% if locality.district is not none %}
+    <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
+    {% else %}
+    <li><a href="{{ url_for('page.list_in_area', area_code=locality.admin_area.code) }}">{{ locality.admin_area.name }}</a></li>
+    {% endif %}
+  </ul>
+</nav>
+<main>
+  <h1>{{ place_name }}</h1>
+  <div class="actions">
+    <a class="action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">Map</a>
+  </div>
+  <section>
+    <div class="h2-inline">
+      <h2>Stops</h2>
+      {% if grouped %}
+      <p><a href="?group=false">Ungroup stops</a></p>
+      {% elif grouped is not none %}
+      <p><a href="?group=true">Group stops</a></p>
+      {% endif %}
     </div>
-</div>
+    {% if stops|length > 1 %}
+    {% for name, group in stops|dictsort %}
+    <h3 id="{{ name }}">{{ name }}</h3>
+    {{ print_items(group) }}
+    {% endfor %}
+    {% elif stops %}
+    {% for _, group in stops.items() %}
+    {{ print_items(group) }}
+    {% endfor %}
+    {% else %}
+    <p>No bus stops found.</p>
+    {% endif %}
+  </section>
+</main>
 {% endblock %}
 
 {% block script %}
-{{ f.add_search_bar() }}
 <script>
-    resizeIndicator('indicator');
-    revertColours('indicator--reversed');
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+    revertColours('.indicator-reversed');
+});
 </script>
 {% endblock %}

@@ -22,41 +22,12 @@ const TILE_ZOOM = 15;
 const LAYOUT_SPACE_X = 30;
 const LAYOUT_CURVE_MARGIN = 6;
 const LAYOUT_LINE_STROKE = 7.2;
-const LAYOUT_INVISIBLE = 'rgba(255, 255, 255, 0)';
+const LAYOUT_INVISIBLE = '#FFF0';
 const LAYOUT_TIMEOUT = 500;
 
 const LAYOUT_DOM_TEXT_START = 12;
 const LAYOUT_DOM_DIV_START = 15;
 const LAYOUT_DOM_PARA_START = 36 + 12;
-
-
-/**
- * Sets up element to activate geolocation and direct to correct page
- * @param {string} LocationURL URL to direct location requests to
- * @param {HTMLElement} activateElement Element to activate
- */
-function addGeolocation(LocationURL, activateElement) {
-    if (!navigator.geolocation) {
-        console.debug('Browser does not support geolocation.');
-        return;
-    }
-
-    let success = function(position) {
-        let latitude = position.coords.latitude.toFixed(6);
-        let longitude = position.coords.longitude.toFixed(6);
-        console.debug('Current coordinates (' + latitude + ', ' + longitude + ')');
-        // Direct to list of stops
-        window.location.href = LocationURL + latitude + ',' + longitude;
-    };
-
-    let error = function(err) {
-        console.debug('Geolocation error: ' + err);
-    };
-
-    activateElement.addEventListener('click', function() {
-        navigator.geolocation.getCurrentPosition(success, error);
-    });
-}
 
 
 /**
@@ -71,49 +42,66 @@ function StarredStops(cookieSet, onAdd, onRemove) {
     this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
     this.onAdd = onAdd;
     this.onRemove = onRemove;
+
+    this.modal = null;
+    this.code = null;
     this.data = null;
     this.active = false;
     this.r = new XMLHttpRequest();
 
-    this.confirm = function(code) {
-        let modalBackground = element('div', {className: 'modal-background'});
+    this.setCode = function(code) {
+        self.code = code;
+    };
+
+    this.createModal = function() {
+        self.modal = element('div',
+            {className: 'modal-background', id: 'modal-confirm'}
+        );
         let modal = element('div',
-            {className: 'modal'},
-            element('h2', 'Create a cookie?'),
+            {className: 'modal modal-dialog'},
+            element('h3', 'Create a cookie?'),
             element('p',
                 'A new list of starred stops will be created on your device as a cookie. No ' +
                 'other identifiable information is stored.'
+            ),
+            element('button',
+                {
+                    className: 'modal-button',
+                    title: 'Close this dialog and go back',
+                    onclick: function() {
+                        this.focus();
+                        this.blur();
+                        document.body.classList.remove('with-modal');
+                        self.modal.classList.remove('modal-background-visible');
+                    }
+                },
+                'Close'
+            ),
+            element('button',
+                {
+                    className: 'modal-button',
+                    title: 'Create cookie and add stop',
+                    onclick: function() {
+                        this.focus();
+                        this.blur();
+                        document.body.classList.remove('with-modal');
+                        self.modal.classList.remove('modal-background-visible');
+                        self.set = true;
+                        self.add();
+                    }
+                },
+                'Continue adding stop'
             )
         );
-        document.body.style.overflow = 'hidden';
-        modalBackground.appendChild(modal);
-        document.body.appendChild(modalBackground);
+        self.modal.appendChild(modal);
+        document.body.appendChild(self.modal);
+    };
 
-        let close = element('button',
-            {
-                className: 'button button--action button--float',
-                title: 'Close this dialog',
-                onclick: function() {
-                    document.body.style.overflow = '';
-                    document.body.removeChild(modalBackground);
-                }
-            },
-            element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
-        );
-        let confirm = element('button',
-            {
-                className: 'button',
-                onclick: function() {
-                    self.set = true;
-                    self.add(code);
-                    document.body.style.overflow = '';
-                    document.body.removeChild(modalBackground);
-                }
-            },
-            'Confirm starred stop'
-        );
-        modal.insertBefore(close, modal.firstChild);
-        modal.appendChild(confirm);
+    this.removeModal = function() {
+        if (self.modal != null) {
+            document.body.removeChild(self.modal);
+            self.modal = null;
+        }
     };
 
     this.get = function(onGet) {
@@ -126,11 +114,19 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         self.r.send();
     };
 
-    this.add = function(code) {
+    this.add = function() {
+        if (self.code == null) {
+            throw new TypeError('SMS code needs to be set for StarredStops object first.');
+        }
+        if (!self.set && self.modal == null) {
+            self.createModal();
+        }
         if (!self.set) {
-            self.confirm(code);
+            document.body.classList.add('with-modal');
+            self.modal.classList.add('modal-background-visible');
             return;
         }
+
         if (self.active) {
             return;
         }
@@ -140,13 +136,16 @@ function StarredStops(cookieSet, onAdd, onRemove) {
                 self.onAdd();
             }
         };
-        self.r.open("POST", STARRED_URL + code, true);
+        self.r.open("POST", STARRED_URL + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
     };
 
-    this.remove = function(code) {
+    this.remove = function() {
+        if (self.code == null) {
+            throw new TypeError('SMS code needs to be set for StarredStops object first.');
+        }
         if (self.active || !self.set) {
             return;
         }
@@ -156,7 +155,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
                 self.onRemove();
             }
         };
-        self.r.open("DELETE", STARRED_URL + code, true);
+        self.r.open("DELETE", STARRED_URL + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
@@ -184,189 +183,70 @@ function getTransitionEnd(element) {
 }
 
 
-/**
- * Adds search bar to header
- * @param {string} staticURL
- * @param {string} searchURL
- * @param {string} csrfToken
- */
-function addSearchBar(staticURL, searchURL, csrfToken) {
-    let outerHeader = document.querySelector('.outer-header'),
-        header = outerHeader.querySelector('.header');
-
-    let open = element('img', {
-            src: staticURL + 'icons/sharp-search-24px-white.svg',
-            alt: 'Search'
-        }),
-        close = element('img', {
-            src: staticURL + 'icons/sharp-close-24px-white.svg',
-            style: {display: 'none'},
-            alt: 'Close'
-        }),
-        search = element('input', {
-            type: 'search',
-            name: 'search',
-            placeholder: 'Find a bus stop...',
-            required: true,
-            tabIndex: '-1'
-        }),
-        submit = element('button',
-            {type: 'submit', name: 'submit', title: 'Search', value: '1', tabIndex: '-1'},
-            element('img', {
-                src: staticURL + 'icons/sharp-search-24px-white.svg',
-                alt: 'Search',
-                width: 20,
-                height: 20
-            })
-        ),
-        csrf = element('input', {type: 'hidden', name: 'csrf_token', value: csrfToken}),
-        button = element('button', {className: 'header__right', title: 'Search'}, open, close);
-
-    search.setAttribute('aria-label', 'Find a bus stop');
-    let bar = element('div',
-        {className: 'hidden search-bar'},
-        element('form',
-            {
-                className: 'form search-bar__form',
-                action: searchURL,
-                method: 'post',
-                name: 'search',
-                autocomplete: 'off'
-            },
-            (csrfToken != null) ? csrf : null,
-            search,
-            submit
-        )
-    );
-
-    header.appendChild(button);
-    outerHeader.appendChild(bar);
-
-    let barHidden = true,
-        transitionEnd = getTransitionEnd(bar),
-        escape = function(event) {
-            if (event.code === 'Escape') {
-                closeBar();
-            }
-        },
-        onOpen = function() {
-            bar.removeEventListener(transitionEnd, onOpen);
-            search.tabIndex = button.tabIndex = '0';
-            search.focus();
-        },
-        onClose = function() {
-            bar.removeEventListener(transitionEnd, onClose);
-            search.tabIndex = button.tabIndex = '-1';
-        };
-
-    let openBar = function() {
-        bar.style.display = '';
-        bar.classList.add('search-bar--open');
-        open.style.display = 'none';
-        close.style.display = '';
-        button.title = 'Close';
-        button.blur();
-        barHidden = false;
-        bar.addEventListener(transitionEnd, onOpen);
-    };
-
-    let closeBar = function() {
-        bar.classList.remove('search-bar--open');
-        open.style.display = '';
-        close.style.display = 'none';
-        button.title = 'Search';
-        search.blur();
-        button.blur();
-        barHidden = true;
-        bar.addEventListener(transitionEnd, onClose);
-    };
-
-    button.addEventListener('click', function() {
-        (barHidden) ? openBar() : closeBar();
-    });
-
-    document.addEventListener('click', function(event) {
-        if (event.target instanceof HTMLElement &&
-            !bar.contains(event.target) &&
-            !button.contains(event.target) &&
-            !barHidden)
-        {
-            closeBar();
+function _resizeText(element) {
+    if (element.dataset.indicatorSet != null) {
+        return;
+    }
+    // Set data attribute and add class
+    element.dataset.indicatorSet = "1";
+    let span = element.querySelector('span');
+    let img = element.querySelector('img');
+    if (span !== null) {
+        let ind = span.textContent;
+        let len = ind.replace(/(&#?\w+;)/, ' ').length;
+        switch (len) {
+            case 1:
+                element.classList.add('indicator-1');
+                break;
+            case 2:
+                // Text 'WW' is as wide as most 3-character strings
+                element.classList.add((ind === 'WW') ? 'indicator-3' : 'indicator-2');
+                break;
+            case 3:
+                element.classList.add('indicator-3');
+                break;
+            case 4:
+                element.classList.add('indicator-4');
+                break;
         }
-    });
+    } else if (img !== null) {
+        let style = window.getComputedStyle(element);
+        let fontSize = parseFloat(style.fontSize);
+        img.width = Math.round(2.8 * fontSize);
+    }
 }
-
 
 /**
  * Resize text within indicators so they look better. Elements have a data attribute set so they can
  * be skipped the next time this function is called.
- * @param {...*} classes Class names as args to modify text in
+ * @param {string} selectors Argument for querySelectorAll
  */
-function resizeIndicator(...classes) {
-    for (let i = 0; i < classes.length; i++) {
-        let elements = document.getElementsByClassName(classes[i]);
-        for (let j = 0; j < elements.length; j++) {
-            let elt = elements[j];
-            // Already covered previously; skip over
-            if (elt.dataset.indicatorSet != null) {
-                continue;
-            }
-            // Set data attribute and add class
-            elt.dataset.indicatorSet = "1";
-            let span = elt.querySelector('span');
-            let img = elt.querySelector('img');
-            if (span !== null) {
-                let ind = span.textContent;
-                let len = ind.replace(/(&#?\w+;)/, ' ').length;
-                switch (len) {
-                case 1:
-                    span.className = 'indicator__len1';
-                    break;
-                case 2:
-                    // Text 'WW' is as wide as most 3-character strings
-                    span.className = (ind === 'WW') ? 'indicator__len3' : 'indicator__len2';
-                    break;
-                case 3:
-                    span.className = 'indicator__len3';
-                    break;
-                case 4:
-                    span.className = 'indicator__len4';
-                    break;
-                default:
-                    span.className = '';
-                }
-            } else if (img !== null) {
-                let style = window.getComputedStyle(elt);
-                let fontSize = parseFloat(style.fontSize);
-                img.width = Math.round(2.8 * fontSize);
-            }
-        }
+function resizeIndicator(selectors) {
+    document.querySelectorAll(selectors).forEach(_resizeText);
+}
+
+
+function _revertColours(element) {
+    if (element.dataset.coloursSet != null) {
+        // Already covered previously; skip over
+        return;
     }
+    // Set data attribute and add class
+    element.dataset.coloursSet = '1';
+    let style = window.getComputedStyle(element);
+    let foreground = style.getPropertyValue('color');
+    let background = style.getPropertyValue('background-color');
+    element.style.backgroundColor = foreground;
+    element.style.color = background;
 }
 
 
 /**
  * Reverts colours of indicators
- * @param {...*} classes Class names as arguments to revert colours
+ * @param {string} selectors Argument for querySelectorAll
  */
-function revertColours(...classes) {
-    for (let i = 0; i < classes.length; i++) {
-        let elements = document.getElementsByClassName(classes[i]);
-        for (let j = 0; j < elements.length; j++) {
-            let elt = elements[j];
-            // Already covered previously; skip over
-            if (elt.dataset.coloursSet != null) {
-                continue;
-            }
-            // Set data attribute and add class
-            elt.dataset.coloursSet = "1";
-            let style = window.getComputedStyle(elt);
-            let foreground = style.getPropertyValue('color');
-            let background = style.getPropertyValue('background-color');
-            elt.style.backgroundColor = foreground;
-            elt.style.color = background;
-        }
-    }
+function revertColours(selectors) {
+    document.querySelectorAll(selectors).forEach(_revertColours)
 }
 
 /**
@@ -587,7 +467,7 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
      * @private
      */
     this._classLive = function(isLive) {
-        return (!isLive) ? '' : (self.isLive) ? 'live-service--live' : 'live-service--estimated';
+        return (!isLive) ? '' : (self.isLive) ? 'departure-live' : 'departure-estimated';
     };
 
     /**
@@ -598,7 +478,7 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
         let message = (self.isLive) ? 'Live times at ' : 'Estimated times from ';
         self.headingTime.textContent = message + self.data.localTime;
 
-        let table = element('table', {className: 'live-data'});
+        let table = element('table', {className: 'departures'});
         for (let s = 0; s < self.data.services.length; s++) {
             let service = self.data.services[s];
             let first = service.expected[0],
@@ -607,7 +487,7 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
                 timesAfter = [];
 
             times.push(element('span',
-                {className: 'live-service--due ' + self._classLive(first.live)},
+                {className: self._classLive(first.live)},
                 (first.secs < 90) ? 'due' : Math.round(first.secs / 60) + ' min'
             ));
 
@@ -626,15 +506,15 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
             }
             if (timesAfter.length > 0) {
                 times.push(element('br'));
-                times.push(element('span', {className: 'live-service--after'}, timesAfter));
+                times.push(element('span', timesAfter));
             }
 
             let row = element('tr',
                 element('td',
-                    element('div',
-                        {className: 'line'},
-                        element('div',
-                            {className: 'line__inner area-' + self.adminAreaCode},
+                    element('span',
+                        {className: 'line-outer'},
+                        element('span',
+                            {className: 'line area-' + self.adminAreaCode},
                             element('span', {className: 'line__text'}, service.name)
                         )
                     )
@@ -740,9 +620,10 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
         self.loopActive = true;
         self.interval = setInterval(function() {
             time--;
-            self.headingCountdown.textContent = (time > 0) ? time + 's' : 'now';
+            self.headingCountdown.textContent = (time > 0) ? time : 'now';
             if (time <= 0) {
                 if (self.loopEnding) {
+                    self.headingCountdown.textContent = '';
                     self.loopActive = false;
                     self.loopEnding = false;
                     clearInterval(self.interval);
@@ -1045,7 +926,7 @@ function StopLayer(stopMap) {
         if (typeof obj !== 'undefined') {
             if (obj !== null) {
                 self.layers.addLayer(obj.layer);
-                resizeIndicator('indicator-marker');
+                resizeIndicator('.indicator-marker');
             }
             return;
         }
@@ -1060,7 +941,7 @@ function StopLayer(stopMap) {
                 let layer = self.createLayer(data);
                 self.loadedTiles.set(key, {coords: coords, layer: layer});
                 self.layers.addLayer(layer);
-                resizeIndicator('indicator-marker');
+                resizeIndicator('.indicator-marker');
             } else {
                 self.loadedTiles.set(key, null);
             }
@@ -1131,7 +1012,7 @@ function StopLayer(stopMap) {
             tiles.forEach(self.loadTile);
         } else if (!self.layers.hasLayer(self.route)) {
             self.route.addTo(self.layers);
-            resizeIndicator('indicator-marker');
+            resizeIndicator('.indicator-marker');
         }
     };
 
@@ -1778,7 +1659,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         self.clearPanel();
         self.mapPanel.appendChild(closePanel);
         self.mapPanel.appendChild(headingOuter);
-        resizeIndicator('indicator');
+        resizeIndicator('.indicator');
         self.mapPanel.appendChild(liveTimes);
         self.mapPanel.appendChild(services);
         self.mapPanel.appendChild(stopInfo);
@@ -2020,7 +1901,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         self.currentMapControl.addTo(self.stopMap.map);
 
         if (data.stops) {
-            resizeIndicator('indicator');
+            resizeIndicator('.indicator');
             setupGraph(diagram, data.layout);
         }
     };
@@ -2742,7 +2623,7 @@ function Diagram(container) {
 
 
 function _moveStopItemElements(container, col, width) {
-    let text = container.querySelector('.item__label'),
+    let text = container.querySelector('.item-label'),
         p = container.querySelector('p');
 
     container.style.paddingLeft = LAYOUT_DOM_DIV_START + LAYOUT_SPACE_X * col + 'px';

@@ -1,74 +1,71 @@
 {% extends 'base.html' %}
-{% import 'functions.html' as f %}
 {% block outer_title %}nextbus{% endblock %}
 
-{% block main %}
-<main class="content content--center">
-    <div class="search-box-above"></div>
-    <div>
-        <div class="heading">
-            <h1>Live bus times in Great Britain</h1>
-        </div>
-        <section class="card card--max-width search-box">
-            {{ f.search_form() }}
-            <ul id="search-box-links" class="search-box__links">
-                <li><a href="{{ url_for('page.list_regions') }}">Browse all regions</a></li>
-                <li><a id="expand-help-content">Help with searching</a></li>
-            </ul>
-            <div id="help-content" class="hidden">
-                <h3>What can I search?</h3>
-                <p>A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.</p>
-                <p>A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.</p>
-                <p><strong>Stop names, streets, areas</strong>&mdash;the names of stops or areas can be searched. You can add place, town or city names to help narrow down your search.</p>
-                <p><strong>Services</strong>&mdash;bus and metro lines can be searched. You can add place names to find lines covering these places only.</p>
-            </div>
-        </section>
-        <section class="card card--max-width">
-            {% if starred is not none and starred|length > 0 %}
-            {% call(s) f.print_list(starred) %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
-                <div class="item--stop">
-                    {{ f.print_stop_indicator(s) }}
-                    <span class="item__label">{{ s.name }}</span>
-                </div>
-                <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
-            </a>
-            {% endcall %}
-            {% else %}
-            <p>You can add your favourite stops here! Just search for them and star them.</p>
-            {% endif %}
-        </section>
-    </div>
-    <div class="search-box-below"></div>
+{% block header %}{% endblock %}
+
+{% block content %}
+<main class="page-narrow page-front">
+  <h1 class="text-middle">Live bus times in Great&nbsp;Britain</h1>
+  <div>
+    <section>
+      <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
+        {{ g.form.hidden_tag() }}
+        <input type="search" name="search" placeholder="Find a stop..." aria-label="Find a bus stop" required>
+        <button type="submit" name="submit" title="Search" value="1">Search</button>
+        <button type="button" title="Help with searching" onclick="(function() {
+            this.focus();
+            this.blur();
+            document.body.classList.add('with-modal');
+            document.getElementById('modal-help').classList.add('modal-background-visible');
+        })()">?</button>
+      </form>
+      <ul class="links">
+        <li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>
+        <li><a href="{{ url_for('page.list_regions') }}">Browse regions</a></li>
+        <li><a href="{{ url_for('page.show_map') }}">Map</a></li>
+      </ul>
+    </section>
+    <section>
+      {% if starred is not none and starred|length > 0 -%}
+      {% call(s) f.print_list(starred) -%}
+      <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
+        <span>
+          {{ f.print_stop_indicator(s) }}
+          <span class="item-label">{{ s.name }}</span>
+        </span>
+        <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
+      </a>
+      {%- endcall %}
+      {%- else -%}
+      <p class="text-middle">You can have your favourite stops here! Just find them and star them.</p>
+      {%- endif %}
+    </section>
+  </div>
 </main>
+{% endblock %}
+
+{% block modal %}
+<div class="modal-background" id="modal-help">
+  <div class="modal modal-dialog">
+    <button title="Close this dialog and go back" class="modal-button" onclick="(function() {
+        this.focus();
+        this.blur();
+        document.body.classList.remove('with-modal');
+        document.getElementById('modal-help').classList.remove('modal-background-visible');
+    })()">Close</button>
+    <h3>What can I search?</h3>
+    <p>A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.</p>
+    <p>A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.</p>
+    <p><strong>Stop names, streets and areas</strong>&mdash;you can add place, town or city names to help narrow down your search.</p>
+    <p><strong>Services</strong>&mdash;you can add place names to find lines covering these areas.</p>
+  </div>
+</div>
 {% endblock %}
 
 {% block script %}
 <script>
-    resizeIndicator('indicator');
-
-    let helpHidden = true;
-    let helpLink = document.getElementById('expand-help-content');
-    let helpContent = document.getElementById('help-content');
-    helpLink.onclick = function() {
-        this.blur();
-        helpContent.style.height = (helpHidden) ? helpContent.scrollHeight + 'px' : '';
-        helpHidden = !helpHidden;
-    };
-    window.addEventListener('resize', function() {
-        if (!helpHidden) {
-            // Reset height, otherwise scrollHeight's value will just increase
-            helpContent.style.height = 'auto';
-            helpContent.style.height = helpContent.scrollHeight + 'px';
-        }
-    })
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+});
 </script>
-{% if config.get('GEOLOCATION_ENABLED') %}
-<script>
-    let firstLink = document.getElementById('search-box-links').children[0];
-    let geoLink = element('li', element('a', 'Find nearby stops'));
-    addGeolocation('{{ url_for("page.list_near_location", coords="") }}', geoLink.firstChild);
-    firstLink.insertAdjacentElement('afterend', geoLink);
-</script>
-{% endif %}
 {% endblock %}

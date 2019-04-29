@@ -3,125 +3,109 @@
 
 {% block title %}{{ service.line }}: {{ truncate_description(service.description) }}{% endblock %}
 
-{% block heading %}
-{% set slash = joiner(' / ') %}
-<nav>
-    <ul class="breadcrumbs breadcrumbs--trailing">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        {% if service.regions %}
-        <li>
-            {% for r in service.regions|sort(attribute='name') %}
-            {{ slash() }}<a href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
-            {% endfor %}
-        </li>
-        {%endif %}
-    </ul>
-</nav>
-<div class="heading-service">
-  <div class="line">
-    <div class="line__inner {{ 'area-%s'|format(service.admin_area.code) if service.admin_area }}">
-      <span class="line__text">{{ service.line }}</span>
-    </div>
-  </div>
-  <h1>{{ service.description }}</h1>
-</div>
-<div class="heading-subtitle">
-  <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
-  <div class="buttons">
-    <a class="button button--action" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}" title="Timetable">
-      <img src="{{ url_for('static', filename='icons/sharp-date_range-24px.svg') }}" alt="Timetable">
-    </a>
-    <a class="button button--action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">
-      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-    </a>
-  </div>
-</div>
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        {% if mirrored %}
-        <ul class="tabs tabs--2">
-            {% if not reverse %}
-            <li><div class="tab tab--active">Outbound</div></li>
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>
-            {% else %}
-            <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}">Outbound</a></li>
-            <li><div class="tab tab--active">Inbound</div></li>
-            {% endif %}
-        </ul>
-        {% endif %}
-        <section class="card" id="diagram">
-            <dl class="description-list">
-              <dt>From</dt>
-              <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
-              <dt>To</dt>
-              <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
-            </dl>
-            <div id="diag" class="diagram"></div>
-            {% if sequence|length > 0 %}
-            {% call(s) f.print_list(sequence, class='list--relative', name='listStops') %}
-            {% if s %}
-            {% set stop = stops[s] %}
-            <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item item--stop--multiline item--stop--service">
-                <div id={{ 'c' + stop.atco_code }}>
-                    <div class="item--stop">
-                        {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
-                        <span class="item__label">{{ stop.name }}</span>
-                    </div>
-                    {% if stop.street and stop.street != stop.locality.name %}
-                    <p>{{ stop.street }}, {{ stop.locality.name }}</p>
-                    {% else %}
-                    <p>{{ stop.locality.name }}</p>
-                    {% endif %}
-                </div>
-            </a>
-            {% else %}
-            <div class="item item--stop item--stop--empty" id="cNull">
-                <div class="indicator" id="iNull"></div>
-            </div>
-            {% endif %}
-            {% endcall %}
-            {% else %}
-            <p>No stops found for this service.</p>
-            {% endif %}
-        </section>
-        <section class="card">
-            <h2>Operators</h2>
-            <div class="operators">
-                {% for o in service.operators|sort(attribute='name') %}
-                {% set break = joiner('<br>'|safe) %}
-                <div class="operator">
-                    <p><strong>{{ o.name }}</strong></p>
-                    {% if o.address %}
-                    <p>{{ o.split_address|join('<br>'|safe) }}</p>
-                    {% endif %}
-                    {% if o.website or o.email or o.twitter %}
-                    <p>
-                        {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
-                        {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
-                        {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter }}">{{ o.twitter }}</a>{% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-        </section>
+<nav>
+  <ul class="breadcrumbs breadcrumbs-trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    {% if service.regions -%}
+    {% set slash = joiner(' / ') -%}
+    <li>
+      {%- for r in service.regions|sort(attribute='name') %}
+      {{ slash() }}<a href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+      {%- endfor %}
+    </li>
+    {%- endif %}
+  </ul>
+</nav>
+<main>
+  <h1 class="heading-service">
+    <span class="line-outer"><span class="line{{ ' area-%s'|format(service.admin_area.code) if service.admin_area }}">{{ service.line }}</span></span>
+    <span>{{ service.description }}</span>
+  </h1>
+  <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
+  <div class="actions">
+    <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
+  </div>
+
+  {% if mirrored %}
+  <ul class="tabs tabs-3">
+    {% if not reverse %}
+    <li><div class="tab tab-active">Outbound</div></li>
+    <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>
+    {% else %}
+    <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}">Outbound</a></li>
+    <li><div class="tab tab-active">Inbound</div></li>
+    {% endif %}
+    <li><a class="tab" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a></li>
+  </ul>
+  {% endif %}
+
+  <section id="diagram">
+    <dl class="description-list">
+      <dt>From</dt>
+      <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
+      <dt>To</dt>
+      <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
+    </dl>
+    <div id="diag" class="diagram"></div>
+    {% if sequence|length > 0 -%}
+    {% call(s) f.print_list(sequence, class='list-relative', name='listStops') -%}
+    {% if s -%}
+    {% set stop = stops[s] -%}
+    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item item-stop item-service-stop">
+      <span id="{{ 'c' + stop.atco_code }}" class="item-multiline">
+        <span>
+            {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
+            <span class="item-label">{{ stop.name }}</span>
+        </span>
+        {% if stop.street and stop.street != stop.locality.name -%}
+        <p>{{ stop.street }}, {{ stop.locality.name }}</p>
+        {%- else -%}
+        <p>{{ stop.locality.name }}</p>
+        {%- endif %}
+      </span>
+    </a>
+    {%- else -%}
+    <div class="item item-stop empty" id="cNull">
+      <span class="indicator" id="iNull"></span>
     </div>
-</div>
+    {%- endif %}
+    {%- endcall %}
+    {%- else -%}
+    <p>No stops found for this service.</p>
+    {%- endif %}
+  </section>
+  <section class="card">
+    <h2>Operators</h2>
+    <div class="operators">
+      {%- for o in service.operators|sort(attribute='name') %}
+      <div>
+        <h3>{{ o.name }}</h3>
+        {% if o.address -%}
+        <p>{{ o.split_address|join('<br>'|safe) }}</p>
+        {%- endif %}
+        {% if o.website or o.email or o.twitter -%}
+        {% set break = joiner('<br>'|safe) -%}
+        <p>
+          {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
+          {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
+          {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
+        </p>
+        {%- endif %}
+      </div>
+      {%- endfor %}
+    </div>
+  </section>
+</main>
 {% endblock %}
 
 {% block script %}
-{{ f.add_search_bar() }}
 <script>
-    resizeIndicator('indicator');
-</script>
-<script>
-    let data, diagram;
-    data = {{ layout|tojson }};
-    if (data) {
-        diagram = setupGraph('diag', data);
-    }
+let data, diagram;
+data = {{ layout|tojson }};
+window.addEventListener('load', function () {
+    resizeIndicator('.indicator');
+    diagram = setupGraph('diag', data);
+});
 </script>
 {% endblock %}

@@ -131,6 +131,23 @@ def truncate_description(description):
     return new_description
 
 
+@page.app_template_global()
+def display_long_date(date):
+    """ Displays a date in long form, eg 'Monday 29th April 2019'. """
+    second_last = (date.day // 10) % 10
+    last = date.day % 10
+    if second_last != 1 and last == 1:
+        ordinal = "st"
+    elif second_last != 1 and last == 2:
+        ordinal = "nd"
+    elif second_last != 1 and last == 3:
+        ordinal = "rd"
+    else:
+        ordinal = "th"
+
+    return f"{date:%A} {date.day}{ordinal} {date:%B} {date.year}"
+
+
 @page.route("/")
 def index():
     """ The home page. """
@@ -427,18 +444,33 @@ def stop_area(stop_area_code):
                            stops=stops)
 
 
+def _query_stop(*, atco_code=None, naptan_code=None):
+    stop = (
+        models.StopPoint.query
+        .options(
+            db.joinedload(models.StopPoint.admin_area, innerjoin=True),
+            db.joinedload(models.StopPoint.locality, innerjoin=True)
+            .joinedload(models.Locality.district),
+            db.joinedload(models.StopPoint.stop_area),
+            db.joinedload(models.StopPoint.other_stops)
+        )
+    )
+
+    if atco_code is not None and naptan_code is None:
+        stop = stop.filter(models.StopPoint.atco_code == atco_code.upper())
+    elif atco_code is None and naptan_code is not None:
+        stop = stop.filter(models.StopPoint.naptan_code == naptan_code.lower())
+    else:
+        raise TypeError("Either keyword argument 'atco_code' or 'naptan_code' "
+                        "must be used.")
+
+    return stop.one_or_none()
+
+
 @page.route("/stop/sms/<naptan_code>")
 def stop_naptan(naptan_code):
     """ Shows stop with NaPTAN (SMS) code. """
-    stop = (
-        models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
-                 db.joinedload(models.StopPoint.locality, innerjoin=True)
-                 .joinedload(models.Locality.district),
-                 db.joinedload(models.StopPoint.stop_area))
-        .filter(models.StopPoint.naptan_code == naptan_code.lower())
-        .one_or_none()
-    )
+    stop = _query_stop(naptan_code=naptan_code)
 
     if stop is None:
         raise NotFound(Markup("Stop with SMS code <strong>%s</strong> does not "
@@ -459,15 +491,7 @@ def stop_atco(atco_code=""):
     """ Shows stop with ATCO code. """
     if not atco_code:
         abort(404)
-
-    stop = (
-        models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.admin_area, innerjoin=True),
-                 db.joinedload(models.StopPoint.locality, innerjoin=True)
-                 .joinedload(models.Locality.district),
-                 db.joinedload(models.StopPoint.stop_area))
-        .get(atco_code.upper())
-    )
+    stop = _query_stop(atco_code=atco_code)
 
     if stop is None:
         raise NotFound(Markup("Stop with ATCO code <strong>%s</strong> does "

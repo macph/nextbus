@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
-{% block title %}Search results{{ " for \"%s\""|format(query) if query }}{% endblock %}
+{% block title %}Search results{{ ' for "%s"'|format(query) if query }}{% endblock %}
 
 {% set f_groups = filters|default(false) and filters.group.choices|length > 1 %}
 {% set f_areas = filters|default(false) and filters.area.choices|length > 1 %}
@@ -12,159 +12,171 @@
 
 {% macro group_tab(value, name, selected) %}
 <li>
-    {% if selected %}
-    <div class="tab tab--active"><span>{{ name }}</span></div>
-    {% else %}
+    {%- if selected -%}
+    <span class="tab tab-active">{{ name }}</span>
+    {%- else -%}
     <a class="tab" href="{{ modify_query(group=value, page=none) }}">{{ name }}</a>
-    {% endif %}
+    {%- endif -%}
 </li>
 {% endmacro %}
 
-{% block heading %}
-<h1>Search</h1>
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        <section class="card">
-            {{ f.search_form(query) }}
-        </section>
-        {% if query is not none %}
-        {% if f_areas %}
-        {% set checked_elements = filters.area.render_elements(class='filter-item', checked=true) %}
-        {% set unchecked_elements = filters.area.render_elements(class='filter-item', checked=false)%} 
-        <section id="filter-box" class="card">
-            <div class="heading-inline heading-inline--right">
-                <h3>Filter by area</h3>
-                <button id="filter-show-button">Show</button>
-            </div>
-            <div id="filter-wrapper" class="filter-form-wrapper">
-                <form id="filter-form" class="filter-form" method="get">
-                    {% if checked_elements %}
-                    <div class="filter-form__scrolling filter-form__expanded">
-                        <ul class="filter-list">
-                            {% for element in checked_elements %}
-                            <li>{{ element }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    <div id="filter-list" class="filter-form__scrolling hidden">
-                        <ul class="filter-list">
-                            {% for element in unchecked_elements %}
-                            <li>{{ element }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <button id="filter-refresh-button" class="filter-submit">Refresh</button>
-                </form>
-            </div>
-        </section>
-        {% endif %}
-        {% if f_groups %}
-        <ul class="tabs tabs--5">
-            {{ group_tab(none, 'All results', 'group' not in request.args) }}
-            {% for value, name in filters.group.choices %}
-            {{ group_tab(value, name, request.args['group'] == value) }}
-            {% endfor %}
-        </ul>
-        {% endif %}
-        <section class="card">
-            {% if results is defined and results.total > 0 %}
-            <h2>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h2>
-            {% if results.items|length > 0 %}
-            {% call(item) f.print_list(results.items) %}
-            {% if item.table_name == 'region' %}
-            <a class="item item--place item--tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
-            {% elif item.table_name == 'admin_area' %}
-            <a class="item item--place item--tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><span><strong>{{ item.name }}</strong></span></a>
-            {% elif item.table_name == 'district' %}
-            <a class="item item--place item--tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</span></a>
-            {% elif item.table_name == 'locality' %}
-            <a class="item item--place item--tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><span><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</span></a>
-            {% elif item.table_name == 'stop_area' %}
-            <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item--stop--multiline">
-                <div class="item--stop">
-                    {{ f.print_stop_indicator(item, reverse=true) }}
-                    <span class="item__label">{{ item.name }}</span>
-                </div>
-                {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
-                <p>{{ place|join(', ') }}</p>
-            </a>
-            {% elif item.table_name == 'stop_point' %}
-            <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item--stop--multiline">
-                <div class="item--stop">
-                    {{ f.print_stop_indicator(item) }}
-                    <span class="item__label">{{ item.name }}</span>
-                </div>
-                {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] %}
-                {% if item.street %}
-                <p>{{ ([item.street] + place)|join(', ') }}</p>
-                {% else %}
-                <p>{{ place|join(', ') }}</p>
-                {% endif %}
-            </a>
-            {% elif item.table_name == 'service' %}
-            <a href="{{ url_for('page.service', service_id=item.code) }}" class="item item--service item--tall">
-              <div class="line">
-                  <div class="line__inner {{ 'area-%s'|format(item.admin_area_ref) if item.admin_area_ref }}">
-                      <span class="line__text">{{ item.short_ind }}</span>
-                  </div>
-              </div>
-              <span class="item__label">{{ truncate_description(item.name) }}</span>
-            </a>
-            {% endif %}
-            {% endcall %}
-            {% if results.has_next or results.has_prev %}
-            <div class="page-select">
-                <p>{% if results.has_prev %}<a href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}</p>
-                <p>{{ results.page }} of {{ results.pages }}</p>
-                <p>{% if results.has_next %}<a href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
-            </div>
-            {% endif %}
-            {% else %}
-            <p>Page {{ request.args.get("page") }} is out of range for this search query.</p>
-            <p><a href="?">Go back to page 1</a></p>
-            {% endif %}
-            {% elif results is defined and (filters.group.choices or filters.area.choices) %}
-            <h2>No results found</h2>
-            <p>No matching results for <strong>{{ query }}</strong> with the filters you selected.</p>
-            <p><a href="?">Reset filters</a></p>
-            {% elif results is defined %}
-            <h2>No results found</h2>
-            <p>The query <strong>{{ query }}</strong> returned no matches. You could try:</p>
-            <ul class="dashed-list">
-                <li>Checking your query for typos;</li>
-                <li>Using more general keywords;</li>
-                <li>Remove some keywords to make your query more broad.</li>
-            </ul>
-            {% else %}
-            <h2>No results found</h2>
-            {% if error.postcode is defined %}
-            <p>The postcode <strong>{{ error.postcode }}</strong> cannot be found; it may not exist or lies outside the area this website covers.</p>
-            {% elif error.param is defined %}
-            <p>Your address is not valid.</p>
-            <p>If you typed the address by hand or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
-            <p>You can try <a href="?">searching with the filters reset</a>, or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
-            {% elif error.too_short is defined %}
-            <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
-            {% elif error.not_defined is defined %}
-            <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down the query.</p>
-            {% else %}
-            <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvenience.</p>
-            {% endif %}
-            {% endif %}
-        </section>
+<main>
+  <h1>Search</h1>
+  <section class="card">
+    <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
+      {{ g.form.hidden_tag() }}
+      <input type="search" name="search" placeholder="Find a stop..." value="{{ query if query is not none else '' }}" aria-label="Find a bus stop" required>
+      <button type="submit" name="submit" title="Search" value="1">Search</button>
+    </form>
+  </section>
+  {% if query is not none -%}
+  <!--
+  {% if f_areas -%}
+  {% set checked_elements = filters.area.render_elements(class='filter-item', checked=true) %}
+  {% set unchecked_elements = filters.area.render_elements(class='filter-item', checked=false)%}
+  <section id="filter-box" class="card">
+    <div class="heading-inline heading-inline--right">
+        <h3>Filter by area</h3>
+        <button id="filter-show-button">Show</button>
     </div>
-</div>
-{% endif %}
+    <div id="filter-wrapper" class="filter-form-wrapper">
+      <form id="filter-form" class="filter-form" method="get">
+        {% if checked_elements %}
+        <div class="filter-form__scrolling filter-form__expanded">
+          <ul class="filter-list">
+            {% for element in checked_elements %}
+            <li>{{ element }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        <div id="filter-list" class="filter-form__scrolling hidden">
+          <ul class="filter-list">
+            {% for element in unchecked_elements %}
+            <li>{{ element }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <button id="filter-refresh-button" class="filter-submit">Refresh</button>
+      </form>
+    </div>
+  </section>
+  {%- endif %}
+  -->
+
+  {% if f_groups -%}
+  <ul class="tabs tabs-5">
+    {{ group_tab(none, 'All results', 'group' not in request.args) }}
+    {%- for value, name in filters.group.choices %}
+    {{ group_tab(value, name, request.args['group'] == value) }}
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+
+  <section>
+    {% if results is defined and results.total > 0 -%}
+    <h3>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h3>
+
+    {% if results.items|length > 0 -%}
+    {% call(item) f.print_list(results.items) -%}
+    {% if item.table_name == 'region' -%}
+    <a class="item item-place item-tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><strong>{{ item.name }}</strong></a>
+    {%- elif item.table_name == 'admin_area' -%}
+    <a class="item item-place item-tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><strong>{{ item.name }}</strong></a>
+    {%- elif item.table_name == 'district' -%}
+    <a class="item item-place item-tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</a>
+    {%- elif item.table_name == 'locality' -%}
+    <a class="item item-place item-tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
+    {%- elif item.table_name == 'stop_area' -%}
+    <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item-stop item-multiline">
+      <span>
+        {{ f.print_stop_indicator(item, reverse=true) }}
+        <span class="item-label">{{ item.name }}</span>
+      </span>
+      {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] -%}
+      <p>{{ place|join(', ') }}</p>
+    </a>
+    {%- elif item.table_name == 'stop_point' -%}
+    <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item-stop item-multiline">
+      <span>
+        {{ f.print_stop_indicator(item) }}
+        <span class="item-label">{{ item.name }}</span>
+      </span>
+      {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] -%}
+      {% if item.street -%}
+      <p>{{ ([item.street] + place)|join(', ') }}</p>
+      {%- else -%}
+      <p>{{ place|join(', ') }}</p>
+      {%- endif %}
+    </a>
+    {%- elif item.table_name == 'service' -%}
+    <a href="{{ url_for('page.service', service_id=item.code) }}" class="item item-service item-tall">
+      <span class="line-outer">
+        <span class="line {{ 'area-%s'|format(item.admin_area_ref) if item.admin_area_ref }}">{{ item.short_ind }}</span>
+      </span>
+      <span class="item-label">{{ truncate_description(item.name) }}</span>
+    </a>
+    {%- endif %}
+    {%- endcall %}
+
+    {% if results.has_next or results.has_prev -%}
+    <div class="inline">
+      <p>
+        {% if results.has_prev %}<a href="{{ modify_query(page=1) }}">Start</a>{% endif %}
+        {% if results.page > 2 %}<a href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}
+      </p>
+      <p>{{ results.page }} of {{ results.pages }}</p>
+      <p>{% if results.has_next %}<a href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
+    </div>
+    {%- endif %}
+
+    {%- else -%}
+    <p>Page {{ request.args.get("page") }} is out of range for this search query.</p>
+    <p><a href="?">Go back to page 1</a></p>
+    {%- endif %}
+
+    {%- elif results is defined and (filters.group.choices or filters.area.choices) -%}
+    <h3>No results found</h3>
+    <p>No matching results for <strong>{{ query }}</strong> with the filters you selected.</p>
+    <p><a href="?">Reset filters</a></p>
+
+    {%- elif results is defined -%}
+    <h3>No results found</h3>
+    <p>The query <strong>{{ query }}</strong> returned no matches. You could try:</p>
+    <ul class="dashed-list">
+      <li>Checking your query for typos;</li>
+      <li>Using more general keywords;</li>
+      <li>Remove some keywords to make your query more broad.</li>
+    </ul>
+
+    {%- else -%}
+    <h3>No results found</h3>
+    {% if error.postcode is defined -%}
+    <p>The postcode <strong>{{ error.postcode }}</strong> cannot be found; it may not exist or lies outside the area this website covers.</p>
+    {%- elif error.param is defined -%}
+    <p>Your address is not valid.</p>
+    <p>If you typed the address by hand or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
+    <p>You can try <a href="?">searching with the filters reset</a>, or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
+    {%- elif error.too_short is defined -%}
+    <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
+    {%- elif error.not_defined is defined -%}
+    <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down the query.</p>
+    {%- else -%}
+    <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvenience.</p>
+    {%- endif %}
+    {%- endif %}
+  </section>
+  {%- endif %}
+</main>
 {% endblock %}
 
 {% block script %}
 <script>
-    resizeIndicator('indicator');
-    revertColours('indicator--reversed');
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+    revertColours('.indicator-reversed');
+});
 </script>
 {% if f_areas %}
 <script>

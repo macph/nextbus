@@ -3,76 +3,77 @@
 
 {% block title %}Stops nearby{% endblock %}
 
-{% block heading %}
-<div class="heading-with-buttons">
-    <h1>Stops nearby</h1>
-    {% if list_stops is not none %}
-    <div class="buttons">
-        <a class="button button--action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}" title="View on map">
-            <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-        </a>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        <section class="card">
-            {{ f.search_form() }}
-        </section>
-        <section class="card">
-            <h2>Stops</h2>
-            {% if list_stops is none %}
-            <p>Searching for stops nearby...</p>
-            {% elif list_stops|length > 0 %}
-            {% call(s) f.print_list(list_stops) %}
-            <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item--stop--multiline">
-                <div class="item--stop">
-                    {{ f.print_stop_indicator(s) }}
-                    <span class="item__label">{{ s.name }}{% if s.street and s.street not in s.name and s.name not in s.street %}, {{ s.street }}{% endif %}</span>
-                    <span class="item__dist">{{ '%.0f m'|format(s.distance) }}</span>
-                </div>
-                {% if s.lines %}
-                <p>
-                {% for l in s.lines %}
-                <span class="line line--inline">
-                    <span class="line__inner {{ 'area-%s'|format(s.admin_area_ref) }}">
-                        <span class="line__text">{{ l }}</span>
-                    </span>
-                </span>
-                {% endfor %}
-                </p>
-                {% endif %}
-            </a>
-            {% endcall %}
-            {% else %}
-            <p>No stops found nearby.</p>
-            {% endif %}
-        </section>
-    </div>
-</div>
+<main>
+  <h1>Stops nearby</h1>
+  {% if list_stops is not none -%}
+  <div class="actions">
+    <a class="action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}">Map</a>
+  </div>
+  {%- endif %}
+  <section>
+    {% if list_stops is none -%}
+    <h2 id="geoH">Getting your location...</h2>
+    <p id="geoM"></p>
+    {%- elif list_stops|length > 0 %}
+    <h2>Stops</h2>
+    {% call(s) f.print_list(list_stops) -%}
+    <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
+      <span>
+        {{ f.print_stop_indicator(s) }}
+        <span class="item-label">{{ s.name }}{% if s.street and s.street not in s.name and s.name not in s.street %}, <span class="item-label-small">{{ s.street }}</span>{% endif %}</span>
+        <span class="item-label item-label-distance">{{ '%.0f m'|format(s.distance) }}</span>
+      </span>
+      {% if s.lines -%}
+      <p>
+        {%- for l in s.lines %}
+        <span class="line-outer line-outer-inline">
+          <span class="line {{ 'area-%s'|format(s.admin_area_ref) }}">{{ l }}</span>
+        </span>
+        {%- endfor %}
+      </p>
+      {%- endif %}
+    </a>
+    {%- endcall %}
+    {%- else -%}
+    <h2>Stops</h2>
+    <p>No stops found nearby.</p>
+    {%- endif %}
+  </section>
+</main>
 {% endblock %}
 
 {% block script %}
-{% if list_stops is none %}
+{% if list_stops is none -%}
 <script>
+window.addEventListener('load', function() {
+    let heading = document.getElementById('geoH'),
+        message = document.getElementById('geoM');
+    let locationURL = "{{ url_for('page.find_near_location') }}";
     if (!navigator.geolocation) {
         console.debug('Browser does not support geolocation.');
+        heading.textContent = 'Error';
+        message.textContent = 'Your browser does not support geolocation. Try using the maps or ' +
+            'search with a postcode to find stops nearby.';
     }
-    let locationURL = "{{ url_for('page.find_near_location') }}";
     navigator.geolocation.getCurrentPosition(function(position) {
         let latitude = position.coords.latitude.toFixed(6);
         let longitude = position.coords.longitude.toFixed(6);
         console.debug('Current coordinates (' + latitude + ', ' + longitude + ')');
+        heading.textContent = 'Redirecting...';
         window.location.href = locationURL + latitude + ',' + longitude;
     }, function(err) {
         console.debug('Geolocation error: ' + err);
+        heading.textContent = 'Error';
+        message.textContent = 'Unable to find your location. Try using the maps or ' +
+            'search with a postcode to find stops nearby.';
     });
+});
 </script>
-{% endif %}
+{%- endif %}
 <script>
-    resizeIndicator('indicator');
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+});
 </script>
 {% endblock %}

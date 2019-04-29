@@ -3,191 +3,180 @@
 
 {% block title %}{{ service.line }}: {{ service.description }}{% endblock %}
 
-{% block heading %}
-<nav>
-    <ul class="breadcrumbs breadcrumbs--trailing">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    </ul>
-</nav>
-<div class="heading-service">
-  <div class="line">
-    <div class="line__inner {{ 'area-%s'|format(service.admin_area.code) if service.admin_area }}">
-      <span class="line__text">{{ service.line }}</span>
-    </div>
-  </div>
-  <h1>{{ service.description }}</h1>
-</div>
-<div class="heading-subtitle">
-    <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
-  <div class="buttons">
-    <a class="button button--action" href="{{ url_for('.service', service_id=service.id, reverse=reverse) }}" title="Diagram">
-      <img src="{{ url_for('static', filename='icons/sharp-timeline-24px.svg') }}" alt="Diagram">
-    </a>
-    <a class="button button--action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">
-      <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-    </a>
-  </div>
-</div>
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        {% if mirrored -%}
-        <ul class="tabs tabs--2">
-            {% if not reverse -%}
-            <li><div class="tab tab--active">Outbound</div></li>
-            <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true) }}">Inbound</a></li>
-            {%- else -%}
-            <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false) }}">Outbound</a></li>
-            <li><div class="tab tab--active">Inbound</div></li>
-            {%- endif %}
-        </ul>
+<nav>
+  <ul class="breadcrumbs breadcrumbs-trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    {% if service.regions -%}
+    {% set slash = joiner(' / ') -%}
+    <li>
+      {%- for r in service.regions|sort(attribute='name') %}
+      {{ slash() }}<a href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+      {%- endfor %}
+    </li>
+    {%- endif %}
+  </ul>
+</nav>
+<main>
+  <h1 class="heading-service">
+    <span class="line-outer"><span class="line{{ ' area-%s'|format(service.admin_area.code) if service.admin_area }}">{{ service.line }}</span></span>
+    <span>{{ service.description }}</span>
+  </h1>
+  <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
+  <div class="actions">
+    <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
+  </div>
+
+  {% if mirrored -%}
+  <ul class="tabs tabs-3">
+      {% if not reverse -%}
+      <li><div class="tab tab-active">Outbound</div></li>
+      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true) }}">Inbound</a></li>
+      {%- else -%}
+      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false) }}">Outbound</a></li>
+      <li><div class="tab tab-active">Inbound</div></li>
+      {%- endif %}
+      <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=reverse) }}">Diagram</a></li>
+  </ul>
+  {%- endif %}
+
+  <section id="timetable">
+      <h3>Timetable</h3>
+      <div class="inline">
+        <p style="margin-right: 10px;">{{ display_long_date(select_date.date.data) }}</p>
+        <form method="GET" action="" class="form">
+          <label>Change date:</label>
+          {{ select_date.date() }}
+          <button title="Go to timetable for this date" type="submit">Go</button>
+        </form>
+      </div>
+      {% if select_date.errors -%}
+      {%- for e in select_date.errors.date %}
+      <p>{{ e }}</p>
+      {%- endfor -%}
+      {%- endif %}
+
+      {% if timetable -%}
+      <div class="timetable-wrapper">
+        <table class="timetable" id="tt">
+          {% if timetable.notes -%}
+          <tr class="timetable-head">
+            <th></th>
+            {% for h in timetable.head -%}
+            <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
+            {%- endfor %}
+          </tr>
+          {% endif %}
+          {% if timetable.operators -%}
+          <tr class="timetable-head">
+            <th></th>
+            {%- for h in timetable.head %}
+            <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
+            {%- endfor %}
+          </tr>
+          {% endif %}
+          {%- for r in timetable.rows %}
+          {%- set stop = timetable.stops[r.stop] -%}
+          <tr class="timetable-row{{ ' timetable-row-major' if r.timing else ' timetable-row-hidden' }}">
+            <th>
+              <div class="timetable-stop">
+                <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
+                <span class="timetable-ind">{{ f.print_stop_indicator(stop) }}</span>
+              </div>
+            </th>
+            {%- for t in r.times %}
+            <td{% if t.timing %} class="timetable-bold"{% endif %}>
+              {%- if t.arrive and t.depart and t.arrive != t.depart -%}
+              <span>a {{ t.arrive }}</span> <span>d {{ t.depart }}</span>
+              {%- elif t.arrive or t.depart -%}
+              {{ t.arrive or t.depart}}
+              {%- endif -%}
+            </td>
+            {%- endfor %}
+          </tr>
+          {%- endfor %}
+        </table>
+      </div>
+      {% if timetable.operators|length and timetable.notes|length -%}
+      <h3>Operators & notes</h3>
+      {%- elif timetable.operators|length -%}
+      <h3>Operators</h3>
+      {%- elif timetable.notes|length -%}
+      <h3>Notes</h3>
+      {%- endif %}
+      {% if timetable.operators|length -%}
+      <dl class="description-list">
+        {%- for c, n in timetable.operators|dictsort(by='value') %}
+        <dt><strong>{{ c }}</strong></dt>
+        <dd>{{ n }}</dd>
+        {%- endfor %}
+      </dl>
+      {%- endif %}
+      {% if timetable.notes|length -%}
+      <dl class="description-list">
+        {%- for c, t in timetable.notes|dictsort(by='value') %}
+        <dt><strong>{{ c }}</strong></dt>
+        <dd>{{ t }}</dd>
+        {%- endfor %}
+      </dl>
+      {%- endif %}
+      {%- elif not select_date.errors -%}
+      <p>No services run on this day.</p>
+      {%- else -%}
+      <p>No stops found for this service.</p>
+      {%- endif %}
+  </section>
+  <section class="card">
+    <h2>Operators</h2>
+    <div class="operators">
+      {%- for o in service.operators|sort(attribute='name') %}
+      {% set break = joiner('<br>'|safe) -%}
+      <div>
+        <h3>{{ o.name }}</h3>
+        {% if o.address -%}
+        <p>{{ o.split_address|join('<br>'|safe) }}</p>
         {%- endif %}
-        <section class="card" id="timetable">
-            <h2>Timetable</h2>
-            <div class="heading-inline heading-inline--right">
-                <p style="margin-right: 10px;">{{ '{d:%A} {d.day} {d:%B} {d.year}'.format(d=select_date.date.data) }}</p>
-                <form method="GET" action="" class="form form--inline">
-                    <label>Change date:</label>
-                    {{ select_date.date() }}
-                    <button title="Go to timetable for this date">
-                      <img src="{{ url_for('static', filename='icons/sharp-arrow_forward-24px.svg') }}" alt="Go" width="20px" height="20px">
-                    </button>
-                </form>
-            </div>
-            {% if select_date.errors -%}
-            {%- for e in select_date.errors.date %}
-            <p>{{ e }}</p>
-            {%- endfor -%}
-            {%- endif %}
-            {% if timetable -%}
-            <div class="timetable-wrapper">
-                <table class="timetable" id="tt">
-                    {% if timetable.notes -%}
-                    <tr class="timetable__head">
-                        <th></th>
-                        {% for h in timetable.head -%}
-                        <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
-                        {%- endfor %}
-                    </tr>
-                    {% endif %}
-                    {% if timetable.operators -%}
-                    <tr class="timetable__head">
-                        <th></th>
-                        {%- for h in timetable.head %}
-                        <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
-                        {%- endfor %}
-                    </tr>
-                    {% endif %}
-                    {%- for r in timetable.rows %}
-                    {%- set stop = timetable.stops[r.stop] -%}
-                    <tr class="timetable__row{{ ' timetable__row--major' if r.timing else ' timetable__row--hidden' }}">
-                        <th>
-                            <div class="timetable__stop">
-                                <div class="timetable__stop__label">{{ stop.locality.name }}, {{ stop.name }}</div>
-                                <div class="timetable__stop__ind">{{ f.print_stop_indicator(stop) }}</div>
-                            </div>
-                        </th>
-                        {%- for t in r.times %}
-                        <td{% if t.timing %} class="timetable--bold"{% endif %}>
-                            {%- if t.arrive and t.depart and t.arrive != t.depart -%}
-                            <span>a {{ t.arrive }}</span> <span>d {{ t.depart }}</span>
-                            {%- elif t.arrive or t.depart -%}
-                            {{ t.arrive or t.depart}}
-                            {%- endif -%}
-                        </td>
-                        {%- endfor %}
-                    </tr>
-                    {%- endfor %}
-                </table>
-            </div>
-            {% if timetable.operators|length and timetable.notes|length -%}
-            <h3>Operators & notes</h3>
-            {%- elif timetable.operators|length -%}
-            <h3>Operators</h3>
-            {%- elif timetable.notes|length -%}
-            <h3>Notes</h3>
-            {%- endif %}
-            {% if timetable.operators|length -%}
-            <dl class="description-list">
-                {%- for c, n in timetable.operators|dictsort(by='value') %}
-                <dt><strong>{{ c }}</strong></dt>
-                <dd>{{ n }}</dd>
-                {%- endfor %}
-            </dl>
-            {%- endif %}
-            {% if timetable.notes|length -%}
-            <dl class="description-list">
-                {%- for c, t in timetable.notes|dictsort(by='value') %}
-                <dt><strong>{{ c }}</strong></dt>
-                <dd>{{ t }}</dd>
-                {%- endfor %}
-            </dl>
-            {%- endif %}
-            {%- elif not select_date.errors -%}
-            <p>No services run on this day.</p>
-            {%- else -%}
-            <p>No stops found for this service.</p>
-            {%- endif %}
-        </section>
-        <section class="card">
-            <h2>Operators</h2>
-            <div class="operators">
-                {% for o in service.operators|sort(attribute='name') %}
-                {% set break = joiner('<br>'|safe) %}
-                <div class="operator">
-                    <p><strong>{{ o.name }}</strong></p>
-                    {% if o.address %}
-                    <p>{{ o.split_address|join('<br>'|safe) }}</p>
-                    {% endif %}
-                    {% if o.website or o.email or o.twitter %}
-                    <p>
-                        {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
-                        {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
-                        {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter }}">{{ o.twitter }}</a>{% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-        </section>
+        {% if o.website or o.email or o.twitter -%}
+        <p>
+          {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
+          {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
+          {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
+        </p>
+        {%- endif %}
+      </div>
+      {%- endfor %}
     </div>
-</div>
+  </section>
+</main>
 {% endblock %}
 
 {% block script %}
-{{ f.add_search_bar() }}
 <script>
-    resizeIndicator('indicator');
-</script>
-<script>
-    function addRowEvent(group) {
-        let hidden = true;
-        if (group.next.length) {
-            group.current.classList.add('timetable__row--selectable');
-            group.current.onclick = function() {
-                let r;
-                for (let i = 0; i < group.next.length; i++) {
-                    r = group.next[i];
-                    if (hidden) {
-                        r.classList.remove('timetable__row--hidden');
-                    } else {
-                        r.classList.add('timetable__row--hidden');
-                    }
-                }
-                hidden = !hidden;
-            }
+function addRowEvent(group) {
+    let hidden = true;
+    let toggleRow = function(row) {
+        if (hidden) {
+            row.classList.remove('timetable-row-hidden');
+        } else {
+            row.classList.add('timetable-row-hidden');
+        }
+    };
+    if (group.next.length) {
+        group.current.classList.add('timetable-row-selectable');
+        group.current.onclick = function() {
+            group.next.forEach(toggleRow);
+            hidden = !hidden;
         }
     }
-
-    let table = document.getElementById('tt');
+}
+function setUpRowEvents(timetable) {
+    let table = document.getElementById(timetable);
     if (table != null) {
         let rows = table.getElementsByTagName('tr'),
             i, row, groups = [];
         for (i = 0; i < rows.length; i++) {
             row = rows[i];
-            if (row.classList.contains('timetable__row--major')) {
+            if (row.classList.contains('timetable-row-major')) {
                 groups.push({current: row, next: []});
             } else if (groups.length) {
                 groups[groups.length - 1].next.push(row);
@@ -197,5 +186,11 @@
             addRowEvent(groups[i]);
         }
     }
+}
+
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+    setUpRowEvents('tt');
+});
 </script>
 {% endblock %}

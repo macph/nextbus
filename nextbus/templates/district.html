@@ -1,49 +1,34 @@
 {% extends "base.html" %}
 {% import 'functions.html' as f %}
-{% block title %}{{ district.name }} district{% endblock %}
-
-{% block heading %}
-<nav>
-    <ul class="breadcrumbs">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        <li><a href="{{ url_for('page.list_in_region', region_code=district.admin_area.region.code) }}">{{ district.admin_area.region.name }}</a></li>
-        <li>{{ district.name }}</li>
-    </ul>
-</nav>
-<h1>{{ district.name }}</h1>
-{% endblock %}
+{% block title %}{{ district.name }}{% endblock %}
 
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        <section class="card card--minor">
-            {% if localities|length > 1 %}
-            {{ f.print_index(localities) }}
-            {% endif %}
-        </section>
-        <section class="card">
-            <h2>Places</h2>
-            {% if localities|length > 1 %}
-            {% call(name, group) f.print_groups(localities|dictsort) %}
-            <h3 id="{{ name }}">{{ name }}</h3>
-            {% call(l) f.print_list(group, 'list--places') %}
-            <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
-            {% endcall %}
-            {% endcall %}
-            {% elif localities %}
-            {% for _, group in localities.items() %}
-            {% call(l) f.print_list(group, 'list--places') %}
-            <a class="item item--place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
-            {% endcall %}
-            {% endfor %}
-            {% else %}
-            <p>No places found.</p>
-            {% endif %}
-        </section>
-    </div>
-</div>
-{% endblock %}
-
-{% block script %}
-{{ f.add_search_bar() }}
+<nav>
+  <ul class="breadcrumbs breadcrumbs-trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    <li><a href="{{ url_for('page.list_in_region', region_code=district.admin_area.region.code) }}">{{ district.admin_area.region.name }}</a></li>
+  </ul>
+</nav>
+<main>
+  <h1>{{ district.name }}</h1>
+  <section>
+    <h2>Places</h2>
+    {% if localities|length > 1 -%}
+    {%- for name, group in localities|dictsort %}
+    <h3 id="{{ name }}">{{ name }}</h3>
+    {% call(l) f.print_list(group, 'list-places') -%}
+    <a class="item item-place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
+    {%- endcall %}
+    {%- endfor %}
+    {%- elif localities -%}
+    {%- for _, group in localities.items() -%}
+    {% call(l) f.print_list(group, 'list-places') -%}
+    <a class="item item-place" href="{{ url_for('page.list_in_locality', locality_code=l.code) }}">{{ l.name }}</a>
+    {%- endcall %}
+    {%- endfor %}
+    {%- else -%}
+    <p>No places found.</p>
+    {%- endif %}
+  </section>
+</main>
 {% endblock %}

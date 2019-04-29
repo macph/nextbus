@@ -3,140 +3,114 @@
 
 {% block title %}{{ stop.long_name }}{% endblock %}
 
-{% block heading %}
-<nav>
-    <ul class="breadcrumbs breadcrumbs--trailing">
-        <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-        {% if stop.locality.district is not none %}
-        <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
-        {% else %}
-        <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
-        {% endif %}
-        <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{ stop.locality.name }}</a></li>
-    </ul>
-</nav>
-<div class="heading-stop">
-    {{ f.print_stop_indicator(stop) }}
-    <h1>{{ stop.name }}</h1>
-    <div class="buttons">
-        <a class="button button--action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">
-            <img src="{{ url_for('static', filename='icons/sharp-place-24px.svg') }}" alt="Map">
-        </a>
-        <button id="starred-button" class="button button--action" style="display: none;">
-            <img id="not-starred" src="{{ url_for('static', filename='icons/baseline-star_border-24px.svg') }}" alt="Add starred stop" style="display: none;">
-            <img id="is-starred" src="{{ url_for('static', filename='icons/baseline-star-24px.svg') }}" alt="Remove starred stop" style="display: none;">
-        </button>
-    </div>
-</div>
-{% if stop.street or stop.bearing %}
-<p>{{ f.stop_description(stop) }}</p>
-{% endif %}
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-2">
-        <section class="card card--min-height">
-            <div class="heading-inline heading-inline--right">
-                <h2 id="liveTime">Retrieving live data...</h2>
-                <p id="liveCountdown"></p>
-            </div>
-            <div id="services"></div>
-        </section>
-        <section class="card">
-            <h2>Services</h2>
-            {% if services %}
-            {% call(s) f.print_list(services|rejectattr('terminates')) %}
-            <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item item--service">
-                <div class="line">
-                    <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
-                        <span class="line__text">{{ s.service.line }}</span>
-                    </div>
-                </div>
-                <div class="item__label">{{ s.destination }}</div>
-            </a>
-            {% endcall %}
-            {% if services|selectattr('terminates')|list %}
-            <h3>Terminating services</h3>
-            {% call(s) f.print_list(services|selectattr('terminates')) %}
-            <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item item--service">
-                <div class="line">
-                    <div class="line__inner {{ 'area-%s'|format(stop.admin_area_ref) }}">
-                        <span class="line__text">{{ s.service.line }}</span>
-                    </div>
-                </div>
-                <div class="item__label">from {{ s.origin }}</div>
-            </a>
-            {% endcall %}
-            {% endif %}
-            {% else %}
-            <p>No services stop here.</p>
-            {% endif %}
-        </section>
-    </div>
-    <div class="column-1">
-        <section class="card card--aside">
-            <h2>Stop information</h2>
-            <p>
-                {% set pipe = joiner() %}
-                {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
-             -->{% if stop.crossing is not none and stop.crossing != stop.street %}{{ pipe() }}{{ stop.crossing }}{% endif %}<!--
-             -->{% if stop.landmark is not none and stop.landmark != stop.crossing %}{{ pipe() }}{{ stop.landmark }}{% endif %}
-            </p>
-            <p>SMS code <strong>{{ stop.naptan_code}}</strong></p>
-            {% if not stop.active %}<p>This stop is marked as inactive.</p>{% endif %}
-        </section>
-        {% if stop.stop_area_ref is not none %}
-        <section class="card card--aside">
-            <h2>Other stops</h2>
-            <p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">{{ stop.stop_area.name }}</a></p>
-        </section>
-        {% endif %}
-    </div>
+<nav>
+  <ul class="breadcrumbs breadcrumbs-trailing">
+    <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
+    {% if stop.locality.district is not none -%}
+    <li><a href="{{ url_for('page.list_in_district', district_code=stop.locality.district.code) }}">{{ stop.locality.district.name }}</a></li>
+    {%- else -%}
+    <li><a href="{{ url_for('page.list_in_area', area_code=stop.locality.admin_area.code) }}">{{ stop.locality.admin_area.name }}</a></li>
+    {%- endif %}
+    <li><a href="{{ url_for('page.list_in_locality', locality_code=stop.locality.code) }}">{{ stop.locality.name }}</a></li>
+  </ul>
+</nav>
+<main>
+<h1 class="heading-stop">
+  {{ f.print_stop_indicator(stop) }}
+  <span>{{ stop.name }}</span>
+</h1>
+{% if stop.street or stop.bearing -%}
+<p>{{ f.stop_description(stop) }}</p>
+{%- endif %}
+<div class="actions" id="actions">
+  <a class="action" href="{{ url_for('page.show_map_stop', atco_code=stop.atco_code) }}" title="View on map">Map</a>
 </div>
+<div class="columns">
+  <div class="column-2">
+    <section>
+      <div class="h2-inline">
+        <h2 id="liveTime">Retrieving live data...</h2>
+        <p class="countdown" id="liveCountdown"></p>
+      </div>
+      <div id="services" style="min-height: 12rem"></div>
+    </section>
+    <section>
+      <h2>Services</h2>
+      {% if services -%}
+      {% call(s) f.print_list(services|rejectattr('terminates')) -%}
+      <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
+        <span class="line-outer">
+          <span class="line {{ 'area-%s'|format(stop.admin_area_ref) }}">{{ s.service.line }}</span>
+        </span>
+        <span class="item-label">{{ s.destination }}</span>
+      </a>
+      {%- endcall %}
+      {% if services|selectattr('terminates')|list -%}
+      <h3>Terminating services</h3>
+      {% call(s) f.print_list(services|selectattr('terminates')) -%}
+      <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
+        <span class="line-outer">
+          <span class="line {{ 'area-%s'|format(stop.admin_area_ref) }}">{{ s.service.line }}</span>
+        </span>
+        <span class="item-label">from {{ s.origin }}</span>
+      </a>
+      {%- endcall %}
+      {%- endif %}
+      {%- else -%}
+      <p>No services stop here.</p>
+      {%- endif %}
+    </section>
+  </div>
+  <div class="column-1">
+    <section>
+      <h2>Stop information</h2>
+      <p>
+        {%- set pipe = joiner() -%}
+        {% if stop.street is not none %}{{ pipe() }}<strong>{{ stop.street }}</strong>{% endif %}<!--
+     -->{% if stop.crossing is not none and stop.crossing != stop.street %}{{ pipe() }}{{ stop.crossing }}{% endif %}<!--
+     -->{% if stop.landmark is not none and stop.landmark != stop.crossing %}{{ pipe() }}{{ stop.landmark }}{% endif %}
+      </p>
+      <p>SMS code <strong>{{ stop.naptan_code}}</strong></p>
+      {% if not stop.active %}<p><strong>This stop is marked as inactive.</strong></p>{% endif %}
+    </section>
+    {% if stop.stop_area_ref is not none -%}
+    <section>
+      <h2>Other stops</h2>
+      {% set other_stops_max = 4 -%}
+      {% if not stop.other_stops -%}
+      <p>There are no other stops in this group.</p>
+      {% elif stop.other_stops|length <= other_stops_max -%}
+      <ul class="list stops">
+        {%- for s in stop.other_stops %}
+        <li>
+          <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop">
+            {{ f.print_stop_indicator(s) }}
+            <span class="item-label">{{ s.name }}</span>
+          </a>
+        </li>
+        {%- endfor %}
+      </ul>
+      {%- elif stop.other_stops|length > other_stops_max -%}
+      <p>There are {{ stop.other_stops|length }} other stops in this group.</p>
+      {%- endif %}
+      <p><a href="{{ url_for('page.stop_area', stop_area_code=stop.stop_area.code) }}">{{ stop.stop_area.name }}</a></p>
+    </section>
+    {%- endif %}
+  </div>
+</div>
+</main>
 {% endblock %}
 
 {% block script %}
-{{ f.add_search_bar() }}
 <script>
-    resizeIndicator('indicator');
+const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
+const STARRED_URL = "{{ url_for('api.starred') }}";
 
-    const STATIC = "{{ url_for('static', filename='') }}";
-    const STARRED_URL = "{{ url_for('api.starred') }}";
-    let starredButton = document.getElementById('starred-button'),
-        isStarred = document.getElementById('is-starred'),
-        notStarred = document.getElementById('not-starred'),
-        addText = 'Add starred stop',
-        removeText = 'Remove starred stop';
-    let code = '{{ stop.naptan_code }}',
-        set = {{ ('stops' in session)|tojson }},
-        active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }};
-    let starred = new StarredStops(
-        set,
-        function() {
-            starredButton.blur();
-            starredButton.title = removeText;
-            starredButton.onclick = function() {
-                starred.remove(code);
-            };
-            notStarred.style.display = 'none';
-            isStarred.style.display = '';
-        },
-        function() {
-            starredButton.blur();
-            starredButton.title = addText;
-            starredButton.onclick = function() {
-                starred.add(code);
-            };
-            isStarred.style.display = 'none';
-            notStarred.style.display = '';
-        }
-    );
-    (active) ? starred.onAdd() : starred.onRemove();
-    starredButton.style.display = '';
-
-    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
-    let ld = new LiveData(
+let ld;
+window.addEventListener('load', function() {
+    resizeIndicator('.indicator');
+    ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',
         'services',
@@ -145,5 +119,42 @@
         {{ operators|tojson }}
     );
     ld.start();
+});
+
+let actions = document.getElementById('actions'),
+    addText = 'Add starred stop',
+    removeText = 'Remove starred stop',
+    smsCode = '{{ stop.naptan_code }}',
+    set = {{ ('stops' in session)|tojson }},
+    active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }},
+    starredButton,
+    starred;
+
+window.addEventListener('load', function() {
+    starredButton = element('button');
+    actions.appendChild(starredButton);
+    starred = new StarredStops(
+        set,
+        function() {
+            starredButton.focus();
+            starredButton.blur();
+            starredButton.textContent = removeText;
+            starredButton.onclick = function() {
+                starred.remove();
+            };
+        },
+        function() {
+            starredButton.focus();
+            starredButton.blur();
+            starredButton.textContent = addText;
+            starredButton.onclick = function() {
+                starred.add();
+            };
+        }
+    );
+    starred.setCode(smsCode);
+    starred.createModal();
+    (active) ? starred.onAdd() : starred.onRemove();
+});
 </script>
 {% endblock %}

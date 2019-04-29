@@ -1,29 +1,5 @@
 {# Functions for templates #}
 
-{# Sets up search form #}
-{% macro search_form(query=none, class=none) -%}
-<form class="form{% if class %} {{ class }}{% endif %}" action="{{ g.action }}" method="post" name="search" autocomplete="off">
-    {% set aria = {'aria-label': 'Find a bus stop'} %}
-    {% set q = query if query is not none else '' %}
-    {{ g.form.hidden_tag() }}
-    {{ g.form.search(placeholder="Find a bus stop...", id='search-form', value=q, required=g.form.search.flags.required, **aria) }}
-    <button id="submit-form" name="submit" type="submit" title="Search" value="1">
-        <img src="{{ url_for('static', filename='icons/sharp-search-24px.svg') }}" width="20px" height="20px" alt="Search">
-    </button>
-</form>
-{%- endmacro %}
-
-{# Replaces header with search functionality #}
-{% macro add_search_bar() -%}
-<script>
-    addSearchBar(
-        '{{ url_for('static', filename='') }}',
-        '{{ url_for('page.search_query') }}',
-        '{{ g.form.csrf_token.current_token }}'
-    );
-</script>
-{%- endmacro %}
-
 {# Prints an inline list, using strong tags if required #}
 {% macro print_inline(items, strong=true) -%}
 {% if items|length == 1 %}
@@ -39,25 +15,12 @@
 {% endif %}
 {%- endmacro %}
 
-{# Prints a list of groups, using <hr> to separate them #}
-{% macro print_groups(list_groups) -%}
-{% set ctx = {'first': true} %}
-{% for name, group in list_groups %}
-{% if ctx.first %}
-{% if ctx.update({'first': false}) %}{% endif %} {# Updates dictionary without printing anything #}
-{% else %}
-<hr/>
-{% endif %}
-{{ caller(name, group ) }}
-{% endfor %}
-{%- endmacro %}
-
 {# Prints a list using callers #}
 {% macro print_list(items, class=none, name=none) -%}
 <ul class="list{% if class %}{{ ' %s'|format(class) }}{% endif %}" {% if name %}id="{{ name }}"{% endif %}>
-    {% for i in items %}
-    <li>{{ caller(i) }}</li>
-    {% endfor %}
+  {%- for i in items %}
+  <li>{{ caller(i) }}</li>
+  {%- endfor %}
 </ul>
 {%- endmacro %}
 
@@ -72,15 +35,15 @@
 
 {# Prints the stop indicator #}
 {% macro print_stop_indicator(stop, reverse=false, name=none) -%}
-<div class="indicator{{ ' indicator--reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
-    {% if stop.short_ind != '' %}
-    <span>{{ stop.short_ind }}</span>
-    {% elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] %}
-    <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="28px" alt="Bus stop">
-    {% elif stop.stop_type in ['PLT', 'GTMU'] %}
-    <img src="{{ url_for('static', filename='img/tram-white.svg') }}" width="28px" alt="Tram stop">
-    {% endif %}
-</div>
+<span class="indicator{{ ' indicator-reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
+  {% if stop.short_ind != '' -%}
+  <span>{{ stop.short_ind }}</span>
+  {%- elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] -%}
+  <img src="{{ url_for('static', filename='img/bus-white.svg') }}" width="28px" alt="Bus stop">
+  {%- elif stop.stop_type in ['PLT', 'GTMU'] -%}
+  <img src="{{ url_for('static', filename='img/tram-white.svg') }}" width="28px" alt="Tram stop">
+  {%- endif %}
+</span>
 {%- endmacro %}
 
 

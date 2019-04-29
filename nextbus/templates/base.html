@@ -1,50 +1,62 @@
+{%- import 'functions.html' as f -%}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        {% block head %}
-        <meta charset="UTF-8">
-        <meta name="theme-color" content="#002171">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.css">
-        <link rel="stylesheet" type=text/css href="https://use.typekit.net/mwf5bfg.css">
-        <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}">
-        <script type="text/javascript" src="{{ url_for('static', filename='nextbus.js') }}"></script>
-        <title>{% block outer_title %}{% block title %}{% endblock %} &ndash; nextbus{% endblock %}</title>
-        {% endblock %}
-    </head>
-    <body>
-        <div class="outer-header">
-            <header class="header">
-                <a class="header__home" href="{{ url_for('page.index') }}">nextbus</a>
-                {% block header %}
-                <a class="header__right" href="{{ url_for('page.show_map') }}" title="Map">
-                  <img src="{{ url_for('static', filename='icons/sharp-map-24px-white.svg') }}" alt="Map">
-                </a>
-                {% endblock %}
-            </header>
-        </div>
-        <div class="outer-content">
-            {% block main %}
-            <main class="content">
-                <div class="heading">
-                    {% block nav %}{% endblock %}
-                    {% block heading %}{% endblock %}
-                </div>
-                {% block content %}{% endblock %}
-            </main>
-            {% endblock %}
-        </div>
-        {% block outer_footer %}
-        <div class="outer-footer">
-            <footer class="footer">
-                {% block footer %}
-                <p class="footer__text">
-                    &copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a>
-                </p>
-                {% endblock %}
-            </footer>
-        </div>
-        {% endblock %}
-    {% block script %}{% endblock %}
-    </body>
+<head>
+  {% block head %}
+  <meta charset="UTF-8">
+  <meta name="theme-color" content="#212121">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Live bus times in Great Britain.">
+  <link rel="stylesheet" type=text/css href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <link rel="stylesheet" type=text/css href="https://rsms.me/inter/inter.css">
+  <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <script type="text/javascript" src="{{ url_for('static', filename='nextbus.js') }}" defer></script>
+  <title>{% block outer_title %}{% block title %}{% endblock %} &ndash; nxb{% endblock %}</title>
+  {% endblock %}
+</head>
+<body>
+<header>
+  <a href="{{ url_for('page.index') }}">nxb</a>
+  {% block header -%}
+  <a onclick="(function() {
+      this.focus();
+      this.blur();
+      document.body.classList.add('with-modal');
+      document.getElementById('modal-menu').classList.add('modal-background-visible');
+  })()">Menu</a>
+  {%- endblock %}
+</header>
+{% block content %}{% endblock %}
+<footer>
+  <p>&copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a></p>
+</footer>
+{% block modal %}
+<div class="modal-background" id="modal-menu">
+  <div class="modal">
+    <header>
+      <a href="/">nxb</a>
+      <a onclick="(function() {
+          this.focus();
+          this.blur();
+          document.body.classList.remove('with-modal');
+          document.getElementById('modal-menu').classList.remove('modal-background-visible');
+      })()">Close</a>
+    </header>
+    <div class="modal-inner">
+      <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
+        {{ g.form.hidden_tag() }}
+        <input type="search" name="search" placeholder="Find a stop..." aria-label="Find a bus stop" required>
+        <button type="submit" name="submit" title="Search" value="1">Search</button>
+      </form>
+      <ul class="links">
+        <li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>
+        <li><a href="{{ url_for('page.list_regions') }}">Browse regions</a></li>
+        <li><a href="{{ url_for('page.show_map') }}">Map</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block script %}{% endblock %}
+</body>
 </html>

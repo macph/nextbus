@@ -2,27 +2,18 @@
 {% import 'functions.html' as f %}
 {% block title %}Regions{% endblock %}
 
-{% block heading %}
-<h1>Great Britain</h1>
-{% endblock %}
-
 {% block content %}
-<div class="columns">
-    <div class="column-1">
-        <section class="card">
-            <h2>Regions</h2>
-            {% if regions %}
-            {% call(r) f.print_list(regions, 'list--places') %}
-            <a class="item item--place" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
-            {% endcall %}
-            {% else %}
-            <p>No regions found.</p>
-            {% endif %}
-        </section>
-    </div>
-</div>
-{% endblock %}
-
-{% block script %}
-{{ f.add_search_bar() }}
+<main>
+  <h1>Great Britain</h1>
+  <section>
+    <h2>Regions</h2>
+    {% if regions -%}
+    {% call(r) f.print_list(regions, 'list-places') -%}
+    <a class="item item-place" href="{{ url_for('page.list_in_region', region_code=r.code) }}">{{ r.name }}</a>
+    {%- endcall %}
+    {%- else -%}
+    <p>No regions found.</p>
+    {%- endif %}
+  </section>
+</main>
 {% endblock %}

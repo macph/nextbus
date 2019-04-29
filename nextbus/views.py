@@ -119,7 +119,7 @@ def truncate_description(description):
     """ Truncate longer descriptions such that only starting and ending
         labels remain.
     """
-    truncated = REMOVE_BRACKETS.sub("", description)
+    truncated = REMOVE_BRACKETS.sub(" ", description)
 
     sep = " – "  # en dash
     places = truncated.split(sep)

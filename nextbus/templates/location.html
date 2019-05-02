@@ -6,17 +6,15 @@
 {% block content %}
 <main>
   <h1>Stops nearby</h1>
-  {% if list_stops is not none -%}
-  <div class="actions">
-    <a class="action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}">Map</a>
-  </div>
-  {%- endif %}
   <section>
     {% if list_stops is none -%}
     <h2 id="geoH">Getting your location...</h2>
     <p id="geoM"></p>
     {%- elif list_stops|length > 0 %}
-    <h2>Stops</h2>
+    <div class="h2-inline">
+      <h2>Stops</h2>
+      <p><a class="action" href="{{ url_for('page.show_map', coords=(latitude, longitude, 16)) }}">Map</a></p>
+    </div>
     {% call(s) f.print_list(list_stops) -%}
     <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
       <span>
@@ -46,12 +44,11 @@
 {% block script %}
 {% if list_stops is none -%}
 <script>
+let heading = document.getElementById('geoH'),
+    message = document.getElementById('geoM');
+let locationURL = "{{ url_for('page.find_near_location') }}";
 window.addEventListener('load', function() {
-    let heading = document.getElementById('geoH'),
-        message = document.getElementById('geoM');
-    let locationURL = "{{ url_for('page.find_near_location') }}";
     if (!navigator.geolocation) {
-        console.debug('Browser does not support geolocation.');
         heading.textContent = 'Error';
         message.textContent = 'Your browser does not support geolocation. Try using the maps or ' +
             'search with a postcode to find stops nearby.';
@@ -59,7 +56,6 @@ window.addEventListener('load', function() {
     navigator.geolocation.getCurrentPosition(function(position) {
         let latitude = position.coords.latitude.toFixed(6);
         let longitude = position.coords.longitude.toFixed(6);
-        console.debug('Current coordinates (' + latitude + ', ' + longitude + ')');
         heading.textContent = 'Redirecting...';
         window.location.href = locationURL + latitude + ',' + longitude;
     }, function(err) {
@@ -70,10 +66,11 @@ window.addEventListener('load', function() {
     });
 });
 </script>
-{%- endif %}
+{%- else -%}
 <script>
 window.addEventListener('load', function() {
     resizeIndicator('.indicator');
 });
 </script>
+{%- endif %}
 {% endblock %}

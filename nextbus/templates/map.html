@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% import 'functions.html' as f %}
+{% set body="body-map" %}
+
 {% set name = stop.long_name if stop else ('Service %s'|format(service.description) if service else none) %}
 {% block title %}Map{% endblock %}
 
@@ -9,64 +11,56 @@
 {{ super() }}
 {% endblock %}
 
-{% block header %}
+{% block content %}
+<div class="map-container">
+  <div id="map" class="map"></div>
+</div>
+<div class="map-panel">
+  <main id="map-panel-content">
+    <h2>Loading map...</h2>
+  </main>
+  {{ f.footer() }}
+</div>
 {% endblock %}
 
-{% block main %}
-<main class="content content--map">
-    <div id="map" class="full-map"></div>
-    <div class="map-panel">
-        <div id="panel-content" class="map-panel__content">
-            <div class="heading heading--panel">
-                <h2 id="panel-heading">Loading map...</h2>
-            </div>
-        </div>
-        <div class="map-panel__footer">
-            <footer class="footer footer--panel">
-                <div>
-                    <p class="footer__text">&copy; Ewan Macpherson and data sources, 2017&ndash;19. <a href="{{ url_for('page.about') }}">About this website</a></p>
-                </div>
-            </footer>
-        </div>
-    </div>
-</main>
-{% endblock %}
-
-{% block outer_footer %}
-{% endblock %}
+{% block footer %}{% endblock %}
 
 {% block script %}
-{{ f.add_search_bar() }}
 <script>
-    const STATIC = "{{ url_for('static', filename='') }}";
-    const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
-    const MAP_URL = "{{ url_for('page.show_map') }}";
-    const STOP_URL = "{{ url_for('api.get_stop', atco_code='') }}";
-    const STOP_PAGE_URL = "{{ url_for('page.stop_atco', atco_code='') }}";
-    const TILE_URL = "{{ url_for('api.get_stops_tile', coord='') }}";
-    const STARRED_URL = "{{ url_for('api.starred') }}";
-    const ROUTE_URL = "{{ url_for('api.get_service_route', service_id='') }}";
-    const TIMETABLE_URL = "{{ url_for('page.service_timetable', service_id='') }}";
+URL.LIVE = "{{ url_for('api.stop_get_times', atco_code='') }}";
+URL.MAP = "{{ url_for('page.show_map') }}";
+URL.STOP = "{{ url_for('api.get_stop', atco_code='') }}";
+URL.TILE = "{{ url_for('api.get_stops_tile', coord='') }}";
+URL.ROUTE = "{{ url_for('api.get_service_route', service_id='') }}";
+URL.TIMETABLE = "{{ url_for('page.service_timetable', service_id='') }}";
 
-    let map = new StopMap(
+let map, starred;
+let starredSet = {{ ('stops' in session)|tojson }};
+let useGeolocation = {{ config.get('GEOLOCATION_ENABLED', false)|tojson }};
+let options = {};
+{% if stop -%}
+options.stop = '{{ stop.atco_code }}';
+{%- endif %}
+{% if latitude and longitude and zoom -%}
+options.latitude = {{ latitude }};
+options.longitude = {{ longitude }};
+options.zoom = {{ zoom }};
+{%- endif %}
+{% if service -%}
+options.service = {{ service.id }};
+options.reverse = {{ reverse|tojson }};
+{%- endif %}
+
+window.addEventListener('load', function() {
+    starred = new StarredStops(starredSet);
+    map = new StopMap(
         'map',
-        'panel-content',
-        {{ ('stops' in session)|tojson }},
-        {{ config.get('GEOLOCATION_ENABLED')|tojson }}
+        'map-panel-content',
+        starred,
+        starredList,
+        useGeolocation
     );
-    let options = {};
-    {% if stop -%}
-    options.stop = '{{ stop.atco_code }}';
-    {%- endif %}
-    {% if latitude and longitude and zoom -%}
-    options.latitude = {{ latitude }};
-    options.longitude = {{ longitude }};
-    options.zoom = {{ zoom }};
-    {%- endif %}
-    {% if service -%}
-    options.service = {{ service.id }};
-    options.reverse = {{ reverse|tojson }};
-    {%- endif %}
     map.init(options);
+});
 </script>
 {% endblock %}

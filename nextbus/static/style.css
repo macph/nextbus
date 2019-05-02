@@ -1,12 +1,15 @@
-/* nxb css. */
-
-/* BASE ELEMENTS */
+/*
+ * nxb CSS; copyright Ewan Macpherson 2017-19
+ */
 
 html {
   font-family: 'Inter', sans-serif;
   font-size: 62.5%;
   color: #212121;
 }
+
+
+/* BASE ELEMENTS */
 
 h1 {
   margin: 0.6em 0;
@@ -137,6 +140,7 @@ input:invalid {
   opacity: 1;
 }
 
+
 /* FORM */
 
 .form {
@@ -187,7 +191,7 @@ header {
   width: 100%;
   height: 4.8rem;
   background-color: white;
-  z-index: 5;
+  z-index: 2000;
 }
 
 header a {
@@ -237,42 +241,53 @@ main {
 footer {
   flex: none;
   width: calc(100% - 3.2rem);
-  margin: 1rem 0 0 0;
+  margin: 2.4rem 0 0 0;
   padding: 0 1.6rem;
 }
 
 section {
+  clear: both;
   margin: 2.4rem 0;
 }
 
-/* Width-restricted section for front pages and about page */
 
-.page-narrow {
-  display: flex;
-  flex-direction: column;
-}
-
-.page-narrow > div {
-  margin: -2.4rem 0;
-}
-
-.page-front > h1 {
-  text-align: center;
-  margin-bottom: 1.33em;
-}
+/* CENTERED TEXT */
 
 .text-middle {
   text-align: center;
 }
 
+
+/* WIDTH-RESTRICTED CONTENT */
+
+.body-narrow > main {
+  display: flex;
+  flex-direction: column;
+}
+
+.body-narrow > main > div {
+  margin: -2.4rem 0;
+}
+
+.body-index > header {
+  position: static;
+}
+
+.body-index > main > h1 {
+  text-align: center;
+  margin-bottom: 1.33em;
+}
+
+
 /* ACTIONS */
 
 .actions {
+  float: right;
   display: flex;
   flex-flow: row wrap;
   align-items: baseline;
   font-size: 1.5rem;
-  margin: -0.5rem;
+  margin: -0.5rem -0.5rem 1rem;
 }
 
 .actions > * {
@@ -306,30 +321,46 @@ section {
   color: white;
 }
 
-/* MODAL DIALOG / MENU AND BLURRING EFFECTS */
+/* OVERLAY DIALOG / MENU */
 
-.modal {
+.body-with-overlay {
+  overflow: hidden;
+}
+
+.overlay {
+  z-index: 2400;
+  visibility: collapse;
+  opacity: 0;
   position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #000E;
+  transition:
+    0.2s opacity ease-out,
+    0.2s visibility;
+}
+
+.overlay-visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.overlay-content {
+  position: absolute;
   top: 0;
   left: 50%;
   transform: translate(-50%, 0);
   padding: 0;
   max-width: 96rem;
-  max-height: 100%;
   width: 100%;
-  overflow-y: auto;
 
   color: white;
 }
 
-.modal-inner {
-  padding: 0 1.6rem;
-  margin: 4rem auto 0;
-  max-width: 64rem;
-  width: calc(100% - 3.2rem);
-}
-
-.modal-dialog {
+.overlay-content-dialog {
   top: 50%;
   transform: translate(-50%, -50%);
   padding: 1rem 1.6rem;
@@ -338,59 +369,80 @@ section {
   width: calc(100% - 3.2rem);
 }
 
-.modal-button {
-  margin: 0.5rem 0 0.5rem 1rem;
+.overlay-content-inner {
+  padding: 0 1.6rem;
+  margin: 4rem auto 0;
+  max-width: 64rem;
+  width: calc(100% - 3.2rem);
+}
+
+.overlay-button {
   float:right;
+  margin: 0.5rem 0 0.5rem 1rem;
 }
 
-.modal a {
+
+/* OVERLAY CHILD ELEMENTS */
+
+.overlay-content a {
   border-color: white;
   color: white;
 }
 
-a:hover {
-  border-color: #ff9800;
+.overlay-content a:hover {
+  border-color: #FF9800;
 }
 
-.modal button,
-.modal input[type="submit"],
-.modal input[type="file"] {
+.overlay-content button,
+.overlay-content input[type="submit"],
+.overlay-content input[type="file"] {
   border-color: white;
   color: white;
 }
 
-.modal button:hover,
-.modal input[type="submit"]:hover,
-.modal input[type="file"]:hover {
+.overlay-content button:hover,
+.overlay-content input[type="submit"]:hover,
+.overlay-content input[type="file"]:hover {
   background-color: white;
   color: #212121;
 }
 
-.modal input:not([type="submit"]):not([type="file"]) {
+.overlay-content input:not([type="submit"]):not([type="file"]) {
   border-color: white;
   color: white;
 }
 
-.modal input:not([type="submit"]):not([type="file"]):focus {
+.overlay-content input:not([type="submit"]):not([type="file"]):focus {
   border-color: #FF9800;
 }
 
-.modal header {
+.overlay-content header {
   position: static;
   background-color: transparent;
 }
 
-.modal header a {
+.overlay-content header a {
   background-color: transparent;
   color: white;
 }
 
-.modal header a:hover {
+.overlay-content header a:hover {
   background-color: white;
   color: #212121;
 }
 
-.modal .list {
+.overlay-content .action {
+  border-color: transparent;
+  color: white;
+}
+
+.overlay-content .action:hover {
+  border-color: white;
+  background-color: white;
+  color: #212121;
+}
+
+.overlay-content .list {
   margin: 1rem -1rem;
   padding: 0;
   width: calc(100% + 2rem);
@@ -400,46 +452,24 @@ a:hover {
   column-gap: 0;
 }
 
-.modal .item {
+.overlay-content .item {
   background-color: transparent;
   color: white;
 }
 
-.modal .item:hover {
+.overlay-content .item:hover {
   background-color: white;
   color: #212121;
-}
-
-.modal-background {
-  z-index: 10;
-  visibility: collapse;
-  opacity: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #000E;
-  transition:
-    0.2s opacity ease-out,
-    0.2s visibility;
-}
-
-.modal-background-visible {
-  visibility: visible;
-  opacity: 1;
-}
-
-.with-modal {
-  overflow: hidden;
 }
 
 
 /* COLUMN LAYOUT */
 
 .columns {
+  clear: both;
   display: flex;
   flex-direction: column;
+  margin-top: 2.4rem;
 }
 
 .columns > div {
@@ -447,13 +477,10 @@ a:hover {
   min-width: 0;
 }
 
-.columns > div:not(:first-child) {
-  margin-top: -1.6rem;
+.columns > div > section:first-child {
+  margin-top: 0;
 }
 
-.columns > div:not(:last-child) {
-  margin-bottom: -1.6rem;
-}
 
 /* LISTS */
 
@@ -489,7 +516,8 @@ a:hover {
   text-align: right;
 }
 
-/* FRONT PAGE LIST LINKS */
+
+/* LIST OF LINKS */
 
 .links {
   display: block;
@@ -508,6 +536,30 @@ a:hover {
 
 .links > li:not(:last-child):after {
   content: " | ";
+}
+
+
+/* NAVIGATION */
+
+.breadcrumbs {
+  padding: 0;
+  list-style: none;
+  font-size: 1.5rem;
+}
+
+.breadcrumbs > li {
+  display: inline;
+  white-space: nowrap;
+  line-height: 1.5em;
+}
+
+.breadcrumbs > li:last-child:after {
+  content: '';
+}
+
+.breadcrumbs > li:after,
+.trailing > li:last-child:after {
+  content: ' \2192';
 }
 
 
@@ -620,7 +672,7 @@ a:hover {
 }
 
 .indicator-2 > span {
-  font-size: 2.0em;
+  font-size: 1.9em;
   font-weight: 600;
 }
 
@@ -633,6 +685,7 @@ a:hover {
   font-size: 1.2em;
   font-weight: 700;
 }
+
 
 /* LINE */
 
@@ -671,9 +724,8 @@ a:hover {
   font-size: 1.2em;
 }
 
-/*
- *  INDICATOR COLOURS (USES NPTG ADMIN AREA CODE)
- */
+
+/* INDICATOR COLOURS (USES NPTG ADMIN AREA CODE) */
 
 .area-011 {
     background-color: #058B88;
@@ -747,8 +799,10 @@ a:hover {
 }
 
 .heading-stop + p {
+  float: left;
   margin: -2rem 0 2rem calc(1.5 * 3.6rem + 1.5rem);
 }
+
 
 /* HEADING WITH SERVICE LINE */
 
@@ -768,6 +822,12 @@ a:hover {
   max-width: calc(100% - 2rem);
 }
 
+.heading-service + p {
+  float: left;
+  margin: 0 0 2rem;
+}
+
+
 /* H2 HEADING WITH ITEMS */
 
 .h2-inline {
@@ -779,7 +839,15 @@ a:hover {
   border-bottom: 0.2rem solid #212121;
 }
 
-.h2-inline > * {
+.h3-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: calc(2.4 * 0.5rem) 0;
+}
+
+.h2-inline > *,
+.h3-inline > * {
   padding: 0;
   margin: 0;
 }
@@ -788,7 +856,9 @@ a:hover {
   border: none;
 }
 
+
 /* INLINE ELEMENTS */
+
 .inline {
   display: flex;
   flex-flow: row wrap;
@@ -843,6 +913,7 @@ a:hover {
   color: inherit;
   text-decoration: none;
   line-height: 1em;
+  cursor: pointer;
 
   transition:
     0.1s background-color ease-out,
@@ -866,7 +937,7 @@ a:hover {
 }
 
 .item-multiline > p {
-  margin: 0 0 0.5rem calc(3.6rem * 1 + 1rem);
+  margin: 0 0 0.5rem calc(3.6rem * 0.9 + 1rem);
   font-size: 1.3rem;
   line-height: normal;
 }
@@ -875,7 +946,11 @@ a:hover {
   display: block;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+}
+
+.item-stop .indicator {
+  font-size: 0.9rem;
 }
 
 .item-service-stop {
@@ -890,6 +965,16 @@ a:hover {
   margin-left: 0;
 }
 
+.item-service-stop-empty:hover {
+  background: transparent;
+  cursor: auto;
+}
+
+.item-service-stop-empty .indicator {
+  background: transparent;
+  border-color: transparent;
+}
+
 .item-tall {
   padding-top: 1rem;
   padding-bottom: 1rem;
@@ -899,7 +984,7 @@ a:hover {
 .item-label {
   flex: 1 1 auto;
   margin-left: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1em;
 }
 
@@ -912,30 +997,11 @@ a:hover {
   text-align: right;
 }
 
-/* NAVIGATION */
-
-.breadcrumbs {
-  padding: 0;
-  list-style: none;
-  font-size: 1.5rem;
-}
-
-.breadcrumbs > li {
-  display: inline;
-  white-space: nowrap;
-  line-height: 1.5em;
-}
-
-.breadcrumbs > li:last-child:after {
-  content: '';
-}
-
-.breadcrumbs > li:after,
-.trailing > li:last-child:after {
-  content: ' \203A';
-}
-
 /* DEPARTURES */
+
+.departures-container {
+  min-height: 12rem;
+}
 
 .departures {
   table-layout: auto;
@@ -1068,10 +1134,12 @@ a:hover {
 
 .timetable-row > td {
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .timetable-row > td.timetable-bold {
   font-weight: 600;
+  letter-spacing: -0.05em;
 }
 
 .timetable th > span,
@@ -1118,35 +1186,167 @@ a:hover {
   white-space: nowrap;
 }
 
-/* MAP GRID */
-.map-layout {
+/* MAP */
+
+.body-map {
   max-width: none;
 }
 
-.map-panel {
-  display: flex;
-  flex-direction: column;
+.body-map > header {
+  background-color: #212121;
+}
+
+.body-map > header a {
+  color: white;
+}
+
+.body-map > header a:hover {
+  background-color: white;
+  color: #212121;
+}
+
+.body-map > main {
+
+}
+
+.body-map > footer {
+  
+}
+
+.body-map .overlay-content {
+  max-width: none;
+}
+
+.body-map .overlay-content-dialog {
+  max-width: 64rem;
+}
+
+.map-container {
+  flex: 1 1 70vh;
 }
 
 .map {
-  flex: 1 1 70vh;
-  background: #4a7d70;
-  background-image:
-    linear-gradient(
-      135deg,
-      #440154,
-      #482475,
-      #414487,
-      #355f8d,
-      #2a788e,
-      #21908d,
-      #22a884,
-      #42be71,
-      #7ad151,
-      #bddf26,
-      #bddf26
-    );
+  height: 100%;
 }
+
+
+/* LEAFLET STYLE OVERRIDES */
+
+.leaflet-bar,
+.leaflet-bar a{
+  border-radius: 0 !important;
+}
+
+.leaflet-control-attribution {
+  font-family: 'Inter', sans-serif;
+}
+
+.leaflet-control-custom {
+  font-family: 'Inter', sans-serif;
+}
+
+.leaflet-control-custom > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaflet-control-custom > a:hover {
+  display: flex;
+}
+
+
+/* Leaflet icons, using Google Material UI SVGs */
+
+.icon-zoom-in::after {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>');
+  width: 24px;
+  height: 24px;
+  content: "";
+}
+
+.icon-zoom-out::after {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 13H5v-2h14v2z"/></svg>');
+  width: 24px;
+  height: 24px;
+  content: "";
+}
+
+.icon-my-location::after {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>');
+  width: 24px;
+  height: 24px;
+  content: "";
+}
+
+.icon-fit-map::after {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/></svg>');
+  width: 24px;
+  height: 24px;
+  content: "";
+}
+
+
+/* MAP MARKERS */
+
+.marker {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: font-size 0.2s ease-out;
+}
+
+.marker:hover {
+  font-size: 1.2rem;
+}
+
+.indicator-marker {
+  transform: translate(-50%, -50%);
+  border: none;
+}
+
+.indicator-arrow::before {
+  box-sizing: border-box;
+  position: absolute;
+  z-index: -1;
+  width: 1.7em;
+  height: 1.7em;
+  background: inherit;
+  transform-origin: bottom right;
+  content: ""
+}
+
+.indicator-arrow-NW::before {
+  transform: translate(-50%, -50%);
+}
+
+.indicator-arrow-N::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.indicator-arrow-NE::before {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.indicator-arrow-E::before {
+  transform: translate(-50%, -50%) rotate(135deg);
+}
+
+.indicator-arrow-SE::before {
+  transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.indicator-arrow-S::before {
+  transform: translate(-50%, -50%) rotate(-135deg);
+}
+
+.indicator-arrow-SW::before {
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.indicator-arrow-W::before {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 
 /* WIDER VIEW */
 
@@ -1156,17 +1356,17 @@ a:hover {
     font-weight: 600;
   }
 
-  .page-narrow {
+  .body-narrow > main {
     margin: 0 auto;
     max-width: 64rem;
   }
 
-  .page-front::before {
+  .body-index > main::before {
     flex: 1;
     content: "";
   }
 
-  .page-front::after {
+  .body-index > main::after {
     flex: 2;
     content: "";
   }
@@ -1192,13 +1392,11 @@ a:hover {
   }
 
   .columns > div:not(:first-child) {
-    margin-top: 0;
     margin-left: 2rem;
   }
 
   .columns > div:not(:last-child) {
     margin-right: 2rem;
-    margin-bottom: 0;
   }
 
   .column-1 {
@@ -1221,32 +1419,76 @@ a:hover {
 /* MAP DESKTOP VIEW */
 
 @media screen and (min-width: 800px) {
-  .map-layout {
-    flex-direction: row-reverse;
+  .body-map {
+    display: grid;
+    grid-template-rows: 4.8rem 1fr;
+    grid-template-columns: 40rem 1fr;
+    display: -ms-grid;
+    -ms-grid-rows: 4.8rem 1fr;
+    -ms-grid-columns: 40rem 1fr;
+    width: 100%;
     height: 100vh;
   }
 
-  .map-layout > header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 40rem;
+  .body-map > header {
+    position: static;
+    grid-row: 1;
+    grid-column: 1 / 3;
   }
 
-  .map-panel {
-    padding: 4.8rem 0 0 0;
-    flex: 0 0 40rem;
+  .body-map > .map-container {
+    grid-row: 2;
+    grid-column: 2;
+  }
+
+  .body-map > .map-panel {
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
   }
 
-  .map {
+  .body-map > .map-panel > main {
+    flex: auto;
+    padding-top: 1rem;
+  }
+
+  .body-map .heading-stop > .indicator {
+    font-size: 1.4rem;
+  }
+
+  .body-map .heading-stop + p {
+    margin: -1.6rem 0 2rem calc(1.4 * 3.6rem + 1.5rem);
+  }
+
+  .body-map .heading-service > .line-outer {
+    font-size: 1.4rem;
+  }
+
+  .body-map .departures tr > td:nth-child(3) {
+    display: table-cell;
+  }
+
+  .body-map .departures tr > td:nth-child(4) {
+    display: none;
+  }
+
+  .body-map > .map-panel > footer {
+    flex: none;
+  }
+
+  .body-map h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
   }
 }
 
 /* use Inter variable font if supported */
 
 @supports (font-variation-settings: normal) {
-  html {
+  html,
+  .marker {
     font-family: 'Inter var', sans-serif;
   }
 }

@@ -30,10 +30,10 @@
   <div class="column-2">
     <section>
       <div class="h2-inline">
-        <h2 id="liveTime">Retrieving live data...</h2>
-        <p class="countdown" id="liveCountdown"></p>
+        <h2 id="live-time">Retrieving live data...</h2>
+        <p class="countdown" id="live-countdown"></p>
       </div>
-      <div id="services" style="min-height: 12rem"></div>
+      <div id="departures" class="departures-container"></div>
     </section>
     <section>
       <h2>Services</h2>
@@ -104,8 +104,7 @@
 
 {% block script %}
 <script>
-const LIVE_URL = "{{ url_for('api.stop_get_times', atco_code='') }}";
-const STARRED_URL = "{{ url_for('api.starred') }}";
+URL.LIVE = "{{ url_for('api.stop_get_times', atco_code='') }}";
 
 let ld;
 window.addEventListener('load', function() {
@@ -113,17 +112,19 @@ window.addEventListener('load', function() {
     ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',
-        'services',
-        'liveTime',
-        'liveCountdown',
+        'departures',
+        'live-time',
+        'live-countdown',
         {{ operators|tojson }}
     );
     ld.start();
 });
 
 let actions = document.getElementById('actions'),
-    addText = 'Add starred stop',
-    removeText = 'Remove starred stop',
+    addText = '\u2606 Add stop',
+    addTitle = 'Add to list of starred stops',
+    removeText = '\u2605 Remove stop',
+    removeTitle = 'Remove from list of starred stops',
     smsCode = '{{ stop.naptan_code }}',
     set = {{ ('stops' in session)|tojson }},
     active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }},
@@ -136,24 +137,24 @@ window.addEventListener('load', function() {
     starred = new StarredStops(
         set,
         function() {
-            starredButton.focus();
-            starredButton.blur();
             starredButton.textContent = removeText;
+            starredButton.title = removeTitle;
             starredButton.onclick = function() {
                 starred.remove();
             };
+            starredStops.reset();
         },
         function() {
-            starredButton.focus();
-            starredButton.blur();
             starredButton.textContent = addText;
+            starredButton.title = addTitle;
             starredButton.onclick = function() {
                 starred.add();
             };
+            starredStops.reset();
         }
     );
     starred.setCode(smsCode);
-    starred.createModal();
+    starred.createOverlay();
     (active) ? starred.onAdd() : starred.onRemove();
 });
 </script>

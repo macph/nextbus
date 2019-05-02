@@ -6,14 +6,14 @@
 {% block content %}
 <main>
   <h1>Postcode {{ postcode.text }}, {{ postcode.district.name|d(postcode.admin_area.name) }} </h1>
-  <div class="actions">
-    <a class="action" href="{{ url_for('page.show_map', coords=(postcode.latitude, postcode.longitude, 16)) }}">Map</a>
-  </div>
   <section>
   </section>
   <section>
     {% if list_stops|length > 0 %}
-    <h2>Stops</h2>
+    <div class="h2-inline">
+      <h2>Stops</h2>
+      <p><a class="action" href="{{ url_for('page.show_map', coords=(postcode.latitude, postcode.longitude, 16)) }}">Map</a></p>
+    </div>
     {% call(s) f.print_list(list_stops) -%}
     <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
       <span>

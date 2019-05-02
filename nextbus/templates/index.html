@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% set body = "body-narrow body-index" %}
+{% set hide_map = true %}
+
 {% block outer_title %}nextbus{% endblock %}
 
-{% block header %}{% endblock %}
-
 {% block content %}
-<main class="page-narrow page-front">
+<main>
   <h1 class="text-middle">Live bus times in Great&nbsp;Britain</h1>
   <div>
     <section>
@@ -12,21 +13,20 @@
         {{ g.form.hidden_tag() }}
         <input type="search" name="search" placeholder="Find a stop..." aria-label="Find a bus stop" required>
         <button type="submit" name="submit" title="Search" value="1">Search</button>
-        <button type="button" title="Help with searching" onclick="(function() {
-            this.focus();
-            this.blur();
-            document.body.classList.add('with-modal');
-            document.getElementById('modal-help').classList.add('modal-background-visible');
-        })()">?</button>
+        <button id="help-open" type="button" title="Help with searching">?</button>
       </form>
       <ul class="links">
-        <li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>
+        {% if config.get('GEOLOCATION_ENABLED', false) %}<li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>{% endif %}
         <li><a href="{{ url_for('page.list_regions') }}">Browse regions</a></li>
         <li><a href="{{ url_for('page.show_map') }}">Map</a></li>
       </ul>
     </section>
     <section>
       {% if starred is not none and starred|length > 0 -%}
+      <div class="h3-inline">
+        <h3>Starred stops</h3>
+        <p><a class="action">Edit</a></p>
+      </div>
       {% call(s) f.print_list(starred) -%}
       <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
         <span>
@@ -44,22 +44,30 @@
 </main>
 {% endblock %}
 
-{% block modal %}
-<div class="modal-background" id="modal-help">
-  <div class="modal modal-dialog">
-    <button title="Close this dialog and go back" class="modal-button" onclick="(function() {
-        this.focus();
-        this.blur();
-        document.body.classList.remove('with-modal');
-        document.getElementById('modal-help').classList.remove('modal-background-visible');
-    })()">Close</button>
+{% block overlay %}
+<div class="overlay" id="overlay-help">
+  <div class="overlay-content overlay-content-dialog">
+    <button id="help-close" title="Close this dialog and go back" class="overlay-button">Close</button>
     <h3>What can I search?</h3>
     <p>A <strong>SMS code</strong>&mdash;every stop in Great Britain has a numeric or alphabetic code which should be visible on the bus stop sign or on the information panel.</p>
     <p>A <strong>postcode</strong>&mdash;you can find stops within 500 metres around a postcode.</p>
     <p><strong>Stop names, streets and areas</strong>&mdash;you can add place, town or city names to help narrow down your search.</p>
     <p><strong>Services</strong>&mdash;you can add place names to find lines covering these areas.</p>
+    <p>You can also quote phrases or exclude words, like for example <strong>"Oxford&nbsp;Street"&nbsp;-London</strong>.</p>
   </div>
 </div>
+<script>
+let helpOverlay;
+window.addEventListener('load', function() {
+    helpOverlay = new Overlay('overlay-help', 'help-close');
+    document.getElementById('help-open').onclick = function() {
+        helpOverlay.open();
+    };
+    document.getElementById('help-close').onclick = function() {
+        helpOverlay.close();
+    };
+});
+</script>
 {% endblock %}
 
 {% block script %}

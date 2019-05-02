@@ -8,7 +8,7 @@ def test_index_start(client, db_loaded):
     response = client.get("/")
 
     assert response.status_code == 200
-    assert b"You can add your favourite stops here!" in response.data
+    assert b"You can have your favourite stops here!" in response.data
 
 
 def test_index_stops_added(client, db_loaded):
@@ -460,7 +460,7 @@ def test_location_away(client, db_loaded):
     response = client.get("/near/51.436333,-4.837392")
 
     assert response.status_code == 200
-    assert b"No stops found within 500 metres" in response.data
+    assert b"No stops found nearby." in response.data
 
 
 def test_location_oob(client, db_loaded):

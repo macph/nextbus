@@ -17,11 +17,11 @@
 </nav>
 <main>
   <h1>{{ stop_area.name }}</h1>
-  <div class="actions">
-    <a class="action" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}" title="View on map">Map</a>
-  </div>
   <section>
-    <h2>Stops</h2>
+    <div class="h2-inline">
+      <h2>Stops</h2>
+      <p><a class="action" href="{{ url_for('page.show_map', coords=(stop_area.latitude, stop_area.longitude, 17)) }}" title="View on map">Map</a></p>
+    </div>
     {% if stops|length > 0 -%}
     {% call(s) f.print_list(stops) -%}
     {% if s.lines -%}

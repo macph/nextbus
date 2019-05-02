@@ -30,40 +30,8 @@
       <button type="submit" name="submit" title="Search" value="1">Search</button>
     </form>
   </section>
+
   {% if query is not none -%}
-  <!--
-  {% if f_areas -%}
-  {% set checked_elements = filters.area.render_elements(class='filter-item', checked=true) %}
-  {% set unchecked_elements = filters.area.render_elements(class='filter-item', checked=false)%}
-  <section id="filter-box" class="card">
-    <div class="heading-inline heading-inline--right">
-        <h3>Filter by area</h3>
-        <button id="filter-show-button">Show</button>
-    </div>
-    <div id="filter-wrapper" class="filter-form-wrapper">
-      <form id="filter-form" class="filter-form" method="get">
-        {% if checked_elements %}
-        <div class="filter-form__scrolling filter-form__expanded">
-          <ul class="filter-list">
-            {% for element in checked_elements %}
-            <li>{{ element }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-        <div id="filter-list" class="filter-form__scrolling hidden">
-          <ul class="filter-list">
-            {% for element in unchecked_elements %}
-            <li>{{ element }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        <button id="filter-refresh-button" class="filter-submit">Refresh</button>
-      </form>
-    </div>
-  </section>
-  {%- endif %}
-  -->
 
   {% if f_groups -%}
   <ul class="tabs tabs-5">
@@ -123,16 +91,16 @@
     {% if results.has_next or results.has_prev -%}
     <div class="inline">
       <p>
-        {% if results.has_prev %}<a href="{{ modify_query(page=1) }}">Start</a>{% endif %}
-        {% if results.page > 2 %}<a href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}
+        {% if results.has_prev %}<a class="action" href="{{ modify_query(page=1) }}">Start</a>{% endif %}
+        {% if results.page > 2 %}<a class="action" href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}
       </p>
       <p>{{ results.page }} of {{ results.pages }}</p>
-      <p>{% if results.has_next %}<a href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
+      <p>{% if results.has_next %}<a class="action" href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
     </div>
     {%- endif %}
 
     {%- else -%}
-    <p>Page {{ request.args.get("page") }} is out of range for this search query.</p>
+    <p>Page {{ request.args.get("page") }} is out of range for this search.</p>
     <p><a href="?">Go back to page 1</a></p>
     {%- endif %}
 
@@ -161,7 +129,7 @@
     {%- elif error.too_short is defined -%}
     <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
     {%- elif error.not_defined is defined -%}
-    <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down the query.</p>
+    <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down this search.</p>
     {%- else -%}
     <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvenience.</p>
     {%- endif %}
@@ -178,39 +146,4 @@ window.addEventListener('load', function() {
     revertColours('.indicator-reversed');
 });
 </script>
-{% if f_areas %}
-<script>
-    let showFilter = false;
-    let filterBox = document.getElementById('filter-box');
-    let filterShow = document.getElementById('filter-show-button');
-    let filterList = document.getElementById('filter-list');
-
-    filterShow.addEventListener('click', function() {
-        showFilter = !showFilter;
-        filterShow.blur();
-        filterShow.textContent = (showFilter) ? 'Hide' : 'Show';
-        filterList.style.height = (showFilter) ? filterList.scrollHeight + 'px' : '';
-        filterList.classList.toggle("filter-form__expanded");
-    });
-    window.addEventListener('resize', function() {
-        if (showFilter) {
-            // Reset height, otherwise scrollHeight's value will just increase
-            filterList.style.height = 'auto';
-            filterList.style.height = filterList.scrollHeight + 'px';
-        }
-    });
-
-    let filterForm = document.getElementById('filter-form');
-    let checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-    for (let i = 0; i < checkboxes.length; i++) {
-        let c = checkboxes[i];
-        c.addEventListener('change', function() {
-            filterForm.submit();
-        });
-    }
-    // Not required anymore; can hide for now
-    let filterRefresh = document.getElementById('filter-refresh-button');
-    filterRefresh.style.display = 'none';
-</script>
-{% endif %}
 {% endblock %}

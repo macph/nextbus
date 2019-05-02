@@ -1,5 +1,5 @@
 /*
- * nextbus website functionality, copyright Ewan Macpherson 2017-18
+ * nxb functionality; copyright Ewan Macpherson 2017-19
  */
 
 const INTERVAL = 90;
@@ -31,6 +31,124 @@ const LAYOUT_DOM_PARA_START = 36 + 12;
 
 
 /**
+ * Dialog / overlay handler. Thanks to https://bitsofco.de/accessible-modal-dialog/
+ * @param {HTMLElement|string} overlayElement
+ * @param {?HTMLElement|string} focusFirst
+ * @constructor
+ */
+function Overlay(overlayElement, focusFirst) {
+    let self = this;
+    this.overlay = (overlayElement instanceof HTMLElement) ?
+        overlayElement : document.getElementById(overlayElement);
+    this.focusFirst = (focusFirst instanceof HTMLElement) ?
+        focusFirst : document.getElementById(focusFirst);
+
+    this.transition = getTransitionEnd(this.overlay);
+    this.lastFocused = null;
+    this.focusable = this.overlay.querySelectorAll(
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), ' +
+        'textarea:not([disabled]), button:not([disabled]), [tabindex="0"]'
+    );
+
+    /**
+     * First focusable element.
+     * @returns {HTMLElement}
+     */
+    this.first = function() {
+        return this.focusable[0];
+    };
+
+    /**
+     * Last focusable element.
+     * @returns {HTMLElement}
+     */
+    this.last = function() {
+        return this.focusable[this.focusable.length - 1];
+    };
+
+    /**
+     * Takes keyboard event and ensures TAB returns back to focusable elements within overlay.
+     * @private
+     */
+    this._cycleTabs = function(event) {
+        const KEY_TAB = 'Tab';
+
+        if (event.key === KEY_TAB && !event.shiftKey) {
+            if (document.activeElement === self.last() ||
+                self.focusable.indexOf(document.activeElement) === -1)
+            {
+                event.preventDefault();
+                self.first().focus();
+            }
+        } else if (event.key === KEY_TAB) {
+            if (document.activeElement === self.first() ||
+                self.focusable.indexOf(document.activeElement) === -1)
+            {
+                event.preventDefault();
+                self.last().focus();
+            }
+        }
+    };
+
+    /**
+     * Handles TAB and ESC keyboard events for overlay.
+     * @private
+     */
+    this._handleKeys = function(event) {
+        const KEY_TAB = 'Tab',
+              KEY_ESC = 'Escape';
+
+        switch (event.key) {
+            case KEY_TAB:
+                self._cycleTabs(event);
+                break;
+            case KEY_ESC:
+                self.close();
+                break;
+        }
+    };
+
+    /**
+     * Called overlay finishes opening.
+     * @callback overlayOpen
+     */
+
+    /**
+     * Opens overlay and sets up keyboard events.
+     * @param {overlayOpen} whenOpen
+     */
+    this.open = function(whenOpen) {
+        self.lastFocused = document.activeElement;
+        document.addEventListener('keydown', self._handleKeys);
+        document.body.classList.add('body-with-overlay');
+        self.overlay.classList.add('overlay-visible');
+        if (whenOpen != null) {
+            whenOpen();
+        }
+        if (self.focusFirst != null) {
+            let onEndTransition = function() {
+                self.overlay.removeEventListener(self.transition, onEndTransition);
+                self.focusFirst.focus();
+            };
+            self.overlay.addEventListener(self.transition, onEndTransition);
+        }
+    };
+
+    /**
+     * Closes overlay and remove keyboard events.
+     */
+    this.close = function() {
+        document.removeEventListener('keydown', self._handleKeys);
+        document.body.classList.remove('body-with-overlay');
+        self.overlay.classList.remove('overlay-visible');
+        if (self.lastFocused != null) {
+            self.lastFocused.focus();
+        }
+    }
+}
+
+
+/**
  * Sends requests to modify cookie data with list of starred stops
  * @constructor
  * @param {boolean} cookieSet Whether cookie has been set in first place or not
@@ -43,7 +161,8 @@ function StarredStops(cookieSet, onAdd, onRemove) {
     this.onAdd = onAdd;
     this.onRemove = onRemove;
 
-    this.modal = null;
+    this.overlay = null;
+    this.overlayElement = null;
     this.code = null;
     this.data = null;
     this.active = false;
@@ -53,64 +172,66 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         self.code = code;
     };
 
-    this.createModal = function() {
-        self.modal = element('div',
-            {className: 'modal-background', id: 'modal-confirm'}
-        );
-        let modal = element('div',
-            {className: 'modal modal-dialog'},
-            element('h3', 'Create a cookie?'),
-            element('p',
-                'A new list of starred stops will be created on your device as a cookie. No ' +
-                'other identifiable information is stored.'
-            ),
-            element('button',
-                {
-                    className: 'modal-button',
-                    title: 'Close this dialog and go back',
-                    onclick: function() {
-                        this.focus();
-                        this.blur();
-                        document.body.classList.remove('with-modal');
-                        self.modal.classList.remove('modal-background-visible');
-                    }
-                },
-                'Close'
-            ),
-            element('button',
-                {
-                    className: 'modal-button',
-                    title: 'Create cookie and add stop',
-                    onclick: function() {
-                        this.focus();
-                        this.blur();
-                        document.body.classList.remove('with-modal');
-                        self.modal.classList.remove('modal-background-visible');
-                        self.set = true;
-                        self.add();
-                    }
-                },
-                'Continue adding stop'
+    this.createOverlay = function() {
+        if (self.overlayElement != null) {
+            return;
+        }
+        self.overlayElement = element('div',
+            {className: 'overlay', id: 'overlay-confirm'},
+            element('div',
+                {className: 'overlay-content overlay-content-dialog'},
+                element('h3', 'Create a cookie?'),
+                element('p',
+                    'A new list of starred stops will be created on your device as a cookie. No ' +
+                    'other identifiable information is stored.'
+                ),
+                element('button',
+                    {id: 'cookie-reject', className: 'overlay-button',
+                        title: 'Close this dialog and go back'},
+                    'Close'
+                ),
+                element('button',
+                    {id: 'cookie-confirm', className: 'overlay-button',
+                        title: 'Create cookie and add stop'
+                    },
+                    'Continue adding stop'
+                )
             )
         );
-        self.modal.appendChild(modal);
-        document.body.appendChild(self.modal);
+        document.body.appendChild(self.overlayElement);
+
+        let confirm = document.getElementById('cookie-confirm'),
+            reject = document.getElementById('cookie-reject');
+        self.overlay = new Overlay(self.overlayElement, confirm);
+        confirm.onclick = function() {
+            self.overlay.close();
+            self.set = true;
+            self.add();
+        };
+        reject.onclick = function() {
+            self.overlay.close();
+        };
     };
 
-    this.removeModal = function() {
-        if (self.modal != null) {
-            document.body.removeChild(self.modal);
-            self.modal = null;
+    this.removeOverlay = function() {
+        if (self.overlayElement != null) {
+            document.body.removeChild(self.overlayElement);
+            self.overlayElement = null;
         }
     };
 
     this.get = function(onGet) {
         self.r.onload = function() {
-            let newData = JSON.parse(self.r.responseText);
-            self.data = newData.stops;
+            if (this.status === 200) {
+                self.set = true;
+                self.data = JSON.parse(self.r.responseText).stops;
+            } else if (this.status === 422) {
+                self.set = false;
+                self.data = null;
+            }
             onGet();
         };
-        self.r.open("GET", STARRED_URL, true);
+        self.r.open("GET", URL.STARRED, true);
         self.r.send();
     };
 
@@ -118,12 +239,11 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         if (self.code == null) {
             throw new TypeError('SMS code needs to be set for StarredStops object first.');
         }
-        if (!self.set && self.modal == null) {
-            self.createModal();
+        if (!self.set && self.overlayElement == null) {
+            self.createOverlay();
         }
         if (!self.set) {
-            document.body.classList.add('with-modal');
-            self.modal.classList.add('modal-background-visible');
+            self.overlay.open();
             return;
         }
 
@@ -136,7 +256,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
                 self.onAdd();
             }
         };
-        self.r.open("POST", STARRED_URL + self.code, true);
+        self.r.open("POST", URL.STARRED + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
@@ -155,10 +275,95 @@ function StarredStops(cookieSet, onAdd, onRemove) {
                 self.onRemove();
             }
         };
-        self.r.open("DELETE", STARRED_URL + self.code, true);
+        self.r.open("DELETE", URL.STARRED + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
+    };
+}
+
+
+/**
+ * Constructs a list of starred stops using the starred stops API
+ * @param {HTMLElement|string} container Container element or ID for list of starred stops
+ * @constructor
+ */
+function StarredStopList(container) {
+    let self = this;
+    this.container = (container instanceof HTMLElement) ?
+        container : document.getElementById(container);
+    this.called = false;
+
+    /**
+     * Sets to call API for updated list on next call
+     */
+    this.reset = function() {
+        self.called = false;
+    };
+
+    /**
+     * Calls API to get new list
+     */
+    this.updateList = function() {
+        if (self.called) {
+            return;
+        }
+        let request = new XMLHttpRequest();
+        request.onload = function() {
+            if (this.status === 200) {
+                self._createList(JSON.parse(this.responseText));
+                self.called = true;
+            } else if (this.status === 422) {
+                // Cookie list does not exist yet; don't do any more calls until it has been reset
+                self.called = true;
+            }
+        };
+        request.open('GET', URL.STARRED + 'data', true);
+        request.send();
+    };
+
+    /**
+     * Constructs list of starred stops and replace contents of container
+     * @param {{type: string, features: StopPoint[]}} data
+     * @private
+     */
+    this._createList = function(data) {
+        if (data.features.length === 0) {
+            removeSubElements(self.container);
+            return;
+        }
+        let heading = element('div',
+            {className: 'h3-inline'},
+            element('h3', 'Starred stops'),
+            element('p', element('a', {className: 'action'}, 'Edit'))
+        );
+        let list = element('ul', {className: 'list stops'});
+        data.features.forEach(function(stop) {
+            let sub = [stop.properties.street, stop.properties.locality].filter(function(p) {
+                return p;
+            });
+            let item = element('a',
+                {
+                    className: 'item item-stop item-multiline',
+                    href: URL.STOP_PAGE + stop.properties.atcoCode
+                },
+                element('span',
+                    element('span',
+                        {className: 'indicator area-' + stop.properties.adminAreaRef},
+                        createIndicator(stop.properties)
+                    ),
+                    element('span', {className: 'item-label'}, stop.properties.name)
+                ),
+                (sub) ? element('p', sub.join(', ')) : null
+            );
+
+            list.appendChild(element('li', item));
+        });
+
+        removeSubElements(self.container);
+        self.container.appendChild(heading);
+        self.container.appendChild(list);
+        resizeIndicator('.indicator');
     };
 }
 
@@ -188,7 +393,7 @@ function _resizeText(element) {
         return;
     }
     // Set data attribute and add class
-    element.dataset.indicatorSet = "1";
+    element.dataset.indicatorSet = '1';
     let span = element.querySelector('span');
     let img = element.querySelector('img');
     if (span !== null) {
@@ -367,7 +572,7 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
-    this.url = LIVE_URL;
+    this.url = URL.LIVE;
     this.container = null;
     this.headingTime = null;
     this.headingCountdown = null;
@@ -515,7 +720,7 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
                         {className: 'line-outer'},
                         element('span',
                             {className: 'line area-' + self.adminAreaCode},
-                            element('span', {className: 'line__text'}, service.name)
+                            element('span', service.name)
                         )
                     )
                 ),
@@ -747,13 +952,14 @@ function roundTo(float, places) {
 
 /**
  * Creates control for map with buttons for each content, title and action
- * @param {{action: function, content: Element|string, title: ?string}} actions List of actions
+ * @param {{action: function, content: ?Element|string, className: ?string, title: ?string}} actions
  */
 function mapControl(...actions) {
     let buttons = actions.map(function(a) {
         let titleText = (a.title != null) ? a.title : '';
+        let className = (a.className != null) ? a.className : '';
         return element('a',
-            {role: 'button', title: titleText, 'aria-label': titleText,
+            {role: 'button', title: titleText, 'aria-label': titleText, className: className,
                   onclick: a.action, ondblclick: a.action},
             a.content
         );
@@ -875,9 +1081,9 @@ function createIndicator(stopData) {
     if (stopData.indicator !== '') {
         ind = element('span', stopData.indicator);
     } else if (stopData.stopType === 'BCS' || stopData.stopType === 'BCT') {
-        ind = element('img', {src: STATIC + 'img/bus-white.svg', width: '28', alt: 'Bus stop'});
+        ind = element('img', {src: URL.STATIC + 'img/bus-white.svg', width: '28', alt: 'Bus stop'});
     } else if (stopData.stopType === 'PLT') {
-        ind = element('img', {src: STATIC + 'img/tram-white.svg', width: '28', alt: 'Tram stop'});
+        ind = element('img', {src: URL.STATIC + 'img/tram-white.svg', width: '28', alt: 'Tram stop'});
     } else {
         ind = null;
     }
@@ -931,7 +1137,7 @@ function StopLayer(stopMap) {
             return;
         }
 
-        let url = TILE_URL + coords.x + ',' + coords.y;
+        let url = URL.TILE + coords.x + ',' + coords.y;
         let request = new XMLHttpRequest;
         request.open('GET', url, true);
 
@@ -1023,18 +1229,12 @@ function StopLayer(stopMap) {
      * @private
      */
     this._markerElement = function(stop) {
-        let arrow = null;
-        if (!self.isIE) {
-            let className = 'indicator-marker__arrow';
-            if (stop.properties.bearing) {
-                className += ' ' + 'indicator-marker__arrow--' + stop.properties.bearing;
-            }
-            arrow = element('div', {className: className})
+        let className = 'indicator indicator-marker area-' + stop.properties.adminAreaRef;
+        if (!self.isIE && stop.properties.bearing) {
+            className += ' ' + 'indicator-arrow indicator-arrow-' + stop.properties.bearing;
         }
-
-        return element('div',
-            {className: 'indicator indicator-marker area-' + stop.properties.adminAreaRef},
-            arrow,
+        return element('span',
+            {className: className},
             createIndicator(stop.properties)
         );
     };
@@ -1158,7 +1358,7 @@ function StopPointsData() {
         }
 
         let request = new XMLHttpRequest;
-        request.open('GET', STOP_URL + atcoCode, true);
+        request.open('GET', URL.STOP + atcoCode, true);
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
                 let data = JSON.parse(request.responseText);
@@ -1241,7 +1441,7 @@ function ServicesData() {
         }
 
         let request = new XMLHttpRequest;
-        request.open('GET', ROUTE_URL + part, true);
+        request.open('GET', URL.ROUTE + part, true);
         request.onreadystatechange = function() {
             if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
                 let data = JSON.parse(request.responseText);
@@ -1352,17 +1552,21 @@ function RouteLayer(stopMap) {
  * @constructor
  * @param {object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
- * @param {boolean} cookieSet Whether the cookie has been set or not
+ * @param {StarredStops} starred starred stops interface
+ * @param {StarredStopList} starred starred stops interface
  */
-function Panel(stopMap, mapPanel, cookieSet) {
+function Panel(stopMap, mapPanel, starred, starredList) {
     let self = this;
     this.stopMap = stopMap;
     this.mapPanel = mapPanel;
     this.container = this.mapPanel.parentNode;
-    this.starred = new StarredStops(cookieSet, null);
+
+    this.starred = starred;
+    this.starred.createOverlay();
+    this.starredList = starredList;
+
     this.activeStops = new Map();
     this.currentMapControl = null;
-
     this.currentStop = null;
     this.currentService = null;
 
@@ -1498,11 +1702,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
         } else {
             headingText = 'Select a stop';
         }
-
-        let heading = element('div',
-            {className: 'heading heading--panel'},
-            element('h2', headingText)
-        );
+        let heading = element('h2', headingText);
 
         self.clearPanel();
         self.mapPanel.appendChild(heading);
@@ -1515,20 +1715,17 @@ function Panel(stopMap, mapPanel, cookieSet) {
      * @private
      */
     this._setStopPanelData = function(data) {
-        let leaveTitle, leaveSrc, leaveAlt;
+        let leaveTitle, leaveText;
         if (self.currentService !== null) {
             let data = self.stopMap.routeLayer.data;
             leaveTitle = 'Back to service ' + data.line;
-            leaveSrc = STATIC + 'icons/sharp-timeline-24px.svg';
-            leaveAlt = 'Back';
+            leaveText = '\u2191 Back';
         } else {
             leaveTitle = 'Close stop panel';
-            leaveSrc = STATIC + 'icons/sharp-close-24px.svg';
-            leaveAlt = 'Close';
+            leaveText = '\u2717 Close';
         }
         let closePanel = element('button',
             {
-                className: 'button button--action button--float',
                 title: leaveTitle,
                 onclick: function() {
                     this.blur();
@@ -1536,8 +1733,9 @@ function Panel(stopMap, mapPanel, cookieSet) {
                     return false;
                 }
             },
-            element('img', {src: leaveSrc, alt: leaveAlt})
+            leaveText
         );
+        let actions = element('div', {className: 'actions'}, closePanel);
 
         let headingText = null,
             hasBearing = (data.bearing !== null && self.directions.hasOwnProperty(data.bearing)),
@@ -1556,56 +1754,47 @@ function Panel(stopMap, mapPanel, cookieSet) {
             headingText = element('p', element('strong', data.street));
         }
 
-        let headingOuter = element('div',
-            {className: 'heading heading--panel'},
-            element('div',
+        let heading = element('h1',
                 {className: 'heading-stop'},
-                element('div',
+                element('span',
                     {className: 'indicator area-' + data.adminAreaRef},
                     createIndicator(data)
                 ),
-                element('h1', data.name),
-            ),
-            headingText
+                element('span', data.name),
         );
 
         let liveTimes = element('section',
-            {className: 'card card--panel'},
             element('div',
-                {className: 'heading-inline heading-inline--right'},
+                {className: 'h2-inline'},
                 element('h2', {id: 'live-time'}, 'Retrieving live data...'),
-                element('p', {id: 'live-countdown'})
+                element('p', {id: 'live-countdown', class: 'countdown'})
             ),
-            element('div', {id: 'services', className: 'services--panel'})
+            element('div', {id: 'departures', class: 'departures-container'})
         );
 
-        let services = element('section',
-            {className: 'card card--panel'},
-            element('h2', 'Services')
-        );
-
+        let services = element('section', element('h2', 'Services'));
         if (data.services.length > 0) {
             let listNonTerminating = [],
                 listTerminating = [];
             data.services.forEach(function(s) {
                 let listItem = element('li',
                     element('div',
-                        {className: 'item item--service', onclick: function() {
+                        {className: 'item item-service', onclick: function() {
                             self.stopMap.update({
                                 stop: null,
                                 service: {id: s.id, reverse: s.reverse},
                                 fitService: true
                             });
                         }},
-                        element('div',
-                            {className: 'line'},
-                            element('div',
-                                {className: 'line__inner area-' + data.adminAreaRef},
-                                element('span', {className: 'line__text'}, s.line)
+                        element('span',
+                            {className: 'line-outer'},
+                            element('span',
+                                {className: 'line area-' + data.adminAreaRef},
+                                s.line
                             )
                         ),
                         element('div',
-                            {className: 'item__label'},
+                            {className: 'item-label'},
                             (s.terminates) ? 'from ' + s.origin : s.destination
                         )
                     )
@@ -1618,7 +1807,6 @@ function Panel(stopMap, mapPanel, cookieSet) {
             });
 
             services.appendChild(element('ul', {className: 'list'}, listNonTerminating));
-
             // Add terminating services under own section
             if (listTerminating.length > 0) {
                 services.appendChild(element('h3', 'Terminating services'));
@@ -1648,66 +1836,58 @@ function Panel(stopMap, mapPanel, cookieSet) {
         }
 
         let stopInfo = element('section',
-            {className: 'card card--panel'},
             element('h2', 'Stop information'),
             infoLine,
             element('p', 'SMS code ', element('strong', data.naptanCode)),
-            (data.active) ? null : element('p', 'This stop is marked as inactive.'),
-            element('p', element('a', {href: STOP_PAGE_URL + data.atcoCode}, 'Stop page'))
+            (data.active) ?
+                null : element('p', element('strong', 'This stop is marked as inactive.')),
+            element('p', element('a', {href: URL.STOP_PAGE + data.atcoCode}, 'Stop page'))
         );
 
         self.clearPanel();
-        self.mapPanel.appendChild(closePanel);
-        self.mapPanel.appendChild(headingOuter);
-        resizeIndicator('.indicator');
+        self.mapPanel.appendChild(heading);
+        self.mapPanel.appendChild(headingText);
+        self.mapPanel.appendChild(actions);
         self.mapPanel.appendChild(liveTimes);
         self.mapPanel.appendChild(services);
         self.mapPanel.appendChild(stopInfo);
+        resizeIndicator('.indicator');
 
         self.getStop(
             data.atcoCode,
             data.adminAreaRef,
-            'services',
+            'departures',
             'live-time',
             'live-countdown',
             data.operators
         );
 
+        self.starred.setCode(data.naptanCode);
         self.starred.get(function() {
             let codeInList = (self.starred.set && self.starred.data.indexOf(data.naptanCode) > -1);
-            let addText = 'Add starred stop',
-                removeStarred = 'Remove starred stop';
-            let notStarred = element('img',
-                {src: STATIC + 'icons/baseline-star_border-24px.svg', alt: addText}
-            );
-            let starred = element('img',
-                {src: STATIC + 'icons/baseline-star-24px.svg', alt: removeStarred}
-            );
+            let addText = '\u2606 Add stop',
+                addTitle = 'Add to list of starred stops',
+                removeText = '\u2605 Remove stop',
+                removeTitle = 'Remove from list of starred stops';
 
-            let starredButton = element('button',
-                {className: 'button button--action button--float'},
-                notStarred,
-                starred
-            );
-            self.mapPanel.insertBefore(starredButton, headingOuter);
+            let starredButton = element('button');
+            actions.insertBefore(starredButton, closePanel);
 
             self.starred.onAdd = function() {
-                starredButton.blur();
-                starredButton.title = removeStarred;
+                starredButton.textContent = removeText;
+                starredButton.title = removeTitle;
                 starredButton.onclick = function() {
-                    self.starred.remove(data.naptanCode);
+                    self.starred.remove();
                 };
-                notStarred.style.display = 'none';
-                starred.style.display = '';
+                self.starredList.reset();
             };
             self.starred.onRemove = function() {
-                starredButton.blur();
-                starredButton.title = addText;
+                starredButton.textContent = addText;
+                starredButton.title = addTitle;
                 starredButton.onclick = function() {
-                    self.starred.add(data.naptanCode);
+                    self.starred.add();
                 };
-                starred.style.display = 'none';
-                notStarred.style.display = '';
+                self.starredList.reset();
             };
             // Set up button
             (codeInList) ? self.starred.onAdd() : self.starred.onRemove();
@@ -1718,7 +1898,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
             action: function() {
                 self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
             },
-            content: element('img', {src: STATIC + 'icons/sharp-zoom_out_map-24px.svg', alt: 'F'}),
+            className: 'icon-fit-map',
             title: 'Fly to stop'
         });
         self.currentMapControl.addTo(self.stopMap.map);
@@ -1740,15 +1920,21 @@ function Panel(stopMap, mapPanel, cookieSet) {
     this._setServicePanelData = function(data) {
         let closePanel = element('button',
             {
-                className: 'button button--action button--float',
                 title: 'Close service panel',
                 onclick: function() {
                     this.blur();
                     self.stopMap.update({service: null});
                 }
             },
-            element('img', {src: STATIC + 'icons/sharp-close-24px.svg', alt: 'Close'})
+            '\u2717 Close'
         );
+        let direction = (data.reverse) ? 'inbound' : 'outbound',
+            timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
+        let timetable = element('a',
+            {className: 'action', href: timetableURL},
+            'Timetable'
+        );
+        let actions = element('div', {className: 'actions'}, timetable, closePanel);
 
         let listOperators = null;
         if (data.operators) {
@@ -1763,45 +1949,26 @@ function Panel(stopMap, mapPanel, cookieSet) {
             });
         }
 
-        let direction = (data.reverse) ? 'inbound' : 'outbound',
-            timetableURL = TIMETABLE_URL.replace('//', '/' + data.service + '/' + direction + '/');
-
-        let headingOuter = element('div',
-            {className: 'heading heading--panel'},
-            element('div',
-                {className: 'heading-service'},
-                element('div',
+        let heading = element('h1',
+            {className: 'heading-service'},
+            element('span',
+                {className: 'line-outer'},
+                element('span',
                     {className: 'line'},
-                    element('div',
-                        {className: 'line__inner'},
-                        element('span', {className: 'line__text'}, data.line)
-                    )
-                ),
-                element('h1', data.description)
-            ),
-            element('div',
-                {className: 'heading-subtitle'},
-                element('p', 'Operated by ', listOperators),
-                element('div',
-                    {className: 'buttons'},
-                    element('a',
-                        {className: 'button button--action', href: timetableURL,
-                         title: 'Timetable'},
-                        element('img',
-                            {src: STATIC + 'icons/sharp-date_range-24px.svg', alt: 'Timetable'}
-                        ),
-                    )
+                    data.line
                 )
-            )
+            ),
+            element('span', data.description)
         );
+        let subtitle = element('p', 'Operated by ', listOperators);
 
         let tabs = null;
         if (data.mirrored) {
             tabs = element('ul',
-                {className: 'tabs tabs--panel tabs--2'},
+                {className: 'tabs tabs-2'},
                 element('li',
                     element('div',
-                        {className: (data.reverse) ? 'tab' : 'tab tab--active',
+                        {className: (data.reverse) ? 'tab' : 'tab tab-active',
                          onclick: (data.reverse) ? function() {
                              map.update({service: {id: data.service, reverse: false}});
                          } : null},
@@ -1810,7 +1977,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
                 ),
                 element('li',
                     element('div',
-                        {className: (data.reverse) ? 'tab tab--active' : 'tab',
+                        {className: (data.reverse) ? 'tab tab-active' : 'tab',
                          onclick: (data.reverse) ? null : function() {
                              map.update({service: {id: data.service, reverse: true}});
                          }},
@@ -1820,39 +1987,34 @@ function Panel(stopMap, mapPanel, cookieSet) {
             );
         }
 
-        let list = element('section', {className: 'card card--panel card--relative'}),
+        let list = element('section', {style: {position: 'relative'}}),
             diagram = element('div', {className: 'diagram'});
 
         let listStops = null;
         if (data.sequence) {
-            listStops = element('ul', {className: 'list list--relative'});
+            listStops = element('ul', {className: 'list list-relative'});
             data.sequence.forEach(function(code) {
                 let s = data.stops[code],
                     item;
                 if (code) {
                     item = element('div',
-                        {className: 'item item--stop--multiline item--stop--service'}
+                        {className: 'item item-stop item-service-stop'}
                     );
 
-                    let sub = [];
-                    if (s.properties.street) {
-                        sub.push(s.properties.street);
-                    }
-                    if (s.properties.locality) {
-                        sub.push(s.properties.locality)
-                    }
+                    let sub = [s.properties.street, s.properties.locality].filter(function (p) {
+                        return p;
+                    });
                     let subtitle = (sub) ? element('p', sub.join(', ')) : null;
 
-                    let inner = element('div',
-                        {id: 'c' + s.properties.atcoCode},
-                        element('div',
-                            {className: 'item--stop'},
-                            element('div',
+                    let inner = element('span',
+                        {id: 'c' + s.properties.atcoCode, className: 'item-multiline'},
+                        element('span',
+                            element('span',
                                 {className: 'indicator area-' + s.properties.adminAreaRef,
                                  id: 'i' + s.properties.atcoCode},
                                 createIndicator(s.properties)
                             ),
-                            element('div', {className: 'item__label'}, s.properties.name),
+                            element('span', {className: 'item-label'}, s.properties.name),
                         ),
                         subtitle
                     );
@@ -1869,8 +2031,11 @@ function Panel(stopMap, mapPanel, cookieSet) {
                     };
                 } else {
                     item = element('div',
-                        {className: 'item item--stop item--stop--empty', id: 'cNull'},
-                        element('div', {className: 'indicator', id: 'iNull'})
+                        {className: 'item item-stop item-service-stop item-service-stop-empty'},
+                        element('span',
+                            {id: 'cNull'},
+                            element('span', {className: 'indicator', id: 'iNull'})
+                        )
                     );
                 }
                 listStops.appendChild(element('li', item));
@@ -1883,8 +2048,9 @@ function Panel(stopMap, mapPanel, cookieSet) {
         list.appendChild(listStops);
 
         self.clearPanel();
-        self.mapPanel.appendChild(closePanel);
-        self.mapPanel.appendChild(headingOuter);
+        self.mapPanel.appendChild(heading);
+        self.mapPanel.appendChild(subtitle);
+        self.mapPanel.appendChild(actions);
         if (tabs) {
             self.mapPanel.appendChild(tabs);
         }
@@ -1895,7 +2061,7 @@ function Panel(stopMap, mapPanel, cookieSet) {
             action: function() {
                 self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
             },
-            content: element('img', {src: STATIC + 'icons/sharp-zoom_out_map-24px.svg', alt: 'F'}),
+            className: 'icon-fit-map',
             title: 'Fit route to map'
         });
         self.currentMapControl.addTo(self.stopMap.map);
@@ -1924,10 +2090,11 @@ function Panel(stopMap, mapPanel, cookieSet) {
  * @constructor
  * @param {string} mapContainer ID for map container element
  * @param {string} mapPanel ID for map panel element
- * @param {boolean} cookieSet Whether the cookie has been set or not
+ * @param {StarredStops} starred Starred stops interface
+ * @param {StarredStopList} starredList Starred stop list for overlay
  * @param {boolean} useGeolocation Enable geolocation on this map
  */
-function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
+function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
     let self = this;
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
@@ -1946,7 +2113,7 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
         }
     );
 
-    this.panel = new Panel(this, this.mapPanel, cookieSet);
+    this.panel = new Panel(this, this.mapPanel, starred, starredList);
     this.services = new ServicesData();
     this.stops = new StopPointsData();
     this.stopLayer = new StopLayer(this);
@@ -1961,16 +2128,15 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
                 position: 'topleft'
             },
             onAdd: function (map) {
-                let containerClass = 'leaflet-control-zoom leaflet-bar leaflet-control-custom',
-                    icons = STATIC + 'icons/',
-                    container = element('div', {className: containerClass}),
-                    zoomIn = element('img', {src: icons + 'sharp-add-24px.svg', alt: '+'}),
-                    zoomOut = element('img', {src: icons + 'sharp-remove-24px.svg', alt: '-'});
+                let container = element(
+                    'div',
+                    {className: 'leaflet-control-zoom leaflet-bar leaflet-control-custom'}
+                );
 
-                this._zoomInButton  = this._createButton(zoomIn.outerHTML, this.options.zoomInTitle,
-                    'leaflet-control-zoom-in', container, this._zoomIn);
-                this._zoomOutButton = this._createButton(zoomOut.outerHTML, this.options.zoomOutTitle,
-                    'leaflet-control-zoom-out', container, this._zoomOut);
+                this._zoomInButton  = this._createButton('', this.options.zoomInTitle,
+                    'leaflet-control-zoom-in icon-zoom-in', container, this._zoomIn);
+                this._zoomOutButton = this._createButton('', this.options.zoomOutTitle,
+                    'leaflet-control-zoom-out icon-zoom-out', container, this._zoomOut);
 
                 this._updateDisabled();
                 map.on('zoomend zoomlevelschange', this._updateDisabled, this);
@@ -1990,8 +2156,8 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
                 action: function() {
                     self.map.locate();
                 },
-                content: element('img', {src: STATIC + 'icons/sharp-my_location-24px.svg', alt: 'G'}),
-                title: 'Set map to your location'
+                className: 'icon-my-location',
+                title: 'Find your location on map'
             }).addTo(self.map);
         }
     };
@@ -2235,7 +2401,7 @@ function StopMap(mapContainer, mapPanel, cookieSet, useGeolocation) {
             accuracy = MAP_DEG_ACCURACY[zoom],
             coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy), zoom];
 
-        let newURL = MAP_URL + routeURL + stopURL + coords.join(',');
+        let newURL = URL.MAP + routeURL + stopURL + coords.join(',');
         history.replaceState(null, null, newURL);
     };
 }

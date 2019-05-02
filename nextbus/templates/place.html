@@ -35,30 +35,26 @@
 </nav>
 <main>
   <h1>{{ place_name }}</h1>
-  <div class="actions">
-    <a class="action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">Map</a>
-  </div>
   <section>
     <div class="h2-inline">
       <h2>Stops</h2>
-      {% if grouped %}
-      <p><a href="?group=false">Ungroup stops</a></p>
-      {% elif grouped is not none %}
-      <p><a href="?group=true">Group stops</a></p>
-      {% endif %}
+      <p>
+        <a class="action" href="{{ url_for('page.show_map', coords=(locality.latitude, locality.longitude, 16)) }}">Map</a>
+        {% if grouped %}<a class="action" href="?group=false">Ungroup stops</a>{% elif grouped is not none %}<a class="action" href="?group=true">Group stops</a>{% endif %}
+      </p>
     </div>
-    {% if stops|length > 1 %}
-    {% for name, group in stops|dictsort %}
+    {% if stops|length > 1 -%}
+    {%- for name, group in stops|dictsort %}
     <h3 id="{{ name }}">{{ name }}</h3>
     {{ print_items(group) }}
-    {% endfor %}
-    {% elif stops %}
-    {% for _, group in stops.items() %}
+    {%- endfor %}
+    {%- elif stops -%}
+    {%- for _, group in stops.items() %}
     {{ print_items(group) }}
-    {% endfor %}
-    {% else %}
+    {%- endfor %}
+    {%- else -%}
     <p>No bus stops found.</p>
-    {% endif %}
+    {%- endif %}
   </section>
 </main>
 {% endblock %}

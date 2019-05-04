@@ -2,13 +2,13 @@
 Search functions for the nextbus package.
 """
 import re
-import reprlib
 
 from flask import current_app
 
-from nextbus import db, models, ts_parser
+from nextbus import db, models
 
 
+REGEX_CODE = re.compile(r"^\s*([A-Za-z\d]{5,12})\s*$")
 REGEX_POSTCODE = re.compile(r"^\s*([A-Za-z]{1,2}\d{1,2}[A-Za-z]?)"
                             r"\s*(\d[A-Za-z]{2})\s*$")
 PAGE_LENGTH = 25
@@ -36,17 +36,29 @@ class InvalidParameters(Exception):
         self.values = values
 
 
+class SearchNotDefined(Exception):
+    """ Raised if parsed search query is not defined enough, ie it does not
+        have terms that restricts the scope of the query. """
+    def __init__(self, query, msg=None):
+        if msg is None:
+            msg = "Query %r is not defined enough." % query
+        super().__init__(msg)
+        self.query = query
+        self.not_defined = True
+
+
 def search_code(query):
     """ Queries stop points and postcodes to find an exact match, returning
         the model object, or None if no match is found.
 
         :param query: Query text returned from search form.
-        :returns: SearchResult object with stop or postcode.
+        :returns: A StopPoint or Postcode object if either was found, else None.
         :raises NoPostcode: if a query was identified as a postcode but it does
         not exist.
     """
-    match_postcode = REGEX_POSTCODE.match(query)
+    found = None
 
+    match_postcode = REGEX_POSTCODE.match(query)
     if match_postcode:
         # Search postcode; make all upper and remove spaces first
         outward, inward = match_postcode.group(1), match_postcode.group(2)
@@ -59,12 +71,14 @@ def search_code(query):
             raise NoPostcode(query, (outward + " " + inward).upper())
         found = postcode
 
-    else:
+    match_code = REGEX_CODE.match(query)
+    if found is None and match_code:
         # Search NaPTAN code & ATCO code
+        code = match_code.group(1)
         stop = (
             models.StopPoint.query.options(db.load_only("atco_code"))
-            .filter((models.StopPoint.naptan_code == query.lower()) |
-                    (models.StopPoint.atco_code == query.upper()))
+            .filter((models.StopPoint.naptan_code == code.lower()) |
+                    (models.StopPoint.atco_code == code.upper()))
             .one_or_none()
         )
         found = stop
@@ -92,9 +106,6 @@ def search_all(query, groups=None, admin_areas=None, page=1):
         # Matching postcode or stop already found
         return matching
 
-    # Else: do a full text search - format query string first
-    parsed = ts_parser(query)
-
     try:
         page_num = int(page)
     except TypeError:
@@ -103,13 +114,16 @@ def search_all(query, groups=None, admin_areas=None, page=1):
     if groups is not None and set(groups) - models.FTS.GROUP_NAMES.keys():
         raise InvalidParameters(query, "group", groups)
 
-    search = models.FTS.search(parsed, groups, admin_areas)
+    search = models.FTS.search(query, groups, admin_areas)
+    if search is None:
+        raise SearchNotDefined(query)
+
     result = search.paginate(page_num, per_page=PAGE_LENGTH, error_out=False)
 
     count = result.total
     current_app.logger.debug(
-        "Search query %r parsed as %r and returned %s result%s" %
-        (query, parsed.to_string(), count, "" if count == 1 else "s")
+        "Search query %r returned %s result%s" %
+        (query, count, "" if count == 1 else "s")
     )
 
     return result
@@ -122,8 +136,11 @@ def filter_args(query, admin_areas=None):
     :param admin_areas: Filter possible groups with pre-selected admin areas.
     :returns: Tuple of two dicts: the result groups and administrative areas
     """
-    parsed = ts_parser(query)
-    groups, args = models.FTS.matching_groups(parsed, admin_areas)
+    result = models.FTS.matching_groups(query, admin_areas)
+    if result is not None:
+        groups, args = result
+    else:
+        raise SearchNotDefined(query)
 
     current_app.logger.debug("Search query %r have possible filters %r and %r"
                              % (query, groups, args))

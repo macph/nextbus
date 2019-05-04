@@ -126,10 +126,8 @@
     <p>Your address is not valid.</p>
     <p>If you typed the address by hand or copied and pasted it, make sure you have entered the address in full and there are no typos.</p>
     <p>You can try <a href="?">searching with the filters reset</a>, or <a href="{{ url_for('page.index') }}">go back to the home page.</a></p>
-    {%- elif error.too_short is defined -%}
-    <p>Your query <strong>{{ query }}</strong> is too short or contained characters that cannot be processed. Try using a different search term.</p>
     {%- elif error.not_defined is defined -%}
-    <p>Your query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down this search.</p>
+    <p>The query <strong>{{ query }}</strong> is too broad. Try adding more keywords to narrow down this search.</p>
     {%- else -%}
     <p>Something went wrong when searching with your query. The administrator has been notified. Apologies for the inconvenience.</p>
     {%- endif %}

@@ -4,6 +4,7 @@ Materialized views for the nextbus package.
 import functools
 
 from sqlalchemy.dialects import postgresql as pg
+from sqlalchemy.types import UserDefinedType
 
 from nextbus import db
 from nextbus.models import utils
@@ -296,6 +297,22 @@ class NaturalSort(utils.MaterializedView):
     )
 
 
+def _test_query(query):
+    """ Uses websearch_to_tsquery() to convert web search query to tsquery, and
+        querytree() to check if the query is bounded, that is, it does not
+        output 'T'.
+    """
+    tsquery = db.func.websearch_to_tsquery('english', query)
+    result = db.session.query(db.func.querytree(tsquery)).one()
+
+    return result[0] != 'T'
+
+
+class TSQUERY(UserDefinedType):
+    def get_col_spec(self, **kw):
+        return "TSQUERY"
+
+
 class FTS(utils.MaterializedView):
     """ Materialized view for full text searching.
 
@@ -336,6 +353,7 @@ class FTS(utils.MaterializedView):
               "place": {"locality"}, "stop": {"stop_area", "stop_point"},
               "service": {"service"}}
 
+    DICTIONARY = "english"
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
     def __repr__(self):
@@ -345,20 +363,24 @@ class FTS(utils.MaterializedView):
     def match(cls, query):
         """ Full text search expression with a tsquery.
 
-            :param query: String suitable for ``to_tsquery()`` function.
+            :param query: Query as string.
             :returns: Expression to be used in a query.
         """
-        return cls.vector.match(query, postgresql_regconfig="english")
+        dict_ = db.bindparam("dictionary", cls.DICTIONARY)
+        return cls.vector.op("@@")(db.func.websearch_to_tsquery(dict_, query))
 
     @classmethod
     def ts_rank(cls, query):
         """ Full text search rank expression with a tsquery.
 
-            :param query: String suitable for ``to_tsquery()`` function.
+            :param query: Query as string.
             :returns: Expression to be used in a query.
         """
-        return db.func.ts_rank(cls.WEIGHTS, cls.vector,
-                               db.func.to_tsquery("english", query))
+        dict_ = db.bindparam("dictionary", cls.DICTIONARY)
+        tsquery = db.func.querytree(db.func.websearch_to_tsquery(dict_, query))
+
+        return db.func.ts_rank(db.bindparam("weights", cls.WEIGHTS), cls.vector,
+                               db.cast(tsquery, TSQUERY))
 
     @classmethod
     def _apply_filters(cls, match, groups=None, areas=None):
@@ -387,29 +409,26 @@ class FTS(utils.MaterializedView):
         """ Creates an expression for searching queries, excluding stop points
             within areas that already match.
 
-            :param query: A ParseResult object or a string.
+            :param query: web search query as string.
             :param groups: Set with values 'area', 'place' or 'stop'.
             :param admin_areas: List of administrative area codes to filter by.
             :returns: Query expression to be executed.
         """
-        try:
-            string = query.to_string()
-            string_not = query.to_string(defined=True)
-        except AttributeError:
-            string = string_not = query
+        if not _test_query(query):
+            return None
 
         fts_sa = db.aliased(cls)
-        rank = cls.ts_rank(string_not)
+        rank = cls.ts_rank(query)
         # Defer vector and admin areas, and order by rank, name and indicator
         match = (
             cls.query
             .options(db.defer(cls.vector), db.defer(cls.admin_areas))
             .outerjoin(NaturalSort, cls.short_ind == NaturalSort.string)
             .filter(
-                cls.match(string),
+                cls.match(query),
                 # Ignore stops whose stop areas already match
                 ~db.exists().where(
-                    fts_sa.match(string) &
+                    fts_sa.match(query) &
                     (fts_sa.code == cls.stop_area_ref)
                 )
             )
@@ -428,15 +447,13 @@ class FTS(utils.MaterializedView):
             The areas and groups are sorted into two sets, to be used for
             filtering.
 
-            :param query: A ParseResult object or a string.
+            :param query: web search query as string.
             :param admin_areas: Filter by admin areas to get matching groups
             :returns: A tuple with a dict of groups and a dict with
             administrative area references and names
         """
-        try:
-            string = query.to_string()
-        except AttributeError:
-            string = query
+        if not _test_query(query):
+            return None
 
         array_t = pg.array_agg(db.distinct(cls.table_name))
         if admin_areas is not None:
@@ -454,7 +471,7 @@ class FTS(utils.MaterializedView):
             )
             .select_from(db.func.unnest(cls.admin_areas).alias("unnest_areas"))
             .join(AdminArea, db.column("unnest_areas") == AdminArea.code)
-            .filter(cls.match(string))
+            .filter(cls.match(query))
             .one()
         )
 

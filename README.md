@@ -2,7 +2,7 @@
 
 Live service times in the UK.
 
-This is a Flask web application running on a PostgreSQL DB via SQLAlchemy.
+This is a Flask + SQLAlchemy web application running on a PostgreSQL DB.
 
 ## Installation
 
@@ -22,15 +22,17 @@ to setup the virtual environment, install all related package and the applicatio
 
 ## Starting up
 
+PostgreSQL must be at least v11 to support particular full text search functionality.
+
 Default config values can be found within `default_config.py` in the root directory. If new values are needed, like a different URI for the DB, a separate config file is required. Create a new Python config file in the `instance` folder:
 
 ```
 echo 'SQLALCHEMY_DATABASE_URI = "postgresql://scott:tiger@localhost"' > instance/new_config.py
 ```
 
-and set enviroment variable `APP_CONFIG` to `new_config.py` so the application will load config on start up. PostgreSQL must be at least v9.4 to support materialized views. With the configuration set up, run the database migrations:
+and set enviroment variable `APP_CONFIG` to `new_config.py` so the application will load config on start up. With the configuration set up, run the database migrations:
 
-```python
+```
 nxb db upgrade
 ```
 

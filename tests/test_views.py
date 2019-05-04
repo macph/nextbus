@@ -171,14 +171,14 @@ def test_search_results_invalid_char(client, db_loaded):
     response = _search_results(client, "@")
 
     assert response.status_code == 200
-    assert b"Your query <strong>@</strong> is too short" in response.data
+    assert b"The query <strong>@</strong> returned no matches" in response.data
 
 
 def test_search_results_undefined(client, db_loaded):
-    response = _search_results(client, "not+London")
+    response = _search_results(client, "-London")
 
     assert response.status_code == 200
-    assert (b"Your query <strong>not London</strong> is too broad"
+    assert (b"The query <strong>-London</strong> is too broad"
             ) in response.data
 
 

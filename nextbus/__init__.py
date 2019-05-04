@@ -6,12 +6,11 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 
-from nextbus import logger, parser
+from nextbus import logger
 
 
 db = SQLAlchemy()
 migrate = Migrate()
-ts_parser = parser.create_tsquery_parser()
 
 
 def create_app(config_obj=None, config_file=None):

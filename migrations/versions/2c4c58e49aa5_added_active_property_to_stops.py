@@ -132,7 +132,7 @@ def upgrade():
                setweight(to_tsvector('english', coalesce(district.name, '')), 'D') ||
                setweight(to_tsvector('english', admin_area.name), 'D') AS vector
         FROM stop_area
-             LEFT OUTER JOIN stop_point ON stop_area.code = stop_point.stop_area_ref
+             JOIN stop_point ON stop_area.code = stop_point.stop_area_ref AND stop_point.active
              LEFT OUTER JOIN locality ON locality.code = stop_area.locality_ref
              LEFT OUTER JOIN district ON district.code = locality.district_ref
              JOIN admin_area ON admin_area.code = stop_area.admin_area_ref

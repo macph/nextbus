@@ -14,7 +14,8 @@ MAX_DIST = 500
 # Aliases for tables or views not yet defined
 _natural_sort = db.table("natural_sort", db.column("string"),
                          db.column("index"))
-_stop_point = db.table("stop_point", db.column("stop_area_ref"))
+_stop_point = db.table("stop_point", db.column("atco_code"),
+                       db.column("stop_area_ref"), db.column("active"))
 _service = db.table("service", db.column("id"), db.column("line"))
 _pattern = db.table("journey_pattern", db.column("id"),
                     db.column("service_ref"))
@@ -200,11 +201,11 @@ class AdminArea(db.Model):
         return "<AdminArea(%r)>" % self.code
 
     def list_localities(self):
-        """ Queries all localities that do contain stops or stop areas. """
+        """ Queries all localities containing active stops. """
         query_local = (
             Locality.query
             .filter(Locality.admin_area_ref == self.code,
-                    Locality.stop_points.any())
+                    Locality.stop_points.any(StopPoint.active))
             .order_by(Locality.name)
         )
 
@@ -233,11 +234,11 @@ class District(db.Model):
         return "<District(%r)>" % self.code
 
     def list_localities(self):
-        """ Queries all localities that do contain stops or stop areas. """
+        """ Queries all localities containing active stops. """
         query_local = (
             Locality.query
             .filter(Locality.district_ref == self.code,
-                    Locality.stop_points.any())
+                    Locality.stop_points.any(StopPoint.active))
             .order_by(Locality.name)
         )
 
@@ -289,17 +290,21 @@ class Locality(db.Model):
                 StopPoint.short_ind.label("short_ind"),
                 StopPoint.admin_area_ref.label("admin_area_ref"),
                 StopPoint.stop_type.label("stop_type"),
-                StopPoint.stop_area_ref.label("stop_area_ref")
+                StopArea.code.label("stop_area_ref")
+            )
+            .select_from(StopPoint)
+            .outerjoin(
+                StopArea,
+                (StopPoint.stop_area_ref == StopArea.code) & StopArea.active
             )
             .filter(StopPoint.locality_ref == self.code, StopPoint.active)
         )
 
         if group_areas:
-            stops_outside_areas = (
-                stops
-                .outerjoin(StopPoint.stop_area)
-                .filter((StopPoint.stop_area_ref.is_(None) |
-                        (StopArea.locality_ref != self.code)))
+            stops_outside_areas = stops.filter(
+                StopPoint.stop_area_ref.is_(None) |
+                db.not_(StopArea.active) |
+                (StopArea.locality_ref != self.code)
             )
             stop_areas = (
                 db.session.query(
@@ -353,8 +358,10 @@ class StopArea(db.Model):
     modified = db.deferred(db.Column(db.DateTime))
 
     # Number of stop points associated with this stop area
-    stop_count = db.deferred(db.select([db.cast(db.func.count(), db.Text)])
-                             .where(_stop_point.c.stop_area_ref == code))
+    stop_count = db.deferred(
+        db.select([db.cast(db.func.count(), db.Text)])
+        .where((_stop_point.c.stop_area_ref == code) & _stop_point.c.active)
+    )
 
     stop_points = db.relationship(
         "StopPoint", backref="stop_area",
@@ -436,7 +443,8 @@ class StopPoint(db.Model):
         primaryjoin=(
             db.foreign(stop_area_ref).isnot(None) &
             (db.remote(stop_area_ref) == db.foreign(stop_area_ref)) &
-            (db.remote(atco_code) != db.foreign(atco_code))
+            (db.remote(atco_code) != db.foreign(atco_code)) &
+            db.remote(active)
         ),
         uselist=True,
         order_by="StopPoint.name, StopPoint.ind_index",

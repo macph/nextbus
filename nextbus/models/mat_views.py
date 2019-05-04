@@ -199,7 +199,10 @@ def _select_fts_vectors():
         ])
         .select_from(
             StopArea.__table__
-            .outerjoin(StopPoint, StopArea.code == StopPoint.stop_area_ref)
+            .join(
+                StopPoint,
+                (StopArea.code == StopPoint.stop_area_ref) & StopPoint.active
+            )
             .outerjoin(Locality, Locality.code == StopArea.locality_ref)
             .outerjoin(District, District.code == Locality.district_ref)
             .join(AdminArea, AdminArea.code == StopArea.admin_area_ref)

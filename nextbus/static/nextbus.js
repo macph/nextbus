@@ -454,13 +454,15 @@ function revertColours(selectors) {
     document.querySelectorAll(selectors).forEach(_revertColours)
 }
 
+
 /**
  * Shorthand for creating a new element without namespace
  * @param {string} tag tag name
- * @param {?(object|HTMLElement|string|HTMLElement[]|string[])} [attr] object containing attributes
- * for new element, eg style, but can also be first child element or array of children if no
- * attributes are required
- * @param  {...?(HTMLElement|string|HTMLElement[]|string[])} children child elements or array of
+ * @param {?(object|HTMLElement|string|(HTMLElement|string)[])} [attr] object to set DOM attributes
+ * for new element, eg style. If attribute 'attr' is specified it can be used to set HTML attributes
+ * for element manually which can't be done with DOM element attributes, eg 'aria-label'. Can also
+ * be first child element or array of children if no attributes are required
+ * @param  {...?(HTMLElement|string|(HTMLElement|string)[])} children child elements or array of
  * elements to be appended
  * @returns {HTMLElement}
  */
@@ -475,19 +477,32 @@ function element(tag, attr, ...children) {
                          attr instanceof Array)) {
         children.unshift(attr);
     } else if (attr != null) {
-        let a, s;
-        for (a in attr) {
-            if (!attr.hasOwnProperty(a)) {
+        let k, v, s;
+        for (k in attr) {
+            if (!attr.hasOwnProperty(k)) {
                 continue;
             }
-            if (a === 'style') {
-                for (s in attr['style']) {
-                    if (attr['style'].hasOwnProperty(s)) {
-                        element.style[s] = attr['style'][s];
+            v = attr[k];
+            if (k === 'attr') {
+                for (s in v) {
+                    if (v.hasOwnProperty(s)) {
+                        element.setAttribute(s, v[s]);
+                    }
+                }
+            } else if (k === 'dataset') {
+                for (s in v) {
+                    if (v.hasOwnProperty(s)) {
+                        element.dataset[s] = v[s];
+                    }
+                }
+            } else if (k === 'style') {
+                for (s in v) {
+                    if (v.hasOwnProperty(s)) {
+                        element.style[s] = v[s];
                     }
                 }
             } else {
-                element[a] = attr[a];
+                element[k] = v;
             }
         }
     }

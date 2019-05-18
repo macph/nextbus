@@ -7,6 +7,34 @@
 </footer>
 {%- endmacro %}
 
+{# Map icon from Google Material UI #}
+{% macro map_icon(title=none) -%}
+<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path fill="none" d="M0 0h24v24H0V0z"></path>
+  <path class="icon-shape" d="M15 5.1L9 3 3 5.02v16.2l6-2.33 6 2.1 6-2.02V2.77L15 5.1zm0 13.79l-6-2.11V5.11l6
+  2.11v11.67z"></path>
+</svg>
+{%- endmacro %}
+
+{# Place icon from Google Material UI #}
+{% macro place_icon(title=none) -%}
+<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path fill="none" d="M0 0h24v24H0V0z"></path>
+  <path class="icon-shape" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38
+  0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path>
+</svg>
+{%- endmacro %}
+
+{# Search icon from Google Material UI #}
+{% macro search_icon(title=none) -%}
+<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path fill="none" d="M0 0h24v24H0V0z"></path>
+  <path class="icon-shape" fill="#212121" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5
+  5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5
+  14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+</svg>
+{%- endmacro %}
+
 {# Prints an inline list, using strong tags if required #}
 {% macro print_inline(items, strong=true) -%}
 {% if items|length == 1 %}

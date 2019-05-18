@@ -286,7 +286,6 @@ def test_locality_grouped(client, db_loaded):
     assert b"Ungroup stops" in response.data
     assert b"/stop/area/490G00008638" in response.data
     assert b"/stop/area/490G00015G" in response.data
-    assert b"/stop/atco" not in response.data
 
 
 def test_locality_ungrouped(client, db_loaded):

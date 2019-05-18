@@ -12,9 +12,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="map-container">
-  <div id="map" class="map"></div>
-</div>
+<div id="map" class="map"></div>
 <div class="map-panel">
   <main id="map-panel-content">
     <h2>Loading map...</h2>
@@ -28,7 +26,6 @@
 {% block script %}
 <script>
 URL.LIVE = "{{ url_for('api.stop_get_times', atco_code='') }}";
-URL.MAP = "{{ url_for('page.show_map') }}";
 URL.STOP = "{{ url_for('api.get_stop', atco_code='') }}";
 URL.TILE = "{{ url_for('api.get_stops_tile', coord='') }}";
 URL.ROUTE = "{{ url_for('api.get_service_route', service_id='') }}";
@@ -60,6 +57,7 @@ window.addEventListener('load', function() {
         starredList,
         useGeolocation
     );
+    starredList.setMap(map);
     map.init(options);
 });
 </script>

@@ -260,8 +260,10 @@ class Locality(db.Model):
     district_ref = db.Column(db.VARCHAR(3),
                              db.ForeignKey("district.code", ondelete="CASCADE"),
                              index=True)
-    latitude = db.deferred(db.Column(db.Float, nullable=False))
-    longitude = db.deferred(db.Column(db.Float, nullable=False))
+    latitude = db.deferred(db.Column(db.Float, nullable=False),
+                           group="coordinates")
+    longitude = db.deferred(db.Column(db.Float, nullable=False),
+                            group="coordinates")
     easting = db.deferred(db.Column(db.Integer, nullable=False))
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))

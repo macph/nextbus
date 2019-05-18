@@ -142,7 +142,7 @@ window.addEventListener('load', function() {
             starredButton.onclick = function() {
                 starred.remove();
             };
-            starredStops.reset();
+            starredList.reset();
         },
         function() {
             starredButton.textContent = addText;
@@ -150,11 +150,11 @@ window.addEventListener('load', function() {
             starredButton.onclick = function() {
                 starred.add();
             };
-            starredStops.reset();
+            starredList.reset();
         }
     );
     starred.setCode(smsCode);
-    starred.createOverlay();
+    starred.createDialog();
     (active) ? starred.onAdd() : starred.onRemove();
 });
 </script>

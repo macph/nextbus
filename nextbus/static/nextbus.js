@@ -31,6 +31,26 @@ const LAYOUT_DOM_PARA_START = 36 + 12;
 
 
 /**
+ * Checks transition ending events to see which one is applicable, from Modernizr
+ * @param {HTMLElement} element
+ * @returns {string}
+ */
+function getTransitionEnd(element) {
+    let transitions = {
+        'transition': 'transitionend',
+        'OTransition': 'oTransitionEnd',
+        'MozTransition': 'transitionend',
+        'WebkitTransition': 'webkitTransitionEnd'
+    };
+    for (let t in transitions) {
+        if (transitions.hasOwnProperty(t) && typeof element.style[t] !== 'undefined') {
+            return transitions[t];
+        }
+    }
+}
+
+
+/**
  * Dialog / overlay handler. Thanks to https://bitsofco.de/accessible-modal-dialog/
  * @param {HTMLElement|string} overlayElement
  * @param {?HTMLElement|string} focusFirst
@@ -44,18 +64,25 @@ function Overlay(overlayElement, focusFirst) {
         focusFirst : document.getElementById(focusFirst);
 
     this.transition = getTransitionEnd(this.overlay);
+    this.focusable = [];
     this.lastFocused = null;
-    this.focusable = this.overlay.querySelectorAll(
-        'a[href], area[href], input:not([disabled]), select:not([disabled]), ' +
-        'textarea:not([disabled]), button:not([disabled]), [tabindex="0"]'
-    );
+
+    this.findFocusable = function() {
+        self.focusable = Array.prototype.slice.call(
+            self.overlay.querySelectorAll(
+                'a[href], area[href], input:not([disabled]), select:not([disabled]), ' +
+                'textarea:not([disabled]), button:not([disabled]), [tabindex="0"]'
+            )
+        );
+    };
+    this.findFocusable();
 
     /**
      * First focusable element.
      * @returns {HTMLElement}
      */
     this.first = function() {
-        return this.focusable[0];
+        return self.focusable[0];
     };
 
     /**
@@ -63,7 +90,7 @@ function Overlay(overlayElement, focusFirst) {
      * @returns {HTMLElement}
      */
     this.last = function() {
-        return this.focusable[this.focusable.length - 1];
+        return self.focusable[self.focusable.length - 1];
     };
 
     /**
@@ -172,7 +199,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         self.code = code;
     };
 
-    this.createOverlay = function() {
+    this.createDialog = function() {
         if (self.overlayElement != null) {
             return;
         }
@@ -213,7 +240,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         };
     };
 
-    this.removeOverlay = function() {
+    this.removeDialog = function() {
         if (self.overlayElement != null) {
             document.body.removeChild(self.overlayElement);
             self.overlayElement = null;
@@ -240,7 +267,7 @@ function StarredStops(cookieSet, onAdd, onRemove) {
             throw new TypeError('SMS code needs to be set for StarredStops object first.');
         }
         if (!self.set && self.overlayElement == null) {
-            self.createOverlay();
+            self.createDialog();
         }
         if (!self.set) {
             self.overlay.open();
@@ -292,7 +319,25 @@ function StarredStopList(container) {
     let self = this;
     this.container = (container instanceof HTMLElement) ?
         container : document.getElementById(container);
+    this.map = null;
+    this.overlay = null;
     this.called = false;
+
+    /**
+     * Sets list to use map such that clicking on starred stop item will update the map
+     * @param {StopMap} map
+     */
+    this.setMap = function(map) {
+        self.map = (map != null) ? map : null;
+    };
+
+    /**
+     * Sets overlay so its focusable elements can be updated when the list is created
+     * @param {Overlay} overlay
+     */
+    this.setOverlay = function(overlay) {
+        self.overlay = (overlay != null) ? overlay : null;
+    };
 
     /**
      * Sets to call API for updated list on next call
@@ -312,6 +357,9 @@ function StarredStopList(container) {
         request.onload = function() {
             if (this.status === 200) {
                 self._createList(JSON.parse(this.responseText));
+                if (self.overlay != null) {
+                    self.overlay.findFocusable();
+                }
                 self.called = true;
             } else if (this.status === 422) {
                 // Cookie list does not exist yet; don't do any more calls until it has been reset
@@ -337,7 +385,7 @@ function StarredStopList(container) {
             element('h3', 'Starred stops'),
             element('p', element('a', {className: 'action'}, 'Edit'))
         );
-        let list = element('ul', {className: 'list stops'});
+        let list = element('ul', {className: 'list list-actions stops'});
         data.features.forEach(function(stop) {
             let sub = [stop.properties.street, stop.properties.locality].filter(function(p) {
                 return p;
@@ -356,8 +404,35 @@ function StarredStopList(container) {
                 ),
                 (sub) ? element('p', sub.join(', ')) : null
             );
+            let mapLink = element('a',
+                {
+                    className: 'item item-action',
+                    innerHTML: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" ' +
+                        'height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/>' +
+                        '<path class="icon-shape" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 ' +
+                        '13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 ' +
+                        '0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 ' +
+                        '2.5z"/></svg>'
+                }
+            );
+            if (self.map != null) {
+                mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
+                mapLink.onclick = function() {
+                    self.map.update({
+                        stop: stop.properties.atcoCode,
+                        fitStop: true,
+                        service: null
+                    });
+                    if (self.overlay != null) {
+                        self.overlay.close();
+                    }
+                };
+            } else {
+                mapLink.title = 'Go to map for ' + stop.properties.title;
+                mapLink.href = URL.MAP + 'stop/' + stop.properties.atcoCode;
+            }
 
-            list.appendChild(element('li', item));
+            list.appendChild(element('li', item, mapLink));
         });
 
         removeSubElements(self.container);
@@ -365,26 +440,6 @@ function StarredStopList(container) {
         self.container.appendChild(list);
         resizeIndicator('.indicator');
     };
-}
-
-
-/**
- * Checks transition ending events to see which one is applicable, from Modernizr
- * @param {HTMLElement} element
- * @returns {string}
- */
-function getTransitionEnd(element) {
-    let transitions = {
-        'transition': 'transitionend',
-        'OTransition': 'oTransitionEnd',
-        'MozTransition': 'transitionend',
-        'WebkitTransition': 'webkitTransitionEnd'
-    };
-    for (let t in transitions) {
-        if (transitions.hasOwnProperty(t) && typeof element.style[t] !== 'undefined') {
-            return transitions[t];
-        }
-    }
 }
 
 
@@ -420,6 +475,7 @@ function _resizeText(element) {
         img.width = Math.round(2.8 * fontSize);
     }
 }
+
 
 /**
  * Resize text within indicators so they look better. Elements have a data attribute set so they can
@@ -1568,7 +1624,7 @@ function RouteLayer(stopMap) {
  * @param {object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
  * @param {StarredStops} starred starred stops interface
- * @param {StarredStopList} starred starred stops interface
+ * @param {StarredStopList} starredList starred stops interface
  */
 function Panel(stopMap, mapPanel, starred, starredList) {
     let self = this;
@@ -1577,7 +1633,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
     this.container = this.mapPanel.parentNode;
 
     this.starred = starred;
-    this.starred.createOverlay();
+    this.starred.createDialog();
     this.starredList = starredList;
 
     this.activeStops = new Map();
@@ -1946,7 +2002,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
         let direction = (data.reverse) ? 'inbound' : 'outbound',
             timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
         let timetable = element('a',
-            {className: 'action', href: timetableURL},
+            {className: 'action', href: timetableURL, title: data.line + ' timetable'},
             'Timetable'
         );
         let actions = element('div', {className: 'actions'}, timetable, closePanel);

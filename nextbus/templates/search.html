@@ -47,7 +47,7 @@
     <h3>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h3>
 
     {% if results.items|length > 0 -%}
-    {% call(item) f.print_list(results.items) -%}
+    {% call(item) f.print_list(results.items, class='list-actions') -%}
     {% if item.table_name == 'region' -%}
     <a class="item item-place item-tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><strong>{{ item.name }}</strong></a>
     {%- elif item.table_name == 'admin_area' -%}
@@ -56,6 +56,7 @@
     <a class="item item-place item-tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</a>
     {%- elif item.table_name == 'locality' -%}
     <a class="item item-place item-tall" href="{{ url_for('page.list_in_locality', locality_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.district_name if item.district_name else item.admin_area_name }}</a>
+    <a class="item item-action" title="Map for {{ item.name }}" href="{{ url_for('page.show_map_locality', locality_code=item.code) }}">{{ f.place_icon() }}</a>
     {%- elif item.table_name == 'stop_area' -%}
     <a href="{{ url_for('page.stop_area', stop_area_code=item.code) }}" class="item item-stop item-multiline">
       <span>
@@ -65,6 +66,7 @@
       {% set place = [item.locality_name, item.district_name if item.district_name else item.admin_area_name] -%}
       <p>{{ place|join(', ') }}</p>
     </a>
+    <a class="item item-action" title="Map for {{ item.name }}" href="{{ url_for('page.show_map_stop_area', stop_area_code=item.code) }}">{{ f.place_icon() }}</a>
     {%- elif item.table_name == 'stop_point' -%}
     <a href="{{ url_for('page.stop_atco', atco_code=item.code) }}" class="item item-stop item-multiline">
       <span>
@@ -78,6 +80,8 @@
       <p>{{ place|join(', ') }}</p>
       {%- endif %}
     </a>
+    {% set stop_name = '%s (%s)'|format(item.name, item.short_ind) if item.short_ind else item.name -%}
+    <a class="item item-action" title="Map for {{ stop_name }}" href="{{ url_for('page.show_map_stop', atco_code=item.code) }}">{{ f.place_icon() }}</a>
     {%- elif item.table_name == 'service' -%}
     <a href="{{ url_for('page.service', service_id=item.code) }}" class="item item-service item-tall">
       <span class="line-outer">
@@ -85,6 +89,7 @@
       </span>
       <span class="item-label">{{ truncate_description(item.name) }}</span>
     </a>
+    <a class="item item-action" title="Map for service {{ item.short_ind }}" href="{{ url_for('page.show_map_service_no_direction', service_id=item.code) }}">{{ f.place_icon() }}</a>
     {%- endif %}
     {%- endcall %}
 

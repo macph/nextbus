@@ -336,8 +336,7 @@ def list_in_locality(locality_code):
     """
     locality = (
         models.Locality.query
-        .options(db.undefer(models.Locality.latitude),
-                 db.undefer(models.Locality.longitude),
+        .options(db.undefer_group("coordinates"),
                  db.joinedload(models.Locality.district),
                  db.joinedload(models.Locality.admin_area, innerjoin=True)
                  .joinedload(models.AdminArea.region, innerjoin=True))
@@ -681,6 +680,34 @@ def show_map_service_direction_stop(service_id, reverse, atco_code,
                                     coords=None):
     """ Shows map with service, direction and stop. """
     return _show_map(service_id, reverse, atco_code, coords)
+
+
+@page.route("/map/place/<locality_code>")
+def show_map_locality(locality_code):
+    """ Shows map centred around locality with code. """
+    locality = (
+        models.Locality.query
+        .options(db.undefer_group("coordinates"))
+        .get(locality_code.upper())
+    )
+
+    if locality is not None:
+        return _show_map(coords=(locality.latitude, locality.longitude, 16))
+    else:
+        raise NotFound(Markup("Place with code <strong>%s</strong> does not "
+                              "exist.") % locality_code)
+
+
+@page.route("/map/stop_area/<stop_area_code>")
+def show_map_stop_area(stop_area_code):
+    """ Shows map centred around locality with code. """
+    area = models.StopArea.query.get(stop_area_code.upper())
+
+    if area is not None:
+        return _show_map(coords=(area.latitude, area.longitude, 17))
+    else:
+        raise NotFound(Markup("Stop area <strong>%s</strong> does not exist.")
+                       % stop_area_code)
 
 
 @page.app_errorhandler(NotFound)

@@ -32,6 +32,15 @@
 {{ f.footer() }}
 {%- endblock %}
 
+<script>
+const URL = {
+    STATIC: "{{ url_for('static', filename='') }}",
+    STOP_PAGE: "{{ url_for('page.stop_atco', atco_code='') }}",
+    STARRED: "{{ url_for('api.starred') }}",
+    MAP: "{{ url_for('page.show_map') }}"
+};
+</script>
+
 {% block overlay -%}
 <div class="overlay" id="overlay-menu">
   <div class="overlay-content">
@@ -55,7 +64,7 @@
   </div>
 </div>
 <script>
-let overlay;
+let overlay, starredList;
 window.addEventListener('load', function() {
     overlay = new Overlay('overlay-menu', 'search-form');
     document.getElementById('menu-open').onclick = function() {
@@ -66,21 +75,11 @@ window.addEventListener('load', function() {
     document.getElementById('menu-close').onclick = function() {
         overlay.close();
     };
+    starredList = new StarredStopList(document.getElementById('starredStops'));
+    starredList.setOverlay(overlay);
 });
 </script>
 {%- endblock %}
-
-<script>
-const URL = {
-    STATIC: "{{ url_for('static', filename='') }}",
-    STOP_PAGE: "{{ url_for('page.stop_atco', atco_code='') }}",
-    STARRED: "{{ url_for('api.starred') }}"
-};
-let starredList;
-window.addEventListener('load', function() {
-    starredList = new StarredStopList(document.getElementById('starredStops'));
-});
-</script>
 {% block script %}{% endblock %}
 
 </body>

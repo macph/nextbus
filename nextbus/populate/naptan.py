@@ -57,7 +57,7 @@ def _create_ind_parser():
 
     def action_arrow(tokens):
         """ Adds arrow to matched substring. """
-        return ">" + tokens[0].upper()
+        return "->" + tokens[0].upper()
 
     def action_truncate(tokens):
         """ Truncate words to make them fit within indicators. """

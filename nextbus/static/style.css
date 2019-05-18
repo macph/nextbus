@@ -282,12 +282,12 @@ section {
 /* ACTIONS */
 
 .actions {
-  float: right;
   display: flex;
   flex-flow: row wrap;
   align-items: baseline;
+  justify-content: flex-end;
   font-size: 1.5rem;
-  margin: -0.5rem -0.5rem 1rem;
+  margin: -0.5rem -0.5rem;
 }
 
 .actions > * {
@@ -575,7 +575,7 @@ section {
 
 .tabs {
   width: calc(100% + 3.2rem);
-  margin: 3.2rem -1.6rem -1rem;
+  margin: 3.2rem -1.6rem 0;
   padding: 0;
   display: flex;
   flex-flow: row nowrap;
@@ -807,8 +807,7 @@ section {
 }
 
 .heading-stop + p {
-  float: left;
-  margin: -2rem 0 2rem calc(1.5 * 3.6rem + 1.5rem);
+  margin: -2rem 0 1rem calc(1.5 * 3.6rem + 1.5rem);
 }
 
 
@@ -831,8 +830,7 @@ section {
 }
 
 .heading-service + p {
-  float: left;
-  margin: 0 0 2rem;
+  margin: 0 0 1rem;
 }
 
 
@@ -1045,7 +1043,7 @@ section {
 }
 
 .departures tr > td {
-  padding: 0.5rem;
+  padding: 0.8rem 0.5rem;
 }
 
 .departures tr > td:nth-child(1) {
@@ -1053,7 +1051,7 @@ section {
 }
 
 .departures tr > td:nth-child(2) {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
 
 }
 
@@ -1071,12 +1069,12 @@ section {
 }
 
 .departures tr > td:nth-child(5) > span:nth-of-type(1) {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   font-weight: 700;
 }
 
 .departures tr > td:nth-child(5) > span:nth-of-type(2)  {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
 }
 
 .departures tr > td:nth-child(5) > span:nth-of-type(2) > span {
@@ -1173,7 +1171,7 @@ section {
 
 .timetable-row > td.timetable-bold {
   font-weight: 600;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
 }
 
 .timetable th > span,
@@ -1489,7 +1487,7 @@ section {
   }
 
   .body-map .heading-stop + p {
-    margin: -1.6rem 0 2rem calc(1.4 * 3.6rem + 1.5rem);
+    margin: -1.6rem 0 1rem calc(1.4 * 3.6rem + 1.5rem);
   }
 
   .body-map .heading-service > .line-outer {

@@ -112,10 +112,10 @@ window.addEventListener('load', function() {
     ld = new LiveData(
         '{{ stop.atco_code }}',
         '{{ stop.admin_area_ref }}',
+        {{ operators|tojson }},
         'departures',
         'live-time',
-        'live-countdown',
-        {{ operators|tojson }}
+        'live-countdown'
     );
     ld.start();
 });

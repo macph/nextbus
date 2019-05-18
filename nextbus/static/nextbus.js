@@ -632,14 +632,14 @@ function removeSubElements(element) {
  * @constructor
  * @param {string} atcoCode ATCO code for stop
  * @param {string} adminAreaCode Admin area code for stop, eg 099 for South Yorkshire
- * @param {(HTMLElement|string)} container Table container element or ID in document
- * @param {(HTMLElement|string)} time Element or ID in document showing time when data was
- * retrieved
- * @param {(HTMLElement|string)} countdown Element or ID in document showing time before next
- * refresh
  * @param {{code: string, name: string}[]} [operators] Optional list of operators
+ * @param {?(HTMLElement|string)} container Table container element or ID in document
+ * @param {?(HTMLElement|string)} time Element or ID in document showing time when data was
+ * retrieved
+ * @param {?(HTMLElement|string)} countdown Element or ID in document showing time before next
+ * refresh
  */
-function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators) {
+function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown) {
     let self = this;
     this.atcoCode = atcoCode;
     this.adminAreaCode = adminAreaCode;
@@ -656,6 +656,17 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
     }
 
     /**
+     * Live time data from API.
+     * @type {?LiveTimesData}
+     */
+    this.data = null;
+
+    this.interval = null;
+    this.isLive = true;
+    this.loopActive = false;
+    this.loopEnding = false;
+
+    /**
      * Sets container, heading with time and subheading with countdown to specified elements
      * @param {(HTMLElement|string)} container
      * @param {(HTMLElement|string)} time
@@ -669,17 +680,9 @@ function LiveData(atcoCode, adminAreaCode, container, time, countdown, operators
             countdown : document.getElementById(countdown);
     };
 
-    /**
-     * Live time data from API.
-     * @type {?LiveTimesData}
-     */
-    this.data = null;
-
-    this.interval = null;
-    this.isLive = true;
-    this.loopActive = false;
-    this.loopEnding = false;
-    this.setElements(container, time, countdown);
+    if (container != null && time != null && countdown != null) {
+        this.setElements(container, time, countdown);
+    }
 
     /**
      * Called after live data is successfully received.
@@ -1667,10 +1670,10 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             live = new LiveData(
                 atcoCode,
                 adminAreaRef,
+                operators,
                 table,
                 time,
-                countdown,
-                operators
+                countdown
             );
             self.activeStops.set(atcoCode, live);
         } else {

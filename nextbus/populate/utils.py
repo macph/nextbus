@@ -342,15 +342,18 @@ class DataCopy(object):
         else:
             self.metadata = reflect_metadata()
 
-    def _escape(self, value):
-        """ Remove trailing/leading spaces and escape backslash characters and
-            delimiters within values.
-        """
+    @staticmethod
+    def _escape(value):
+        """ Remove trailing/leading spaces and escape special characters. """
         return (
             str(value).strip()
             .replace("\\", "\\\\")
-            .replace("\n", "\\" + "\n")
-            .replace(self.SEP, "\\" + self.SEP)
+            .replace("\b", "\\b")
+            .replace("\f", "\\f")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\v")
+            .replace("\v", "\\v")
         )
 
     def _parse_row(self, table, obj):
@@ -369,11 +372,9 @@ class DataCopy(object):
                     )
                 else:
                     continue
-            if obj[col.name] is not None:
-                value = self._escape(obj[col.name])
-            else:
-                value = self.NULL
-            row.append(value)
+            value = obj[col.name]
+            escaped = self._escape(value) if value is not None else self.NULL
+            row.append(escaped)
             columns.append(col.name)
 
         return row, columns
@@ -430,7 +431,7 @@ class DataCopy(object):
                                  null=self.NULL, columns=columns)
             except Exception:
                 # Save copy file for debugging and raise again
-                error_file = os.path.join(ROOT_DIR, "temp/error_data")
+                error_file = os.path.join(ROOT_DIR, "temp/tnds_error_data")
                 logger.error("Error occurred with COPY; saving file to "
                              "%r" % error_file)
                 logger.debug("Columns: %r" % columns)

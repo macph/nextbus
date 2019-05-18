@@ -23,8 +23,9 @@ def _get_regions():
         a ValueError is raised.
     """
     with utils.database_connection() as conn:
-        query_regions = conn.execute(db.select([models.Region.code])
-                                     .where(models.Region.code != "GB"))
+        query_regions = conn.execute(
+            db.select([models.Region.code]).where(models.Region.code != "GB")
+        )
     regions = [r[0] for r in query_regions]
 
     if not regions:
@@ -381,7 +382,7 @@ def _delete_empty_services():
         .filter(models.JourneyPattern.service_ref == models.Service.id)
         .exists()
     )
-    empty_local_operators = ~(
+    empty_local = ~(
         db.session.query(models.JourneyPattern)
         .filter(models.JourneyPattern.region_ref
                 == models.LocalOperator.region_ref,
@@ -400,26 +401,33 @@ def _delete_empty_services():
         .exists()
     )
 
-    def delete(model, where):
-        return model.__table__.delete().where(where)
-
-    with utils.database_connection() as conn:
+    with utils.database_connection() as connection:
         # All associated journey links and journeys will be deleted too
-        _execute_with_log(conn, delete(models.JourneyPattern, empty_patterns),
-                          "%d journey pattern%s without stop point references "
-                          "deleted")
-        _execute_with_log(conn, delete(models.Service, empty_services),
-                          "%d service%s without journey patterns deleted")
-        _execute_with_log(conn, delete(models.Locality, empty_services),
-                          "%d service%s without journey patterns deleted")
-        _execute_with_log(conn,
-                          delete(models.LocalOperator, empty_local_operators),
-                          "%d local operator%s without services deleted")
-        _execute_with_log(conn, delete(models.LocalOperator, empty_operators),
-                          "%d operator%s without local operators deleted")
-        _execute_with_log(conn,
-                          delete(models.Organisation, empty_organisations),
-                          "%d organisation%s without journeys deleted")
+        _execute_with_log(
+            connection,
+            models.JourneyPattern.__table__.delete().where(empty_patterns),
+            "%d journey pattern%s without stop point references deleted"
+        )
+        _execute_with_log(
+            connection,
+            models.Service.__table__.delete().where(empty_services),
+            "%d service%s without journey patterns deleted"
+        )
+        _execute_with_log(
+            connection,
+            models.LocalOperator.__table__.delete().where(empty_local),
+            "%d local operator%s without services deleted"
+        )
+        _execute_with_log(
+            connection,
+            models.LocalOperator.__table__.delete().where(empty_operators),
+            "%d operator%s without local operators deleted"
+        )
+        _execute_with_log(
+            connection,
+            models.Organisation.__table__.delete().where(empty_organisations),
+            "%d organisation%s without journeys deleted"
+        )
 
 
 def _compare_arrays(array0, array1):
@@ -463,6 +471,7 @@ def _merge_services():
         "service_stops",
         db.Column("id", db.Integer),
         db.Column("line", db.Text),
+        db.Column("region_ref", db.Text),
         db.Column("stops", db.ARRAY(db.Text, dimensions=1)),
         db.Column("outbound", db.ARRAY(db.Text, dimensions=1)),
         db.Column("inbound", db.ARRAY(db.Text, dimensions=1)),
@@ -471,10 +480,11 @@ def _merge_services():
     )
 
     insert_stops = stops.insert().from_select(
-        ["id", "line", "stops", "outbound", "inbound"],
+        ["id", "line", "region_ref", "stops", "outbound", "inbound"],
         db.select([
             service.c.id,
             service.c.line,
+            pattern.c.region_ref,
             _array_agg(link.c.stop_point_ref),
             _array_agg(db.case([(pattern.c.direction, link.c.stop_point_ref)],
                                else_=None)),
@@ -484,7 +494,7 @@ def _merge_services():
         .select_from(service
                      .join(pattern, pattern.c.service_ref == service.c.id)
                      .join(link, link.c.pattern_ref == pattern.c.id))
-        .group_by(service.c.id)
+        .group_by(service.c.id, pattern.c.region_ref)
     )
 
     # Using table of services and stops, find intersecting stops for every pair
@@ -504,8 +514,12 @@ def _merge_services():
         db.select([s0.c.id, s1.c.id])
         .select_from(s0)
         .select_from(s1)
-        .where(db.and_(s0.c.line == s1.c.line, s0.c.id < s1.c.id,
-                       _compare_arrays(s0.c.stops, s1.c.stops) > 0.5))
+        .where(
+            (s0.c.line == s1.c.line) &
+            (s0.c.region_ref == s1.c.region_ref) &
+            (s0.c.id < s1.c.id) &
+            (_compare_arrays(s0.c.stops, s1.c.stops) > 0.5)
+        )
     )
 
     # Using a recursive CTE, find all original services and other services which
@@ -575,10 +589,10 @@ def _merge_services():
         db.select([
             directions.c.original,
             directions.c.other,
-            db.or_(db.and_(directions.c.intersect_2 > directions.c.intersect_0,
-                           directions.c.intersect_2 > 0.5),
-                   db.and_(directions.c.intersect_3 > directions.c.intersect_1,
-                           directions.c.intersect_3 > 0.5))
+            (directions.c.intersect_2 > directions.c.intersect_0) &
+            (directions.c.intersect_2 > 0.5) |
+            (directions.c.intersect_3 > directions.c.intersect_1) &
+            (directions.c.intersect_3 > 0.5)
         ])
         .select_from(directions)
     )
@@ -667,7 +681,7 @@ def _commit_tnds_region(transform, archive, region, delete=False,
     tnds.commit(delete=del_, exclude=excluded)
 
 
-def commit_tnds_data(directory=None, delete=True, warn=False):
+def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
     """ Commits TNDS data to database.
 
         :param directory: Directory where zip files with TNDS XML documents and
@@ -676,7 +690,9 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
         :param delete: Truncate all data from TNDS tables before populating.
         :param warn: Log warning if no FTP credentials exist. If False an error
         will be raised instead.
+        :param merge: Merge services with a similar journey patterns.
     """
+    data = None
     if directory is None:
         try:
             # Download required files and get region code from each filename
@@ -709,10 +725,11 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
     setup_tnds_functions()
     RowIds(check_existing=not delete)
 
-    del_ = delete
+    delete_first = delete
     for region, archive in data.items():
-        _commit_tnds_region(transform, archive, region, delete=del_)
-        del_ = False
+        _commit_tnds_region(transform, archive, region, delete=delete_first)
+        delete_first = False
 
     _delete_empty_services()
-    _merge_services()
+    if merge:
+        _merge_services()

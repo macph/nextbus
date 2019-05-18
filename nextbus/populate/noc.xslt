@@ -65,7 +65,7 @@
         <licence_name><xsl:value-of select="VOSA_PSVLicenseName"/></licence_name>
         <mode><xsl:value-of select="$mode_id"/></mode>
         <email><xsl:value-of select="key('key_public_name', PubNmId)/TTRteEnq"/></email>
-        <address><xsl:value-of select="key('key_public_name', PubNmId)/ComplEnq"/></address>
+        <address><xsl:value-of select="func:scrub_whitespace(key('key_public_name', PubNmId)/ComplEnq)"/></address>
         <website>
           <xsl:if test="key('key_public_name', PubNmId)/Website != ''">
             <xsl:value-of select="func:format_website(key('key_public_name', PubNmId)/Website)"/>

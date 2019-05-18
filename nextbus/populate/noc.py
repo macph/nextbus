@@ -24,6 +24,12 @@ def download_noc_data():
 
 
 @utils.xslt_text_func
+def scrub_whitespace(_, text):
+    """ Replaces all whitespace with a single space each. """
+    return " ".join(text.split()) if text is not None else ""
+
+
+@utils.xslt_text_func
 def format_website(_, text):
     """ Retrieves website enclosed by # signs. """
     match = REGEX_OP_WEBSITE.search(text)

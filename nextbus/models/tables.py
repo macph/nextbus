@@ -1033,10 +1033,6 @@ class OperatingPeriod(db.Model):
     date_end = db.Column(db.Date, nullable=True)
     working = db.Column(db.Boolean, nullable=False)
 
-    __table_args__ = (
-        db.CheckConstraint("date_start <= date_end"),
-    )
-
 
 class SpecialPeriod(db.Model):
     """ Special days specified by journeys. """
@@ -1048,13 +1044,9 @@ class SpecialPeriod(db.Model):
         db.ForeignKey("journey.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    date_start = db.Column(db.Date)
-    date_end = db.Column(db.Date)
+    date_start = db.Column(db.Date, nullable=False)
+    date_end = db.Column(db.Date, nullable=False)
     operational = db.Column(db.Boolean, nullable=False)
-
-    __table_args__ = (
-        db.CheckConstraint("date_start <= date_end"),
-    )
 
 
 class BankHolidays(db.Model):

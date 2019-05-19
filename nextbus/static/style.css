@@ -21,7 +21,7 @@ h1 {
 h2 {
   margin: 0.5em 0;
   padding: 0.3em 0;
-  border-bottom: 0.2rem solid #212121;
+  border-bottom: 0.12rem solid #212121;
 
   font-size: 2.4rem;
   letter-spacing: -0.02em;
@@ -47,7 +47,7 @@ p {
 a {
   padding: 0;
   background-color: transparent;
-  border-width: 0.075em;
+  border-width: 0.12rem;
   border-style: none none solid;
   border-color: #212121;
 
@@ -82,7 +82,7 @@ input[type="file"] {
   box-sizing: border-box;
 
   background-color: transparent;
-  border: 0.075em solid #212121;
+  border: 0.12rem solid #212121;
   border-radius: 0;
   outline: none;
 
@@ -301,7 +301,7 @@ section {
   box-sizing: border-box;
 
   background-color: transparent;
-  border: 0.075em solid white;
+  border: 0.12rem solid white;
 
   font-size: 1.5rem;
   font-weight: 700;
@@ -842,7 +842,7 @@ section {
   justify-content: space-between;
   margin: calc(2.4 * 0.5rem) 0;
   padding: calc(2.4 * 0.3rem) 0;
-  border-bottom: 0.2rem solid #212121;
+  border-bottom: 0.12rem solid #212121;
 }
 
 .h3-inline {
@@ -1117,29 +1117,11 @@ section {
   text-align: right;
 }
 
-.timetable-row-selectable {
-  cursor: pointer;
-}
-
-.timetable-row-selectable,
-.timetable-row-selectable > th {
-  transition:
-    0.2s background-color ease-out,
-    0.2s color ease-out;
-}
-
-.timetable-row-selectable:hover,
-.timetable-row-selectable:hover > th {
-  background: #212121;
-  color: white;
-}
-
 .timetable-row-hidden {
   display: none;
 }
 
-.timetable-head > th,
-.timetable-row > th {
+.timetable th {
   width: 18rem;
   min-width: 18rem;
   padding: 0.5rem;
@@ -1156,8 +1138,7 @@ section {
   font-weight: 600;
 }
 
-.timetable-head > td,
-.timetable-row > td {
+.timetable td {
   width: 5.6rem;
   min-width: 5.6rem;
   padding: 0.5rem;
@@ -1169,19 +1150,44 @@ section {
   letter-spacing: -0.01em;
 }
 
-.timetable-row > td.timetable-bold {
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-
 .timetable th > span,
 .timetable td > span {
   white-space: nowrap;
 }
 
+.timetable-bold {
+  font-weight: 600;
+  letter-spacing: -0.03em !important;
+}
+
+.timetable-last {
+  position: sticky;
+  right: 0;
+  min-width: auto !important;;
+
+  background-color: white;
+  text-align: center;
+  font-size: 2rem;
+  transition:
+    0.2s background-color ease-out,
+    0.2s color ease-out;
+}
+
+.timetable-action {
+  width: 4.4rem !important;
+  min-width: 4.4rem !important;
+  cursor: pointer;
+}
+
+.timetable-action:hover {
+  background: #212121;
+  color: white;
+}
+
 .timetable-stop {
   display: flex;
   align-items: center;
+  border: none;
 }
 
 .timetable-label {

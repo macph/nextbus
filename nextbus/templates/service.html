@@ -41,7 +41,11 @@
   {% endif %}
 
   <section>
+    {% if mirrored -%}
     <h3>Diagram</h3>
+    {%- else -%}
+    <h2>Diagram</h2>
+    {%- endif %}
     <dl class="description-list">
       <dt>From</dt>
       <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>

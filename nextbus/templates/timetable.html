@@ -41,90 +41,97 @@
   {%- endif %}
 
   <section id="timetable">
-      <h3>Timetable</h3>
-      <div class="inline">
-        <p style="margin-right: 10px;">{{ display_long_date(select_date.date.data) }}</p>
-        <form method="GET" action="" class="form">
-          <label>Change date:</label>
-          {{ select_date.date() }}
-          <button title="Go to timetable for this date" type="submit">Go</button>
-        </form>
-      </div>
-      {% if select_date.errors -%}
-      {%- for e in select_date.errors.date %}
-      <p>{{ e }}</p>
-      {%- endfor -%}
-      {%- endif %}
+    {% if mirrored -%}
+    <h3>Timetable</h3>
+    {%- else -%}
+    <h2>Timetable</h2>
+    {%- endif %}
+    <div class="inline">
+      <p style="margin-right: 10px;">{{ display_long_date(select_date.date.data) }}</p>
+      <form method="GET" action="" class="form">
+        <label>Change date</label>
+        {{ select_date.date() }}
+        <button title="Go to timetable for this date" type="submit">Go</button>
+      </form>
+    </div>
+    {% if select_date.errors -%}
+    {%- for e in select_date.errors.date %}
+    <p>{{ e }}</p>
+    {%- endfor -%}
+    {%- endif %}
 
-      {% if timetable -%}
-      <div class="timetable-wrapper">
-        <table class="timetable" id="tt">
-          {% if timetable.notes -%}
-          <tr class="timetable-head">
-            <th></th>
-            {% for h in timetable.head -%}
-            <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
-            {%- endfor %}
-          </tr>
-          {% endif %}
-          {% if timetable.operators -%}
-          <tr class="timetable-head">
-            <th></th>
-            {%- for h in timetable.head %}
-            <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
-            {%- endfor %}
-          </tr>
-          {% endif %}
-          {%- for r in timetable.rows %}
-          {%- set stop = timetable.stops[r.stop] -%}
-          <tr class="timetable-row{{ ' timetable-row-major' if r.timing else ' timetable-row-hidden' }}">
-            <th>
-              <div class="timetable-stop">
-                <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
-                <span class="timetable-ind">{{ f.print_stop_indicator(stop) }}</span>
-              </div>
-            </th>
-            {%- for t in r.times %}
-            <td{% if t.timing %} class="timetable-bold"{% endif %}>
-              {%- if t.arrive and t.depart and t.arrive != t.depart -%}
-              <span>a {{ t.arrive }}</span> <span>d {{ t.depart }}</span>
-              {%- elif t.arrive or t.depart -%}
-              {{ t.arrive or t.depart}}
-              {%- endif -%}
-            </td>
-            {%- endfor %}
-          </tr>
+    {% if timetable -%}
+    <div class="timetable-wrapper">
+      <table class="timetable" id="tt">
+        {% if timetable.notes -%}
+        <tr class="timetable-head">
+          <th></th>
+          {% for h in timetable.head -%}
+          <td>{% if h[2] is not none %}{{ h[2] }}{% endif %}</td>
           {%- endfor %}
-        </table>
-      </div>
-      {% if timetable.operators|length and timetable.notes|length -%}
-      <h3>Operators & notes</h3>
-      {%- elif timetable.operators|length -%}
-      <h3>Operators</h3>
-      {%- elif timetable.notes|length -%}
-      <h3>Notes</h3>
-      {%- endif %}
-      {% if timetable.operators|length -%}
-      <dl class="description-list">
-        {%- for c, n in timetable.operators|dictsort(by='value') %}
-        <dt><strong>{{ c }}</strong></dt>
-        <dd>{{ n }}</dd>
+          <td class="timetable-last"></td>
+        </tr>
+        {% endif %}
+        {% if timetable.operators -%}
+        <tr class="timetable-head">
+          <th></th>
+          {%- for h in timetable.head %}
+          <td>{% if h[1] is not none %}{{ h[1] }}{% endif %}</td>
+          {%- endfor %}
+          <td class="timetable-last"></td>
+        </tr>
+        {% endif %}
+        {%- for r in timetable.rows %}
+        {%- set stop = timetable.stops[r.stop] -%}
+        <tr class="timetable-row{{ ' timetable-row-major' if r.timing else ' timetable-row-hidden' }}">
+          <th>
+            <div class="timetable-stop">
+              <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
+              <span class="timetable-ind">{{ f.print_stop_indicator(stop) }}</span>
+            </div>
+          </th>
+          {%- for t in r.times %}
+          <td{% if t.timing %} class="timetable-bold"{% endif %}>
+            {%- if t.arrive and t.depart and t.arrive != t.depart -%}
+            <span>a {{ t.arrive }}</span> <span>d {{ t.depart }}</span>
+            {%- elif t.arrive or t.depart -%}
+            {{ t.arrive or t.depart}}
+            {%- endif -%}
+          </td>
+          {%- endfor %}
+          <td class="timetable-last"></td>
+        </tr>
         {%- endfor %}
-      </dl>
-      {%- endif %}
-      {% if timetable.notes|length -%}
-      <dl class="description-list">
-        {%- for c, t in timetable.notes|dictsort(by='value') %}
-        <dt><strong>{{ c }}</strong></dt>
-        <dd>{{ t }}</dd>
-        {%- endfor %}
-      </dl>
-      {%- endif %}
-      {%- elif not select_date.errors -%}
-      <p>No services run on this day.</p>
-      {%- else -%}
-      <p>No stops found for this service.</p>
-      {%- endif %}
+      </table>
+    </div>
+    {% if timetable.operators|length and timetable.notes|length -%}
+    <h4>Operators & notes</h4>
+    {%- elif timetable.operators|length -%}
+    <h4>Operators</h4>
+    {%- elif timetable.notes|length -%}
+    <h4>Notes</h4>
+    {%- endif %}
+    {% if timetable.operators|length -%}
+    <dl class="description-list">
+      {%- for c, n in timetable.operators|dictsort(by='value') %}
+      <dt><strong>{{ c }}</strong></dt>
+      <dd>{{ n }}</dd>
+      {%- endfor %}
+    </dl>
+    {%- endif %}
+    {% if timetable.notes|length -%}
+    <dl class="description-list">
+      {%- for c, t in timetable.notes|dictsort(by='value') %}
+      <dt><strong>{{ c }}</strong></dt>
+      <dd>{{ t }}</dd>
+      {%- endfor %}
+    </dl>
+    {%- endif %}
+    {%- elif not select_date.errors -%}
+    <p>No services run on this day.</p>
+    {%- else -%}
+    <p>No stops found for this service.</p>
+    {%- endif %}
   </section>
   <section class="card">
     <h2>Operators</h2>
@@ -153,19 +160,27 @@
 {% block script %}
 <script>
 function addRowEvent(group) {
+    let action = group.current.querySelector('td:last-child');
     let hidden = true;
     let toggleRow = function(row) {
         if (hidden) {
-            row.classList.remove('timetable-row-hidden');
-        } else {
             row.classList.add('timetable-row-hidden');
+        } else {
+            row.classList.remove('timetable-row-hidden');
         }
     };
-    if (group.next.length) {
-        group.current.classList.add('timetable-row-selectable');
-        group.current.onclick = function() {
-            group.next.forEach(toggleRow);
+    let expandText = 'Expand group of stops',
+        hideText = 'Hide group of stops';
+    console.log(group);
+    if (group.next.length > 0) {
+        action.textContent = '+';
+        action.title = 'Expand group of stops';
+        action.classList.add('timetable-action');
+        action.onclick = function() {
             hidden = !hidden;
+            group.next.forEach(toggleRow);
+            action.textContent = (hidden) ? '+' : '−';
+            action.title = (hidden) ? expandText : hideText;
         }
     }
 }

@@ -469,6 +469,8 @@ function _resizeText(element) {
                 element.classList.add('indicator-4');
                 break;
         }
+        // Use font's arrow symbol instead of '->'
+        span.textContent = span.textContent.replace('->', '→');
     } else if (img !== null) {
         let style = window.getComputedStyle(element);
         let fontSize = parseFloat(style.fontSize);

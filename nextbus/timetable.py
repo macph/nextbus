@@ -221,7 +221,11 @@ def _query_times(service_id, direction, date):
         .join(models.JourneyPattern.links)
         .outerjoin(jl_start, models.Journey.start_run == jl_start.id)
         .outerjoin(jl_end, models.Journey.end_run == jl_end.id)
-        .outerjoin(models.JourneySpecificLink)
+        .outerjoin(
+            models.JourneySpecificLink,
+            (models.Journey.id == models.JourneySpecificLink.journey_ref) &
+            (models.JourneyLink.id == models.JourneySpecificLink.link_ref)
+        )
         # Truncate journey pattern if journey has starting or ending dead runs
         .filter(
             jl_start.id.is_(None) |

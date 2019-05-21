@@ -179,14 +179,11 @@ function Overlay(overlayElement, focusFirst) {
  * Sends requests to modify cookie data with list of starred stops
  * @constructor
  * @param {boolean} cookieSet Whether cookie has been set in first place or not
- * @param {function} [onAdd] Called when starred stop is added
- * @param {function} [onRemove] Called when starred stop is removed
  */
-function StarredStops(cookieSet, onAdd, onRemove) {
+function StarredStops(cookieSet) {
     let self = this;
     this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
-    this.onAdd = onAdd;
-    this.onRemove = onRemove;
+    this.onAdd = null;
 
     this.overlay = null;
     this.overlayElement = null;
@@ -247,6 +244,15 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         }
     };
 
+    /**
+     * Called when starred stops API returns response.
+     * @callback onLoad
+     */
+
+    /**
+     * Gets list of stops and call function on load
+     * @param {onLoad} onGet
+     */
     this.get = function(onGet) {
         self.r.onload = function() {
             if (this.status === 200) {
@@ -258,11 +264,16 @@ function StarredStops(cookieSet, onAdd, onRemove) {
             }
             onGet();
         };
-        self.r.open("GET", URL.STARRED, true);
+        self.r.open('GET', URL.STARRED, true);
         self.r.send();
     };
 
-    this.add = function() {
+    /**
+     * Add stop to list and call function. If list not set, open overlay to confirm cookie before
+     * continuing with callback.
+     * @param {onLoad} onAdd
+     */
+    this.add = function(onAdd) {
         if (self.code == null) {
             throw new TypeError('SMS code needs to be set for StarredStops object first.');
         }
@@ -270,6 +281,8 @@ function StarredStops(cookieSet, onAdd, onRemove) {
             self.createDialog();
         }
         if (!self.set) {
+            // Save callback and reuse on next call
+            self.onAdd = onAdd;
             self.overlay.open();
             return;
         }
@@ -281,15 +294,22 @@ function StarredStops(cookieSet, onAdd, onRemove) {
             self.active = false;
             if (self.onAdd != null) {
                 self.onAdd();
+                self.onAdd = null;
+            } else if (onAdd != null) {
+                onAdd();
             }
         };
-        self.r.open("POST", URL.STARRED + self.code, true);
+        self.r.open('POST', URL.STARRED + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
     };
 
-    this.remove = function() {
+    /**
+     * Removes stop from list and call function.
+     * @param {onLoad} onRemove
+     */
+    this.remove = function(onRemove) {
         if (self.code == null) {
             throw new TypeError('SMS code needs to be set for StarredStops object first.');
         }
@@ -298,11 +318,11 @@ function StarredStops(cookieSet, onAdd, onRemove) {
         }
         self.r.onload = function() {
             self.active = false;
-            if (self.onRemove != null) {
-                self.onRemove();
+            if (onRemove != null) {
+                onRemove();
             }
         };
-        self.r.open("DELETE", URL.STARRED + self.code, true);
+        self.r.open('DELETE', URL.STARRED + self.code, true);
         self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         self.r.send();
         self.active = true;
@@ -440,6 +460,49 @@ function StarredStopList(container) {
         self.container.appendChild(list);
         resizeIndicator('.indicator');
     };
+}
+
+
+/**
+ * Creates starred toggle button
+ * @param {StarredStops} starred
+ * @param {boolean} stopIsStarred
+ * @param {StarredStopList} starredList
+ * @returns {HTMLElement}
+ */
+function createStarredButton(starred, stopIsStarred, starredList) {
+    let addText = '\u2606 Add stop',
+        addTitle = 'Add to list of starred stops',
+        removeText = '\u2605 Remove stop',
+        removeTitle = 'Remove from list of starred stops';
+
+    let starredButton = element('button');
+    let onAdd, onRemove;
+
+    onAdd = function() {
+        starredButton.textContent = removeText;
+        starredButton.title = removeTitle;
+        starredButton.onclick = function() {
+            starred.remove(onRemove);
+        };
+        if (starredList != null) {
+            starredList.reset();
+        }
+    };
+    onRemove = function() {
+        starredButton.textContent = addText;
+        starredButton.title = addTitle;
+        starredButton.onclick = function() {
+            starred.add(onAdd);
+        };
+        if (starredList != null) {
+            starredList.reset();
+        }
+    };
+    // Set up button
+    (stopIsStarred) ? onAdd() : onRemove();
+
+    return starredButton;
 }
 
 
@@ -1941,32 +2004,8 @@ function Panel(stopMap, mapPanel, starred, starredList) {
         self.starred.setCode(data.naptanCode);
         self.starred.get(function() {
             let codeInList = (self.starred.set && self.starred.data.indexOf(data.naptanCode) > -1);
-            let addText = '\u2606 Add stop',
-                addTitle = 'Add to list of starred stops',
-                removeText = '\u2605 Remove stop',
-                removeTitle = 'Remove from list of starred stops';
-
-            let starredButton = element('button');
-            actions.insertBefore(starredButton, closePanel);
-
-            self.starred.onAdd = function() {
-                starredButton.textContent = removeText;
-                starredButton.title = removeTitle;
-                starredButton.onclick = function() {
-                    self.starred.remove();
-                };
-                self.starredList.reset();
-            };
-            self.starred.onRemove = function() {
-                starredButton.textContent = addText;
-                starredButton.title = addTitle;
-                starredButton.onclick = function() {
-                    self.starred.add();
-                };
-                self.starredList.reset();
-            };
-            // Set up button
-            (codeInList) ? self.starred.onAdd() : self.starred.onRemove();
+            let button = createStarredButton(self.starred, codeInList, self.starredList);
+            actions.insertBefore(button, closePanel);
         });
 
         // Add control for zooming into stop view

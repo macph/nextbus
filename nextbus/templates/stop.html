@@ -128,34 +128,14 @@ let actions = document.getElementById('actions'),
     smsCode = '{{ stop.naptan_code }}',
     set = {{ ('stops' in session)|tojson }},
     active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }},
-    starredButton,
     starred;
 
 window.addEventListener('load', function() {
-    starredButton = element('button');
-    actions.appendChild(starredButton);
-    starred = new StarredStops(
-        set,
-        function() {
-            starredButton.textContent = removeText;
-            starredButton.title = removeTitle;
-            starredButton.onclick = function() {
-                starred.remove();
-            };
-            starredList.reset();
-        },
-        function() {
-            starredButton.textContent = addText;
-            starredButton.title = addTitle;
-            starredButton.onclick = function() {
-                starred.add();
-            };
-            starredList.reset();
-        }
-    );
+    starred = new StarredStops(set);
     starred.setCode(smsCode);
     starred.createDialog();
-    (active) ? starred.onAdd() : starred.onRemove();
+    let button = createStarredButton(starred, active, starredList);
+    actions.appendChild(button);
 });
 </script>
 {% endblock %}

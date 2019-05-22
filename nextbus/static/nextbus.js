@@ -1549,6 +1549,11 @@ function StopLayer(stopMap) {
     this.loadedTiles = new MapCache(CACHE_LIMIT);
     this.layers = L.layerGroup();
     this.route = null;
+
+    /**
+     * Data for current stop.
+     * @type {?StopPointData}
+     */
     this.data = null;
 
     /**
@@ -1911,10 +1916,14 @@ function ServicesData() {
 function RouteLayer(stopMap) {
     let self = this;
     this.stopMap = stopMap;
-
     this.current = null;
-    this.data = null;
     this.layer = null;
+
+    /**
+     * Data for current stop.
+     * @type {?ServiceData}
+     */
+    this.data = null;
 
     /**
      * Creates route layer to be put on map
@@ -2718,10 +2727,15 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
      * @param {boolean} [options.fitStop] If setting a new stop, fit map to stop. False by default
      */
     this.update = function(options) {
-        if (!options) {
-            // Stop and route has not changed; update panel (eg new message at zoom level) and URL
+        let andFinally = function() {
             self.panel.updatePanel();
             self.setURL();
+            self.setTitle();
+        };
+
+        if (!options) {
+            // Stop and route has not changed
+            andFinally();
             return;
         }
 
@@ -2749,8 +2763,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                     self.routeLayer.set(self.currentService, fitService);
                     self.stopLayer.setStop(stopData);
                     self.stopLayer.setRoute(routeData);
-                    self.panel.updatePanel();
-                    self.setURL();
+                    andFinally();
                 }
             };
 
@@ -2774,8 +2787,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                 self.routeLayer.clear();
                 self.stopLayer.setStop(data);
                 self.stopLayer.removeRoute();
-                self.panel.updatePanel();
-                self.setURL();
+                andFinally();
             });
 
         } else if (self.currentService) {
@@ -2784,8 +2796,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                 self.routeLayer.set(self.currentService, fitService);
                 self.stopLayer.removeStop();
                 self.stopLayer.setRoute(data);
-                self.panel.updatePanel();
-                self.setURL();
+                andFinally();
             });
 
         } else {
@@ -2793,27 +2804,47 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
             self.routeLayer.clear();
             self.stopLayer.removeStop();
             self.stopLayer.removeRoute();
-            self.panel.updatePanel();
-            self.setURL();
+            andFinally();
         }
 
     };
 
-    // TODO: Can the page title be modified too?
+    /**
+     * Updates title with current stop or route
+     */
+    this.setTitle = function() {
+        let routeData = self.routeLayer.data,
+            stopData = self.stopLayer.data;
+        let components = ['Map'];
+
+        if (stopData != null) {
+            components.push(self.stopLayer.data.title);
+        } else if (routeData != null) {
+            components.push(routeData.line + ': ' + routeData.description);
+        }
+        components.push('nxb');
+        let title = components.join(' – ');
+
+        if (title !== document.title) {
+            document.title = title;
+        }
+    };
 
     /**
      * Sets page to new URL with current stop, coordinates and zoom
      */
     this.setURL = function() {
+        let routeData = self.routeLayer.data,
+            stopData = self.stopLayer.data;
         let routeURL = '',
             stopURL = '';
 
-        if (self.routeLayer.data !== null) {
-            let direction = (self.routeLayer.data.reverse) ? 'inbound' : 'outbound';
-            routeURL = 'service/' + self.routeLayer.data.service + '/' + direction + '/';
+        if (routeData != null) {
+            let direction = (routeData.reverse) ? 'inbound' : 'outbound';
+            routeURL = 'service/' + routeData.service + '/' + direction + '/';
         }
-        if (self.stopLayer.data !== null) {
-            stopURL = 'stop/' + self.stopLayer.data.atcoCode + '/';
+        if (stopData != null) {
+            stopURL = 'stop/' + stopData.atcoCode + '/';
         }
 
         let centre = self.map.getCenter(),

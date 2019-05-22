@@ -14,33 +14,14 @@ class SearchPlaces(FlaskForm):
     submit = fields.SubmitField("Search")
 
 
-class MultipleCheckboxField(fields.SelectMultipleField):
-    """ Sets up a list of checkboxes for multiple choices. """
-    widget = widgets.ListWidget(prefix_label=False)
-    option_widget = widgets.CheckboxInput()
-
-    def render_elements(self, checked=None, **kwargs):
-        """ Creates a list of elements with each checkbox input within its
-            associated label element. If checked is True or False, only elements
-            with checkboxes marked as such as selected.
-        """
-        list_elements = []
-        for item in self:
-            if checked is None or item.checked is checked:
-                label = item.label(str(item) + " " + item.label.text, **kwargs)
-                list_elements.append(label)
-
-        return list_elements
-
-
 class FilterResults(FlaskForm):
     """ Search results filtering by stops and areas. """
     class Meta(object):
         """ Disable CSRF as this form uses GET. """
         csrf = False
 
-    group = MultipleCheckboxField("group")
-    area = MultipleCheckboxField("area")
+    group = fields.SelectMultipleField("group")
+    area = fields.SelectMultipleField("area")
     page = fields.IntegerField("page", default=1)
 
     def add_choices(self, groups, areas):

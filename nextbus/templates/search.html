@@ -23,13 +23,22 @@
 {% block content %}
 <main>
   <h1>Search</h1>
-  <section class="card">
+  <section>
     <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
       {{ g.form.hidden_tag() }}
       <input type="search" name="search" placeholder="Find a stop..." value="{{ query if query is not none else '' }}" aria-label="Find a bus stop" required>
       <button type="submit" name="submit" title="Search" value="1">Search</button>
     </form>
   </section>
+
+  {% if f_areas -%}
+  <section>
+    <form method="get" id="form-select-area">
+      {{ filters.area(id="select-area") }}
+      <button id="select-area-refresh" type="submit">Refresh</button>
+    </form>
+  </section>
+  {%- endif %}
 
   {% if query is not none -%}
 
@@ -144,9 +153,18 @@
 
 {% block script %}
 <script>
+let filterArea;
 window.addEventListener('load', function() {
     resizeIndicator('.indicator');
     revertColours('.indicator-reversed');
+
+    document.getElementById('select-area-refresh').style.display = 'none';
+    let formSelectArea = document.getElementById('form-select-area');
+    let onSelect = (formSelectArea != null) ? function() { formSelectArea.submit(); } : null;
+    let selectArea = document.getElementById('select-area');
+    if (selectArea != null) {
+        filterArea = new FilterList('select-area', 'Filter by area...', onSelect);
+    }
 });
 </script>
 {% endblock %}

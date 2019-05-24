@@ -9,6 +9,9 @@
     <replace code="078">
       <name old="Durham">County Durham</name>
     </replace>
+    <replace code="082">
+      <name old="Greater London">London</name>
+    </replace>
   </table>
   <table model="District">
     <replace code="308">

@@ -54,7 +54,7 @@ a {
   color: #212121;
   text-decoration: none;
   cursor: pointer;
-  transition: 0.1s border-color ease-out;
+  transition: 0.2s border-color ease-out;
 }
 
 a:hover {
@@ -90,8 +90,8 @@ input[type="file"] {
   font-weight: 700;
   color: #212121;
   transition:
-    0.1s background-color ease-out,
-    0.1s color ease-out;
+    0.2s background-color ease-out,
+    0.2s color ease-out;
   cursor: pointer;
 }
 
@@ -112,7 +112,7 @@ input:not([type="submit"]):not([type="file"]) {
   outline: none;
   min-width: 0; /* Override width set by browser */
 
-  transition: 0.1s border-color ease-out;
+  transition: 0.2s border-color ease-out;
 }
 
 input:not([type="submit"]):not([type="file"]):focus {
@@ -209,8 +209,8 @@ header a {
 
   color: #212121;
   transition:
-    0.1s background-color ease-out,
-    0.1s color ease-out;
+    0.2s background-color ease-out,
+    0.2s color ease-out;
 }
 
 header a:first-child {
@@ -309,9 +309,9 @@ section {
   text-align: center;
   color: #212121;
   transition:
-    0.1s background-color ease-out,
-    0.1s color ease-out,
-    0.1s border-color ease-out;
+    0.2s background-color ease-out,
+    0.2s color ease-out,
+    0.2s border-color ease-out;
   cursor: pointer;
 }
 
@@ -356,24 +356,35 @@ section {
   padding: 0;
   max-width: 96rem;
   width: 100%;
-
   color: white;
+  transition: 0.2s transform ease-out;
 }
 
 .overlay-content-dialog {
   top: 50%;
-  transform: translate(-50%, -50%);
   padding: 1rem 1.6rem;
   max-width: 64rem;
   max-height: calc(100% - 2rem);
   width: calc(100% - 3.2rem);
+  transform: translate(-50%, -50%) scale(0.95);
 }
 
-.overlay-content-inner {
+.overlay-visible > .overlay-content-dialog {
+  transform: translate(-50%, -50%);
+}
+
+.overlay-content-body {
   padding: 0 1.6rem;
   margin: 4rem auto 0;
   max-width: 64rem;
   width: calc(100% - 3.2rem);
+
+  transform: translate(0, -1rem);
+  transition: 0.2s transform ease-out;
+}
+
+.overlay-visible .overlay-content-body {
+  transform: none;
 }
 
 .overlay-button {
@@ -623,8 +634,8 @@ section {
 .tab:not(.tab-active) {
   border-style: none none solid;
   transition:
-    0.1s background-color ease-out,
-    0.1s color ease-out;
+    0.2s background-color ease-out,
+    0.2s color ease-out;
   cursor: pointer;
 }
 
@@ -929,8 +940,8 @@ section {
   cursor: pointer;
 
   transition:
-    0.1s background-color ease-out,
-    0.1s color ease-out;
+    0.2s background-color ease-out,
+    0.2s color ease-out;
 }
 
 .item:hover {

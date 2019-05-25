@@ -573,7 +573,8 @@ def service_timetable(service_id, reverse=None):
                                 reverse=is_reverse))
 
     select_date = forms.SelectDate(request.args)
-    if select_date.date.data is None:
+    is_today = select_date.date.data is None
+    if is_today:
         # Set to today by default
         select_date.date.data = datetime.date.today()
 
@@ -584,7 +585,7 @@ def service_timetable(service_id, reverse=None):
 
     return render_template("timetable.html", service=sv, reverse=is_reverse,
                            mirrored=mirrored, timetable=tt_data,
-                           select_date=select_date)
+                           select_date=select_date, is_today=is_today)
 
 
 def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):

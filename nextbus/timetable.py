@@ -310,6 +310,7 @@ class TimetableStop:
         return cls(row.stop_point_ref, row.arrive, row.depart, row.timing_point,
                    row.utc_arrive, row.utc_depart)
 
+
 class TimetableJourney(abc.MutableSequence):
     """ Journey for timetable, represented as one or more columns.
 
@@ -436,12 +437,12 @@ class Timetable:
         self.date = date
 
         if sequence is None or dict_stops is None:
-            g, ds = graph.service_graph_stops(service_id, direction)
-            self.sequence = g.sequence() if sequence is None else list(sequence)
-            self.stops = ds if dict_stops is None else dict(dict_stops)
+            g, stops = graph.service_graph_stops(service_id, direction)
         else:
-            self.sequence = list(sequence)
-            self.stops = dict(dict_stops)
+            g, stops = None, None
+
+        self.sequence = list(sequence) if sequence is not None else g.sequence()
+        self.stops = dict(dict_stops) if dict_stops is not None else stops
 
         if self.sequence:
             # Remove null values from start or end of sequence
@@ -462,7 +463,7 @@ class Timetable:
                                             self.date)
 
     def __bool__(self):
-        return bool(self.sequence)
+        return bool(self.journeys)
 
     def _compare_times(self, journey_a, journey_b):
         """ Compares two journeys based on UTC arrival/departure times at their

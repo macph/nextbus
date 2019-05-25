@@ -30,11 +30,12 @@
 
   {% if mirrored -%}
   <ul class="tabs tabs-3">
+      {% set date = select_date.date.data if not is_today else none %}
       {% if not reverse -%}
       <li><div class="tab tab-active">Outbound</div></li>
-      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true) }}">Inbound</a></li>
+      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true, date=date) }}">Inbound</a></li>
       {%- else -%}
-      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false) }}">Outbound</a></li>
+      <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false, date=date) }}">Outbound</a></li>
       <li><div class="tab tab-active">Inbound</div></li>
       {%- endif %}
   </ul>
@@ -129,7 +130,7 @@
     {%- endif %}
     {%- elif not select_date.errors -%}
     <p>No services run on this day.</p>
-    {%- else -%}
+    {%- elif not timetable.sequence -%}
     <p>No stops found for this service.</p>
     {%- endif %}
   </section>

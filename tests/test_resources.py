@@ -383,8 +383,7 @@ def test_starred_delete_all(client, db_loaded):
     assert delete.status_code == 204
 
     get = client.get("/api/starred/")
-    assert get.status_code == 200
-    assert json.loads(get.data) == {"stops": []}
+    assert get.status_code == 422
 
 
 def test_starred_swap(client, db_loaded):

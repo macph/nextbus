@@ -179,7 +179,7 @@ class StarredStop(MethodView):
 
         code = naptan_code.lower() if naptan_code is not None else None
         if naptan_code is None:
-            session["stops"] = []
+            del session["stops"]
             session.permanent = False
             session.modified = True
         elif code in session["stops"]:

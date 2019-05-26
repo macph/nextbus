@@ -260,12 +260,12 @@ section {
 
 /* WIDTH-RESTRICTED CONTENT */
 
-.body-narrow > main {
+.body-index > main {
   display: flex;
   flex-direction: column;
 }
 
-.body-narrow > main > div {
+.body-index > main > div {
   margin: -2.4rem 0;
 }
 

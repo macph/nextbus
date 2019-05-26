@@ -13,7 +13,6 @@ lxml = "*"
 "psycopg2" = "*"
 pyparsing = "*"
 python-dateutil = "*"
-pytz = "*"
 requests = "*"
 "nextbus" = {path = ".", editable = true}
 gunicorn = "*"

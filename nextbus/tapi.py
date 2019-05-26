@@ -5,15 +5,15 @@ import json
 import os
 
 import dateutil.parser
-import pytz
+import dateutil.tz
 import requests
 from flask import current_app
 
 from definitions import ROOT_DIR
 
 
-GB_TZ = pytz.timezone("Europe/London")
-UTC = pytz.utc
+GB_TZ = dateutil.tz.gettz("Europe/London")
+UTC = dateutil.tz.UTC
 
 URL_API = r"https://transportapi.com/v3/uk/bus/stop/%s/live.json"
 URL_FCC = r"http://fcc.transportapi.com/v3/uk/bus/stop/%s/live.json"
@@ -84,7 +84,7 @@ class Departure:
         :param dt_requested: Date time API call was requested at.
     """
     __slots__ = ("line", "name", "destination", "operator", "operator_name",
-                 "live", "expected", "datetime")
+                 "is_live", "expected", "datetime")
 
     def __init__(self, data, dt_requested):
         self.line = data["line"]
@@ -94,26 +94,20 @@ class Departure:
         self.operator = data["operator"]
         self.operator_name = data["operator_name"]
 
-        exp = (data["date"], data["aimed_departure_time"])
         live = (data["expected_departure_date"],
                 data["expected_departure_time"])
+        tt = (data["date"], data["aimed_departure_time"])
 
-        if None not in exp:
-            dt_exp = GB_TZ.localize(dateutil.parser.parse("T".join(exp)))
+        self.is_live = None not in live
+        if self.is_live:
+            dt = dateutil.parser.parse("T".join(live)).replace(tzinfo=GB_TZ)
+        elif None not in tt:
+            dt = dateutil.parser.parse("T".join(tt)).replace(tzinfo=GB_TZ)
         else:
-            dt_exp = None
+            dt = None
 
-        self.live = None not in live
-        if self.live:
-            dt_live = GB_TZ.localize(dateutil.parser.parse("T".join(live)))
-            self.expected = (dt_live - dt_requested).seconds
-            self.datetime = dt_live.isoformat()
-        elif dt_exp is not None:
-            self.expected = (dt_exp - dt_requested).seconds
-            self.datetime = dt_exp.isoformat()
-        else:
-            self.expected = None
-            self.datetime = None
+        self.expected = (dt - dt_requested).seconds if dt is not None else None
+        self.datetime = dt.isoformat() if dt is not None else None
 
     def __repr__(self):
         return "<Departure(%r, %r, %r)>" % (
@@ -142,7 +136,7 @@ class LiveData:
         self.datetime = dateutil.parser.parse(data["request_time"])
         if self.datetime.tzinfo is None:
             # Assume naive datetime is UTC
-            self.datetime = UTC.localize(self.datetime)
+            self.datetime = self.datetime.replace(tzinfo=UTC)
 
         self.services = self._group_journeys(data)
 
@@ -180,7 +174,7 @@ class LiveData:
                 if max_minutes > 0 and j.expected > max_minutes * 60:
                     continue
                 times.append({
-                    "live": j.live,
+                    "live": j.is_live,
                     "secs": j.expected,
                     "expDate": j.datetime
                 })

@@ -17,7 +17,6 @@ setup(
         'psycopg2',
         'pyparsing',
         'python-dateutil',
-        'pytz',
         'sqlalchemy',
         'requests',
         'werkzeug',

@@ -25,7 +25,7 @@
       {% if starred is not none and starred|length > 0 -%}
       <div class="h3-inline">
         <h3>Starred stops</h3>
-        <p><a class="action">Edit</a></p>
+        <p><a class="action" href="{{ url_for('page.starred') }}">Edit</a></p>
       </div>
       {% call(s) f.print_list(starred, class='list-actions') -%}
       <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">

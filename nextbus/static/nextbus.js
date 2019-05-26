@@ -403,7 +403,12 @@ function StarredStopList(container) {
         let heading = element('div',
             {className: 'h3-inline'},
             element('h3', 'Starred stops'),
-            element('p', element('a', {className: 'action'}, 'Edit'))
+            element('p',
+                element('a',
+                    {className: 'action', href: URL.STARRED_PAGE},
+                    'Edit'
+                )
+            )
         );
         let list = element('ul', {className: 'list list-actions stops'});
         data.features.forEach(function(stop) {

@@ -159,6 +159,12 @@ def about():
     return render_template("about.html")
 
 
+@page.route("/starred")
+def starred():
+    """ List of starred stops. """
+    return render_template("starred.html", starred=_get_starred_stops())
+
+
 @page.route("/search", methods=["POST"])
 def search_query():
     """ Receives search query in POST request and redirects to another page.

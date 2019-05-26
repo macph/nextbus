@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% import 'functions.html' as f %}
+{% set body = 'body-narrow' %}
+
+{% block title %}Starred stops{% endblock %}
+
+{% block content %}
+<main>
+  <h1>Starred stops</h1>
+  <section>
+    {% if starred is not none and starred|length > 0 -%}
+    <div class="h3-inline">
+      <h3>Stops</h3>
+      <p><button id="delete-open" title="Delete all starred stops">Delete all stops</button></p>
+    </div>
+    {% call(s) f.print_list(starred) -%}
+    <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
+      <span>
+        {{ f.print_stop_indicator(s) }}
+        <span class="item-label">{{ s.name }}</span>
+      </span>
+      <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
+    </a>
+    {%- endcall %}
+    {%- else -%}
+    <p>You can have your favourite stops here! Just find them and star them.</p>
+    {%- endif %}
+  </section>
+</main>
+{% endblock %}
+
+{% block overlay %}
+{{ super() }}
+<div class="overlay" id="overlay-delete">
+  <div class="overlay-content overlay-content-dialog">
+    <h3>Delete all stops?</h3>
+    <p>The cookie for this website will be unset and all stops you've saved will be lost.</p>
+    <button id="delete-close" title="Close this dialog and go back" class="overlay-button">Close</button>
+    <button id="delete-confirm" title="Continue with deleting all stops" class="overlay-button">Delete stops</button>
+  </div>
+</div>
+<script>
+let deleteOverlay;
+window.addEventListener('load', function() {
+    deleteOverlay = new Overlay('overlay-delete', 'delete-confirm');
+    document.getElementById('delete-open').onclick = function() { deleteOverlay.open(); };
+    document.getElementById('delete-close').onclick = function() { deleteOverlay.close(); };
+    document.getElementById('delete-confirm').onclick = function() {
+        let request = new XMLHttpRequest();
+        request.onload = function() {
+            window.location.reload();
+        };
+        request.open('DELETE', URL.STARRED, true);
+        request.send();
+    };
+});
+</script>
+{% endblock %}
+
+{% block script %}
+<script>
+let set = {{ ('stops' in session)|tojson }};
+let starred;
+window.addEventListener('load', function() {
+    starred = new StarredStops(set);
+    resizeIndicator('.indicator');
+});
+</script>
+{% endblock %}

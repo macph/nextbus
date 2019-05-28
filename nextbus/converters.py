@@ -19,7 +19,8 @@ class PathString(routing.PathConverter):
         return value.replace("+", " ")
 
     def to_url(self, value):
-        return urls.url_quote(value.replace(" ", "+"), charset=self.map.charset)
+        escaped = urls.url_quote(value, charset=self.map.charset)
+        return escaped.replace("%20", "+")
 
 
 class LatLong(routing.BaseConverter):

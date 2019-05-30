@@ -82,9 +82,13 @@
           <td class="timetable-last"></td>
         </tr>
         {% endif %}
+        {%- set timing = namespace(first=false, last=true) -%}
         {%- for r in timetable.rows %}
         {%- set stop = timetable.stops[r.stop] -%}
-        <tr class="timetable-row{{ ' timetable-row-major' if r.timing else ' timetable-row-hidden' }}">
+        {%- if r == timetable.timed_rows|first -%}{%- set timing.first = true -%}{%- endif -%}
+        {%- if r == timetable.timed_rows|last -%}{%- set timing.last = false -%}{%- endif -%}
+        {%- set row_class = ' timetable-row-timed' if r.timing else (' timetable-row-hidden' if timing.first and timing.last else '') -%}
+        <tr class="timetable-row{{ row_class }}">
           <th>
             <div class="timetable-stop">
               <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
@@ -172,7 +176,6 @@ function addRowEvent(group) {
     };
     let expandText = 'Expand group of stops',
         hideText = 'Hide group of stops';
-    console.log(group);
     if (group.next.length > 0) {
         action.textContent = '+';
         action.title = 'Expand group of stops';
@@ -185,18 +188,22 @@ function addRowEvent(group) {
         }
     }
 }
-function setUpRowEvents(timetable) {
+function setUpRowEvents(timetable, groups) {
     let table = document.getElementById(timetable);
     if (table != null) {
         let rows = table.getElementsByTagName('tr'),
-            i, row, groups = [];
+            i, row;
         for (i = 0; i < rows.length; i++) {
             row = rows[i];
-            if (row.classList.contains('timetable-row-major')) {
+            if (row.classList.contains('timetable-row-timed')) {
                 groups.push({current: row, next: []});
-            } else if (groups.length) {
+            } else if (groups.length > 0) {
                 groups[groups.length - 1].next.push(row);
             }
+        }
+        // If last few rows are not timed - don't need to group them
+        if (groups.length > 0 && groups[groups.length - 1].next.length > 0) {
+            groups.splice(-1, 1);
         }
         for (i = 0; i < groups.length; i++) {
             addRowEvent(groups[i]);
@@ -204,9 +211,10 @@ function setUpRowEvents(timetable) {
     }
 }
 
+let groups = [];
 window.addEventListener('load', function() {
     resizeIndicator('.indicator');
-    setUpRowEvents('tt');
+    setUpRowEvents('tt', groups);
 });
 </script>
 {% endblock %}

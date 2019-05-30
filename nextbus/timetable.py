@@ -454,9 +454,11 @@ class Timetable:
             self.journeys = self._timetable_journeys(query_result)
             data = self._create_table()
             self.head, self.rows, self.operators, self.notes = data
+            self.timed_rows = [r for r in self.rows if r.timing]
         else:
             self.journeys = []
             self.head, self.rows, self.operators, self.notes = [], [], {}, {}
+            self.timed_rows = []
 
     def __repr__(self):
         return "<Timetable(%r, %r, %r)>" % (self.service_id, self.direction,

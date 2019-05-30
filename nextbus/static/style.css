@@ -1252,7 +1252,7 @@ section {
   font-weight: 400;
 }
 
-.timetable-row-major > th {
+.timetable-row-timed > th {
   font-weight: 600;
 }
 

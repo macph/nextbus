@@ -79,40 +79,61 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
 class Departure:
     """ Holds data for each journey expected at a stop, with line, operator and
         times.
-
-        :param data: Data for a departure.
-        :param dt_requested: Date time API call was requested at.
     """
     __slots__ = ("line", "name", "destination", "operator", "operator_name",
-                 "is_live", "expected", "datetime")
+                 "is_live", "expected", "seconds")
 
-    def __init__(self, data, dt_requested):
-        self.line = data["line"]
-        self.name = data["line_name"]
+    def __init__(self, line, name, destination, operator, operator_name,
+                 is_live, expected, seconds):
+        self.line = line
+        self.name = name
+        self.destination = destination
+        self.operator = operator
+        self.operator_name = operator_name
+        self.is_live = is_live
+        self.expected = expected
+        self.seconds = seconds
+
+    @classmethod
+    def from_data(cls, data, dt_requested):
+        line = data["line"]
+        name = data["line_name"]
         # Ignore all text after comma or opening parenthesis
-        self.destination = data["direction"].split(",")[0].split("(")[0]
-        self.operator = data["operator"]
-        self.operator_name = data["operator_name"]
+        destination = data["direction"].split(",")[0].split("(")[0]
+        operator = data["operator"]
+        operator_name = data["operator_name"]
 
         live = (data["expected_departure_date"],
                 data["expected_departure_time"])
         tt = (data["date"], data["aimed_departure_time"])
 
-        self.is_live = None not in live
-        if self.is_live:
-            dt = dateutil.parser.parse("T".join(live)).replace(tzinfo=GB_TZ)
-        elif None not in tt:
-            dt = dateutil.parser.parse("T".join(tt)).replace(tzinfo=GB_TZ)
+        is_live = all(i is not None for i in live)
+        is_tt = all(i is not None for i in tt)
+        if is_live or is_tt:
+            dt_string = "T".join(live if is_live else tt)
+            dt = dateutil.parser.parse(dt_string).replace(tzinfo=GB_TZ)
         else:
             dt = None
 
-        self.expected = (dt - dt_requested).seconds if dt is not None else None
-        self.datetime = dt.isoformat() if dt is not None else None
+        if dt is not None:
+            difference = dt - dt_requested
+            # If datetime is ambiguous (eg BST -> GMT on last Sunday of October)
+            # assume times before request time are in the next hour
+            if difference.days < 0 and dateutil.tz.datetime_ambiguous(dt):
+                dt = dt.replace(fold=1)
+                difference = dt - dt_requested
+            expected = dt.isoformat()
+            seconds = difference.total_seconds()
+        else:
+            expected = None
+            seconds = None
+
+        return cls(line, name, destination, operator, operator_name, is_live,
+                   expected, seconds)
 
     def __repr__(self):
-        return "<Departure(%r, %r, %r)>" % (
-            self.line, self.operator, self.datetime
-        )
+        return "<Departure(%r, %r, %r)>" % (self.line, self.operator,
+                                            self.expected)
 
 
 def _get_expected(journey):
@@ -150,7 +171,7 @@ class LiveData:
         groups = {}
         for departures in data["departures"].values():
             for data in departures:
-                journey = Departure(data, self.datetime)
+                journey = Departure.from_data(data, self.datetime)
                 key = journey.line, journey.operator, journey.destination
                 if journey.expected is not None:
                     groups.setdefault(key, []).append(journey)
@@ -171,12 +192,14 @@ class LiveData:
             first = service[0]
             times = []
             for j in service:
-                if max_minutes > 0 and j.expected > max_minutes * 60:
+                if j.seconds is None or j.seconds < 0:
+                    continue
+                if max_minutes and j.seconds > max_minutes * 60:
                     continue
                 times.append({
                     "live": j.is_live,
-                    "secs": j.expected,
-                    "expDate": j.datetime
+                    "secs": j.seconds,
+                    "expDate": j.expected
                 })
             if not times:
                 continue

@@ -512,6 +512,24 @@ function createStarredButton(starred, stopIsStarred, starredList) {
 
 
 /**
+ * Replace default options for a class with selected options
+ * @param {Object} options - Options given
+ * @param {Object} defaultOptions - Default options to be replaced by given options
+ * @returns {Object}
+ */
+function processOptions(options, defaultOptions) {
+    let newOptions = {};
+    for (let o in defaultOptions) {
+        if (defaultOptions.hasOwnProperty(o)) {
+            newOptions[o] = (options != null && typeof options[o] !== 'undefined') ?
+                options[o] : defaultOptions[o];
+        }
+    }
+    return newOptions;
+}
+
+
+/**
  * @typedef {{
  *      label: string,
  *      value: string,
@@ -521,165 +539,443 @@ function createStarredButton(starred, stopIsStarred, starredList) {
  *  }} SelectOption
  */
 
+/**
+ * @callback onSelect
+ * @param {FilterList} self
+ * @param {SelectOption} option
+ */
 
 /**
- * Creates a multiple selection which works better than the standard HTML element
- * @param {?HTMLElement|string} selectElement <select> element to replace
- * @param {?string} defaultText Text to display when no options are selected
- * @param {?function} onSelect Callback when an item is selected or deselected
- * @constructor
+ * @typedef {Object} FilterListOptions
+ * @property {HTMLElement | string | null} selectElement - <select> element
+ * @property {?Map<string, string>} optionMap
+ * @property {?onSelect | null} onSelect - Called when item selected or deselected
+ * @property {?boolean} closeOnSelect - Closes menu when an item has been selected - default true
+ * @property {?string} defaultText - Text to display when no items are selected
+ * @property {?string} classFilterList - Class for filter list container element
+ * @property {?string} classInput Class - for selected items component
+ * @property {?string} classInputDefault - lass for default text for selected items
+ * @property {?string} classSelected - Class for selected item
+ * @property {?string} classSelectedDisabled - Class for disabled selected item
+ * @property {?string} classMenu - Class for menu component
+ * @property {?string} classMenuHidden - Class for when menu is hidden
+ * @property {?string} classMenuItem - Class for menu item
+ * @property {?string} classMenuItemDisabled - Class for disabled menu item
  */
-function FilterList(selectElement, defaultText, onSelect) {
+
+
+/**
+ * Constructs selected component for FilterList
+ * @param {FilterList} filterList
+ * @constructor
+ * @private
+ */
+function _FilterSelected(filterList) {
     let self = this;
-    this.onSelect = (onSelect) ? onSelect : null;
-    this.select = null;
+    this.list = filterList;
+    this.options = this.list.options;
+    this.element = null;
+    this.items = new Map();
     this.default = null;
 
-    this.container = null;
-    this.input = null;
-    this.action = null;
-    this.menu = null;
-
-    /**
-     * List of options
-     * @type {SelectOption[]}
-     */
-    this.options = [];
-    this.defaultItem = null;
-    this.selectedItems = new Map();
-    this.hidden = true;
-
-    /**
-     * Creates selected item
-     * @param {SelectOption} option
-     * @returns {HTMLElement}
-     * @private
-     */
-    this._createSelected = function(option) {
-        let item = element('a',
-            {
-                className: 'filter-selected',
-                title: 'Remove ' + option.label + ' from filter',
-                dataset: {value: option.value},
-                tabIndex: '0'
-            },
-            option.label
-        );
-        if (option.disabled) {
-            item.classList.add('filter-selected-disabled');
+    this.adjacent = function(direction, item) {
+        let adj, option;
+        if (!direction) {
+            throw new TypeError('Direction must be a positive or negative number.');
+        }
+        if (item != null) {
+            adj = (direction > 0) ? item.nextSibling : item.previousSibling;
         } else {
-            item.onclick = function() {
-                self.removeItem(option);
+            adj = (direction > 0) ? self.element.firstChild : self.element.lastChild;
+        }
+        while (adj != null) {
+            if (adj.nodeType === Node.ELEMENT_NODE && adj.dataset.value != null) {
+                option = self.list.data.get(adj.dataset.value);
+                if (option != null && !option.disabled) {
+                    break;
+                }
             }
+            adj = (direction > 0) ? adj.nextSibling : adj.previousSibling;
         }
 
-        return item;
+        return adj;
     };
 
-    /**
-     * Creates menu item
-     * @param {SelectOption} option
-     * @returns {HTMLElement}
-     * @private
-     */
-    this._createItem = function(option) {
+    this._handleKeys = function(event) {
+        let adj;
+        let defaultEvent = false;
+        switch (event.key) {
+            case 'ArrowUp':
+                self.list.menu.show();
+                adj = self.list.menu.adjacent(-1);
+                if (adj != null) {
+                    adj.focus();
+                }
+                break;
+            case 'ArrowDown':
+                self.list.menu.show();
+                adj = self.list.menu.adjacent(1);
+                if (adj != null) {
+                    adj.focus();
+                }
+                break;
+            case 'ArrowLeft':
+                adj = self.adjacent(-1, this) || self.adjacent(-1);
+                adj.focus();
+                break;
+            case 'ArrowRight':
+                adj = self.adjacent(1, this) || self.adjacent(1);
+                adj.focus();
+                break;
+            case 'Backspace':
+            case 'Delete':
+                adj = self.adjacent(-1, this) || self.adjacent(1, this);
+                self.list.deselect(this.dataset.value);
+                if (adj != null) {
+                    adj.focus();
+                } else {
+                    self.list.menu.show();
+                    self.list.menu.adjacent(1).focus();
+                }
+                break;
+            default:
+                defaultEvent = true;
+        }
+        return defaultEvent;
+    };
+
+    this.updateDefault = function() {
+        if (self.items.size === 0 && self.options.defaultText != null) {
+            self.default = element('span',
+                {className: self.options.classInputDefault || ''},
+                self.options.defaultText
+            );
+            self.element.appendChild(self.default);
+        } else if (self.items.size > 0 && self.default != null) {
+            self.element.removeChild(self.default);
+            self.default = null;
+        }
+    };
+
+    this.setUp = function () {
+        self.element = element('div',{
+            className: self.options.classInput || '',
+            onclick: function() {
+                if (self.list.menu.hidden) {
+                    self.list.menu.show();
+                } else {
+                    self.list.menu.hide();
+                }
+            }
+        });
+        self.list.container.appendChild(self.element);
+    };
+
+    this.addItem = function(option) {
         let item = element('a',
             {
-                className: 'filter-menu-item',
-                title: 'Add ' + option.label + ' to filter',
+                className: self.options.classSelected || '',
+                title: 'Remove ' + option.label + ' from filter',
                 dataset: {value: option.value}
             },
             option.label
         );
-        if (option.selected) {
-            item.style.display = 'none';
-        }
         if (option.disabled) {
-            item.classList.add('filter-menu-item-disabled');
+            item.classList.add(self.options.classSelectedDisabled);
         } else {
+            item.tabIndex = 0;
             item.onclick = function() {
-                self.addItem(option);
+                self.list.deselect(option.value);
             }
         }
-
-        return item;
+        self.items.set(option.value, item);
+        item.addEventListener('keydown', self._handleKeys);
+        self.element.appendChild(item);
     };
 
-    this._updateDefault = function() {
-        if (self.selectedItems.size === 0 && self.default != null) {
-            self.defaultItem = element('span', {className: 'filter-default'}, self.default);
-            self.input.appendChild(self.defaultItem);
-        } else if (self.selectedItems.size > 0 && self.defaultItem != null) {
-            self.input.removeChild(self.defaultItem);
-            self.defaultItem = null;
+    this.removeItem = function(value) {
+        self.element.removeChild(self.items.get(value));
+        self.items.delete(value);
+    };
+
+    this.setUp();
+}
+
+/**
+ * Constructs menu component for FilterList
+ * @param {FilterList} filterList
+ * @constructor
+ * @private
+ */
+function _FilterMenu(filterList) {
+    let self = this;
+    this.list = filterList;
+    this.options = this.list.options;
+    this.element = null;
+    this.items = new Map();
+    this.shown = new Set();
+    this.hidden = true;
+
+    this.updateHeight = function() {
+        let style = window.getComputedStyle(self.element);
+        let match = /\d+/.exec(style.maxHeight);
+        if (match != null) {
+            let height = Math.min(self.element.scrollHeight, parseInt(match[0]));
+            self.element.style.height = 'auto';
+            self.element.style.height = height + 'px';
         }
     };
 
-    this._menuHeight = function() {
-        let menuStyle = window.getComputedStyle(self.menu);
-        let maxHeight = parseInt(menuStyle.maxHeight.match(/\d+/)[0]);
+    this.adjacent = function(direction, item) {
+        let adj, style, option;
+        if (!direction) {
+            throw new TypeError('Direction must be a positive or negative number.');
+        }
+        if (item != null) {
+            adj = (direction > 0) ? item.nextSibling : item.previousSibling;
+        } else {
+            adj = (direction > 0) ? self.element.firstChild : self.element.lastChild;
+        }
+        while (adj != null) {
+            if (adj.nodeType === Node.ELEMENT_NODE && adj.dataset.value != null) {
+                style = window.getComputedStyle(adj);
+                option = self.list.data.get(adj.dataset.value);
+                if (adj.style.display !== 'none' && option != null && !option.disabled) {
+                    break;
+                }
+            }
+            adj = (direction > 0) ? adj.nextSibling : adj.previousSibling;
+        }
+        return adj;
+    };
 
-        return Math.min(self.menu.scrollHeight, maxHeight);
+    this._handleKeys = function(event) {
+        let adj;
+        let defaultEvent = false;
+        switch (event.key) {
+            case 'ArrowUp':
+                adj = self.adjacent(-1, this) || self.adjacent(-1);
+                adj.focus();
+                break;
+            case 'ArrowDown':
+                adj = self.adjacent(1, this) || self.adjacent(1);
+                adj.focus();
+                break;
+            case 'ArrowLeft':
+                adj = self.list.selected.adjacent(-1);
+                if (adj != null) {
+                    adj.focus();
+                }
+                break;
+            case 'ArrowRight':
+                adj = self.list.selected.adjacent(1);
+                if (adj != null) {
+                    adj.focus();
+                }
+                break;
+            case 'Enter':
+                adj = self.adjacent(-1, this) || self.adjacent(1, this);
+                self.list.select(this.dataset.value);
+                if (adj != null) {
+                    adj.focus();
+                } else {
+                    self.list.selected.adjacent(1).focus();
+                }
+                break;
+            default:
+                defaultEvent = true;
+        }
+        return defaultEvent;
+    };
+
+    this.setUp = function() {
+        self.element = element('div', {
+            className: (self.options.classMenu || '') + ' ' + (self.options.classMenuHidden || ''),
+            tabIndex: -1
+        });
+        self.list.container.appendChild(self.element);
+        window.addEventListener('resize', function() {
+            if (!self.hidden) {
+                self.updateHeight();
+            }
+        });
+    };
+
+    this.show = function() {
+        if (!self.hidden || self.shown.size === 0) {
+            return;
+        }
+        self.hidden = false;
+        self.element.classList.remove(self.options.classMenuHidden);
+        self.updateHeight();
+    };
+
+    this.hide = function() {
+        if (self.hidden) {
+            return;
+        }
+        self.hidden = true;
+        self.element.classList.add(self.options.classMenuHidden);
+    };
+
+    this.addItem = function(option) {
+        let item = element('a',
+            {
+                className: self.options.classMenuItem || '',
+                title: 'Add ' + option.label + ' to filter',
+                dataset: {value: option.value},
+            },
+            option.label
+        );
+        if (option.disabled) {
+            item.classList.add(self.options.classMenuItemDisabled);
+        } else {
+            item.tabIndex = 0;
+            item.onclick = function() {
+                self.list.select(option.value);
+            };
+            item.onfocus = function() {
+                self.show();
+            };
+        }
+        if (option.selected) {
+            item.style.display = 'none';
+        } else {
+            self.shown.add(option.value);
+        }
+        self.items.set(option.value, item);
+        item.addEventListener('keydown', self._handleKeys);
+        self.element.appendChild(item);
+    };
+
+    this.showItem = function(value) {
+        self.items.get(value).style.display = '';
+        self.shown.add(value);
+        self.updateHeight();
+    };
+
+    this.hideItem = function(value) {
+        self.items.get(value).style.display = 'none';
+        self.shown.delete(value);
+        self.updateHeight();
+    };
+
+    this.setUp();
+}
+
+/**
+ * Constructs a filter list from a list of options or a <select multiple> element
+ * @param {?FilterListOptions} options - Options for filter list
+ * @constructor
+ */
+function FilterList(options) {
+    let self = this;
+    this.options = processOptions(options, {
+        selectElement: null,
+        optionMap: null,
+        onSelect: null,
+        closeOnSelect: true,
+        defaultText: null,
+        classFilterList: 'filter-list',
+        classInput: 'filter-input',
+        classInputDefault: 'filter-default',
+        classSelected: 'filter-selected',
+        classSelectedDisabled: 'filter-selected-disabled',
+        classMenu: 'filter-menu',
+        classMenuHidden: 'filter-menu-hidden',
+        classMenuItem: 'filter-menu-item',
+        classMenuItemDisabled: 'filter-menu-item-disabled'
+    });
+
+    this.selectElement = null;
+    this.container = null;
+    this.selected = null;
+    this.menu = null;
+    this.data = new Map();
+
+    this._handleKeys = function(event) {
+        if (event.key === 'Escape') {
+            self.menu.hide();
+        }
+    };
+
+    this.select = function(value) {
+        let option = self.data.get(value);
+        if (option.selected) {
+            return;
+        }
+        option.selected = true;
+        if (option.original != null) {
+            option.original.selected = true;
+        }
+        if (self.options.onSelect != null) {
+            self.options.onSelect(self, option);
+        }
+        self.selected.addItem(option);
+        self.selected.updateDefault();
+        self.menu.hideItem(value);
+        if (self.options.closeOnSelect || self.menu.shown.size === 0) {
+            self.menu.hide();
+        }
+    };
+
+    this.deselect = function(value) {
+        let option = self.data.get(value);
+        if (!option.selected) {
+            return;
+        }
+        option.selected = false;
+        if (option.original != null) {
+            option.original.selected = false;
+        }
+        if (self.options.onSelect != null) {
+            self.options.onSelect(self, option);
+        }
+        self.selected.removeItem(value);
+        self.selected.updateDefault();
+        self.menu.showItem(value);
+    };
+
+    this._hideMenu = function(event) {
+        if (!self.menu.hidden && !self.container.contains(event.target)) {
+            self.menu.hide();
+        }
     };
 
     this._createList = function() {
-        self.container = element('div', {className: 'filter-list'});
-        window.addEventListener('click', function(event) {
-            if (!self.hidden && !self.container.contains(event.target)) {
-                self.hideMenu();
+        self.container = element('div', {className: self.options.classFilterList || ''});
+        self.container.addEventListener('keydown', self._handleKeys);
+
+        self.selected = new _FilterSelected(self);
+        self.menu = new _FilterMenu(self);
+
+        self.data.forEach(function(option) {
+            self.menu.addItem(option);
+            if (option.selected) {
+                self.selected.addItem(option);
             }
         });
+        self.selected.updateDefault();
 
-        self.input = element('div', {className: 'filter-input'});
-        self.input.onclick = function() {
-            if (self.hidden) {
-                self.showMenu();
-            }
-        };
+        window.addEventListener('click', self._hideMenu);
+        window.addEventListener('focusin', self._hideMenu);
 
-        self.menu = element('div',
-            {className: 'filter-menu filter-menu-hidden', tabIndex: '-1'}
-        );
-        window.addEventListener('resize', function() {
-            if (!self.hidden) {
-                // Reset height, otherwise scrollHeight's value will just increase
-                self.menu.style.height = 'auto';
-                self.menu.style.height = self._menuHeight() + 'px';
-            }
-        });
-
-        self.options.forEach(function(o) {
-            let menuItem = self._createItem(o);
-            self.menu.appendChild(menuItem);
-            if (o.selected) {
-                let selectedItem = self._createSelected(o);
-                self.input.appendChild(selectedItem);
-                self.selectedItems.set(o.value, selectedItem);
-            }
-        });
-        self._updateDefault();
-
-        self.container.appendChild(self.input);
-        self.container.appendChild(self.menu);
-        if (self.select != null) {
+        if (self.selectElement != null) {
             // Hide original select element and replace
-            self.select.style.display = 'none';
-            self.select.parentNode.insertBefore(self.container, self.select.nextSibling);
+            self.selectElement.style.display = 'none';
+            self.selectElement.parentNode.insertBefore(
+                self.container,
+                self.selectElement.nextSibling
+            );
         }
+        // Set initial height of menu element
+        self.menu.updateHeight();
     };
 
-    /**
-     * Creates filter list from map
-     * @param {Map<string, string>} map Map of values and labels
-     * @param {?string} text Default text when no items selected
-     */
-    this.createFromMap = function(map, text) {
-        self.select = null;
-        self.default = (text != null) ? text : null;
-
-        self.options = [];
+    this.createFromMap = function(map) {
+        self.selectElement = null;
         map.forEach(function(label, value) {
-            self.options.push({
+            self.data.set(value, {
                 label: label,
                 value: value,
                 disabled: false,
@@ -687,25 +983,17 @@ function FilterList(selectElement, defaultText, onSelect) {
                 original: null
             });
         });
-
         self._createList();
     };
 
-    /**
-     * Creates filter list from existing <select> element
-     * @param {HTMLElement|string} select Select element or ID
-     * @param {?string} text Default text when no items selected
-     */
-    this.createFromSelect = function(select, text) {
-        self.select = (select instanceof HTMLElement) ? select : document.getElementById(select);
-        if (self.select.tagName !== 'SELECT' || !self.select.multiple) {
+    this.createFromSelect = function(select) {
+        self.selectElement = (select instanceof HTMLElement) ?
+            select : document.getElementById(select);
+        if (self.selectElement.tagName !== 'SELECT' || !self.selectElement.multiple) {
             throw new TypeError('Must be a select element with multiple options.');
         }
-        self.default = (text != null) ? text : null;
-
-        self.options = [];
-        self.select.querySelectorAll('option').forEach(function(o) {
-            self.options.push({
+        self.selectElement.querySelectorAll('option').forEach(function(o) {
+            self.data.set(o.value, {
                 label: o.label,
                 value: o.value,
                 disabled: o.disabled,
@@ -713,106 +1001,18 @@ function FilterList(selectElement, defaultText, onSelect) {
                 original: o
             });
         });
-
         self._createList();
     };
 
-    if (selectElement != null) {
-        this.createFromSelect(selectElement, defaultText);
+    if (self.options.optionMap != null && self.options.selectElement != null) {
+        throw new TypeError(
+            'Only one of optionMap and selectElement options can be used to construct FilterList.'
+        );
+    } else if (self.options.selectElement != null) {
+        this.createFromSelect(self.options.selectElement);
+    } else if (self.options.optionMap != null) {
+        this.createFromMap(self.options.optionMap);
     }
-
-    this._handleKeys = function(event) {
-        const KEY_ESC = 'Escape';
-        if (event.key === KEY_ESC) {
-            self.hideMenu();
-        }
-    };
-
-    /**
-     * Shows menu
-     */
-    this.showMenu = function() {
-        if (!self.hidden) {
-            return;
-        }
-        if (self.selectedItems.size === self.options.length) {
-            return;
-        }
-        self.hidden = false;
-
-        self.menu.classList.remove('filter-menu-hidden');
-        self.menu.style.height = self._menuHeight() + 'px';
-
-        window.addEventListener('keydown', self._handleKeys);
-    };
-
-    /**
-     * Hides menu
-     */
-    this.hideMenu = function() {
-        if (self.hidden) {
-            return;
-        }
-        self.hidden = true;
-
-        self.menu.classList.add('filter-menu-hidden');
-        self.menu.style.height = '0';
-
-        window.removeEventListener('keydown', self._handleKeys);
-    };
-
-    /**
-     * Selects an option. Updates original select element as well
-     * @param {SelectOption} option
-     */
-    this.addItem = function(option) {
-        if (option.selected) {
-            return;
-        }
-
-        option.selected = true;
-        if (option.original != null) {
-            option.original.selected = true;
-        }
-        if (self.onSelect != null) {
-            self.onSelect(self, option);
-        }
-
-        let selectedItem = self._createSelected(option),
-            menuItem = self.menu.querySelector('a[data-value="' + option.value + '"]');
-        self.selectedItems.set(option.value, selectedItem);
-        self.input.appendChild(selectedItem);
-        menuItem.style.display = 'none';
-        self._updateDefault();
-
-        if (self.selectedItems.size === self.options.length) {
-            self.hideMenu();
-        }
-    };
-
-    /**
-     * Deselects an option. Updates original select element as well
-     * @param {SelectOption} option
-     */
-    this.removeItem = function(option) {
-        if (!option.selected) {
-            return;
-        }
-
-        option.selected = false;
-        if (option.original != null) {
-            option.original.selected = false;
-        }
-        if (self.onSelect != null) {
-            self.onSelect(self, option);
-        }
-
-        let menuItem = self.menu.querySelector('a[data-value="' + option.value + '"]');
-        self.input.removeChild(self.selectedItems.get(option.value));
-        self.selectedItems.delete(option.value);
-        menuItem.style.display = '';
-        self._updateDefault();
-    };
 }
 
 

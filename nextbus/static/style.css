@@ -1119,7 +1119,6 @@ section {
   top: 100%;
   width: 100%;
   max-height: 24rem;
-  height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   box-sizing: border-box;
@@ -1133,6 +1132,7 @@ section {
 
 .filter-menu-hidden {
   border-bottom-style: none;
+  height: 0 !important;
 }
 
 .filter-menu-item {

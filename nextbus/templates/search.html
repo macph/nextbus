@@ -161,10 +161,11 @@ window.addEventListener('load', function() {
     document.getElementById('select-area-refresh').style.display = 'none';
     let formSelectArea = document.getElementById('form-select-area');
     let onSelect = (formSelectArea != null) ? function() { formSelectArea.submit(); } : null;
-    let selectArea = document.getElementById('select-area');
-    if (selectArea != null) {
-        filterArea = new FilterList('select-area', 'Filter by area...', onSelect);
-    }
+    filterArea = new FilterList({
+        selectElement: document.getElementById('select-area'),
+        onSelect: onSelect,
+        defaultText: 'Filter by area...'
+    });
 });
 </script>
 {% endblock %}

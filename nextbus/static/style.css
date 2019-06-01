@@ -74,6 +74,15 @@ label {
 }
 
 button,
+input:not([type="radio"]):not([type="checkbox"]) {
+  /* Disable default rounded style in Safari */
+  -webkit-border-radius: 0;
+  -webkit-appearance: none;
+  border-radius: 0;
+  outline: none;
+}
+
+button,
 input[type="submit"],
 input[type="file"] {
   min-width: 2.5em;
@@ -83,8 +92,6 @@ input[type="file"] {
 
   background-color: transparent;
   border: 0.12rem solid #212121;
-  border-radius: 0;
-  outline: none;
 
   font-size: 1.5rem;
   font-weight: 700;
@@ -108,8 +115,6 @@ input:not([type="submit"]):not([type="file"]) {
   border-width: 0.12rem;
   border-style: none none solid;
   border-color: #212121;
-  border-radius: 0;
-  outline: none;
   min-width: 0; /* Override width set by browser */
 
   transition: 0.2s border-color ease-out;
@@ -182,6 +187,7 @@ body {
 
 header {
   flex: none;
+  position: -webkit-sticky; /* Sticky requires prefix on Safari */
   position: sticky;
   top: 0;
   left: 0;
@@ -337,6 +343,7 @@ section {
   width: 100%;
   height: 100%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   background-color: #000E;
   transition:
     0.2s opacity ease-out,
@@ -1114,6 +1121,7 @@ section {
   max-height: 24rem;
   height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   box-sizing: border-box;
 
   border-width: 0.12rem;
@@ -1226,6 +1234,7 @@ section {
   margin: 1.6rem -1.6rem;
   overflow-x: auto;
   overflow-y: visible;
+  -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
 }
 
 .timetable {
@@ -1244,6 +1253,7 @@ section {
   min-width: 18rem;
   padding: 0.5rem;
 
+  position: -webkit-sticky; /* Sticky requires prefix on Safari */
   position: sticky;
   left: 0;
   z-index: 2;
@@ -1279,6 +1289,7 @@ section {
 }
 
 .timetable-last {
+  position: -webkit-sticky; /* Sticky requires prefix on Safari */
   position: sticky;
   right: 0;
   min-width: auto !important;;
@@ -1346,6 +1357,7 @@ section {
 
 .body-map {
   max-width: none;
+  background-color: #212121;
 }
 
 .body-map > header {
@@ -1361,12 +1373,8 @@ section {
   color: #212121;
 }
 
-.body-map > main {
-
-}
-
-.body-map > footer {
-  
+.map-panel {
+  background-color: white;
 }
 
 .body-map .overlay-content {
@@ -1599,6 +1607,7 @@ section {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   }
 
   .body-map > .map-panel > main {

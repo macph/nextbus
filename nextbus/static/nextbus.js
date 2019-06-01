@@ -2516,6 +2516,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
 }
 
 
+// TODO: iOS Safari in landscape: live stop panel keeps jumping up to front when countdown updated
 // TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
 
 

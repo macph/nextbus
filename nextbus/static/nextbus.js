@@ -306,10 +306,16 @@ function StarredStops(cookieSet) {
     };
 
     /**
-     * Removes stop from list and call function.
-     * @param {onLoad} onRemove
+     * Called when starred stops API returns response.
+     * @callback onMove
      */
-    this.remove = function(onRemove) {
+
+    /**
+     * Moves stop on starred stop list to an index.
+     * @param {number} index - New index position for stop
+     * @param {onMove} onMove
+     */
+    this.move = function(index, onMove) {
         if (self.code == null) {
             throw new TypeError('SMS code needs to be set for StarredStops object first.');
         }
@@ -318,8 +324,31 @@ function StarredStops(cookieSet) {
         }
         self.r.onload = function() {
             self.active = false;
-            if (onRemove != null) {
-                onRemove();
+            if (onMove != null) {
+                onMove();
+            }
+        };
+        self.r.open('PATCH', URL.STARRED + self.code + '/' + index, true);
+        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        self.r.send();
+        self.active = true;
+    };
+
+    /**
+     * Removes stop from list and call function.
+     * @param {onLoad} onDelete
+     */
+    this.delete = function(onDelete) {
+        if (self.code == null) {
+            throw new TypeError('SMS code needs to be set for StarredStops object first.');
+        }
+        if (self.active || !self.set) {
+            return;
+        }
+        self.r.onload = function() {
+            self.active = false;
+            if (onDelete != null) {
+                onDelete();
             }
         };
         self.r.open('DELETE', URL.STARRED + self.code, true);
@@ -488,7 +517,7 @@ function createStarredButton(starred, stopIsStarred, starredList) {
         starredButton.textContent = removeText;
         starredButton.title = removeTitle;
         starredButton.onclick = function() {
-            starred.remove(onRemove);
+            starred.delete(onRemove);
         };
         if (starredList != null) {
             starredList.reset();
@@ -1013,6 +1042,345 @@ function FilterList(options) {
     } else if (self.options.optionMap != null) {
         this.createFromMap(self.options.optionMap);
     }
+}
+
+
+function _isBefore(first, second) {
+    if (first === second || first.parentNode !== second.parentNode) {
+        return false;
+    }
+    let previous = second;
+    while (previous != null && previous !== first) {
+        previous = previous.previousSibling;
+    }
+    return previous === first;
+}
+
+
+function _nodeIndex(node) {
+    let i = 0,
+        prev = node;
+    while ((prev = prev.previousSibling) != null) {
+        if (prev.nodeType === Node.ELEMENT_NODE) {
+            i++;
+        }
+    }
+    return i;
+}
+
+
+/**
+ * @callback onSort
+ * @param {SortableList} self
+ * @param {HTMLElement} item
+ * @param {number} startIndex
+ * @param {number} endIndex
+ * @param {function} finish
+ */
+
+/**
+ * @typedef SortableListOptions
+ * @property {?onSort} onSort - Callback when
+ * @property {boolean} wait - When calling onSort, disable dragging & wait for callback to complete
+ */
+
+/**
+ * @typedef {{
+ *     item: HTMLElement,
+ *     anchor: HTMLElement | null
+ * }} SortableItem
+ */
+
+/**
+ * Converts list element into a sortable with draggable items
+ * @param {HTMLElement | string} list
+ * @param {SortableListOptions} options
+ * @constructor
+ */
+function SortableList(list, options) {
+    let self = this;
+    this.list = (list instanceof HTMLElement) ? list : document.getElementById(list);
+    this.options = processOptions(options, {
+        onSort: null,
+        wait: false
+    });
+
+    this.items = [];
+    this.active = null;
+    this.index = null;
+
+    this._replaceItem = function(item) {
+        if (self.active != null && self.active !== item) {
+            let insertBefore = (_isBefore(self.active, item)) ?
+                item.nextSibling : item;
+            self.list.removeChild(self.active);
+            self.list.insertBefore(self.active, insertBefore);
+        }
+    };
+
+    this._moveTo = function(index) {
+        if (index >= 0 && index < self.items.length) {
+            self._replaceItem(self.list.children[index]);
+        }
+    };
+
+    this._getItem = function(element) {
+        let item;
+        for (let i = 0; i < self.items.length; i++) {
+            item = self.items[i].item;
+            if (item.contains(element)) {
+                return item;
+            }
+        }
+        return null;
+    };
+
+    this._touchItem = function(event) {
+        if (event.changedTouches.length === 1) {
+            let touch = event.changedTouches[0],
+                target = document.elementFromPoint(touch.clientX, touch.clientY);
+            return self._getItem(target);
+        } else {
+            self._cancel();
+            return null;
+        }
+    };
+
+    this._adjacent = function(direction, item) {
+        let adjacent = (item != null) ? item : self.active;
+        if (adjacent == null || !self.items || !direction || !self.list.contains(adjacent)) {
+            return null;
+        }
+        while (true) {
+            adjacent = (direction > 0) ? adjacent.nextSibling : adjacent.previousSibling;
+            if (adjacent == null) {
+                adjacent = (direction > 0) ? self.list.firstChild : self.list.lastChild;
+            }
+            if (adjacent.nodeType === Node.ELEMENT_NODE) {
+                for (let i = 0; i < self.items.length; i++) {
+                    if (adjacent === self.items[i].item) {
+                        return adjacent;
+                    }
+                }
+            }
+        }
+    };
+
+    this._hold = function(element) {
+        if (self.active == null) {
+            self.active = element;
+            self.index = _nodeIndex(self.active);
+            self.active.style.opacity = 0.1;
+            // Enable dropping while dragging is active
+            self._enableDrop();
+        }
+    };
+
+    this._release = function() {
+        if (self.active != null) {
+            self.active.style.opacity = '';
+            self.active = null;
+            self.index = null;
+            // Disable dropping so the inactive elements can be scrolled over
+            self._disableDrop();
+        }
+    };
+
+    this._dragStart = function(event) {
+        // Event target not always the list item element, get that first
+        let item = self._getItem(this);
+        if (item != null) {
+            // setData required to make drag & drop work
+            event.dataTransfer.setData('text/html', item.outerHTML);
+            self._hold(item);
+        }
+    };
+
+    this._dragOver = function(event) {
+        event.preventDefault();
+        self._replaceItem(this);
+    };
+
+    this._touchStart = function(event) {
+        // preventDefault required to block scrolling while dragging on Safari
+        event.preventDefault();
+        // Element at touch coordinates not always the list item element, get that first
+        let target = self._touchItem(event);
+        if (target != null) {
+            self._hold(target);
+        }
+    };
+
+    this._touchMove = function(event) {
+        let target = self._touchItem(event);
+        // Avoid blocking zooming/pinching which is not cancelable
+        if (target != null && event.cancelable) {
+            // Block scrolling on most devices
+            event.preventDefault();
+            self._replaceItem(target);
+        }
+    };
+
+    this._cancel = function() {
+        self._moveTo(self.index);
+        self._release();
+    };
+
+    this._end = function() {
+        if (self.active == null) {
+            return;
+        }
+        if (self.options.onSort != null && self.options.wait) {
+            // Pass another function to callback to complete move, keep drag disabled
+            // If this function is called with true (or no arguments) the move is finalised,
+            // otherwise it is cancelled and the active item back in original position
+            self.disableDrag();
+            self.list.style.opacity = '0.1';
+            self.options.onSort(
+                self,
+                self.active,
+                self.index,
+                _nodeIndex(self.active),
+                function(result) {
+                    if (result || result == null) {
+                        self._release();
+                    } else {
+                        self._cancel();
+                    }
+                    self.enableDrag();
+                    self.list.style.opacity = '';
+                }
+            );
+        } else if (self.options.onSort != null) {
+            // Callback but don't wait for it. Passes a no-op function
+            self.options.onSort(
+                self,
+                self.active,
+                self.index,
+                _nodeIndex(self.active),
+                function() {}
+            );
+            self._release();
+        } else {
+            // No callbacks required, complete the move
+            self._release();
+        }
+    };
+
+    this._handleArrowKey = function(direction, item) {
+        let adj = self._adjacent(direction, item);
+        if (adj != null && self.active != null) {
+            self._replaceItem(adj);
+            self.active.focus();
+        } else if (adj != null) {
+            adj.focus();
+        }
+    };
+
+    this._handleKeys = function(event) {
+        switch (event.key) {
+            case 'ArrowUp':
+                self._handleArrowKey(-1, this);
+                break;
+            case 'ArrowDown':
+                self._handleArrowKey(1, this);
+                break;
+            case ' ':
+            case 'Enter':
+                if (self.active != null) {
+                    self._end();
+                } else {
+                    self._hold(this);
+                }
+                break;
+            case 'Escape':
+                if (self.active != null) {
+                    self._cancel();
+                    this.focus();
+                }
+                break;
+            case 'Tab':
+                if (self.active != null) {
+                    // Block tabbing while moving item
+                    event.preventDefault();
+                }
+                break;
+        }
+    };
+
+    this._enableDrop = function() {
+        self.items.forEach(function(i) {
+            i.item.addEventListener('dragover', self._dragOver);
+            i.item.addEventListener('touchmove', self._touchMove, {passive: false});
+        });
+    };
+
+    this._disableDrop = function() {
+        self.items.forEach(function(i) {
+            i.item.removeEventListener('dragover', self._dragOver);
+            i.item.removeEventListener('touchmove', self._touchMove);
+        });
+    };
+
+    this.enableDrag = function() {
+        self.items.forEach(function(i) {
+            if (i.anchor != null) {
+                i.anchor.addEventListener('dragstart', self._dragStart);
+                i.anchor.addEventListener('dragend', self._end);
+                i.anchor.addEventListener('touchstart', self._touchStart);
+                i.anchor.addEventListener('touchend', self._end);
+                i.anchor.addEventListener('touchcancel', self._cancel);
+            }
+            i.item.addEventListener('keydown', self._handleKeys);
+        });
+    };
+
+    this.disableDrag = function() {
+        self.items.forEach(function(i) {
+            if (i.anchor != null) {
+                i.anchor.removeEventListener('dragstart', self._dragStart);
+                i.anchor.removeEventListener('dragend', self._end);
+                i.anchor.removeEventListener('touchstart', self._touchStart);
+                i.anchor.removeEventListener('touchend', self._end);
+                i.anchor.removeEventListener('touchcancel', self._cancel);
+            }
+            i.item.removeEventListener('keydown', self._handleKeys);
+        });
+    };
+
+    this.setUp = function() {
+        if (self.list == null) {
+            return;
+        }
+        self.list.querySelectorAll('li').forEach(function(i) {
+            let a = (i.hasAttribute('draggable')) ?
+                i : i.querySelector('[draggable]');
+            if (a != null) {
+                // draggable attribute must be 'true' to work
+                a.draggable = true;
+                i.tabIndex = 0;
+            }
+            self.items.push({item: i, anchor: a});
+        });
+        self.enableDrag();
+    };
+
+    this.removeItem = function(element) {
+        let item = self._getItem(element);
+        if (item == null) {
+            return false;
+        }
+        for (let i = 0; i < self.items.length; i++) {
+            if (self.items[i].item === item) {
+                self.list.removeChild(item);
+                self.items.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    self.setUp();
 }
 
 

@@ -13,15 +13,27 @@
       <h3>Stops</h3>
       <p><button id="delete-open" title="Delete all starred stops">Delete all stops</button></p>
     </div>
-    {% call(s) f.print_list(starred) -%}
-    <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
-      <span>
-        {{ f.print_stop_indicator(s) }}
-        <span class="item-label">{{ s.name }}</span>
-      </span>
-      <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
-    </a>
-    {%- endcall %}
+    <ul id="starred-list" class="list list-actions">
+      {%- for s in starred %}
+      <li data-smscode="{{ s.naptan_code }}">
+        <span class="item item-action" draggable="true">&#x2756;</span>
+        <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
+          <span>
+            {{ f.print_stop_indicator(s) }}
+            <span class="item-label">{{ s.name }}</span>
+          </span>
+          <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
+        </a>
+        <a class="item item-action" onclick="(function(event) {
+            starred.setCode('{{ s.naptan_code }}');
+            starred.delete(function() {
+                sortableList.removeItem(event.target);
+                starredList.reset();
+            });
+        })(event)">&#x2717;</a>
+      </li>
+      {%- endfor %}
+    </ul>
     {%- else -%}
     <p>You can have your favourite stops here! Just find them and star them.</p>
     {%- endif %}
@@ -60,10 +72,21 @@ window.addEventListener('load', function() {
 {% block script %}
 <script>
 let set = {{ ('stops' in session)|tojson }};
-let starred;
+let starred, sortableList;
 window.addEventListener('load', function() {
-    starred = new StarredStops(set);
     resizeIndicator('.indicator');
+    starred = new StarredStops(set);
+    sortableList = new SortableList('starred-list', {
+        onSort: function(self, item, startIndex, endIndex, finish) {
+            console.log(self, item, startIndex, endIndex, finish);
+            starred.setCode(item.dataset.smscode);
+            starred.move(endIndex, function() {
+                finish();
+                starredList.reset();
+            });
+        },
+        wait: true
+    });
 });
 </script>
 {% endblock %}

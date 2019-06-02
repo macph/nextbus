@@ -183,18 +183,14 @@ function Overlay(overlayElement, focusFirst) {
 function StarredStops(cookieSet) {
     let self = this;
     this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
-    this.onAdd = null;
+
+    this.code = null;
+    this.onSuccess = null;
+    this.onFail = null;
 
     this.overlay = null;
     this.overlayElement = null;
-    this.code = null;
-    this.data = null;
     this.active = false;
-    this.r = new XMLHttpRequest();
-
-    this.setCode = function(code) {
-        self.code = code;
-    };
 
     this.createDialog = function() {
         if (self.overlayElement != null) {
@@ -245,115 +241,139 @@ function StarredStops(cookieSet) {
     };
 
     /**
+     * Called on successful request.
+     * @callback onSuccess
+     * @param {Object?} data
+     */
+
+    /**
      * Called when starred stops API returns response.
-     * @callback onLoad
+     * @callback onFail
+     * @param {number} status
      */
 
     /**
      * Gets list of stops and call function on load
-     * @param {onLoad} onGet
+     * @param {onSuccess} onSuccess
+     * @param {onFail} onFail
      */
-    this.get = function(onGet) {
-        self.r.onload = function() {
+    this.get = function(onSuccess, onFail) {
+        let request = new XMLHttpRequest();
+        request.open('GET', URL.STARRED, true);
+        request.onloadend = function() {
+            let data = null;
             if (this.status === 200) {
-                self.set = true;
-                self.data = JSON.parse(self.r.responseText).stops;
-            } else if (this.status === 422) {
-                self.set = false;
-                self.data = null;
+                data = JSON.parse(request.responseText);
+                if (onSuccess != null) {
+                    onSuccess(data);
+                }
+            } else if (onFail != null) {
+                onFail(request.status);
             }
-            onGet();
+            self.set = (data != null);
         };
-        self.r.open('GET', URL.STARRED, true);
-        self.r.send();
+        request.send();
     };
 
     /**
      * Add stop to list and call function. If list not set, open overlay to confirm cookie before
      * continuing with callback.
-     * @param {onLoad} onAdd
+     * @param {string} code
+     * @param {onSuccess} onSuccess
+     * @param {onFail} onFail
      */
-    this.add = function(onAdd) {
-        if (self.code == null) {
-            throw new TypeError('SMS code needs to be set for StarredStops object first.');
-        }
+    this.add = function(code, onSuccess, onFail) {
         if (!self.set && self.overlayElement == null) {
             self.createDialog();
         }
         if (!self.set) {
-            // Save callback and reuse on next call
-            self.onAdd = onAdd;
+            // Save code and callbacks and reuse on next call
+            self.code = code;
+            self.onSuccess = onSuccess;
+            self.onFail = onFail;
             self.overlay.open();
             return;
         }
-
         if (self.active) {
             return;
         }
-        self.r.onload = function() {
+
+        let request = new XMLHttpRequest();
+        request.open('POST', URL.STARRED + (self.code || code), true);
+        request.onloadend = function() {
             self.active = false;
-            if (self.onAdd != null) {
-                self.onAdd();
-                self.onAdd = null;
-            } else if (onAdd != null) {
-                onAdd();
+            let _onSuccess = self.onSuccess || onSuccess,
+                _onFail = self.onFail || onFail;
+            if (request.status === 201 || request.status === 204) {
+                if (_onSuccess != null) {
+                    _onSuccess(null);
+                }
+            } else if (_onFail != null) {
+                _onFail(request.status);
             }
+            self.code = self.onSuccess = self.onFail = null;
         };
-        self.r.open('POST', URL.STARRED + self.code, true);
-        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        self.r.send();
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        request.send();
         self.active = true;
     };
 
     /**
-     * Called when starred stops API returns response.
-     * @callback onMove
-     */
-
-    /**
      * Moves stop on starred stop list to an index.
+     * @param {string} code
      * @param {number} index - New index position for stop
-     * @param {onMove} onMove
+     * @param {onSuccess} onSuccess
+     * @param {onFail} onFail
      */
-    this.move = function(index, onMove) {
-        if (self.code == null) {
-            throw new TypeError('SMS code needs to be set for StarredStops object first.');
-        }
+    this.move = function(code, index, onSuccess, onFail) {
         if (self.active || !self.set) {
             return;
         }
-        self.r.onload = function() {
+
+        let request = new XMLHttpRequest();
+        request.open('PATCH', URL.STARRED + code + '/' + index, true);
+        request.onloadend = function() {
             self.active = false;
-            if (onMove != null) {
-                onMove();
+            if (request.status === 204 && onSuccess != null) {
+                if (onSuccess != null) {
+                    onSuccess(null);
+                }
+            } else if (onFail != null) {
+                onFail(request.status);
             }
         };
-        self.r.open('PATCH', URL.STARRED + self.code + '/' + index, true);
-        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        self.r.send();
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        request.send();
         self.active = true;
     };
 
     /**
      * Removes stop from list and call function.
-     * @param {onLoad} onDelete
+     * @param {string?} code
+     * @param {onSuccess} onSuccess
+     * @param {onFail} onFail
      */
-    this.delete = function(onDelete) {
-        if (self.code == null) {
-            throw new TypeError('SMS code needs to be set for StarredStops object first.');
-        }
+    this.delete = function(code, onSuccess, onFail) {
         if (self.active || !self.set) {
             return;
         }
-        self.r.onload = function() {
+
+        let request = new XMLHttpRequest();
+        let url = (code != null) ? URL.STARRED + code : URL.STARRED;
+        request.open('DELETE', url, true);
+        request.onloadend = function() {
             self.active = false;
-            if (onDelete != null) {
-                onDelete();
+            if (request.status === 204) {
+                self.set = (code != null);
+                if (onSuccess != null) {
+                    onSuccess(null);
+                }
+            } else if (onFail != null) {
+                onFail(request.status);
             }
         };
-        self.r.open('DELETE', URL.STARRED + self.code, true);
-        self.r.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        self.r.send();
+        request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        request.send();
         self.active = true;
     };
 }
@@ -399,24 +419,20 @@ function StarredStopList(container) {
      * Calls API to get new list
      */
     this.updateList = function() {
-        if (self.called) {
-            return;
-        }
-        let request = new XMLHttpRequest();
-        request.onload = function() {
-            if (this.status === 200) {
-                self._createList(JSON.parse(this.responseText));
-                if (self.overlay != null) {
-                    self.overlay.findFocusable();
+        if (!self.called) {
+            let request = new XMLHttpRequest();
+            request.open('GET', URL.STARRED + 'data', true);
+            request.onload = function () {
+                if (this.status === 200) {
+                    self._createList(JSON.parse(request.responseText));
+                    if (self.overlay != null) {
+                        self.overlay.findFocusable();
+                    }
+                    self.called = true;
                 }
-                self.called = true;
-            } else if (this.status === 422) {
-                // Cookie list does not exist yet; don't do any more calls until it has been reset
-                self.called = true;
-            }
-        };
-        request.open('GET', URL.STARRED + 'data', true);
-        request.send();
+            };
+            request.send();
+        }
     };
 
     /**
@@ -500,11 +516,12 @@ function StarredStopList(container) {
 /**
  * Creates starred toggle button
  * @param {StarredStops} starred
+ * @param {string} code
  * @param {boolean} stopIsStarred
  * @param {StarredStopList} starredList
  * @returns {HTMLElement}
  */
-function createStarredButton(starred, stopIsStarred, starredList) {
+function createStarredButton(starred, code, stopIsStarred, starredList) {
     let addText = '\u2606 Add stop',
         addTitle = 'Add to list of starred stops',
         removeText = '\u2605 Remove stop',
@@ -517,7 +534,7 @@ function createStarredButton(starred, stopIsStarred, starredList) {
         starredButton.textContent = removeText;
         starredButton.title = removeTitle;
         starredButton.onclick = function() {
-            starred.delete(onRemove);
+            starred.delete(code, onRemove);
         };
         if (starredList != null) {
             starredList.reset();
@@ -527,7 +544,7 @@ function createStarredButton(starred, stopIsStarred, starredList) {
         starredButton.textContent = addText;
         starredButton.title = addTitle;
         starredButton.onclick = function() {
-            starred.add(onAdd);
+            starred.add(code, onAdd);
         };
         if (starredList != null) {
             starredList.reset();
@@ -1070,17 +1087,22 @@ function _nodeIndex(node) {
 
 
 /**
+ * @callback sortResult
+ * @param {boolean?} result
+ */
+
+/**
  * @callback onSort
  * @param {SortableList} self
  * @param {HTMLElement} item
  * @param {number} startIndex
  * @param {number} endIndex
- * @param {function} finish
+ * @param {sortResult} finish
  */
 
 /**
  * @typedef SortableListOptions
- * @property {?onSort} onSort - Callback when
+ * @property {?onSort} onSort - Callback when completing a move
  * @property {boolean} wait - When calling onSort, disable dragging & wait for callback to complete
  */
 
@@ -1109,6 +1131,17 @@ function SortableList(list, options) {
     this.active = null;
     this.index = null;
 
+    this.getItem = function(element) {
+        let item;
+        for (let i = 0; i < self.items.length; i++) {
+            item = self.items[i].item;
+            if (item.contains(element)) {
+                return item;
+            }
+        }
+        return null;
+    };
+
     this._replaceItem = function(item) {
         if (self.active != null && self.active !== item) {
             let insertBefore = (_isBefore(self.active, item)) ?
@@ -1124,22 +1157,11 @@ function SortableList(list, options) {
         }
     };
 
-    this._getItem = function(element) {
-        let item;
-        for (let i = 0; i < self.items.length; i++) {
-            item = self.items[i].item;
-            if (item.contains(element)) {
-                return item;
-            }
-        }
-        return null;
-    };
-
     this._touchItem = function(event) {
         if (event.changedTouches.length === 1) {
             let touch = event.changedTouches[0],
                 target = document.elementFromPoint(touch.clientX, touch.clientY);
-            return self._getItem(target);
+            return self.getItem(target);
         } else {
             self._cancel();
             return null;
@@ -1188,7 +1210,7 @@ function SortableList(list, options) {
 
     this._dragStart = function(event) {
         // Event target not always the list item element, get that first
-        let item = self._getItem(this);
+        let item = self.getItem(this);
         if (item != null) {
             // setData required to make drag & drop work
             event.dataTransfer.setData('text/html', item.outerHTML);
@@ -1365,8 +1387,7 @@ function SortableList(list, options) {
         self.enableDrag();
     };
 
-    this.removeItem = function(element) {
-        let item = self._getItem(element);
+    this.removeItem = function(item) {
         if (item == null) {
             return false;
         }
@@ -2888,10 +2909,13 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             data.operators
         );
 
-        self.starred.setCode(data.smsCode);
-        self.starred.get(function() {
-            let codeInList = (self.starred.set && self.starred.data.indexOf(data.smsCode) > -1);
-            let button = createStarredButton(self.starred, codeInList, self.starredList);
+        self.starred.get(function(starredList) {
+            let button = createStarredButton(
+                self.starred,
+                data.smsCode,
+                (self.starred.set && starredList.stops.indexOf(data.smsCode) > -1),
+                self.starredList
+            );
             actions.insertBefore(button, closePanel);
         });
 

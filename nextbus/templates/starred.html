@@ -25,9 +25,8 @@
           <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
         </a>
         <a class="item item-action" onclick="(function(event) {
-            starred.setCode('{{ s.naptan_code }}');
-            starred.delete(function() {
-                sortableList.removeItem(event.target);
+            starred.delete('{{ s.naptan_code }}', function() {
+                sortableList.removeItem(sortableList.getItem(event.target));
                 starredList.reset();
             });
         })(event)">&#x2717;</a>
@@ -55,7 +54,10 @@
 let deleteOverlay;
 window.addEventListener('load', function() {
     deleteOverlay = new Overlay('overlay-delete', 'delete-confirm');
-    document.getElementById('delete-open').onclick = function() { deleteOverlay.open(); };
+    let deleteOpen = document.getElementById('delete-open');
+    if (deleteOpen != null) {
+        document.getElementById('delete-open').onclick = function() { deleteOverlay.open(); };
+    }
     document.getElementById('delete-close').onclick = function() { deleteOverlay.close(); };
     document.getElementById('delete-confirm').onclick = function() {
         let request = new XMLHttpRequest();
@@ -78,12 +80,16 @@ window.addEventListener('load', function() {
     starred = new StarredStops(set);
     sortableList = new SortableList('starred-list', {
         onSort: function(self, item, startIndex, endIndex, finish) {
-            console.log(self, item, startIndex, endIndex, finish);
-            starred.setCode(item.dataset.smscode);
-            starred.move(endIndex, function() {
-                finish();
-                starredList.reset();
-            });
+            if (startIndex !== endIndex) {
+                starred.move(item.dataset.smscode, endIndex, function() {
+                    finish(true);
+                    starredList.reset();
+                }, function() {
+                    finish(false);
+                });
+            } else {
+                finish(false);
+            }
         },
         wait: true
     });

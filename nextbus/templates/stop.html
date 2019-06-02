@@ -132,9 +132,8 @@ let actions = document.getElementById('actions'),
 
 window.addEventListener('load', function() {
     starred = new StarredStops(set);
-    starred.setCode(smsCode);
     starred.createDialog();
-    let button = createStarredButton(starred, active, starredList);
+    let button = createStarredButton(starred, smsCode, active, starredList);
     actions.appendChild(button);
 });
 </script>

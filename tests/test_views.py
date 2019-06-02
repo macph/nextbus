@@ -13,7 +13,7 @@ def test_index_start(client, db_loaded):
 
 def test_index_stops_added(client, db_loaded):
     first = client.post("/api/starred/53272")
-    assert first.status_code == 204
+    assert first.status_code == 201
 
     second = client.post("/api/starred/76193")
     assert second.status_code == 204

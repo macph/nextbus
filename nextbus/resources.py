@@ -108,25 +108,13 @@ class StarredStop(MethodView):
     """ API to manipulate list of starred stops on cookie, with all responses
         sent in JSON.
 
-        GET: Send list of starred stops by NaPTAN code or single stop if
-        specified
+        GET: Send list of SMS codes for starred stops, or null if cookie not set
         POST: Add starred NaPTAN code to cookie list
         PATCH: Move starred NaPTAN code to new index in list
         DELETE: Delete starred NaPTAN code from cookie list
     """
-    def get(self, naptan_code):
-        if "stops" not in session:
-            return bad_request(422, "No cookie has been set.")
-
-        code = naptan_code.lower() if naptan_code is not None else None
-        if code is None:
-            return jsonify({"stops": session.get("stops", [])})
-        elif code in session["stops"]:
-            return jsonify({"stop": code})
-        else:
-            return bad_request(
-                404, "Stop %r not in list of starred stops." % naptan_code
-            )
+    def get(self, naptan_code=None):
+        return jsonify({"stops": session.get("stops")})
 
     def post(self, naptan_code):
         if naptan_code is None:
@@ -134,22 +122,22 @@ class StarredStop(MethodView):
 
         code = naptan_code.lower()
         if "stops" in session and code in session["stops"]:
-            return bad_request(
-                422, "SMS code %r already in list of starred stops." % code
-            )
+            message = "SMS code %r already in list of starred stops." % code
+            return bad_request(422, message)
 
         stop = models.StopPoint.query.filter_by(naptan_code=code).one_or_none()
         if stop is None:
             return bad_request(404, "SMS code %r does not exist." % code)
+
         if "stops" in session:
             session["stops"].append(code)
             session.modified = True
+            return "", 204
         else:
             session["stops"] = [code]
             session.permanent = True
             session.modified = True
-
-        return "", 204
+            return "", 201
 
     def patch(self, naptan_code, index):
         if "stops" not in session:
@@ -157,14 +145,13 @@ class StarredStop(MethodView):
 
         code = naptan_code.lower()
         if code not in session["stops"]:
-            return bad_request(
-                404, "Stop %r not in list of starred stops." % code
-            )
+            message = "Stop %r not in list of starred stops." % code
+            return bad_request(404, message)
 
         length = len(session["stops"])
         if index not in range(length):
-            return bad_request(400, "Index %d out of range [0, %d]." %
-                               (index, length - 1))
+            message = "Index %d is outside range [0, %d]." % (index, length - 1)
+            return bad_request(400, message)
 
         if session["stops"].index(code) != index:
             session["stops"].remove(code)
@@ -186,60 +173,35 @@ class StarredStop(MethodView):
             session["stops"].remove(code)
             session.modified = True
         else:
-            return bad_request(
-                404, "SMS code %r not in list of starred stops." % code
-            )
+            message = "SMS code %r not in list of starred stops." % code
+            return bad_request(404, message)
 
         return "", 204
 
 
-def starred_stop_data(naptan_code=None):
-    """ GET endpoint for GeoJSON data for starred stops.
-
-        If a NaPTAN code is specified, the Feature GeoJSON data is returned for
-        that stop only, otherwise a FeatureCollection is returned with a list of
-        starred stops.
-    """
+def starred_stop_data():
+    """ GET endpoint for GeoJSON data for starred stops. """
     if "stops" not in session:
-        return bad_request(422, "No cookie has been set.")
+        return jsonify(_list_geojson([]))
 
     codes = session["stops"]
     def _by_index(s): return codes.index(s.naptan_code)
 
-    if naptan_code is not None:
-        sms = naptan_code.lower()
-        if sms not in codes:
-            return bad_request(
-                404, "SMS code %r not in list of starred stops." % sms
-            )
-        stop = (
-            models.StopPoint.query
-            .options(db.joinedload(models.StopPoint.locality))
-            .filter(models.StopPoint.naptan_code == sms)
-            .one_or_none()
-        )
-        if stop is not None:
-            return jsonify(stop.to_geojson())
-        else:
-            return bad_request(404, "SMS code %r does not exist." % sms)
-    else:
-        stops = (
-            models.StopPoint.query
-            .options(db.joinedload(models.StopPoint.locality))
-            .filter(models.StopPoint.naptan_code.in_(codes))
-            .all()
-        )
-        return jsonify(_list_geojson(sorted(stops, key=_by_index)))
+    stops = (
+        models.StopPoint.query
+        .options(db.joinedload(models.StopPoint.locality))
+        .filter(models.StopPoint.naptan_code.in_(codes))
+        .all()
+    )
+    return jsonify(_list_geojson(sorted(stops, key=_by_index)))
 
 
 api.add_url_rule("/starred/", view_func=StarredStop.as_view("starred"),
                  methods=["GET", "DELETE"],  defaults={"naptan_code": None})
 api.add_url_rule("/starred/<naptan_code>",
                  view_func=StarredStop.as_view("starred_stop"),
-                 methods=["GET", "POST", "DELETE"])
+                 methods=["POST", "DELETE"])
 api.add_url_rule("/starred/<naptan_code>/<int:index>",
                  view_func=StarredStop.as_view("starred_stop_index"),
                  methods=["PATCH"])
-api.add_url_rule("/starred/data", view_func=starred_stop_data,
-                 defaults={"naptan_code": None})
-api.add_url_rule("/starred/<naptan_code>/data", view_func=starred_stop_data)
+api.add_url_rule("/starred/data", view_func=starred_stop_data, methods=["GET"])

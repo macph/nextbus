@@ -293,13 +293,19 @@ def test_stops_tile_with_stops(client, db_loaded):
 def test_starred_stops_get_nothing(client, db_loaded):
     response = client.get("/api/starred/")
 
-    assert response.status_code == 422
-    assert json.loads(response.data) == {"message": "No cookie has been set."}
+    assert response.status_code == 200
+    assert json.loads(response.data) == {"stops": None}
+
+
+def test_starred_stops_get_stop(client, db_loaded):
+    get = client.get("/api/starred/53272")
+
+    assert get.status_code == 405
 
 
 def test_starred_stops_add_twice(client, db_loaded):
     add = client.post("/api/starred/53272")
-    assert add.status_code == 204
+    assert add.status_code == 201
 
     add = client.post("/api/starred/53272")
     assert add.status_code == 422
@@ -310,15 +316,11 @@ def test_starred_stops_add_twice(client, db_loaded):
 
 def test_starred_stops_add_delete_one(client, db_loaded):
     add = client.post("/api/starred/53272")
-    assert add.status_code == 204
+    assert add.status_code == 201
 
     get = client.get("/api/starred/")
     assert get.status_code == 200
     assert json.loads(get.data) == {"stops": ["53272"]}
-
-    get = client.get("/api/starred/53272")
-    assert get.status_code == 200
-    assert json.loads(get.data) == {"stop": "53272"}
 
     delete = client.delete("/api/starred/53272")
     assert delete.status_code == 204
@@ -352,7 +354,7 @@ def test_starred_stops_delete_nothing(client, db_loaded):
 
 def test_starred_stops_delete_wrong_sms(client, db_loaded):
     add = client.post("/api/starred/53272")
-    assert add.status_code == 204
+    assert add.status_code == 201
 
     delete = client.delete("/api/starred/53273")
 
@@ -364,7 +366,7 @@ def test_starred_stops_delete_wrong_sms(client, db_loaded):
 
 def test_starred_stops_add_two_stops(client, db_loaded):
     add = client.post("/api/starred/76193")
-    assert add.status_code == 204
+    assert add.status_code == 201
 
     add = client.post("/api/starred/76241")
     assert add.status_code == 204
@@ -372,10 +374,6 @@ def test_starred_stops_add_two_stops(client, db_loaded):
     get = client.get("/api/starred/")
     assert get.status_code == 200
     assert json.loads(get.data) == {"stops": ["76193", "76241"]}
-
-    get = client.get("/api/starred/76193")
-    assert get.status_code == 200
-    assert json.loads(get.data) == {"stop": "76193"}
 
 
 def test_starred_delete_all(client, db_loaded):
@@ -386,7 +384,8 @@ def test_starred_delete_all(client, db_loaded):
     assert delete.status_code == 204
 
     get = client.get("/api/starred/")
-    assert get.status_code == 422
+    assert get.status_code == 200
+    assert json.loads(get.data) == {"stops": None}
 
 
 def test_starred_swap(client, db_loaded):
@@ -431,14 +430,19 @@ def test_starred_out_of_range(client, db_loaded):
 
     patch = client.patch("/api/starred/76241/5")
     assert patch.status_code == 400
-    assert json.loads(patch.data) == {"message": "Index 5 out of range [0, 1]."}
+    assert json.loads(patch.data) == {
+        "message": "Index 5 is outside range [0, 1]."
+    }
 
 
 def test_starred_stops_data_nothing(client, db_loaded):
-    response = client.get("/api/starred/stops")
+    response = client.get("/api/starred/data")
 
-    assert response.status_code == 422
-    assert json.loads(response.data) == {"message": "No cookie has been set."}
+    assert response.status_code == 200
+    assert json.loads(response.data) == {
+        "type": "FeatureCollection",
+        "features": []
+    }
 
 
 def test_starred_stops_data_list(client, db_loaded):
@@ -451,25 +455,4 @@ def test_starred_stops_data_list(client, db_loaded):
     assert json.loads(response.data) == {
         "type": "FeatureCollection",
         "features": [GEOJSON_2, GEOJSON_3]
-    }
-
-
-def test_starred_stops_data_one(client, db_loaded):
-    client.post("/api/starred/76241")
-    client.post("/api/starred/76193")
-
-    response = client.get("/api/starred/76241/data")
-
-    assert response.status_code == 200
-    assert json.loads(response.data) == GEOJSON_2
-
-
-def test_starred_stops_data_wrong_code(client, db_loaded):
-    client.post("/api/starred/76193")
-
-    response = client.get("/api/starred/76241/data")
-
-    assert response.status_code == 404
-    assert json.loads(response.data) == {
-        "message": "SMS code '76241' not in list of starred stops."
     }

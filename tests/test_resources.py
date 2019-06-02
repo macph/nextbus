@@ -18,6 +18,7 @@ GEOJSON_1 = {
     },
     "properties": {
         "atcoCode": "490000015G",
+        "smsCode": "53272",
         "name": "Barking Station",
         "indicator": "G",
         "title": "Barking Station (Stop G)",
@@ -36,6 +37,7 @@ GEOJSON_2 = {
     },
     "properties": {
         "atcoCode": "490008638N",
+        "smsCode": "76241",
         "name": "Greatfields Park",
         "indicator": "N",
         "title": "Greatfields Park (Stop N)",
@@ -54,6 +56,7 @@ GEOJSON_3 = {
     },
     "properties": {
         "atcoCode": "490008638S",
+        "smsCode": "76193",
         "name": "Greatfields Park",
         "indicator": "P",
         "title": "Greatfields Park (Stop P)",
@@ -100,7 +103,7 @@ def test_multiple_stops(db_loaded):
 
 STOP_POINT_JSON = {
     "atcoCode": "490000015G",
-    "naptanCode": "53272",
+    "smsCode": "53272",
     "title": "Barking Station (Stop G)",
     "name": "Barking Station",
     "indicator": "G",

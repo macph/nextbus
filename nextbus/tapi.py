@@ -215,7 +215,7 @@ class LiveData:
 
         return {
             "atcoCode": self.atco_code,
-            "naptanCode": self.naptan_code,
+            "smsCode": self.naptan_code,
             "isoDate": self.datetime.isoformat(),
             "localTime": self.datetime.astimezone(GB_TZ).strftime("%H:%M"),
             "services": services

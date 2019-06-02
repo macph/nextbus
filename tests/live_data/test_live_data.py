@@ -84,7 +84,7 @@ def test_live_stop_live(api_data):
 def test_live_json(api_data):
     expected = {
         "atcoCode": "490000015G",
-        "naptanCode": "53272",
+        "smsCode": "53272",
         "isoDate": "2019-06-02T08:25:45+00:00",
         "localTime": "09:25",
         "services": [{
@@ -113,7 +113,7 @@ def test_live_json(api_data):
 def test_live_json_threshold(api_data):
     assert tapi.LiveData(api_data).to_json(max_minutes=1) == {
         "atcoCode": "490000015G",
-        "naptanCode": "53272",
+        "smsCode": "53272",
         "isoDate": "2019-06-02T08:25:45+00:00",
         "localTime": "09:25",
         "services": []
@@ -126,7 +126,7 @@ def test_live_json_out_of_date(api_data):
     })
     assert tapi.LiveData(api_data).to_json() == {
         "atcoCode": "490000015G",
-        "naptanCode": "53272",
+        "smsCode": "53272",
         "isoDate": "2019-06-02T09:25:45+00:00",
         "localTime": "10:25",
         "services": []
@@ -157,7 +157,7 @@ def test_live_stop_ambiguous(api_data):
     assert service.seconds == 2355
     assert tapi.LiveData(api_data).to_json() == {
         "atcoCode": "490000015G",
-        "naptanCode": "53272",
+        "smsCode": "53272",
         "isoDate": "2019-10-27T00:50:45+00:00",
         "localTime": "01:50",
         "services": [{

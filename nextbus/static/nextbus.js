@@ -1551,7 +1551,7 @@ function removeSubElements(element) {
  * JSON data from API for live bus times data.
  * @typedef {{
  *     atcoCode: string,
- *     naptanCode: string,
+ *     smsCode: string,
  *     isoDate: string,
  *     localTime: string,
  *     services: {
@@ -2006,7 +2006,7 @@ function mapControl(...actions) {
  *     },
  *     properties: {
  *         atcoCode: string,
- *         naptanCode: string,
+ *         smsCode: string,
  *         title: string,
  *         name: string
  *         indicator: string,
@@ -2038,7 +2038,7 @@ function mapControl(...actions) {
  * Full JSON data for a stop point
  * @typedef {{
  *     atcoCode: string,
- *     naptanCode: string,
+ *     smsCode: string,
  *     title: string,
  *     name: string,
  *     indicator: string,
@@ -2864,7 +2864,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
         let stopInfo = element('section',
             element('h2', 'Stop information'),
             infoLine,
-            element('p', 'SMS code ', element('strong', data.naptanCode)),
+            element('p', 'SMS code ', element('strong', data.smsCode)),
             (data.active) ?
                 null : element('p', element('strong', 'This stop is marked as inactive.')),
             element('p', element('a', {href: URL.STOP_PAGE + data.atcoCode}, 'Stop page'))
@@ -2888,9 +2888,9 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             data.operators
         );
 
-        self.starred.setCode(data.naptanCode);
+        self.starred.setCode(data.smsCode);
         self.starred.get(function() {
-            let codeInList = (self.starred.set && self.starred.data.indexOf(data.naptanCode) > -1);
+            let codeInList = (self.starred.set && self.starred.data.indexOf(data.smsCode) > -1);
             let button = createStarredButton(self.starred, codeInList, self.starredList);
             actions.insertBefore(button, closePanel);
         });

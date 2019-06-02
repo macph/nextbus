@@ -540,6 +540,7 @@ class StopPoint(db.Model):
             },
             "properties": {
                 "atcoCode": self.atco_code,
+                "smsCode": self.naptan_code,
                 "title": self.long_name,
                 "name": self.name,
                 "indicator": self.short_ind,
@@ -607,7 +608,7 @@ class StopPoint(db.Model):
         services, operators = self.get_services()
         json = {
             "atcoCode": self.atco_code,
-            "naptanCode": self.naptan_code,
+            "smsCode": self.naptan_code,
             "title": self.long_name,
             "name": self.name,
             "indicator": self.short_ind,

@@ -61,7 +61,7 @@ function Overlay(overlayElement, focusFirst) {
     this.overlay = (overlayElement instanceof HTMLElement) ?
         overlayElement : document.getElementById(overlayElement);
     this.focusFirst = (focusFirst instanceof HTMLElement) ?
-        focusFirst : document.getElementById(focusFirst);
+        focusFirst : document.getElementById(focusFirst) || null;
 
     this.transition = getTransitionEnd(this.overlay);
     this.focusable = [];
@@ -155,7 +155,8 @@ function Overlay(overlayElement, focusFirst) {
         if (self.focusFirst != null) {
             let onEndTransition = function() {
                 self.overlay.removeEventListener(self.transition, onEndTransition);
-                self.focusFirst.focus();
+                let focusFirst = self.focusFirst || document.body;
+                (focusFirst).focus();
             };
             self.overlay.addEventListener(self.transition, onEndTransition);
         }

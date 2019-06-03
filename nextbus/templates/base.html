@@ -69,12 +69,18 @@ let overlay, starredList;
 window.addEventListener('load', function() {
     let menu = document.getElementById('menu-open');
     overlay = new Overlay('overlay-menu', 'search-form');
+    menu.tabIndex = 0;
     menu.style.display = '';
     menu.onclick = function() {
         overlay.open(function() {
             starredList.updateList();
         });
     };
+    menu.onkeydown = function(event) {
+        if (event.key === 'Enter') {
+            this.click();
+        }
+    }
     document.getElementById('menu-close').onclick = function() {
         overlay.close();
     };

@@ -79,7 +79,6 @@ input:not([type="radio"]):not([type="checkbox"]) {
   -webkit-border-radius: 0;
   -webkit-appearance: none;
   border-radius: 0;
-  outline: none;
 }
 
 button,
@@ -116,6 +115,7 @@ input:not([type="submit"]):not([type="file"]) {
   border-style: none none solid;
   border-color: #212121;
   min-width: 0; /* Override width set by browser */
+  outline: none;
 
   transition: 0.2s border-color ease-out;
 }

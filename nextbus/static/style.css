@@ -327,6 +327,17 @@ section {
   color: white;
 }
 
+.action-danger {
+  border-color: #C62828;
+  color: #C62828;
+}
+
+.action-danger:hover {
+  background-color: #C62828;
+  border-color: #C62828;
+  color: white;
+}
+
 /* OVERLAY DIALOG / MENU */
 
 .body-with-overlay {
@@ -854,26 +865,29 @@ section {
 
 /* H2 HEADING WITH ITEMS */
 
-.h2-inline {
+.h2-inline,
+.h3-inline {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.h2-inline {
   margin: calc(2.4 * 0.5rem) 0;
   padding: calc(2.4 * 0.3rem) 0;
   border-bottom: 0.12rem solid #212121;
 }
 
 .h3-inline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin: calc(2.4 * 0.5rem) 0;
 }
 
 .h2-inline > *,
 .h3-inline > * {
-  padding: 0;
-  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .h2-inline > h2 {
@@ -1012,6 +1026,15 @@ section {
   min-height: 2rem;
 }
 
+.item-disabled {
+  pointer-events: none;
+}
+
+.item-disabled:hover {
+  background-color: inherit;
+  color: inherit;
+}
+
 .item-label {
   flex: 1 1 auto;
   margin-left: 1rem;
@@ -1030,21 +1053,62 @@ section {
 
 .item-action {
   flex: none;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
 }
 
-.item .icon {
+.item-action .icon {
   width: 2.4rem;
   height: 2.4rem;
 }
 
-.item .icon-shape {
+.item-action .icon-shape {
   fill: #212121;
   transition: 0.2s fill ease-out;
 }
 
-.item:hover .icon-shape {
+.item-action:hover .icon-shape {
   fill: white;
+}
+
+.item-action-hidden {
+  display: none;
+}
+
+.item-action-drag {
+  font-size: 1.7rem;
+  color: #9E9E9E;
+  cursor: grab;
+}
+
+.item-action-danger {
+  color: #C62828;
+}
+
+.item-action-drag:hover {
+  color: #212121;
+  background-color: inherit;
+}
+
+.item-action-danger:hover {
+  background-color: #C62828;
+  color: white;
+}
+
+.item-action-drag .icon-shape {
+  fill: #9E9E9E;
+  transition: 0.2s fill ease-out;
+}
+
+.item-action-drag:hover .icon-shape {
+  fill: #212121;
+}
+
+.item-action-danger .icon-shape {
+  fill: #C62828;
+}
+
+.item-action-danger:hover .icon-shape {
+  color: white;
 }
 
 

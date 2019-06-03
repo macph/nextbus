@@ -1087,7 +1087,7 @@ function _nodeIndex(node) {
 
 
 /**
- * @callback sortResult
+ * @callback callbackResult
  * @param {boolean?} result
  */
 
@@ -1097,13 +1097,23 @@ function _nodeIndex(node) {
  * @param {HTMLElement} item
  * @param {number} startIndex
  * @param {number} endIndex
- * @param {sortResult} finish
+ * @param {callbackResult} finish
+ */
+
+/**
+ * @callback onDelete
+ * @param {SortableList} self
+ * @param {HTMLElement} item
+ * @param {callbackResult} finish
  */
 
 /**
  * @typedef SortableListOptions
  * @property {?onSort} onSort - Callback when completing a move
- * @property {boolean} wait - When calling onSort, disable dragging & wait for callback to complete
+ * @property {?onDelete} onDelete - Callback when deleting an item
+ * @property {?boolean} canDelete - Allows deletion of item, eg when pressing DEL key
+ * @property {?boolean} wait - When calling onSort, disable dragging & wait for callback to complete
+ * @property {?boolean} enabled - Dragging is enabled on set up
  */
 
 /**
@@ -1124,7 +1134,10 @@ function SortableList(list, options) {
     this.list = (list instanceof HTMLElement) ? list : document.getElementById(list);
     this.options = processOptions(options, {
         onSort: null,
-        wait: false
+        onDelete: null,
+        canDelete: false,
+        wait: false,
+        enabled: true
     });
 
     this.items = [];
@@ -1168,15 +1181,18 @@ function SortableList(list, options) {
         }
     };
 
-    this._adjacent = function(direction, item) {
+    this._adjacent = function(direction, item, wraparound) {
+        let wrap = (wraparound != null) ? wraparound : true;
         let adjacent = (item != null) ? item : self.active;
         if (adjacent == null || !self.items || !direction || !self.list.contains(adjacent)) {
             return null;
         }
         while (true) {
             adjacent = (direction > 0) ? adjacent.nextSibling : adjacent.previousSibling;
-            if (adjacent == null) {
+            if (adjacent == null && wrap) {
                 adjacent = (direction > 0) ? self.list.firstChild : self.list.lastChild;
+            } else if (adjacent == null) {
+                return adjacent;
             }
             if (adjacent.nodeType === Node.ELEMENT_NODE) {
                 for (let i = 0; i < self.items.length; i++) {
@@ -1327,6 +1343,9 @@ function SortableList(list, options) {
                     event.preventDefault();
                 }
                 break;
+            case 'Delete':
+                self.delete(this, true);
+                break;
         }
     };
 
@@ -1352,6 +1371,9 @@ function SortableList(list, options) {
                 i.anchor.addEventListener('touchstart', self._touchStart);
                 i.anchor.addEventListener('touchend', self._end);
                 i.anchor.addEventListener('touchcancel', self._cancel);
+                // draggable attribute must be 'true' to work
+                i.anchor.draggable = true;
+                i.item.tabIndex = 0;
             }
             i.item.addEventListener('keydown', self._handleKeys);
         });
@@ -1365,6 +1387,8 @@ function SortableList(list, options) {
                 i.anchor.removeEventListener('touchstart', self._touchStart);
                 i.anchor.removeEventListener('touchend', self._end);
                 i.anchor.removeEventListener('touchcancel', self._cancel);
+                i.anchor.draggable = false;
+                i.item.tabIndex = -1;
             }
             i.item.removeEventListener('keydown', self._handleKeys);
         });
@@ -1377,14 +1401,11 @@ function SortableList(list, options) {
         self.list.querySelectorAll('li').forEach(function(i) {
             let a = (i.hasAttribute('draggable')) ?
                 i : i.querySelector('[draggable]');
-            if (a != null) {
-                // draggable attribute must be 'true' to work
-                a.draggable = true;
-                i.tabIndex = 0;
-            }
             self.items.push({item: i, anchor: a});
         });
-        self.enableDrag();
+        if (self.options.enabled) {
+            self.enableDrag();
+        }
     };
 
     this.removeItem = function(item) {
@@ -1401,7 +1422,218 @@ function SortableList(list, options) {
         return false;
     };
 
+    this.delete = function(item, focus) {
+        if (!self.options.canDelete || self.active != null) {
+            // Don't allow deletion while reordering is ongoing
+            return;
+        }
+        let removeItem = function() {
+            // Get adjacent item to switch focus when using keyboard
+            let adj = self._adjacent(1, item, false) || self._adjacent(-1, item, false);
+            self.removeItem(item);
+            if (focus && adj != null) {
+                adj.focus();
+            }
+        }
+        if (self.options.onDelete != null && self.options.wait) {
+            // Pass another function to callback to complete deletion, keep drag disabled
+            // If this function is called with true (or no arguments) the deletion is finalised,
+            // otherwise it is cancelled and the active item back in original position
+            self.disableDrag();
+            self.list.style.opacity = '0.1';
+            self.options.onDelete(
+                self,
+                item,
+                function(result) {
+                    if (result || result == null) {
+                        removeItem();
+                    }
+                    self.enableDrag();
+                    self.list.style.opacity = '';
+                }
+            );
+        } else if (self.options.onDelete != null) {
+            // Callback but don't wait for it. Passes a no-op function
+            self.options.onDelete( self, item, function() {});
+            removeItem();
+        } else {
+            removeItem();
+        }
+    };
+
     self.setUp();
+}
+
+
+function StarredStopsInterface(list, starred) {
+    let self = this;
+    this.list = (list instanceof HTMLElement) ? list : document.getElementById(list);
+    this.starred = starred;
+    this.sortableList = null;
+    this.overlay = null;
+    this.toggleButton = null;
+    this.deleteButton = null;
+    this.editEnabled = false;
+
+    this._toggleEdit = function() {
+        self.editEnabled = !self.editEnabled;
+        if (self.editEnabled) {
+            self.deleteButton.style.display = '';
+            self.deleteButton.tabIndex = 0;
+            self.toggleButton.textContent = 'Finish';
+            self.toggleButton.title = 'Finish editing this list';
+            self.sortableList.enableDrag();
+        } else {
+            self.deleteButton.style.display = 'none';
+            self.deleteButton.tabIndex = -1;
+            self.toggleButton.textContent = 'Edit';
+            self.toggleButton.title = 'Edit this list of starred stops';
+            self.sortableList.disableDrag();
+        }
+        let toggle = function(e, hide) {
+            if (hide) {
+                e.classList.add('item-action-hidden');
+            } else {
+                e.classList.remove('item-action-hidden');
+            }
+        };
+        self.sortableList.items.forEach(function(i) {
+            let c = i.item.children;
+            if (self.editEnabled) {
+                toggle(c[0], false);
+                c[1].dataset.url = c[1].href;
+                c[1].classList.add('item-disabled');
+                c[1].tabIndex = -1;
+                c[1].removeAttribute('href');
+                toggle(c[2], true);
+                toggle(c[3], false);
+            } else {
+                toggle(c[0], true);
+                c[1].tabIndex = 0;
+                c[1].classList.remove('item-disabled');
+                c[1].setAttribute('href', c[1].dataset.url);
+                toggle(c[2], false);
+                toggle(c[3], true);
+            }
+        });
+    };
+
+    this._createDialog = function() {
+        let overlay = element('div',
+            {className: 'overlay'},
+            element('div',
+                {className: 'overlay-content overlay-content-dialog'},
+                element('h3', 'Delete all stops?'),
+                element('p', 'The cookie for this website will be unset and all stops you\' saved' +
+                    'will be lost.'),
+                element('button',
+                    {id: 'delete-close', className: 'overlay-button',
+                        title: 'Close this dialog and go back'},
+                    'Close'
+                ),
+                element('button',
+                    {id: 'delete-confirm', className: 'overlay-button',
+                        title: 'Continue with deleting all stops'},
+                    'Delete stops'
+                )
+            )
+        );
+        document.body.appendChild(overlay);
+        let close = document.getElementById('delete-close'),
+            confirm = document.getElementById('delete-confirm');
+        self.overlay = new Overlay(overlay, confirm);
+        close.onclick = function() {
+            self.overlay.close();
+        };
+        confirm.onclick = function() {
+            self.starred.delete(null, function() {
+                starredList.reset();
+            });
+        };
+    };
+
+    this.setUp = function() {
+        let items = self.list.querySelectorAll('li');
+        if (items.length === 0) {
+            return;
+        }
+        items.forEach(function(li) {
+            let item = li.querySelector('.item');
+            let anchor = element('span',
+                {
+                    className: 'item item-action item-action-drag item-action-hidden',
+                    title: 'Hold to drag stop around',
+                    draggable: true
+                },
+                '\u2756'
+            );
+            let del = element('a',
+                {
+                    className: 'item item-action item-action-danger item-action-hidden',
+                    title: 'Delete this stop',
+                    onclick: function() {
+                        self.sortableList.delete(self.sortableList.getItem(this));
+                    }
+                },
+                'Delete'
+            );
+            li.insertBefore(anchor, item);
+            li.appendChild(del);
+        });
+
+        self.sortableList = new SortableList(list, {
+            onSort: function(_, item, startIndex, endIndex, finish) {
+                if (startIndex !== endIndex) {
+                    let stop = item.querySelector('.item-stop');
+                    self.starred.move(stop.dataset.smscode, endIndex, function() {
+                        finish(true);
+                        starredList.reset();
+                    }, function() {
+                        finish(false);
+                    });
+                } else {
+                    finish(false);
+                }
+            },
+            onDelete: function(_, item, finish) {
+                let stop = item.querySelector('.item-stop');
+                self.starred.delete(stop.dataset.smscode, function() {
+                    finish(true);
+                    starredList.reset();
+                }, function() {
+                    finish(false);
+                })
+            },
+            canDelete: true,
+            wait: true,
+            enabled: false
+        });
+
+        self._createDialog();
+        this.toggleButton = element('button',
+            {
+                tabIndex: 0,
+                title: 'Edit this list of starred stops',
+                onclick: self._toggleEdit
+            },
+            'Edit'
+        );
+        this.deleteButton = element('button',
+            {
+                className: 'action-danger',
+                title: 'Delete all starred stops',
+                style: {display: 'none'},
+                onclick: function() {
+                    self.overlay.open();
+                }
+            },
+            'Delete all stops'
+        );
+    };
+
+    if (list != null && starred != null) {
+        this.setUp();
+    }
 }
 
 
@@ -1431,7 +1663,7 @@ function _resizeText(element) {
                 element.classList.add('indicator-4');
                 break;
         }
-        // Use font's arrow symbol instead of '->'
+        // Use font's arrow symbol  instead of '->'
         span.textContent = span.textContent.replace('->', '→');
     } else if (img !== null) {
         let style = window.getComputedStyle(element);

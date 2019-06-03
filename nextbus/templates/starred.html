@@ -11,28 +11,17 @@
     {% if starred is not none and starred|length > 0 -%}
     <div class="h3-inline">
       <h3>Stops</h3>
-      <p><button id="delete-open" title="Delete all starred stops">Delete all stops</button></p>
     </div>
-    <ul id="starred-list" class="list list-actions">
-      {%- for s in starred %}
-      <li data-smscode="{{ s.naptan_code }}">
-        <span class="item item-action" draggable="true">&#x2756;</span>
-        <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
-          <span>
-            {{ f.print_stop_indicator(s) }}
-            <span class="item-label">{{ s.name }}</span>
-          </span>
-          <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
-        </a>
-        <a class="item item-action" onclick="(function(event) {
-            starred.delete('{{ s.naptan_code }}', function() {
-                sortableList.removeItem(sortableList.getItem(event.target));
-                starredList.reset();
-            });
-        })(event)">&#x2717;</a>
-      </li>
-      {%- endfor %}
-    </ul>
+    {% call(s) f.print_list(starred, name='starred-list', class='list-actions') -%}
+    <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" data-smscode="{{ s.naptan_code }}" class="item item-stop item-multiline">
+      <span>
+        {{ f.print_stop_indicator(s) }}
+        <span class="item-label">{{ s.name }}</span>
+      </span>
+      <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
+    </a>
+    <a href="{{ url_for('page.show_map_stop', atco_code=s.atco_code) }}" title="Go to map for {{ s.long_name }}" class="item item-action">{{ f.place_icon() }}</a>
+    {%- endcall %}
     {%- else -%}
     <p>You can have your favourite stops here! Just find them and star them.</p>
     {%- endif %}
@@ -40,59 +29,25 @@
 </main>
 {% endblock %}
 
-{% block overlay %}
-{{ super() }}
-<div class="overlay" id="overlay-delete">
-  <div class="overlay-content overlay-content-dialog">
-    <h3>Delete all stops?</h3>
-    <p>The cookie for this website will be unset and all stops you've saved will be lost.</p>
-    <button id="delete-close" title="Close this dialog and go back" class="overlay-button">Close</button>
-    <button id="delete-confirm" title="Continue with deleting all stops" class="overlay-button">Delete stops</button>
-  </div>
-</div>
-<script>
-let deleteOverlay;
-window.addEventListener('load', function() {
-    deleteOverlay = new Overlay('overlay-delete', 'delete-confirm');
-    let deleteOpen = document.getElementById('delete-open');
-    if (deleteOpen != null) {
-        document.getElementById('delete-open').onclick = function() { deleteOverlay.open(); };
-    }
-    document.getElementById('delete-close').onclick = function() { deleteOverlay.close(); };
-    document.getElementById('delete-confirm').onclick = function() {
-        let request = new XMLHttpRequest();
-        request.onload = function() {
-            window.location.reload();
-        };
-        request.open('DELETE', URL.STARRED, true);
-        request.send();
-    };
-});
-</script>
-{% endblock %}
-
 {% block script %}
 <script>
 let set = {{ ('stops' in session)|tojson }};
-let starred, sortableList;
+let starred, list, starredUI;
 window.addEventListener('load', function() {
+    list = document.getElementById('starred-list');
+    if (list == null) {
+        return;
+    }
     resizeIndicator('.indicator');
     starred = new StarredStops(set);
-    sortableList = new SortableList('starred-list', {
-        onSort: function(self, item, startIndex, endIndex, finish) {
-            if (startIndex !== endIndex) {
-                starred.move(item.dataset.smscode, endIndex, function() {
-                    finish(true);
-                    starredList.reset();
-                }, function() {
-                    finish(false);
-                });
-            } else {
-                finish(false);
-            }
-        },
-        wait: true
-    });
+    starredUI = new StarredStopsInterface(list, starred);
+    let heading = document.querySelector('.h3-inline');
+    let actions = element('div',
+        {className: 'actions'},
+        starredUI.deleteButton,
+        starredUI.toggleButton
+    );
+    heading.appendChild(actions);
 });
 </script>
 {% endblock %}

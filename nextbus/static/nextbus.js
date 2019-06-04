@@ -1801,6 +1801,59 @@ function removeSubElements(element) {
 
 
 /**
+ * Creates filter list from a list of groups of stops for each service and returns it.
+ * @param {HTMLElement} list
+ * @param {{
+ *     id: number,
+ *     direction: boolean,
+ *     line: string,
+ *     destination: string,
+ *     stops: string[]
+ * }[]} groups
+ * @returns FilterList
+ */
+function stopServiceFilter(list, groups) {
+    if (groups == null || groups.length === 0) {
+        return null;
+    }
+
+    let services = new Map();
+    let stops = new Map();
+
+    groups.forEach(function(g) {
+        let value = g.id.toString() + ((g.direction) ? 't' : 'f'),
+            label = g.line + ' to ' + g.destination;
+        services.set(value, label);
+        stops.set(value, g.stops);
+    });
+
+    let updateList = function(filterList) {
+        let showStops = new Set();
+        filterList.data.forEach(function(o) {
+            if (o.selected) {
+                stops.get(o.value).forEach(function(s) { showStops.add(s); });
+            }
+        });
+        list.querySelectorAll('.item').forEach(function(stop) {
+            if (stop.dataset.code != null) {
+                if (showStops.size === 0 || showStops.has(stop.dataset.code)) {
+                    stop.parentNode.style.display = '';
+                } else {
+                    stop.parentNode.style.display = 'none';
+                }
+            }
+        });
+    };
+
+    return new FilterList({
+        optionMap: services,
+        onSelect: updateList,
+        defaultText: 'Filter by service...'
+    });
+}
+
+
+/**
  * JSON data from API for live bus times data.
  * @typedef {{
  *     atcoCode: string,

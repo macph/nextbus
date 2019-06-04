@@ -8,6 +8,7 @@ import string
 
 from flask import (abort, Blueprint, current_app, g, jsonify, Markup,
                    render_template, redirect, request, session, url_for)
+from sqlalchemy.dialects import postgresql as pg
 from werkzeug.urls import url_encode
 
 from nextbus import db, forms, graph, location, models, search, timetable
@@ -372,6 +373,38 @@ def list_in_locality(locality_code):
                            grouped=group_areas)
 
 
+def _group_lines_stops(list_stops):
+    """ Groups lines and stops such that each distinct line and direction has
+        a group of stops associated with it.
+    """
+    stops = [s.atco_code for s in list_stops]
+
+    separator = db.literal_column("' / '")
+    destinations = db.func.string_agg(
+        db.distinct(models.JourneyPattern.destination),
+        pg.aggregate_order_by(separator, models.JourneyPattern.destination)
+    )
+    array_stops = pg.array_agg(db.distinct(models.JourneyLink.stop_point_ref))
+    groups = (
+        db.session.query(
+            models.Service.id.label("id"),
+            models.JourneyPattern.direction.label("direction"),
+            models.Service.line.label("line"),
+            destinations.label("destination"),
+            array_stops.label("stops")
+        )
+        .select_from(models.Service)
+        .join(models.Service.patterns)
+        .join(models.JourneyPattern.links)
+        .filter(models.JourneyLink.stop_point_ref.in_(stops))
+        .group_by(models.Service.id, models.JourneyPattern.direction)
+        .order_by(models.Service.line_index, models.JourneyPattern.direction)
+        .all()
+    )
+
+    return [g._asdict() for g in groups]
+
+
 @page.route("/near/")
 def find_near_location():
     """ Starts looking for nearby stops. """
@@ -390,9 +423,10 @@ def list_near_location(coords):
 
     stops = models.StopPoint.in_range(latitude, longitude,
                                       db.undefer(models.StopPoint.lines))
+    groups = _group_lines_stops(stops)
 
     return render_template("location.html", latitude=latitude,
-                           longitude=longitude, list_stops=stops)
+                           longitude=longitude, list_stops=stops, groups=groups)
 
 
 @page.route("/near/<string:code>")
@@ -410,8 +444,10 @@ def list_near_postcode(code):
                         code=302)
 
     stops = postcode.stops_in_range(db.undefer(models.StopPoint.lines))
+    groups = _group_lines_stops(stops)
 
-    return render_template("postcode.html", postcode=postcode, list_stops=stops)
+    return render_template("postcode.html", postcode=postcode, list_stops=stops,
+                           groups=groups)
 
 
 @page.route("/stop/area/<stop_area_code>")

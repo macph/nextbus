@@ -90,10 +90,10 @@
         {%- set row_class = ' timetable-row-timed' if r.timing else (' timetable-row-hidden' if timing.first and timing.last else '') -%}
         <tr class="timetable-row{{ row_class }}">
           <th>
-            <div class="timetable-stop">
+            <a href= "{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="timetable-stop">
               <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
               <span class="timetable-ind">{{ f.print_stop_indicator(stop) }}</span>
-            </div>
+            </a>
           </th>
           {%- for t in r.times %}
           <td{% if t.timing %} class="timetable-bold"{% endif %}>

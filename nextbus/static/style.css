@@ -1337,6 +1337,25 @@ section {
   z-index: 1;
 }
 
+.timetable-row > th {
+  transition: 0.2s background-color ease-out;
+}
+
+.timetable-row > th:hover {
+  background-color: #212121;
+}
+
+.timetable-stop {
+  display: flex;
+  align-items: center;
+  border: none;
+  transition: 0.2s color ease-out;
+}
+
+.timetable-row > th:hover > .timetable-stop {
+  color: white;
+}
+
 .timetable-row > td {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -1375,12 +1394,6 @@ section {
 .timetable-action:hover {
   background: #212121;
   color: white;
-}
-
-.timetable-stop {
-  display: flex;
-  align-items: center;
-  border: none;
 }
 
 .timetable-label {

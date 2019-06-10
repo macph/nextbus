@@ -1375,7 +1375,10 @@ function StarredStopList(options) {
     this.deleteButton = null;
     this.editEnabled = false;
 
-    this.reset = function() {
+    this.reset = function(clearList) {
+        if (clearList && self.container != null) {
+            removeSubElements(self.container);
+        }
         self.called = false;
     };
 
@@ -1446,8 +1449,8 @@ function StarredStopList(options) {
                         fitStop: true,
                         service: null
                     });
-                    if (self.overlay != null) {
-                        self.overlay.close();
+                    if (self.menuOverlay != null) {
+                        self.menuOverlay.close();
                     }
                 };
             } else {
@@ -1515,13 +1518,16 @@ function StarredStopList(options) {
     };
 
     this._createDialog = function() {
+        if (self.deleteOverlay != null) {
+            return;
+        }
         let overlay = element('div',
             {className: 'overlay'},
             element('div',
                 {className: 'overlay-content overlay-content-dialog'},
                 element('h3', 'Delete all stops?'),
-                element('p', 'The cookie for this website will be unset and all stops you\' saved' +
-                    'will be lost.'),
+                element('p', 'The cookie for this website will be unset and all stops you\'ve ' +
+                    'saved will be lost.'),
                 element('button',
                     {id: 'delete-close', className: 'overlay-button',
                         title: 'Close this dialog and go back'},
@@ -1586,7 +1592,7 @@ function StarredStopList(options) {
                     let stop = item.querySelector('.item-stop');
                     self.starred.move(stop.dataset.smscode, endIndex, function() {
                         finish(true);
-                        self.reset();
+                        self.reset(false);
                     }, function() {
                         finish(false);
                     });
@@ -1599,7 +1605,7 @@ function StarredStopList(options) {
                 if (stop.dataset.smscode != null) {
                     self.starred.delete(stop.dataset.smscode, function() {
                         finish(true);
-                        self.reset();
+                        self.reset(false);
                     }, function() {
                         finish(false);
                     });

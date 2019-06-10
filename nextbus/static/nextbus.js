@@ -9,12 +9,10 @@ const MAP_ZOOM_MAX = 19;
 const MAP_CENTRE_GB = [54.00366, -2.547855];
 const MAP_BOUNDS_NW = [61, 2];
 const MAP_BOUNDS_SE = [49, -8];
-
-// Minimum number of degree places required to represent latitude and longitude at set zoom level
-// Calculated using
-// 1 degree longitude at equator = 111 320 m
-// 1 pixel at zoom level 0 = 156 412 m
-const MAP_DEG_ACCURACY = [0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7];
+// 1 degree longitude at equator
+const MAP_DEGREE_LONGITUDE = 111320;
+// 1 pixel at zoom level zero
+const MAP_PIXEL_ZOOM_LEVEL_ZERO = 156412;
 
 const CACHE_LIMIT = 64;
 const TILE_ZOOM = 15;
@@ -2304,6 +2302,26 @@ function roundTo(float, places) {
 
 
 /**
+ * Find minimum number of places to accurately represent latitude and longitude at a set zoom level
+ * @param {number} zoomLevel
+ * @returns {number}
+ */
+function mapCoordinateAccuracy(zoomLevel) {
+    if (zoomLevel < 0) {
+        return 0;
+    }
+    let pixelDistance = MAP_PIXEL_ZOOM_LEVEL_ZERO / Math.pow(2, zoomLevel);
+    let degreeDistance = MAP_DEGREE_LONGITUDE;
+    let places = 0;
+    while (degreeDistance > pixelDistance) {
+        degreeDistance /= 10;
+        places++;
+    }
+    return places;
+}
+
+
+/**
  * Creates control for map with buttons for each content, title and action
  * @param {{action: function, content: ?Element|string, className: ?string, title: ?string}} actions
  */
@@ -2914,20 +2932,14 @@ function RouteLayer(stopMap) {
  * @constructor
  * @param {object} stopMap Parent stop map object
  * @param {HTMLElement} mapPanel Panel HTML element
- * @param {StarredStops} starred starred stops interface
- * @param {StarredStopList} starredList starred stops interface
  */
-function Panel(stopMap, mapPanel, starred, starredList) {
+function Panel(stopMap, mapPanel) {
     let self = this;
     this.stopMap = stopMap;
     this.mapPanel = mapPanel;
     this.container = this.mapPanel.parentNode;
 
-    this.starred = starred;
-    this.starred.createDialog();
     this.starredButton = null;
-    this.starredList = starredList;
-
     this.activeStops = new Map();
     this.currentMapControl = null;
     this.currentStop = null;
@@ -2994,7 +3006,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
 
     this._removeStarredButton = function() {
         if (self.starredButton != null) {
-            self.starred.removeAction(self.starredButton.code);
+            self.stopMap.starred.removeAction(self.starredButton.code);
             self.starredButton = null;
         }
     };
@@ -3235,12 +3247,12 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             data.operators
         );
 
-        self.starred.get(function(starredList) {
+        self.stopMap.starred.get(function(list) {
             self.starredButton = new StarredButton(
-                self.starred,
-                self.starredList,
+                self.stopMap.starred,
+                self.stopMap.starredList,
                 data.smsCode,
-                (self.starred.set && starredList.stops.indexOf(data.smsCode) > -1)
+                (self.stopMap.starred.set && list.stops.indexOf(data.smsCode) > -1)
             );
             actions.insertBefore(self.starredButton.button, closePanel);
         });
@@ -3452,6 +3464,9 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
     this.geolocation = useGeolocation;
+    this.starred = starred;
+    this.starred.createDialog();
+    this.starredList = starredList;
 
     this.map = null;
     this.tileLayer = L.tileLayer(
@@ -3466,7 +3481,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         }
     );
 
-    this.panel = new Panel(this, this.mapPanel, starred, starredList);
+    this.panel = new Panel(this, this.mapPanel);
     this.services = new ServicesData();
     this.stops = new StopPointsData();
     this.stopLayer = new StopLayer(this);
@@ -3772,8 +3787,8 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         }
 
         let centre = self.map.getCenter(),
-            zoom = self.map.getZoom(),
-            accuracy = MAP_DEG_ACCURACY[zoom],
+            zoom = Math.round(self.map.getZoom()),
+            accuracy = mapCoordinateAccuracy(zoom),
             coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy), zoom];
 
         let newURL = URL.MAP + routeURL + stopURL + coords.join(',');

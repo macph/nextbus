@@ -121,6 +121,7 @@ window.addEventListener('load', function() {
 });
 
 let actions = document.getElementById('actions'),
+    button = null,
     addText = '\u2606 Add stop',
     addTitle = 'Add to list of starred stops',
     removeText = '\u2605 Remove stop',
@@ -130,8 +131,8 @@ let actions = document.getElementById('actions'),
 
 window.addEventListener('load', function() {
     starred.createDialog();
-    let button = createStarredButton(starred, smsCode, active, starredList);
-    actions.appendChild(button);
+    button = new StarredButton(starred, starredList, smsCode, active);
+    actions.appendChild(button.button);
 });
 </script>
 {% endblock %}

@@ -184,6 +184,7 @@ function Overlay(overlayElement, focusFirst) {
 function StarredStops(cookieSet) {
     let self = this;
     this.set = (typeof cookieSet !== 'undefined') ? cookieSet : true;
+    this.actions = new Map();
 
     this.code = null;
     this.onSuccess = null;
@@ -239,6 +240,25 @@ function StarredStops(cookieSet) {
             document.body.removeChild(self.overlayElement);
             self.overlayElement = null;
         }
+    };
+
+    this.addAction = function(action) {
+        self.actions.set(action.code, action);
+    };
+
+    this.updateActions = function(code, set) {
+        if (code != null) {
+            let action = self.actions.get(code);
+            if (action != null && action.code === code && action.isStarred === !set) {
+                action.set(set);
+            }
+        } else {
+            self.actions.clear();
+        }
+    };
+
+    this.removeAction = function(code) {
+        self.actions.delete(code);
     };
 
     /**
@@ -312,6 +332,7 @@ function StarredStops(cookieSet) {
             } else if (_onFail != null) {
                 _onFail(request.status);
             }
+            self.updateActions(self.code || code, true);
             self.code = self.onSuccess = self.onFail = null;
         };
         request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -372,6 +393,7 @@ function StarredStops(cookieSet) {
             } else if (onFail != null) {
                 onFail(request.status);
             }
+            self.updateActions(code, false);
         };
         request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         request.send();
@@ -381,48 +403,49 @@ function StarredStops(cookieSet) {
 
 
 /**
- * Creates starred toggle button
+ * Toggles starred stop with ATCO code
  * @param {StarredStops} starred
- * @param {string} code
- * @param {boolean} stopIsStarred
  * @param {StarredStopList} starredList
- * @returns {HTMLElement}
+ * @param {string} code
+ * @param {bool} stopIsStarred
+ * @constructor
  */
-function createStarredButton(starred, code, stopIsStarred, starredList) {
+function StarredButton(starred, starredList, code, stopIsStarred) {
+    let self = this;
+    this.starred = starred;
+    this.starredList = starredList;
+    this.code = code;
+    this.isStarred = stopIsStarred;
+    this.button = null;
+
     let addText = '\u2606 Add stop',
         addTitle = 'Add to list of starred stops',
         removeText = '\u2605 Remove stop',
         removeTitle = 'Remove from list of starred stops';
 
-    let starredButton = element('button');
-    let setButton = function(star) {
-        if (star) {
-            starredButton.textContent = removeText;
-            starredButton.title = removeTitle;
-            starredButton.onclick = function () {
-                starred.delete(code, function() {
-                    setButton(false);
-                });
-            };
-            if (starredList != null) {
-                starredList.reset();
-            }
-        } else {
-            starredButton.textContent = addText;
-            starredButton.title = addTitle;
-            starredButton.onclick = function () {
-                starred.add(code, function() {
-                    setButton(true);
-                });
-            };
-            if (starredList != null) {
-                starredList.reset();
-            }
-        }
+    this.set = function(star) {
+        self.isStarred = star;
+        self.button.textContent = (self.isStarred) ? removeText : addText;
+        self.button.title = (self.isStarred) ? removeTitle : addTitle;
+        let action = (self.isStarred) ? self.starred.delete : self.starred.add;
+        let setNew = !self.isStarred;
+        self.button.onclick = function() {
+            action(code, function() {
+                self.set(setNew);
+                if (self.starredList != null) {
+                    self.starredList.reset(true);
+                }
+            });
+        };
     };
-    setButton(stopIsStarred);
 
-    return starredButton;
+    this.setUp = function() {
+        self.button = element('button');
+        self.set(self.isStarred);
+        self.starred.addAction(self);
+    };
+
+    this.setUp();
 }
 
 
@@ -2902,6 +2925,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
 
     this.starred = starred;
     this.starred.createDialog();
+    this.starredButton = null;
     this.starredList = starredList;
 
     this.activeStops = new Map();
@@ -2968,6 +2992,13 @@ function Panel(stopMap, mapPanel, starred, starredList) {
         });
     };
 
+    this._removeStarredButton = function() {
+        if (self.starredButton != null) {
+            self.starred.removeAction(self.starredButton.code);
+            self.starredButton = null;
+        }
+    };
+
     /**
      * Sets panel to a stop point with live times or a service diagram based on stops and services
      * being loaded by map
@@ -2981,6 +3012,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             self.currentService = self.stopMap.currentService;
             self.currentStop = self.stopMap.currentStop;
             self._scrollToTop();
+            self._removeStarredButton();
             self._setStopPanel();
         } else if (!self.stopMap.currentStop && self.stopMap.currentService &&
                    (updateStop || updateService)) {
@@ -2989,6 +3021,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             self.currentService = self.stopMap.currentService;
             self.stopAllLoops();
             self._scrollToTop();
+            self._removeStarredButton();
             self._setServicePanel();
         } else if (!self.stopMap.currentStop && !self.stopMap.currentService) {
             // Unset any current stops and services
@@ -2996,6 +3029,7 @@ function Panel(stopMap, mapPanel, starred, starredList) {
             self.currentService = null;
             self.stopAllLoops();
             self._scrollToTop();
+            self._removeStarredButton();
             self._setPanelMessage();
         }
     };
@@ -3202,13 +3236,13 @@ function Panel(stopMap, mapPanel, starred, starredList) {
         );
 
         self.starred.get(function(starredList) {
-            let button = createStarredButton(
+            self.starredButton = new StarredButton(
                 self.starred,
+                self.starredList,
                 data.smsCode,
-                (self.starred.set && starredList.stops.indexOf(data.smsCode) > -1),
-                self.starredList
+                (self.starred.set && starredList.stops.indexOf(data.smsCode) > -1)
             );
-            actions.insertBefore(button, closePanel);
+            actions.insertBefore(self.starredButton.button, closePanel);
         });
 
         // Add control for zooming into stop view

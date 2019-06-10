@@ -126,12 +126,9 @@ let actions = document.getElementById('actions'),
     removeText = '\u2605 Remove stop',
     removeTitle = 'Remove from list of starred stops',
     smsCode = '{{ stop.naptan_code }}',
-    set = {{ ('stops' in session)|tojson }},
-    active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }},
-    starred;
+    active = {{ ('stops' in session and stop.naptan_code in session.stops)|tojson }};
 
 window.addEventListener('load', function() {
-    starred = new StarredStops(set);
     starred.createDialog();
     let button = createStarredButton(starred, smsCode, active, starredList);
     actions.appendChild(button);

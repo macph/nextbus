@@ -31,8 +31,7 @@ URL.TILE = "{{ url_for('api.get_stops_tile', coord='') }}";
 URL.ROUTE = "{{ url_for('api.get_service_route', service_id='') }}";
 URL.TIMETABLE = "{{ url_for('page.service_timetable', service_id='') }}";
 
-let map, starred;
-let starredSet = {{ ('stops' in session)|tojson }};
+let map;
 let useGeolocation = {{ config.get('GEOLOCATION_ENABLED', false)|tojson }};
 let options = {};
 {% if stop -%}
@@ -49,7 +48,6 @@ options.reverse = {{ reverse|tojson }};
 {%- endif %}
 
 window.addEventListener('load', function() {
-    starred = new StarredStops(starredSet);
     map = new StopMap(
         'map',
         'map-panel-content',
@@ -57,7 +55,7 @@ window.addEventListener('load', function() {
         starredList,
         useGeolocation
     );
-    starredList.setMap(map);
+    starredList.map = map;
     map.init(options);
 });
 </script>

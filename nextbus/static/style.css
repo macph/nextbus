@@ -471,6 +471,17 @@ section {
   color: #212121;
 }
 
+.overlay-content .action-danger {
+  border-color: #C62828;
+  color: #C62828;
+}
+
+.overlay-content .action-danger:hover {
+  border-color: #C62828;
+  background-color: #C62828;
+  color: white;
+}
+
 .overlay-content .list {
   margin: 1rem -1rem;
   padding: 0;
@@ -497,6 +508,38 @@ section {
 
 .overlay-content .item:hover .icon-shape {
   fill: #212121;
+}
+
+.overlay-content .item-action-drag {
+  color: #9E9E9E;
+}
+
+.overlay-content .item-action-danger {
+  color: #C62828;
+}
+
+.overlay-content .item-action-drag:hover {
+  color: white;
+  background-color: inherit;
+}
+
+.overlay-content .item-action-danger:hover {
+  background-color: #C62828;
+  color: white;
+}
+
+.overlay-content .item-action-drag .icon-shape {
+  fill: #9E9E9E;
+  transition: 0.2s fill ease-out;
+}
+
+.overlay-content .item-action-danger .icon-shape {
+  fill: #C62828;
+}
+
+.overlay-content .item-action-drag:hover .icon-shape,
+.overlay-content .item-action-danger:hover .icon-shape {
+  fill: white;
 }
 
 

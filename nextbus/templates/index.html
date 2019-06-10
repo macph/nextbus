@@ -25,10 +25,9 @@
       {% if starred is not none and starred|length > 0 -%}
       <div class="h3-inline">
         <h3>Starred stops</h3>
-        <p><a class="action" href="{{ url_for('page.starred') }}">Edit</a></p>
       </div>
-      {% call(s) f.print_list(starred, class='list-actions') -%}
-      <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop item-multiline">
+      {% call(s) f.print_list(starred, class='list-actions', name='starred-list') -%}
+      <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" data-smscode="{{ s.naptan_code }}" class="item item-stop item-multiline">
         <span>
           {{ f.print_stop_indicator(s) }}
           <span class="item-label">{{ s.name }}</span>
@@ -73,8 +72,21 @@ window.addEventListener('load', function() {
 
 {% block script %}
 <script>
+let list, starredUI;
 window.addEventListener('load', function() {
+    list = document.getElementById('starred-list');
+    if (list == null) {
+        return;
+    }
     resizeIndicator('.indicator');
+    starredUI = new StarredStopList({list: list, starred: starred});
+    let heading = document.querySelector('.h3-inline');
+    let actions = element('div',
+        {className: 'actions'},
+        starredUI.deleteButton,
+        starredUI.toggleButton
+    );
+    heading.appendChild(actions);
 });
 </script>
 {% endblock %}

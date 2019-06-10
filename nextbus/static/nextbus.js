@@ -381,140 +381,6 @@ function StarredStops(cookieSet) {
 
 
 /**
- * Constructs a list of starred stops using the starred stops API
- * @param {HTMLElement|string} container Container element or ID for list of starred stops
- * @constructor
- */
-function StarredStopList(container) {
-    let self = this;
-    this.container = (container instanceof HTMLElement) ?
-        container : document.getElementById(container);
-    this.map = null;
-    this.overlay = null;
-    this.called = false;
-
-    /**
-     * Sets list to use map such that clicking on starred stop item will update the map
-     * @param {StopMap} map
-     */
-    this.setMap = function(map) {
-        self.map = (map != null) ? map : null;
-    };
-
-    /**
-     * Sets overlay so its focusable elements can be updated when the list is created
-     * @param {Overlay} overlay
-     */
-    this.setOverlay = function(overlay) {
-        self.overlay = (overlay != null) ? overlay : null;
-    };
-
-    /**
-     * Sets to call API for updated list on next call
-     */
-    this.reset = function() {
-        self.called = false;
-    };
-
-    /**
-     * Calls API to get new list
-     */
-    this.updateList = function() {
-        if (!self.called) {
-            let request = new XMLHttpRequest();
-            request.open('GET', URL.STARRED + 'data', true);
-            request.onload = function () {
-                if (this.status === 200) {
-                    self._createList(JSON.parse(request.responseText));
-                    if (self.overlay != null) {
-                        self.overlay.findFocusable();
-                    }
-                    self.called = true;
-                }
-            };
-            request.send();
-        }
-    };
-
-    /**
-     * Constructs list of starred stops and replace contents of container
-     * @param {{type: string, features: StopPoint[]}} data
-     * @private
-     */
-    this._createList = function(data) {
-        if (data.features.length === 0) {
-            removeSubElements(self.container);
-            return;
-        }
-        let heading = element('div',
-            {className: 'h3-inline'},
-            element('h3', 'Starred stops'),
-            element('p',
-                element('a',
-                    {className: 'action', href: URL.STARRED_PAGE},
-                    'Edit'
-                )
-            )
-        );
-        let list = element('ul', {className: 'list list-actions stops'});
-        data.features.forEach(function(stop) {
-            let sub = [stop.properties.street, stop.properties.locality].filter(function(p) {
-                return p;
-            });
-            let item = element('a',
-                {
-                    className: 'item item-stop item-multiline',
-                    href: URL.STOP_PAGE + stop.properties.atcoCode
-                },
-                element('span',
-                    element('span',
-                        {className: 'indicator area-' + stop.properties.adminAreaRef},
-                        createIndicator(stop.properties)
-                    ),
-                    element('span', {className: 'item-label'}, stop.properties.name)
-                ),
-                (sub) ? element('p', sub.join(', ')) : null
-            );
-            let mapLink = element('a',
-                {
-                    className: 'item item-action',
-                    innerHTML: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" ' +
-                        'height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/>' +
-                        '<path class="icon-shape" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 ' +
-                        '13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 ' +
-                        '0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 ' +
-                        '2.5z"/></svg>'
-                }
-            );
-            if (self.map != null) {
-                mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
-                mapLink.onclick = function() {
-                    self.map.update({
-                        stop: stop.properties.atcoCode,
-                        fitStop: true,
-                        service: null
-                    });
-                    if (self.overlay != null) {
-                        self.overlay.close();
-                    }
-                };
-            } else {
-                mapLink.title = 'Go to map for ' + stop.properties.title;
-                mapLink.href = URL.MAP + 'stop/' + stop.properties.atcoCode;
-            }
-
-            list.appendChild(element('li', item, mapLink));
-        });
-
-        removeSubElements(self.container);
-        self.container.appendChild(heading);
-        self.container.appendChild(list);
-        resizeIndicator('.indicator');
-    };
-}
-
-
-/**
  * Creates starred toggle button
  * @param {StarredStops} starred
  * @param {string} code
@@ -529,30 +395,32 @@ function createStarredButton(starred, code, stopIsStarred, starredList) {
         removeTitle = 'Remove from list of starred stops';
 
     let starredButton = element('button');
-    let onAdd, onRemove;
-
-    onAdd = function() {
-        starredButton.textContent = removeText;
-        starredButton.title = removeTitle;
-        starredButton.onclick = function() {
-            starred.delete(code, onRemove);
-        };
-        if (starredList != null) {
-            starredList.reset();
+    let setButton = function(star) {
+        if (star) {
+            starredButton.textContent = removeText;
+            starredButton.title = removeTitle;
+            starredButton.onclick = function () {
+                starred.delete(code, function() {
+                    setButton(false);
+                });
+            };
+            if (starredList != null) {
+                starredList.reset();
+            }
+        } else {
+            starredButton.textContent = addText;
+            starredButton.title = addTitle;
+            starredButton.onclick = function () {
+                starred.add(code, function() {
+                    setButton(true);
+                });
+            };
+            if (starredList != null) {
+                starredList.reset();
+            }
         }
     };
-    onRemove = function() {
-        starredButton.textContent = addText;
-        starredButton.title = addTitle;
-        starredButton.onclick = function() {
-            starred.add(code, onAdd);
-        };
-        if (starredList != null) {
-            starredList.reset();
-        }
-    };
-    // Set up button
-    (stopIsStarred) ? onAdd() : onRemove();
+    setButton(stopIsStarred);
 
     return starredButton;
 }
@@ -1435,7 +1303,7 @@ function SortableList(list, options) {
             if (focus && adj != null) {
                 adj.focus();
             }
-        }
+        };
         if (self.options.onDelete != null && self.options.wait) {
             // Pass another function to callback to complete deletion, keep drag disabled
             // If this function is called with true (or no arguments) the deletion is finalised,
@@ -1466,15 +1334,142 @@ function SortableList(list, options) {
 }
 
 
-function StarredStopsInterface(list, starred) {
+/**
+ * @typedef {Object} StarredListOptions
+ * @property {HTMLElement | string | null} container - Container to append new list to
+ * @property {HTMLElement | string | null} list - Existing list to use
+ * @property {StarredStops} starred
+ * @property {StopMap} map
+ * @property {Overlay} menuOverlay
+ */
+
+
+/**
+ * @param {StarredListOptions} options
+ * @constructor
+ */
+function StarredStopList(options) {
     let self = this;
-    this.list = (list instanceof HTMLElement) ? list : document.getElementById(list);
-    this.starred = starred;
+
+    if (options.container != null && options.list == null) {
+        this.container = (options.container instanceof HTMLElement) ?
+            options.container : document.getElementById(options.container);
+        this.list = null;
+    } else if (options.container == null && options.list != null) {
+        this.container = null;
+        this.list = (options.list instanceof HTMLElement) ?
+            options.list : document.getElementById(options.list);
+    } else {
+        throw new TypeError("Container to append list to or an existing list must be specified");
+    }
+    this.starred = options.starred;
+    this.map = (options.map) ? options.map : null;
+    this.menuOverlay = (options.menuOverlay) ? options.menuOverlay : null;
+
+    this.called = false;
+
+    this.heading = null;
     this.sortableList = null;
-    this.overlay = null;
+    this.deleteOverlay = null;
     this.toggleButton = null;
     this.deleteButton = null;
     this.editEnabled = false;
+
+    this.reset = function() {
+        self.called = false;
+    };
+
+    this.updateList = function() {
+        if (!self.called) {
+            let request = new XMLHttpRequest();
+            request.open('GET', URL.STARRED + 'data', true);
+            request.onload = function () {
+                if (this.status === 200) {
+                    self._createList(JSON.parse(request.responseText));
+                    if (self.menuOverlay != null) {
+                        self.menuOverlay.findFocusable();
+                    }
+                    self.called = true;
+                }
+            };
+            request.send();
+        }
+    };
+
+    this._createList = function(data) {
+        if (data.features.length === 0) {
+            removeSubElements(self.container);
+            return;
+        }
+
+        self.heading = element('div',
+            {className: 'h3-inline'},
+            element('h3', 'Starred stops')
+        );
+        self.list = element('ul', {className: 'list list-actions stops'});
+
+        data.features.forEach(function(stop) {
+            let sub = [stop.properties.street, stop.properties.locality].filter(function(p) {
+                return p;
+            });
+            let item = element('a',
+                {
+                    className: 'item item-stop item-multiline',
+                    href: URL.STOP_PAGE + stop.properties.atcoCode,
+                    dataset: {smscode: stop.properties.smsCode}
+                },
+                element('span',
+                    element('span',
+                        {className: 'indicator area-' + stop.properties.adminAreaRef},
+                        createIndicator(stop.properties)
+                    ),
+                    element('span', {className: 'item-label'}, stop.properties.name)
+                ),
+                (sub) ? element('p', sub.join(', ')) : null
+            );
+            let mapLink = element('a',
+                {
+                    className: 'item item-action',
+                    innerHTML: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" ' +
+                        'height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/>' +
+                        '<path class="icon-shape" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 ' +
+                        '13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 ' +
+                        '0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 ' +
+                        '2.5z"/></svg>'
+                }
+            );
+            if (self.map != null) {
+                mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
+                mapLink.onclick = function() {
+                    self.map.update({
+                        stop: stop.properties.atcoCode,
+                        fitStop: true,
+                        service: null
+                    });
+                    if (self.overlay != null) {
+                        self.overlay.close();
+                    }
+                };
+            } else {
+                mapLink.title = 'Go to map for ' + stop.properties.title;
+                mapLink.href = URL.MAP + 'stop/' + stop.properties.atcoCode;
+            }
+
+            self.list.appendChild(element('li', item, mapLink));
+        });
+
+        removeSubElements(self.container);
+        self.container.appendChild(self.heading);
+        self.container.appendChild(self.list);
+        resizeIndicator('.indicator');
+        self.setUp();
+        let actions = element('div',
+            {className: 'actions'},
+            self.deleteButton,
+            self.toggleButton
+        );
+        self.heading.appendChild(actions);
+    };
 
     this._toggleEdit = function() {
         self.editEnabled = !self.editEnabled;
@@ -1542,18 +1537,21 @@ function StarredStopsInterface(list, starred) {
         document.body.appendChild(overlay);
         let close = document.getElementById('delete-close'),
             confirm = document.getElementById('delete-confirm');
-        self.overlay = new Overlay(overlay, confirm);
+        self.deleteOverlay = new Overlay(overlay, confirm);
         close.onclick = function() {
-            self.overlay.close();
+            self.deleteOverlay.close();
         };
         confirm.onclick = function() {
             self.starred.delete(null, function() {
-                starredList.reset();
+                window.location.reload();
             });
         };
     };
 
     this.setUp = function() {
+        if (self.list == null) {
+            return;
+        }
         let items = self.list.querySelectorAll('li');
         if (items.length === 0) {
             return;
@@ -1582,13 +1580,13 @@ function StarredStopsInterface(list, starred) {
             li.appendChild(del);
         });
 
-        self.sortableList = new SortableList(list, {
+        self.sortableList = new SortableList(self.list, {
             onSort: function(_, item, startIndex, endIndex, finish) {
                 if (startIndex !== endIndex) {
                     let stop = item.querySelector('.item-stop');
                     self.starred.move(stop.dataset.smscode, endIndex, function() {
                         finish(true);
-                        starredList.reset();
+                        self.reset();
                     }, function() {
                         finish(false);
                     });
@@ -1598,12 +1596,14 @@ function StarredStopsInterface(list, starred) {
             },
             onDelete: function(_, item, finish) {
                 let stop = item.querySelector('.item-stop');
-                self.starred.delete(stop.dataset.smscode, function() {
-                    finish(true);
-                    starredList.reset();
-                }, function() {
-                    finish(false);
-                })
+                if (stop.dataset.smscode != null) {
+                    self.starred.delete(stop.dataset.smscode, function() {
+                        finish(true);
+                        self.reset();
+                    }, function() {
+                        finish(false);
+                    });
+                }
             },
             canDelete: true,
             wait: true,
@@ -1611,7 +1611,7 @@ function StarredStopsInterface(list, starred) {
         });
 
         self._createDialog();
-        this.toggleButton = element('button',
+        self.toggleButton = element('button',
             {
                 tabIndex: 0,
                 title: 'Edit this list of starred stops',
@@ -1619,20 +1619,20 @@ function StarredStopsInterface(list, starred) {
             },
             'Edit'
         );
-        this.deleteButton = element('button',
+        self.deleteButton = element('button',
             {
                 className: 'action-danger',
                 title: 'Delete all starred stops',
                 style: {display: 'none'},
                 onclick: function() {
-                    self.overlay.open();
+                    self.deleteOverlay.open();
                 }
             },
             'Delete all stops'
         );
     };
 
-    if (list != null && starred != null) {
+    if (self.list != null) {
         this.setUp();
     }
 }

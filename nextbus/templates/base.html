@@ -37,9 +37,13 @@ const URL = {
     STATIC: "{{ url_for('static', filename='') }}",
     STOP_PAGE: "{{ url_for('page.stop_atco', atco_code='') }}",
     STARRED: "{{ url_for('api.starred') }}",
-    STARRED_PAGE: "{{ url_for('page.starred') }}",
     MAP: "{{ url_for('page.show_map') }}"
 };
+const COOKIE_SET = {{ ('stops' in session)|tojson }};
+let starred;
+window.addEventListener('load', function() {
+    starred = new StarredStops(COOKIE_SET);
+});
 </script>
 
 {% block overlay -%}
@@ -80,12 +84,15 @@ window.addEventListener('load', function() {
         if (event.key === 'Enter') {
             this.click();
         }
-    }
+    };
     document.getElementById('menu-close').onclick = function() {
         overlay.close();
     };
-    starredList = new StarredStopList(document.getElementById('starredStops'));
-    starredList.setOverlay(overlay);
+    starredList = new StarredStopList({
+        container: document.getElementById('starredStops'),
+        starred: starred,
+        menuOverlay: overlay
+    });
 });
 </script>
 {%- endblock %}

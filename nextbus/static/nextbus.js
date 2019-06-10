@@ -539,9 +539,9 @@ function _FilterSelected(filterList) {
 
     this._handleKeys = function(event) {
         let adj;
-        let defaultEvent = false;
         switch (event.key) {
             case 'ArrowUp':
+                event.preventDefault();
                 self.list.menu.show();
                 adj = self.list.menu.adjacent(-1);
                 if (adj != null) {
@@ -549,6 +549,7 @@ function _FilterSelected(filterList) {
                 }
                 break;
             case 'ArrowDown':
+                event.preventDefault();
                 self.list.menu.show();
                 adj = self.list.menu.adjacent(1);
                 if (adj != null) {
@@ -556,15 +557,18 @@ function _FilterSelected(filterList) {
                 }
                 break;
             case 'ArrowLeft':
+                event.preventDefault();
                 adj = self.adjacent(-1, this) || self.adjacent(-1);
                 adj.focus();
                 break;
             case 'ArrowRight':
+                event.preventDefault();
                 adj = self.adjacent(1, this) || self.adjacent(1);
                 adj.focus();
                 break;
             case 'Backspace':
             case 'Delete':
+                event.preventDefault();
                 adj = self.adjacent(-1, this) || self.adjacent(1, this);
                 self.list.deselect(this.dataset.value);
                 if (adj != null) {
@@ -574,10 +578,7 @@ function _FilterSelected(filterList) {
                     self.list.menu.adjacent(1).focus();
                 }
                 break;
-            default:
-                defaultEvent = true;
         }
-        return defaultEvent;
     };
 
     this.updateDefault = function() {
@@ -687,29 +688,33 @@ function _FilterMenu(filterList) {
 
     this._handleKeys = function(event) {
         let adj;
-        let defaultEvent = false;
         switch (event.key) {
             case 'ArrowUp':
+                event.preventDefault();
                 adj = self.adjacent(-1, this) || self.adjacent(-1);
                 adj.focus();
                 break;
             case 'ArrowDown':
+                event.preventDefault();
                 adj = self.adjacent(1, this) || self.adjacent(1);
                 adj.focus();
                 break;
             case 'ArrowLeft':
+                event.preventDefault();
                 adj = self.list.selected.adjacent(-1);
                 if (adj != null) {
                     adj.focus();
                 }
                 break;
             case 'ArrowRight':
+                event.preventDefault();
                 adj = self.list.selected.adjacent(1);
                 if (adj != null) {
                     adj.focus();
                 }
                 break;
             case 'Enter':
+                event.preventDefault();
                 adj = self.adjacent(-1, this) || self.adjacent(1, this);
                 self.list.select(this.dataset.value);
                 if (adj != null) {
@@ -718,10 +723,7 @@ function _FilterMenu(filterList) {
                     self.list.selected.adjacent(1).focus();
                 }
                 break;
-            default:
-                defaultEvent = true;
         }
-        return defaultEvent;
     };
 
     this.setUp = function() {
@@ -1208,13 +1210,16 @@ function SortableList(list, options) {
     this._handleKeys = function(event) {
         switch (event.key) {
             case 'ArrowUp':
+                event.preventDefault();
                 self._handleArrowKey(-1, this);
                 break;
             case 'ArrowDown':
+                event.preventDefault();
                 self._handleArrowKey(1, this);
                 break;
             case ' ':
             case 'Enter':
+                event.preventDefault();
                 if (self.active != null) {
                     self._end();
                 } else {
@@ -1222,6 +1227,7 @@ function SortableList(list, options) {
                 }
                 break;
             case 'Escape':
+                event.preventDefault();
                 if (self.active != null) {
                     self._cancel();
                     this.focus();
@@ -1234,6 +1240,7 @@ function SortableList(list, options) {
                 }
                 break;
             case 'Delete':
+                event.preventDefault();
                 self.delete(this, true);
                 break;
         }

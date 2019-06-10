@@ -1471,6 +1471,7 @@ function StarredStopList(options) {
             );
             if (self.map != null) {
                 mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
+                mapLink.tabIndex = 0;
                 mapLink.onclick = function() {
                     self.map.update({
                         stop: stop.properties.atcoCode,
@@ -1479,6 +1480,11 @@ function StarredStopList(options) {
                     });
                     if (self.menuOverlay != null) {
                         self.menuOverlay.close();
+                    }
+                };
+                mapLink.onkeydown = function(event) {
+                    if (event.key === 'Enter') {
+                        this.click();
                     }
                 };
             } else {

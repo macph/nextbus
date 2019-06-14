@@ -289,7 +289,7 @@ function StarredStops(cookieSet) {
             } else if (onFail != null) {
                 onFail(request.status);
             }
-            self.set = (data != null);
+            self.set = (data != null && data.stops != null);
         };
         request.send();
     };
@@ -1406,6 +1406,7 @@ function StarredStopList(options) {
     this.reset = function(clearList) {
         if (clearList && self.container != null) {
             removeSubElements(self.container);
+            self.editEnabled = false;
         }
         self.called = false;
     };
@@ -3265,7 +3266,7 @@ function Panel(stopMap, mapPanel) {
                 self.stopMap.starred,
                 self.stopMap.starredList,
                 data.smsCode,
-                (self.stopMap.starred.set && list.stops.indexOf(data.smsCode) > -1)
+                (list.stops != null && list.stops.indexOf(data.smsCode) > -1)
             );
             actions.insertBefore(self.starredButton.button, closePanel);
         });

@@ -465,6 +465,13 @@ function processOptions(options, defaultOptions) {
 }
 
 
+function focusOrIgnore(element) {
+    if (element instanceof HTMLElement) {
+        element.focus();
+    }
+}
+
+
 /**
  * @typedef {{
  *      label: string,
@@ -533,43 +540,67 @@ function _FilterSelected(filterList) {
             }
             adj = (direction > 0) ? adj.nextSibling : adj.previousSibling;
         }
-
         return adj;
     };
 
-    this._handleKeys = function(event) {
-        let adj;
-        switch (event.key) {
+    this._menuHandleKeys = function(event) {
+        switch(event.key) {
             case 'ArrowUp':
                 event.preventDefault();
                 self.list.menu.show();
-                adj = self.list.menu.adjacent(-1);
-                if (adj != null) {
-                    adj.focus();
-                }
+                focusOrIgnore(self.list.menu.adjacent(-1));
                 break;
             case 'ArrowDown':
                 event.preventDefault();
                 self.list.menu.show();
-                adj = self.list.menu.adjacent(1);
-                if (adj != null) {
-                    adj.focus();
-                }
+                focusOrIgnore(self.list.menu.adjacent(1));
                 break;
             case 'ArrowLeft':
                 event.preventDefault();
-                adj = self.adjacent(-1, this) || self.adjacent(-1);
-                adj.focus();
+                focusOrIgnore(self.adjacent(-1));
                 break;
             case 'ArrowRight':
                 event.preventDefault();
-                adj = self.adjacent(1, this) || self.adjacent(1);
-                adj.focus();
+                focusOrIgnore(self.adjacent(1));
+                break;
+            case 'Enter':
+                event.preventDefault();
+                event.stopPropagation();
+                break;
+        }
+    };
+
+    this._handleKeys = function(event) {
+        switch (event.key) {
+            case 'ArrowUp':
+                event.preventDefault();
+                event.stopPropagation();
+                self.list.menu.show();
+                focusOrIgnore(self.list.menu.adjacent(-1));
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                event.stopPropagation();
+                self.list.menu.show();
+                focusOrIgnore(self.list.menu.adjacent(1));
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                event.stopPropagation();
+                focusOrIgnore(self.adjacent(-1, this) || self.adjacent(-1));
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                event.stopPropagation();
+                focusOrIgnore(self.adjacent(1, this) || self.adjacent(1));
+                break;
+            case 'Enter':
+                event.preventDefault();
                 break;
             case 'Backspace':
             case 'Delete':
                 event.preventDefault();
-                adj = self.adjacent(-1, this) || self.adjacent(1, this);
+                let adj = self.adjacent(1, this) || self.adjacent(-1, this);
                 self.list.deselect(this.dataset.value);
                 if (adj != null) {
                     adj.focus();
@@ -595,15 +626,17 @@ function _FilterSelected(filterList) {
     };
 
     this.setUp = function () {
+        let showMenu = function() {
+            if (self.list.menu.hidden) {
+                self.list.menu.show();
+            }
+        };
         self.element = element('div',{
             className: self.options.classInput || '',
-            onclick: function() {
-                if (self.list.menu.hidden) {
-                    self.list.menu.show();
-                } else {
-                    self.list.menu.hide();
-                }
-            }
+            tabIndex: 0,
+            onfocus: showMenu,
+            onclick: showMenu,
+            onkeydown: self._menuHandleKeys
         });
         self.list.container.appendChild(self.element);
     };
@@ -613,14 +646,14 @@ function _FilterSelected(filterList) {
             {
                 className: self.options.classSelected || '',
                 title: 'Remove ' + option.label + ' from filter',
-                dataset: {value: option.value}
+                dataset: {value: option.value},
+                tabIndex: -1
             },
             option.label
         );
         if (option.disabled) {
             item.classList.add(self.options.classSelectedDisabled);
         } else {
-            item.tabIndex = 0;
             item.onclick = function() {
                 self.list.deselect(option.value);
             }
@@ -691,27 +724,19 @@ function _FilterMenu(filterList) {
         switch (event.key) {
             case 'ArrowUp':
                 event.preventDefault();
-                adj = self.adjacent(-1, this) || self.adjacent(-1);
-                adj.focus();
+                focusOrIgnore(self.adjacent(-1, this) || self.adjacent(-1));
                 break;
             case 'ArrowDown':
                 event.preventDefault();
-                adj = self.adjacent(1, this) || self.adjacent(1);
-                adj.focus();
+                focusOrIgnore(self.adjacent(1, this) || self.adjacent(1));
                 break;
             case 'ArrowLeft':
                 event.preventDefault();
-                adj = self.list.selected.adjacent(-1);
-                if (adj != null) {
-                    adj.focus();
-                }
+                focusOrIgnore(self.list.selected.adjacent(-1));
                 break;
             case 'ArrowRight':
                 event.preventDefault();
-                adj = self.list.selected.adjacent(1);
-                if (adj != null) {
-                    adj.focus();
-                }
+                focusOrIgnore(self.list.selected.adjacent(1));
                 break;
             case 'Enter':
                 event.preventDefault();
@@ -762,13 +787,13 @@ function _FilterMenu(filterList) {
                 className: self.options.classMenuItem || '',
                 title: 'Add ' + option.label + ' to filter',
                 dataset: {value: option.value},
+                tabIndex: -1
             },
             option.label
         );
         if (option.disabled) {
             item.classList.add(self.options.classMenuItemDisabled);
         } else {
-            item.tabIndex = 0;
             item.onclick = function() {
                 self.list.select(option.value);
             };

@@ -158,7 +158,10 @@ window.addEventListener('load', function() {
     resizeIndicator('.indicator');
     revertColours('.indicator-reversed');
 
-    document.getElementById('select-area-refresh').style.display = 'none';
+    let refresh = document.getElementById('select-area-refresh');
+    if (refresh != null) {
+        refresh.style.display = 'none';
+    }
     let formSelectArea = document.getElementById('form-select-area');
     let onSelect = (formSelectArea != null) ? function() { formSelectArea.submit(); } : null;
     filterArea = new FilterList({

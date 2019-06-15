@@ -21,7 +21,7 @@ h1 {
 h2 {
   margin: 0.5em 0;
   padding: 0.3em 0;
-  border-bottom: 0.12rem solid #212121;
+  border-bottom: 0.1rem solid #212121;
 
   font-size: 2.4rem;
   letter-spacing: -0.02em;
@@ -47,7 +47,7 @@ p {
 a {
   padding: 0;
   background-color: transparent;
-  border-width: 0.12rem;
+  border-width: 0.1rem;
   border-style: none none solid;
   border-color: #212121;
 
@@ -90,7 +90,7 @@ input[type="file"] {
   box-sizing: border-box;
 
   background-color: transparent;
-  border: 0.12rem solid #212121;
+  border: 0.1rem solid #212121;
 
   font-size: 1.5rem;
   font-weight: 700;
@@ -111,7 +111,7 @@ input[type="file"]:hover {
 input:not([type="submit"]):not([type="file"]) {
   padding: 0.6rem 0;
   background-color: transparent;
-  border-width: 0.12rem;
+  border-width: 0.1rem;
   border-style: none none solid;
   border-color: #212121;
   min-width: 0; /* Override width set by browser */
@@ -307,7 +307,7 @@ section {
   box-sizing: border-box;
 
   background-color: transparent;
-  border: 0.12rem solid white;
+  border: 0.1rem solid white;
 
   font-size: 1.5rem;
   font-weight: 700;
@@ -681,7 +681,7 @@ section {
   justify-content: center;
   height: 32px;
   padding: 0.5rem;
-  border-width: 0.12rem;
+  border-width: 0.1rem;
   border-color: #212121;
 
   font-size: 1.3rem;
@@ -713,13 +713,13 @@ section {
 
 .tabs::before {
   flex: 0 0 1.6rem;
-  border-bottom: 0.12rem solid #212121;
+  border-bottom: 0.1rem solid #212121;
   content: '';
 }
 
 .tabs::after {
   flex: 1;
-  border-bottom: 0.12rem solid #212121;
+  border-bottom: 0.1rem solid #212121;
   content: '';
 }
 
@@ -918,7 +918,7 @@ section {
 .h2-inline {
   margin: calc(2.4 * 0.5rem) 0;
   padding: calc(2.4 * 0.3rem) 0;
-  border-bottom: 0.12rem solid #212121;
+  border-bottom: 0.1rem solid #212121;
 }
 
 .h3-inline {
@@ -1167,7 +1167,7 @@ section {
   padding: 0.25rem 1rem 0.25rem 0;
   cursor: pointer;
 
-  border-width: 0.12rem;
+  border-width: 0.1rem;
   border-style: none none solid;
   border-color: #212121;
 }
@@ -1193,7 +1193,7 @@ section {
   margin: 0.25rem 0.5rem 0.25rem 0;
   padding: 0.25rem 0.5rem;
 
-  border: 0.12rem solid #212121;
+  border: 0.1rem solid #212121;
   font-weight: 600;
 
   transition:
@@ -1230,7 +1230,7 @@ section {
   -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   box-sizing: border-box;
 
-  border-width: 0.12rem;
+  border-width: 0.1rem;
   border-color: #212121;
   border-style: none solid solid;
   background-color: white;

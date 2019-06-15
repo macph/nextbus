@@ -1,6 +1,7 @@
 /*
  * nxb functionality; copyright Ewan Macpherson 2017-19
  */
+'use strict';
 
 const INTERVAL = 90;
 

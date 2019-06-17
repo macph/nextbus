@@ -33,6 +33,14 @@ def bad_request(status, message):
     return response
 
 
+@api.after_request
+def set_cache_control(response):
+    if response.cache_control.max_age is None:
+        response.cache_control.max_age = 604800
+
+    return response
+
+
 @api.route("/live/<atco_code>")
 def stop_get_times(atco_code=None):
     """ Requests and retrieve bus times. """

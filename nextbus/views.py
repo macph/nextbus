@@ -93,6 +93,14 @@ def add_search_form():
     g.action = url_for("page.search_query")
 
 
+@page.after_request
+def set_cache_control(response):
+    if response.cache_control.max_age is None:
+        response.cache_control.max_age = 604800
+
+    return response
+
+
 @page.app_template_global()
 def modify_query(**values):
     """ Jinja function to modify a query URL by replacing query string

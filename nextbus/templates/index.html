@@ -6,7 +6,7 @@
 
 {% block content %}
 <main>
-  <h1 class="text-middle">Live bus times in Great&nbsp;Britain</h1>
+  <h1 class="text-middle">Live times in Great&nbsp;Britain</h1>
   <div>
     <section>
       <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
@@ -15,11 +15,11 @@
         <button type="submit" name="submit" title="Search" value="1">Search</button>
         <button id="help-open" type="button" title="Help with searching">?</button>
       </form>
-      <ul class="links">
-        {% if config.get('GEOLOCATION_ENABLED', false) %}<li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>{% endif %}
-        <li><a href="{{ url_for('page.list_regions') }}">Browse regions</a></li>
-        <li><a href="{{ url_for('page.show_map') }}">Map</a></li>
-      </ul>
+      <div class="actions actions-index">
+        {% if config.get('GEOLOCATION_ENABLED', false) %}<a class="action" href="{{ url_for('page.find_near_location') }}">Stops nearby</a>{% endif %}
+        <a class="action" href="{{ url_for('page.list_regions') }}">Browse regions</a>
+        <a class="action" href="{{ url_for('page.show_map') }}">Map</a>
+      </div>
     </section>
     <section>
       {% if starred is not none and starred|length > 0 -%}

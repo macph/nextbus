@@ -24,12 +24,12 @@
   </h1>
   <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
   <div class="actions">
-    <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
     <a class="action" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a>
+    <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
   </div>
 
   {% if mirrored %}
-  <ul class="tabs tabs-3">
+  <ul class="tabs tabs-2">
     {% if not reverse %}
     <li><div class="tab tab-active">Outbound</div></li>
     <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>

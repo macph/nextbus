@@ -296,6 +296,12 @@ section {
   margin: -0.5rem -0.5rem;
 }
 
+.actions-index {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
 .actions > * {
   margin: 0.5rem;
 }
@@ -594,28 +600,6 @@ section {
   width: 5.6rem;
   margin-right: 1rem;
   text-align: right;
-}
-
-
-/* LIST OF LINKS */
-
-.links {
-  display: block;
-  margin: 2rem 0;
-  padding: 0;
-  list-style: none;
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 1.6em;
-}
-
-.links > li {
-  display: inline;
-  white-space: nowrap;
-}
-
-.links > li:not(:last-child):after {
-  content: ' | ';
 }
 
 

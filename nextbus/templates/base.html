@@ -59,11 +59,11 @@ window.addEventListener('load', function() {
         <input id="search-form" type="search" name="search" placeholder="Find a stop..." aria-label="Find a bus stop" required>
         <button type="submit" name="submit" title="Search" value="1">Search</button>
       </form>
-      <ul class="links">
-        <li><a href="{{ url_for('page.find_near_location') }}">Stops nearby</a></li>
-        <li><a href="{{ url_for('page.list_regions') }}">Browse regions</a></li>
-        <li><a href="{{ url_for('page.show_map') }}">Map</a></li>
-      </ul>
+      <div class="actions actions-index">
+        {% if config.get('GEOLOCATION_ENABLED', false) %}<a class="action" href="{{ url_for('page.find_near_location') }}">Stops nearby</a>{% endif %}
+        <a class="action" href="{{ url_for('page.list_regions') }}">Browse regions</a>
+        <a class="action" href="{{ url_for('page.show_map') }}">Map</a>
+      </div>
       <div id="starredStops"></div>
     </div>
   </div>

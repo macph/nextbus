@@ -121,14 +121,11 @@ function Overlay(overlayElement, focusFirst) {
      * @private
      */
     this._handleKeys = function(event) {
-        const KEY_TAB = 'Tab',
-              KEY_ESC = 'Escape';
-
         switch (event.key) {
-            case KEY_TAB:
+            case 'Tab':
                 self._cycleTabs(event);
                 break;
-            case KEY_ESC:
+            case 'Escape':
                 self.close();
                 break;
         }
@@ -1255,6 +1252,8 @@ function SortableList(list, options) {
             case 'Escape':
                 event.preventDefault();
                 if (self.active != null) {
+                    // Cancel the move but don't trigger other events such as overlay closing
+                    event.stopPropagation();
                     self._cancel();
                     this.focus();
                 }
@@ -1576,6 +1575,9 @@ function StarredStopList(options) {
                 toggle(c[3], true);
             }
         });
+        if (self.menuOverlay != null) {
+            self.menuOverlay.findFocusable();
+        }
     };
 
     this._createDialog = function() {

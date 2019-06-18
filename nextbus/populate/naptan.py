@@ -21,13 +21,6 @@ IND_MAX_CHARS = 5
 IND_MAX_WORDS = 2
 
 
-def download_naptan_data():
-    """ Downloads NaPTAN data from the DfT. Comes in a zipped file.
-    """
-    return file_ops.download(NAPTAN_URL, directory="temp",
-                             params={"format": "xml"})
-
-
 def _create_ind_parser():
     """ Creates the parser for shortening indicator text for stop points. """
 
@@ -170,14 +163,14 @@ def _remove_stop_areas():
 
 
 def _find_stop_area_mode(query_result, ref):
-    """ Helper function to find the mode of references for each stop area.
+    """ Finds the mode of references for each stop area.
 
         The query results must have 3 columns: primary key, foreign key
         reference and number of stop points within each area matching that
         reference, in that order.
 
         :param ref: Name of the reference column.
-        :returns: Two lists; one to be to be used with ``bulk_update_mappings``
+        :returns: Two lists; one to be to be used with `bulk_update_mappings`
         and the other strings for invalid areas.
     """
     # Group by stop area and reference
@@ -199,8 +192,8 @@ def _find_stop_area_mode(query_result, ref):
 
 
 def _find_locality_min_distance(ambiguous_areas):
-    """ Helper function to find the minimum distance between stop areas and
-        localities for these with ambiguous localities.
+    """ Finds the minimum distance between stop areas and localities for these
+        with ambiguous localities.
     """
     distance = db.func.sqrt(
         db.func.power(models.StopArea.easting - models.Locality.easting, 2) +
@@ -235,24 +228,21 @@ def _find_locality_min_distance(ambiguous_areas):
         # Check if associated localities are far away - may be wrong locality
         for k, dist in local.items():
             if dist > 2 * min_dist and dist > 1000:
-                utils.logger.warning("Area %s: %.0f m away from %s" %
-                                     (sa, dist, k))
+                utils.logger.warning(f"Area {sa}: {dist:.0f} m away from {k}")
 
         # Else, check if only one locality matches min distance and set it
         if len(local_min) == 1:
-            utils.logger.debug("Area %s set to locality %s, dist %.0f m" %
-                               (sa, local_min[0], min_dist))
+            utils.logger.debug(f"Area {sa} set to locality {local_min[0]}, "
+                               f"dist {min_dist:.0f} m")
             update_areas.append({"code": sa, "locality_ref": local_min[0]})
         else:
-            utils.logger.warning("Area %s: ambiguous localities %s" %
-                                 (sa, min_dist))
+            utils.logger.warning(f"Area {sa}: ambiguous localities, {min_dist}")
 
     return update_areas
 
 
 def _set_stop_area_locality():
-    """ Add locality info based on stops contained within the stop areas.
-    """
+    """ Add locality info based on stops contained within the stop areas. """
     # Find stop areas with associated locality codes
     query = (
         db.session.query(
@@ -318,29 +308,8 @@ def _set_tram_admin_area():
         utils.logger.info("Adding locality codes to stop areas")
         db.session.bulk_update_mappings(models.StopArea, areas)
 
-    for area in ambiguous.items():
-        utils.logger.warning("Area %s: ambiguous admin areas %s" % area)
-
-
-def _get_naptan_data(naptan_file):
-    """ Parses NaPTAN XML data and returns lists of stop points and stop areas
-        within the specified admin areas.
-
-        :param naptan_file: File-like object or path for a source XML file
-        :returns: Transformed data as a XML ElementTree object
-    """
-    naptan_data = et.parse(naptan_file)
-    xslt_data = et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT))
-    transform = et.XSLT(xslt_data)
-
-    try:
-        new_data = transform(naptan_data)
-    except (et.XSLTParseError, et.XSLTApplyError) as err:
-        for error_message in getattr(err, "error_log"):
-            utils.logger.error(error_message)
-        raise
-
-    return new_data
+    for area, areas in ambiguous.items():
+        utils.logger.warning(f"Area {area}: ambiguous admin areas {areas}")
 
 
 def commit_naptan_data(archive=None, list_files=None):
@@ -370,25 +339,31 @@ def commit_naptan_data(archive=None, list_files=None):
     elif list_files is not None:
         iter_files = iter(list_files)
     else:
-        downloaded = download_naptan_data()
+        downloaded = file_ops.download(NAPTAN_URL, directory="temp",
+                                       params={"format": "xml"})
         iter_files = file_ops.iter_archive(downloaded)
 
     # Go through data and create objects for committing to database
     _setup_naptan_functions()
-    naptan = utils.PopulateData()
 
+    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT)))
+    metadata = utils.reflect_metadata()
+    delete = True
     for file_ in iter_files:
         file_name = file_.name if hasattr(file_, "name") else file_
-        utils.logger.info("Parsing file %r" % file_name)
-        naptan.add_from(_get_naptan_data(file_))
+        utils.logger.info(f"Parsing file {file_name!r}")
+        utils.populate_database(
+            utils.collect_xml_data(utils.xslt_transform(file_, xslt)),
+            metadata=metadata,
+            delete=delete
+        )
+        delete = False
 
-    naptan.commit(delete=True)
     # Remove all orphaned stop areas and add localities to other stop areas
     _remove_stop_areas()
     _set_stop_area_locality()
     _set_tram_admin_area()
 
     if downloaded is not None:
-        utils.logger.info("New file %r downloaded; can be deleted" %
-                          downloaded)
+        utils.logger.info(f"New file {downloaded!r} downloaded; can be deleted")
     utils.logger.info("NaPTAN population done")

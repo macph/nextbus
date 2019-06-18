@@ -3,7 +3,9 @@ Utilities for the populate subpackage.
 """
 import collections
 import contextlib
+import csv
 import functools
+import io
 import itertools
 import logging
 import os
@@ -20,7 +22,8 @@ from nextbus import db, logger, models
 
 
 NXB_EXT_URI = r"http://nextbus.org/functions"
-ROW_LIMIT = 10000
+
+ROW_LIMIT = 100000
 
 logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
@@ -77,7 +80,7 @@ def xml_as_dict(element):
     data = {}
     for e in element:
         if e.tag in data:
-            raise ValueError("Multiple elements have the same tag %r." % e.tag)
+            raise ValueError(f"Multiple elements have the same tag {e.tag!r}.")
         default = e.get("default", None)
         data[e.tag] = default if e.text is None else e.text
 
@@ -182,280 +185,188 @@ def r_split(_, text, char):
     return text.split(char)[-1]
 
 
-class PopulateData:
-    def __init__(self, xml_data=None):
-        self.input = None
-        self.entries = collections.OrderedDict()
+def xslt_transform(data, xslt, **kw):
+    """ Transforms a XML file or object with an XSLT object. Keyword arguments
+        are used as string parameters within the XSLT transform.
+    """
+    try:
+        xml = et.parse(data)
+    except TypeError:
+        xml = data
+    params = {k: xslt.strparam(v) for k, v in kw.items()}
+    try:
+        result = xslt(xml, **params)
+    except et.XSLTError as err:
+        for error_message in getattr(err, "error_log"):
+            logger.error(error_message)
+        raise
+    for message in getattr(xslt, "error_log"):
+        logger.debug(message)
 
-        self.metadata = reflect_metadata()
-        self.dc = DataCopy(self.metadata)
+    return result
 
-        if xml_data is not None:
-            self.set_input(xml_data)
 
-    def total(self):
-        return sum(len(e) for e in self.entries.values())
+def collect_xml_data(xml_data):
+    """ Collect entries from a XML tree into a dictionary of models and entries.
 
-    def set_input(self, xml_data):
-        """ Sets source data to a XML file or ElementTree object.
+        Each element within the root are expected to have the same name as
+        models.
+    """
+    collected = collections.OrderedDict()
+    for element in xml_data.getroot():
+        model = getattr(models, element.tag, None)
+        if model is None:
+            raise ValueError(f"Element {element} does not match an existing "
+                             f"model name.")
+        if model not in collected:
+            collected[model] = []
+        collected[model].append(xml_as_dict(element))
 
-            :param xml_data: `ElementTree` object, a file-like object or a path
-            pointing to a XML file.
-        """
-        try:
-            self.input = et.parse(xml_data)
-        except TypeError:
-            self.input = xml_data
-
-    def add(self, xpath_query, model):
-        """ Iterates through a list of elements, creating a list of dicts.
-
-            :param xpath_query: XPath query to retrieve list of elements.
-            :param model: Database model.
-        """
-        if self.input is None:
-            raise ValueError("No source XML data has been set yet.")
-
-        # Find all elements matching query
-        list_elements = self.input.xpath(xpath_query)
-        if not list_elements:
-            return
-
-        new_entries = self.entries.setdefault(model, list())
-        new_entries.extend(xml_as_dict(e) for e in list_elements)
-
-    def add_from(self, xml_data):
-        """ Searches data file and add to dataset, selecting models and columns
-            based on tag names.
-
-            :param xml_data: `ElementTree` object, a file-like object or a path
-            pointing to a XML file.
-        """
-        self.set_input(xml_data)
-        try:
-            root = self.input.getroot()
-        except AttributeError:
-            root = self.input
-
-        names_found = []
-        # Order of dataset needs to be maintained for foreign keys
-        for c in root:
-            if c.tag not in names_found:
-                if not hasattr(models, c.tag):
-                    raise ValueError("Elements with tag %r does not have a "
-                                     "matching model name." % c.tag)
-                names_found.append(c.tag)
-
-        for name in names_found:
-            self.add(name, getattr(models, name))
-
-    def _new_temp_table(self, table):
-        """ Creates a temporary table based on an existing table, excluding any
-            columns with autoincrement, and set it to drop on commit.
-        """
-        # Find a suitable temporary table name
-        num = 0
-        temp_name = "%s_%d" % (table.name, num)
-        while temp_name in self.metadata.tables:
-            num += 1
-            temp_name = "%s_%d" % (table.name, num)
-
-        new_columns = [db.Column(c.name, c.type, autoincrement=False)
-                       for c in table.columns if not c.autoincrement]
-
-        return db.Table(
-            temp_name,
-            self.metadata,
-            *new_columns,
-            prefixes=["TEMPORARY"],
-            postgresql_on_commit="DROP"
-        )
-
-    def _commit(self, connection, model, delete=False):
-        """ Copies from entries for a model using a temporary table. """
-        if not self.entries[model]:
-            return
-
-        table = self.metadata.tables[model.__tablename__]
-        temp_table = self._new_temp_table(table)
-        temp_table.create(connection)
-
-        # Add entries to temporary table using COPY
-        self.dc.copy(connection, temp_table, self.entries[model])
-
-        if delete:
-            truncate(connection, table)
-
-        insert_main = (
-            postgresql.insert(table)
-            .from_select([c.name for c in temp_table.columns],
-                         db.select([temp_table]))
-            .on_conflict_do_nothing()
-        )
-
-        logger.info("Inserting all data from temporary table %r for model %s" %
-                    (temp_table.name, model.__name__))
-        connection.execute(insert_main)
-
-        self.metadata.remove(temp_table)
-
-    def commit(self, delete=False, exclude=None, clear=False):
-        """ Copies data from XML data which has been added.
-            :param delete: Delete old data from models before copying.
-            :param exclude: Iterable of models that shouldn't be deleted
-            :param clear: Delete all entries after committing.
-        """
-        with database_connection() as conn:
-            for m in self.entries:
-                delete_model = delete and (exclude is None or m not in exclude)
-                self._commit(conn, m, delete_model)
-        if clear:
-            self.entries.clear()
+    return collected
 
 
 def truncate(connection, table, cascade=True):
-    """ Deletes data from a table using `TRUNCATE`.
-
-        :param connection: SQLAlchemy engine connection.
-        :param table: SQLAlchemy `Table` object.
-        :param cascade: Truncate other tables with foreign keys to this table.
-    """
+    """ Deletes data from a table using `TRUNCATE`. """
     str_truncate = "TRUNCATE {} CASCADE;" if cascade else "TRUNCATE {};"
     table_name = psycopg2.sql.Identifier(table.name)
     statement = psycopg2.sql.SQL(str_truncate).format(table_name)
 
     with connection.connection.cursor() as cursor:
-        logger.info("Deleting all rows from %r" % table.name)
         cursor.execute(statement)
 
 
-class DataCopy(object):
-    """ Sets up an interface for copying data to PostgreSQL DB. """
-    SEP = "\t"
-    NULL = r"\N"
-    LIMIT = 500000
+def _iter_every(iterable, length):
+    """ Generator for iterable split into lists with maximum length. """
+    iterator = iter(iterable)
+    section = list(itertools.islice(iterator, length))
+    while section:
+        yield section
+        section = list(itertools.islice(iterator, length))
 
-    def __init__(self, metadata=None):
-        # Get metadata from existing database for server defaults
-        if metadata is not None:
-            self.metadata = metadata
-        else:
-            self.metadata = reflect_metadata()
 
-    @staticmethod
-    def _escape(value):
-        """ Remove trailing/leading spaces and escape special characters. """
-        return (
-            str(value).strip()
-            .replace("\\", "\\\\")
-            .replace("\b", "\\b")
-            .replace("\f", "\\f")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\v")
-            .replace("\v", "\\v")
-        )
+def _copy_executor(table, null_value):
+    s_table = psycopg2.sql.Identifier(table.name)
+    s_null = psycopg2.sql.Literal(null_value)
+    copy_stmt = psycopg2.sql.SQL("COPY {} FROM STDIN WITH CSV HEADER NULL {}")
 
-    def _parse_row(self, table, obj):
-        """ Parses each object, excluding columns that have server defaults (eg
-            sequences).
-        """
-        row = []
-        columns = []
-        for col in table.columns:
-            if col.name not in obj:
-                if not col.nullable and col.server_default is None:
-                    raise ValueError(
-                        "Non-nullable column %r for table %r does not have a "
-                        "default value; can't use row %r without this column." %
-                        (table.name, col.name, obj)
-                    )
-                else:
-                    continue
-            value = obj[col.name]
-            escaped = self._escape(value) if value is not None else self.NULL
-            row.append(escaped)
-            columns.append(col.name)
-
-        return row, columns
-
-    def _write_copy_file(self, file_, table_name, data):
-        """ Writes data from list of dicts to a file for import. """
-        table = self.metadata.tables[table_name]
-        columns = None
-        for obj in data:
-            row, cols = self._parse_row(table, obj)
-            # Compare columns to ensure they are all the same
-            if columns is None:
-                columns = cols
-            elif cols != columns:
-                raise ValueError(
-                    "Columns %r for this row in table %r differ from columns "
-                    "%r for other rows." % (cols, table_name, columns)
-                )
-
-            file_.write(self.SEP.join(row) + "\n")
-
-        return columns
-
-    def _create_copy_files(self, table_name, data):
-        """ Splits data into chunks with `LIMIT` and saves them to files. """
-        iter_rows = iter(data)
-        temp_files = []
-        columns = None
-
+    def execute_copy(cursor, file_):
+        statement = copy_stmt.format(s_table, s_null)
         try:
-            while True:
-                chunk = list(itertools.islice(iter_rows, self.LIMIT))
-                if not chunk:
-                    break
-                # Create a temporary file to store copy data
-                fd, path = tempfile.mkstemp()
-                with open(fd, "w") as file_:
-                    columns = self._write_copy_file(file_, table_name, chunk)
-                temp_files.append(path)
+            cursor.copy_expert(statement, file_)
         except Exception:
-            for path in temp_files:
-                os.remove(path)
+            logger.error("Error with COPY", exc_info=1)
+            error_path = os.path.join(ROOT_DIR, "temp/error_data")
+            with open(error_path, "w") as error_f:
+                file_.seek(0)
+                shutil.copyfileobj(file_, error_f)
+                logger.info(f"Data written to {error_path!r}")
             raise
 
-        return columns, temp_files
+    return execute_copy
 
-    def _copy_from_file(self, cursor, table_name, columns, path):
-        """ Opens file and copies it to the DB using `COPY FROM`. If any errors
-            occur the offending file is saved to `temp/error_data`.
-        """
-        with open(path) as file_:
-            try:
-                cursor.copy_from(file_, table_name, sep=self.SEP,
-                                 null=self.NULL, columns=columns)
-            except Exception:
-                # Save copy file for debugging and raise again
-                error_file = os.path.join(ROOT_DIR, "temp/tnds_error_data")
-                logger.error("Error occurred with COPY; saving file to "
-                             "%r" % error_file)
-                logger.debug("Columns: %r" % columns)
-                with open(error_file, "w") as f:
-                    file_.seek(0)
-                    shutil.copyfileobj(file_, f)
-                raise
 
-    def copy(self, connection, table, data):
-        """ Copies all data to the database, deleting data afterwards
+def _copy(connection, table, entries):
+    """ Copies entries to a table using the COPY command via CSV files. """
+    columns = [c.name for c in table.columns]
+    null = "\\N"
+    copy = _copy_executor(table, null)
 
-            :param table: SQLAlchemy `Table` object.
-            :param data: List of dictionaries with table columns as keys. All
-            dictionaries must have the same keys.
-            :param connection: SQLAlchemy engine connection.
-        """
-        logger.info("Copying %d row%s to %r" %
-                    (len(data), "" if len(data) == 1 else "s", table.name))
-        columns, temp_files = self._create_copy_files(table.name, data)
+    # Convert None values to a set value as to distinguish from empty strings
+    def convert_null(row):
+        return {c: row[c] if row.get(c) is not None else null
+                for c in columns}
 
+    if len(entries) < ROW_LIMIT:
+        # newline="" required to make CSV writing work
+        buf = io.StringIO(newline="")
+        data = csv.DictWriter(buf, columns)
+        data.writeheader()
+        data.writerows(map(convert_null, entries))
+        buf.seek(0)
+        with connection.connection.cursor() as cursor:
+            copy(cursor, buf)
+
+    else:
+        paths = []
         try:
+            for section in _iter_every(entries, ROW_LIMIT):
+                desc, path = tempfile.mkstemp()
+                paths.append(path)
+                # newline="" required to make CSV writing work
+                with open(desc, "w", newline="") as buf:
+                    data = csv.DictWriter(buf, columns)
+                    data.writeheader()
+                    data.writerows(map(convert_null, section))
+
             with connection.connection.cursor() as cursor:
-                for path in temp_files:
-                    self._copy_from_file(cursor, table.name, columns, path)
+                for path in paths:
+                    logger.debug(f"Copying {len(entries)} rows to {table.name} "
+                                 f"from files {path!r}")
+                    with open(path, "r") as buf:
+                        copy(cursor, buf)
         finally:
-            for path in temp_files:
+            for path in paths:
                 os.remove(path)
+
+
+def _temp_table(metadata, table):
+    """ Creates a temporary table from an existing table. """
+    # Find a suitable temporary table name
+    num = 0
+    temp_name = f"{table.name}_{num}"
+    while temp_name in metadata.tables:
+        num += 1
+        temp_name = f"{table.name}_{num}"
+
+    new_columns = (db.Column(c.name, c.type, autoincrement=False)
+                   for c in table.columns if not c.autoincrement)
+
+    return db.Table(
+        temp_name,
+        metadata,
+        *new_columns,
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+
+
+def _populate_table(connection, metadata, model, entries, delete_table=False):
+    """ Fills a table with data by using COPY and an intermediate table so
+        ON CONFLICT DO NOTHING can be used.
+    """
+    if not entries:
+        return
+    table = metadata.tables[model.__table__.name]
+    temp_table = _temp_table(metadata, table)
+    temp_table.create(connection)
+
+    if delete_table:
+        logger.debug(f"Truncating table {table.name}")
+        truncate(connection, table)
+
+    logger.debug(f"Copying {len(entries)} rows to table {table.name} via "
+                 f"{temp_table.name}")
+    # Add entries to temporary table using COPY
+    _copy(connection, temp_table, entries)
+    # Insert entries from temporary table into main table avoiding conflicts
+    insert_main = (
+        postgresql.insert(table)
+        .from_select([c.name for c in temp_table.columns],
+                     db.select([temp_table]))
+        .on_conflict_do_nothing()
+    )
+    connection.execute(insert_main)
+    metadata.remove(temp_table)
+
+
+def populate_database(data, metadata=None, delete=False, exclude=None):
+    """ Populates the database using a dictionary of models and lists of
+        entries.
+    """
+    if not data:
+        return
+    metadata_ = reflect_metadata() if metadata is None else metadata
+    with database_connection() as connection:
+        for model, entries in data.items():
+            del_ = delete and (exclude is None or model not in exclude)
+            _populate_table(connection, metadata_, model, entries, del_)

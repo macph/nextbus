@@ -30,22 +30,22 @@ LIST_COUNTRIES = [
 ]
 
 
-def download_nspl_data():
+def _download_nspl_data():
     """ Downloads NSPL data from Camden's Socrata API. Requires an app token,
         which can be obtained from Camden's open data site. For more info, see
         https://dev.socrata.com/foundry/opendata.camden.gov.uk/ry6e-hbqy
 
-        The ``CAMDEN_API_TOKEN`` key in application config is used for access,
+        The `CAMDEN_API_TOKEN` key in application config is used for access,
         and while it is not necessary it will raise throttling limits on access
         to the API.
     """
     token = current_app.config.get("CAMDEN_API_TOKEN")
     headers = {"X-App-Token": token} if token is not None else {}
-    codes = ["country_code='%s'" % c for c in LIST_COUNTRIES]
+    codes = [f"country_code='{c}'" for c in LIST_COUNTRIES]
 
     params = {
         "$select": ", ".join(LIST_COLUMNS),
-        "$where": "(%s) AND (positional_quality < 8)" % " OR ".join(codes),
+        "$where": f"({' OR '.join(codes)})",
         "$limit": 2000000
     }
     new = file_ops.download(NSPL_API, file_name="nspl.json", directory="temp",
@@ -70,27 +70,22 @@ def _get_dict_local_authorities():
     return local_authorities
 
 
-def commit_nspl_data(file_=None):
+def commit_nspl_data(path=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
 
-        :param file_: Path for JSON file. If None, initiates download from
-        the Camden Open Data API.
+        :param path: Path for JSON file. If None, initiates download from the
+        Camden Open Data API.
     """
-    downloaded_file = None
-    if file_ is None:
-        downloaded_file = download_nspl_data()
-        nspl_path = downloaded_file
-    else:
-        nspl_path = file_
+    nspl_path = _download_nspl_data() if path is None else path
 
-    utils.logger.info("Opening file %r" % nspl_path)
+    utils.logger.info(f"Opening file {nspl_path!r}")
     with open(nspl_path, "r") as json_file:
         data = json.load(json_file)
 
     postcodes = []
     local_authorities = _get_dict_local_authorities()
-    utils.logger.info("Parsing %d postcodes" % len(data))
+    utils.logger.info(f"Parsing {len(data)} postcodes")
     for row in data:
         local_authority = local_authorities[row["local_authority_code"]]
         postcodes.append({
@@ -104,14 +99,11 @@ def commit_nspl_data(file_=None):
             "latitude":         row["latitude"]
         })
 
-    dc = utils.DataCopy()
-    table = models.Postcode.__table__
+    utils.populate_database(
+        {models.Postcode: postcodes},
+        delete=True
+    )
 
-    with utils.database_connection() as connection:
-        utils.truncate(connection, table)
-        dc.copy(connection, table, postcodes)
-
-    if downloaded_file is not None:
-        utils.logger.info("New file %r downloaded; can be deleted" %
-                          downloaded_file)
+    if path is None:
+        utils.logger.info(f"New file {nspl_path!r} downloaded; can be deleted")
     utils.logger.info("NSPL population done.")

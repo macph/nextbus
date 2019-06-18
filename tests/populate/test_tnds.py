@@ -6,9 +6,10 @@ import os
 import lxml.etree as et
 import pytest
 
-from nextbus.populate.utils import xslt_func
+from definitions import ROOT_DIR
+from nextbus.populate.utils import xslt_func, xslt_transform
 from nextbus.populate.tnds import (
-    bank_holidays, days_week, weeks_month, RowIds, _get_tnds_transform
+    TNDS_XSLT, bank_holidays, days_week, weeks_month, RowIds
 )
 
 
@@ -75,7 +76,6 @@ def test_bank_holidays(holidays, region, expected):
 
 
 def test_transform_tnds(asserts):
-    transform = _get_tnds_transform()
     expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
     # Set up functions to assign IDs
     RowIds(check_existing=False)
@@ -87,12 +87,13 @@ def test_transform_tnds(asserts):
     xslt_func["stop_exists"] = always_true
 
     try:
-        output = transform(
+        output = xslt_transform(
             et.parse(TNDS_RAW),
-            region=transform.strparam("Y"),
-            file=transform.strparam("TNDS_raw.xml")
+            et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))),
+            region="Y",
+            file="TNDS_raw.xml"
         )
-    except (et.XSLTApplyError, et.XSLTParseError) as err:
+    except et.XSLTError as err:
         for msg in getattr(err, "error_log"):
             print(msg)
         raise

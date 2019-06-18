@@ -15,7 +15,6 @@ from nextbus.populate import file_ops, utils
 
 TNDS_URL = r"ftp.tnds.basemap.co.uk"
 TNDS_XSLT = r"nextbus/populate/tnds.xslt"
-TNDS_ROLLOVER = 100000
 
 
 def _get_regions():
@@ -45,14 +44,12 @@ def download_tnds_files():
 
     regions = _get_regions()
     paths = {}
-    utils.logger.info("Opening FTP connection to %r with credentials" %
-                      TNDS_URL)
+    utils.logger.info(f"Opening FTP connection {TNDS_URL!r} with credentials")
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
         for region in regions:
             file_name = region + ".zip"
             file_path = os.path.join(ROOT_DIR, "temp", file_name)
-            utils.logger.info("Downloading file %r from %r" %
-                              (file_name, TNDS_URL))
+            utils.logger.info(f"Downloading file {file_name!r}")
             with open(file_path, "wb") as file_:
                 ftp.retrbinary("RETR " + file_name, file_.write)
             paths[region] = file_path
@@ -72,7 +69,7 @@ class IndexList(object):
 
     def __repr__(self):
         items = ", ".join(repr(i) for i in self)
-        return "<IndexList(%s, initial=%s)>" % (items, self._initial)
+        return f"<IndexList({items}, initial={self._initial})>"
 
     def __len__(self):
         return len(self._map)
@@ -150,25 +147,24 @@ class RowIds(object):
         if name not in self._id:
             # Find the initial sequence and set up list
             initial = self._get_sequence(name)
-            utils.logger.info("Setting sequence for %s to %d" % (name, initial))
+            utils.logger.info(f"Setting sequence for {name} to {initial}")
 
             self._id[name] = IndexList(initial=initial)
 
         new_id = self._id[name].add(ids if ids else None)
-        utils.logger.debug("Added ID %d for %r and identifiers %r" %
-                           (new_id, name, ids))
+        utils.logger.debug(f"Added ID {new_id} for {name!r} and identifiers "
+                           f"{ids!r}")
 
         return new_id
 
     def get_id(self, _, name, *ids):
         """ Gets integer ID for IDs (eg file name, code) """
         if name not in self._id or ids not in self._id[name]:
-            raise ValueError("IDs %r does not exist for model %r." %
-                             (ids, name))
+            raise ValueError(f"IDs {ids!r} does not exist for model {name!r}.")
 
         got_id = self._id[name].get(ids)
-        utils.logger.debug("Retrieved ID %d for %r and identifiers %r" %
-                           (got_id, name, ids))
+        utils.logger.debug(f"Retrieved ID {got_id} for {name} and identifiers "
+                           f"{ids!r}")
 
         return got_id
 
@@ -349,21 +345,10 @@ def setup_tnds_functions():
         exists = code in set_stops
         if not exists and code not in set_not_exists:
             set_not_exists.add(code)
-            utils.logger.warning("Stop ATCO code %r in file %r does not exist."
-                                 % (code, file_))
+            utils.logger.warning(f"Stop ATCO code {code!r} in file {file_!r} "
+                                 f"does not exist.")
 
         return exists
-
-
-def _execute_with_log(connection, statement, message):
-    """ Executes an insert, update or delete statement and logs with message.
-
-        Messages should have two format characters - first one with number of
-        rows updated/deleted/added and the second the plural 's' character.
-    """
-    result = connection.execute(statement)
-    count = result.rowcount
-    utils.logger.info(message % (count, "s" if count != 1 else ""))
 
 
 def _delete_empty_services():
@@ -371,63 +356,53 @@ def _delete_empty_services():
         are null - eg when including a metro route where all stop points are
         not in the existing database.
     """
-    empty_patterns = ~(
-        db.session.query(models.JourneyLink)
-        .filter(models.JourneyLink.pattern_ref == models.JourneyPattern.id,
-                models.JourneyLink.stop_point_ref.isnot(None))
-        .exists()
+    service = models.Service.__table__
+    pattern = models.JourneyPattern.__table__
+    link = models.JourneyLink.__table__
+    local_operator = models.LocalOperator.__table__
+    operator = models.Operator.__table__
+    organisations = models.Organisations.__table__
+    organisation = models.Organisation.__table__
+
+    empty_patterns = ~db.exists().where(
+        (link.c.pattern_ref == pattern.c.id) &
+        link.c.stop_point_ref.isnot(None)
     )
-    empty_services = ~(
-        db.session.query(models.JourneyPattern)
-        .filter(models.JourneyPattern.service_ref == models.Service.id)
-        .exists()
+    empty_services = ~db.exists().where(
+        pattern.c.service_ref == service.c.id
     )
-    empty_local = ~(
-        db.session.query(models.JourneyPattern)
-        .filter(models.JourneyPattern.region_ref
-                == models.LocalOperator.region_ref,
-                models.JourneyPattern.local_operator_ref
-                == models.LocalOperator.code)
-        .exists()
+    empty_local = ~db.exists().where(
+        (pattern.c.region_ref == operator.c.region_ref) &
+        (pattern.c.local_operator_ref == local_operator.c.code)
     )
-    empty_operators = ~(
-        db.session.query(models.LocalOperator)
-        .filter(models.LocalOperator.operator_ref == models.Operator.code)
-        .exists()
+    empty_operators = ~db.exists().where(
+        local_operator.c.operator_ref == operator.c.code
     )
-    empty_organisations = ~(
-        db.session.query(models.Organisations)
-        .filter(models.Organisations.org_ref == models.Organisation.code)
-        .exists()
+    empty_orgs = ~db.exists().where(
+        organisations.c.org_ref == organisation.c.code
     )
 
     with utils.database_connection() as connection:
         # All associated journey links and journeys will be deleted too
-        _execute_with_log(
-            connection,
-            models.JourneyPattern.__table__.delete().where(empty_patterns),
-            "%d journey pattern%s without stop point references deleted"
-        )
-        _execute_with_log(
-            connection,
-            models.Service.__table__.delete().where(empty_services),
-            "%d service%s without journey patterns deleted"
-        )
-        _execute_with_log(
-            connection,
-            models.LocalOperator.__table__.delete().where(empty_local),
-            "%d local operator%s without services deleted"
-        )
-        _execute_with_log(
-            connection,
-            models.LocalOperator.__table__.delete().where(empty_operators),
-            "%d operator%s without local operators deleted"
-        )
-        _execute_with_log(
-            connection,
-            models.Organisation.__table__.delete().where(empty_organisations),
-            "%d organisation%s without journeys deleted"
-        )
+        jp = connection.execute(pattern.delete().where(empty_patterns))
+        utils.logger.info(f"JourneyPattern: {jp.rowcount} without stop "
+                          f"point references deleted")
+
+        s = connection.execute(service.delete().where(empty_services))
+        utils.logger.info(f"Service: {s.rowcount} without journey patterns "
+                          f"deleted")
+
+        lo = connection.execute(local_operator.delete().where(empty_local))
+        utils.logger.info(f"LocalOperator: {lo.rowcount} without journey "
+                          f"patterns deleted")
+
+        o = connection.execute(operator.delete().where(empty_operators))
+        utils.logger.info(f"Operator: {o.rowcount} without local operators "
+                          f"deleted")
+
+        org = connection.execute(organisation.delete().where(empty_orgs))
+        utils.logger.info(f"Organisation: {org.rowcount} without journeys "
+                          f"deleted")
 
 
 def _compare_arrays(array0, array1):
@@ -613,25 +588,26 @@ def _merge_services():
     delete_services = service.delete().where(service.c.id.in_(other_ids))
 
     # Do everything within a transaction - temp tables will be dropped on commit
-    with utils.database_connection() as conn:
+    with utils.database_connection() as connection:
         utils.logger.info("Finding all services sharing line labels and stops")
-        stops.create(conn)
-        conn.execute(insert_stops)
+        stops.create(connection)
+        connection.execute(insert_stops)
 
-        pairs.create(conn)
-        conn.execute(insert_pairs)
+        pairs.create(connection)
+        connection.execute(insert_pairs)
 
-        duplicates.create(conn)
-        conn.execute(insert_duplicates)
+        duplicates.create(connection)
+        connection.execute(insert_duplicates)
 
-        dup_directions.create(conn)
-        conn.execute(insert_dup_directions)
+        dup_directions.create(connection)
+        connection.execute(insert_dup_directions)
 
-        _execute_with_log(conn, update_patterns,
-                          "%d journey pattern%s updated to new service refs")
+        p = connection.execute(update_patterns)
+        utils.logger.info(f"JourneyPattern: {p.rowcount} updated with new "
+                          f"service references")
 
-        _execute_with_log(conn, delete_services,
-                          "%d duplicate service%s deleted")
+        s = connection.execute(delete_services)
+        utils.logger.info(f"Service: {s.rowcount} duplicates deleted")
 
 
 def _fill_description():
@@ -639,46 +615,6 @@ def _fill_description():
         served using the graph diameter.
     """
     pass
-
-
-def _get_tnds_transform():
-    """ Uses XSLT to convert TNDS XML data into several separate datasets. """
-    tnds_xslt = et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))
-    transform = et.XSLT(tnds_xslt)
-
-    return transform
-
-
-def _commit_tnds_region(transform, archive, region, delete=False,
-                        rollover=TNDS_ROLLOVER):
-    """ Transforms each XML file and commit data to DB. """
-    tnds = utils.PopulateData()
-    str_region = transform.strparam(region)
-
-    del_ = delete
-    # We don't want to delete any NOC data if they have been added
-    excluded = models.Operator, models.LocalOperator
-
-    for i, file_ in enumerate(file_ops.iter_archive(archive)):
-        utils.logger.info("Parsing file %r" % os.path.join(archive, file_.name))
-        data = et.parse(file_)
-        file_name = transform.strparam(file_.name)
-
-        try:
-            new_data = transform(data, region=str_region, file=file_name)
-        except et.XSLTError as err:
-            for error_message in getattr(err, "error_log"):
-                utils.logger.error(error_message)
-            raise
-
-        tnds.add_from(new_data)
-
-        if tnds.total() > rollover:
-            tnds.commit(delete=del_, exclude=excluded, clear=True)
-            del_ = False
-
-    # Commit rest of entries
-    tnds.commit(delete=del_, exclude=excluded)
 
 
 def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
@@ -712,8 +648,8 @@ def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
             if os.path.exists(path):
                 data[r] = path
             else:
-                utils.logger.warning("Archive %r not found in directory %r." %
-                                     (file_, directory))
+                utils.logger.warning(f"Archive {file_!r} not found in "
+                                     f"directory {directory!r}.")
 
     if not data:
         raise ValueError(
@@ -721,14 +657,28 @@ def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
             "contain any suitable archives or their downloads failed."
         )
 
-    transform = _get_tnds_transform()
     setup_tnds_functions()
     RowIds(check_existing=not delete)
 
-    delete_first = delete
+    # We don't want to delete any NOC data if they have been added
+    excluded = models.Operator, models.LocalOperator
+    metadata = utils.reflect_metadata()
+    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT)))
+
+    del_ = delete
     for region, archive in data.items():
-        _commit_tnds_region(transform, archive, region, delete=delete_first)
-        delete_first = False
+        for file_ in file_ops.iter_archive(archive):
+            path = os.path.join(archive, file_.name)
+            utils.logger.info(f"Parsing file {path!r}")
+            data = utils.xslt_transform(file_, xslt, region=region,
+                                        file=file_.name)
+            utils.populate_database(
+                utils.collect_xml_data(data),
+                metadata=metadata,
+                delete=del_,
+                exclude=excluded
+            )
+            del_ = False
 
     _delete_empty_services()
     if merge:

@@ -7,7 +7,6 @@ import re
 import lxml.etree as et
 
 from definitions import ROOT_DIR
-from nextbus import models
 from nextbus.populate import file_ops, utils
 
 
@@ -37,47 +36,33 @@ def format_website(_, text):
     return match.group(1) if match else ""
 
 
-def _get_noc_data(noc_file, debug=False):
-    """ Parses NOC data and transforms with XSLT.
-
-        :param noc_file: File-like object or path for a XML file
-        :param debug: Log all messages output from XSLT
-        :returns: Transformed data as a XML ElementTree object
-    """
-    utils.logger.info("Opening NOC XML file %r" % noc_file)
-    try:
-        data = et.parse(noc_file)
-    except (UnicodeDecodeError, et.XMLSyntaxError):
-        # NOC data is encoded in Windows-1252 or Latin-1 for some reason
-        utils.logger.warning("NOC XML file %r cannot be parsed with UTF-8 - "
-                             "trying again with Latin1" % noc_file)
-        data = et.parse(noc_file, et.XMLParser(encoding="Latin1"))
-
-    transform = et.XSLT(et.parse(os.path.join(ROOT_DIR, NOC_XSLT)))
-    try:
-        new_data = transform(data)
-    except (et.XSLTParseError, et.XSLTApplyError) as err:
-        for error_message in getattr(err, "error_log"):
-            utils.logger.error(error_message)
-        raise
-
-    if debug:
-        utils.logger.debug(getattr(transform, "error_log"))
-
-    return new_data
-
-
-def commit_noc_data(file_=None):
+def commit_noc_data(path=None):
     """ Convert NOC data (service operators) to database objects and commit them
         to the application database.
 
-        :param file_: Path to raw data in XML form
+        :param path: Path to raw data in XML form
     """
-    path = download_noc_data() if file_ is None else file_
-    noc = utils.PopulateData()
-    noc.add_from(_get_noc_data(path))
-    noc.commit(delete=True)
+    if path is None:
+        file_path = file_ops.download(NOC_URL, directory="temp")
+    else:
+        file_path = path
 
-    if file_ is None:
-        utils.logger.info("New file %r downloaded; can be deleted" % path)
+    utils.logger.info(f"Opening NOC XML file {file_path!r}")
+    try:
+        data = et.parse(file_path)
+    except (UnicodeDecodeError, et.XMLSyntaxError):
+        # NOC data is encoded in Windows-1252 for some reason despite the XML
+        # declaration specifying UTF-8 encoding
+        utils.logger.warning("NOC XML file %r cannot be parsed with UTF-8 - "
+                             "trying again with CP1252" % file_path)
+        data = et.parse(file_path, et.XMLParser(encoding="CP1252"))
+
+    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, NOC_XSLT)))
+    utils.populate_database(
+        utils.collect_xml_data(utils.xslt_transform(data, xslt)),
+        delete=True
+    )
+
+    if file_path is None:
+        utils.logger.info(f"New file {file_path!r} downloaded; can be deleted")
     utils.logger.info("NOC population done")

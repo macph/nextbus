@@ -51,14 +51,14 @@ def _delete_row(model, element):
         :param element: A ``delete`` XML element.
         :returns: Number of rows deleted.
     """
+    name = model.__name__
     if not element.keys():
         raise ValueError("Each <delete> element requires at least one XML "
                          "attribute to filter rows.")
 
     count = model.query.filter_by(**element.attrib).delete()
     if count == 0:
-        logger.warning("%s: No rows matching %r found." %
-                       (model.__name__, element.attrib))
+        logger.warning(f"{name}: No rows matching {element.attrib} found.")
 
     return count
 
@@ -79,8 +79,7 @@ def _replace_row(model, element):
     matching = model.query.filter_by(**element.attrib)
     matching_entries = matching.all()
     if not matching_entries:
-        logger.warning("%s: No rows matching %r found." %
-                       (name, element.attrib))
+        logger.warning(f"{name}: No rows matching {element.attrib} found.")
         return 0
 
     updated_values = {}
@@ -91,22 +90,19 @@ def _replace_row(model, element):
         existing = set(getattr(r, column) for r in matching_entries)
         # Checks if new values already exist
         if existing == {new_value}:
-            logger.warning(
-                "%s: %s %r for %r already matches." %
-                (name, column, new_value, element.attrib)
-            )
+            logger.warning(f"{name}: {column} {new_value!r} for "
+                           f"{element.attrib} already matches.")
             continue
         # Gives a warning if set value does not match the existing
         # value, suggesting it may have been changed in the dataset
         if old_value and not all(e == old_value for e in existing):
             if len(existing) > 1:
-                values = "values %r" % sorted(existing)
+                values = f"values {sorted(existing)}"
             else:
-                values = "value %r" % next(iter(existing))
-            logger.warning(
-                "%s: %s %r for %r does not match existing %s." %
-                (name, column, old_value, element.attrib, values)
-            )
+                values = f"value {next(iter(existing))!r}"
+            logger.warning(f"{name}: {column} {old_value!r} for "
+                           f"{element.attrib} does not match existing "
+                           f"{values}.")
         updated_values[column] = new_value
 
     if updated_values:
@@ -161,16 +157,15 @@ def modify_data(xml_file=None):
                          "'model' attribute matching an existing table.")
 
     logger.info("Processing populated data")
-    create, delete, replace = 0, 0, 0
+    c, d, r = 0, 0, 0
     for table in list_tables:
         model = getattr(models, table.get("model"))
         with utils.database_session():
             for element in table.xpath("create"):
-                create += _create_row(model, element)
+                c += _create_row(model, element)
             for element in table.xpath("delete"):
-                delete += _delete_row(model, element)
+                d += _delete_row(model, element)
             for element in table.xpath("replace"):
-                replace += _replace_row(model, element)
+                r += _replace_row(model, element)
 
-    logger.info("Rows: %d created, %d deleted and %d replaced." %
-                (create, delete, replace))
+    logger.info(f"Rows: {c} created, {d} deleted and {r} replaced.")

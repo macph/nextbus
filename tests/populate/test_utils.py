@@ -2,8 +2,6 @@
 Testing the extension functions for XSLT transformations and the element ->
 dict function.
 """
-import io
-
 import lxml.etree as et
 import psycopg2
 import pytest
@@ -119,66 +117,44 @@ XML_TWO = (b"<Data><Region><code>NW</code><name>North West</name></Region>"
 EXPECTED_NW = {"code": "NW", "name": "North West"}
 EXPECTED_Y = {"code": "Y", "name": "Yorkshire"}
 
-
-def test_add_items(with_app):
-    data = pop_utils.PopulateData(io.BytesIO(XML_TWO))
-    data.add("Region", models.Region)
-
-    assert data.entries == {models.Region: [EXPECTED_NW, EXPECTED_Y]}
+def test_collect_items(with_app):
+    data = pop_utils.collect_xml_data(et.ElementTree(et.fromstring(XML_TWO)))
+    assert data == {models.Region: [EXPECTED_NW, EXPECTED_Y]}
 
 
-def test_add_from(with_app):
-    data = pop_utils.PopulateData()
-    data.add_from(io.BytesIO(XML_TWO))
-
-    assert data.entries == {models.Region: [EXPECTED_NW, EXPECTED_Y]}
-
-
-EXPECTED_DELETED = [("NW", "North West"), ("Y", "Yorkshire")]
-EXPECTED_NOT_DELETED = [
-    ("GB", "Great Britain"), ("L", "Greater London"), ("NW", "North West"),
-    ("Y", "Yorkshire")
-]
+EXISTING = [("GB", "Great Britain"), ("L", "Greater London")]
+EXPECTED = [("NW", "North West"), ("Y", "Yorkshire")]
 
 
 def test_commit_data(load_db):
-    data = pop_utils.PopulateData()
-    data.add_from(io.BytesIO(XML_TWO))
-    data.commit(delete=False, clear=False)
+    pop_utils.populate_database(
+        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+        delete=False
+    )
 
     regions = models.Region.query.order_by("code").all()
-    assert [(r.code, r.name) for r in regions] == EXPECTED_NOT_DELETED
-    assert data.entries
-
-
-def test_commit_data_clear(load_db):
-    data = pop_utils.PopulateData()
-    data.add_from(io.BytesIO(XML_TWO))
-    data.commit(delete=False, clear=True)
-
-    regions = models.Region.query.order_by("code").all()
-    assert [(r.code, r.name) for r in regions] == EXPECTED_NOT_DELETED
-    assert not data.entries
+    assert [(r.code, r.name) for r in regions] == EXISTING + EXPECTED
 
 
 def test_commit_data_delete(load_db):
-    data = pop_utils.PopulateData()
-    data.add_from(io.BytesIO(XML_TWO))
-    data.commit(delete=True, clear=False)
+    pop_utils.populate_database(
+        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+        delete=True
+    )
 
     regions = models.Region.query.order_by("code").all()
-    assert [(r.code, r.name) for r in regions] == EXPECTED_DELETED
-    assert data.entries
+    assert [(r.code, r.name) for r in regions] == EXPECTED
 
 
 def test_commit_data_delete_excluded(load_db):
-    data = pop_utils.PopulateData()
-    data.add_from(io.BytesIO(XML_TWO))
-    data.commit(delete=True, exclude=[models.Region], clear=False)
+    pop_utils.populate_database(
+        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+        delete=True,
+        exclude=[models.Region]
+    )
 
     regions = models.Region.query.order_by("code").all()
-    assert [(r.code, r.name) for r in regions] == EXPECTED_NOT_DELETED
-    assert data.entries
+    assert [(r.code, r.name) for r in regions] == EXISTING + EXPECTED
 
 
 def test_commit_data_truncate_cascade(load_db):

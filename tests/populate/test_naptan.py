@@ -6,12 +6,14 @@ import os
 import lxml.etree as et
 import pytest
 
+from definitions import ROOT_DIR
 from nextbus import db, models
+from nextbus.populate.utils import xslt_transform
 from nextbus.populate.naptan import (
-    _create_ind_parser, _get_naptan_data, _remove_stop_areas,
-    _set_stop_area_locality, _setup_naptan_functions, commit_naptan_data)
-from nextbus.populate.nptg import (_get_nptg_data, _remove_districts,
-                                   commit_nptg_data)
+    NAPTAN_XSLT, _create_ind_parser, _remove_stop_areas,
+    _set_stop_area_locality, _setup_naptan_functions, commit_naptan_data
+)
+from nextbus.populate.nptg import NPTG_XSLT, _remove_districts, commit_nptg_data
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,12 +24,14 @@ NAPTAN_RAW = os.path.join(TEST_DIR, "NaPTAN_raw.xml")
 NAPTAN_RAW_370 = os.path.join(TEST_DIR, "NaPTAN_raw_370.xml")
 NAPTAN_RAW_940 = os.path.join(TEST_DIR, "NaPTAN_raw_940.xml")
 
+NPTG_XSLT = os.path.join(ROOT_DIR, NPTG_XSLT)
+NAPTAN_XSLT = os.path.join(ROOT_DIR, NAPTAN_XSLT)
 
 PARSER = et.XMLParser(remove_blank_text=True)
 
 
 def test_nptg_transform_all(asserts):
-    data = _get_nptg_data(NPTG_RAW)
+    data = xslt_transform(NPTG_RAW, et.XSLT(et.parse(NPTG_XSLT)))
     expected = et.parse(NPTG_ALL, et.XMLParser(remove_blank_text=True))
 
     asserts.xml_elements_equal(data.getroot(), expected.getroot())
@@ -35,7 +39,7 @@ def test_nptg_transform_all(asserts):
 
 def test_naptan_transform_all(asserts):
     _setup_naptan_functions()
-    data = _get_naptan_data(NAPTAN_RAW)
+    data = xslt_transform(NAPTAN_RAW, et.XSLT(et.parse(NAPTAN_XSLT)))
     expected = et.parse(NAPTAN_ALL, PARSER)
 
     asserts.xml_elements_equal(data.getroot(), expected.getroot())

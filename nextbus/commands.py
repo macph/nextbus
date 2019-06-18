@@ -128,8 +128,8 @@ class MutexOption(click.Option):
               exclude=("all_d", "nptg_d", "nptg_f", "naptan_d", "naptan_f",
                        "nspl_d", "nspl_f", "noc_d", "noc_f", "tnds_d", "tnds_f",
                        "modify", "backup", "backup_f", "restore"),
-              help="Restore database from a specified dump "
-              "file before populating database.")
+              help="Restore database from a specified dump file before "
+                   "populating database.")
 @click.pass_context
 def populate(ctx, **kw):
     """ Calls the populate functions for filling the database with data. """
@@ -154,19 +154,17 @@ def populate(ctx, **kw):
 
     if any(options.values()):
         if options["b"]:
-            # Carry out at least one option, back up beforehand if needed
-            file_ops.backup_database(dump_file=kw["backup_f"])
+            file_ops.backup_database(path=kw["backup_f"])
         if options["r"]:
-            # Carry out at least one option, back up beforehand if needed
-            file_ops.restore_database(dump_file=kw["restore_f"])
+            file_ops.restore_database(path=kw["restore_f"])
         if options["g"]:
             populate.commit_nptg_data(archive=kw["nptg_f"])
         if options["n"]:
             populate.commit_naptan_data(archive=kw["naptan_f"])
         if options["p"]:
-            populate.commit_nspl_data(file_=kw["nspl_f"])
+            populate.commit_nspl_data(path=kw["nspl_f"])
         if options["o"]:
-            populate.commit_noc_data(file_=kw["noc_f"])
+            populate.commit_noc_data(path=kw["noc_f"])
         if options["t"]:
             # If using --all and TNDS credentials not loaded just log warning
             populate.commit_tnds_data(directory=kw["tnds_f"],

@@ -478,9 +478,10 @@ def stop_area(stop_area_code):
         .order_by(models.StopPoint.ind_index)
         .all()
     )
+    groups = _group_lines_stops(stops)
 
     return render_template("stop_area.html", stop_area=area,
-                           stops=stops)
+                           stops=stops, groups=groups)
 
 
 def _query_stop(*, atco_code=None, naptan_code=None):

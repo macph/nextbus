@@ -2384,17 +2384,27 @@ function mapCoordinateAccuracy(zoomLevel) {
 
 /**
  * Creates control for map with buttons for each content, title and action
- * @param {{action: function, content: ?Element|string, className: ?string, title: ?string}} actions
+ * @param {{
+ *   action: function,
+ *   content: ?Element|string,
+ *   innerHTML: ?string,
+ *   className: ?string,
+ *   title: ?string
+ * }} actions
  */
 function mapControl(...actions) {
     let buttons = actions.map(function(a) {
         let titleText = (a.title != null) ? a.title : '';
         let className = (a.className != null) ? a.className : '';
-        return element('a',
+        let button = element('a',
             {role: 'button', title: titleText, 'aria-label': titleText, className: className,
                   onclick: a.action, ondblclick: a.action},
             a.content
         );
+        if (a.innerHTML != null) {
+            button.innerHTML = a.innerHTML;
+        }
+        return button;
     });
 
     let CustomControl = L.Control.extend({
@@ -3016,6 +3026,11 @@ function Panel(stopMap, mapPanel) {
         'W': 'westbound',
         'NW': 'northwest bound'
     };
+    this.fitToMap = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
+        'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M15 3l2.3 2.3-2.89 ' +
+        '2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 ' +
+        '12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 ' +
+        '2.89 2.87L15 21h6v-6z"/></svg>';
 
     /**
      * Gets live data object for a bus stop or create one if it does not exist
@@ -3323,8 +3338,8 @@ function Panel(stopMap, mapPanel) {
             action: function() {
                 self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
             },
-            className: 'icon-fit-map',
-            title: 'Fly to stop'
+            title: 'Fly to stop',
+            innerHTML: self.fitToMap
         });
         self.currentMapControl.addTo(self.stopMap.map);
     };
@@ -3486,8 +3501,8 @@ function Panel(stopMap, mapPanel) {
             action: function() {
                 self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
             },
-            className: 'icon-fit-map',
-            title: 'Fit route to map'
+            title: 'Fit route to map',
+            innerHTML: self.fitToMap
         });
         self.currentMapControl.addTo(self.stopMap.map);
 
@@ -3562,10 +3577,23 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                     {className: 'leaflet-control-zoom leaflet-bar leaflet-control-custom'}
                 );
 
-                this._zoomInButton  = this._createButton('', this.options.zoomInTitle,
-                    'leaflet-control-zoom-in icon-zoom-in', container, this._zoomIn);
-                this._zoomOutButton = this._createButton('', this.options.zoomOutTitle,
-                    'leaflet-control-zoom-out icon-zoom-out', container, this._zoomOut);
+                this._zoomInButton  = this._createButton(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
+                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 ' +
+                    '13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
+                    this.options.zoomInTitle, 'leaflet-control-zoom-in',
+                    container,
+                    this._zoomIn
+                );
+                this._zoomOutButton = this._createButton(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
+                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 1' +
+                    '3H5v-2h14v2z"/></svg>',
+                    this.options.zoomOutTitle,
+                    'leaflet-control-zoom-out',
+                    container,
+                    this._zoomOut
+                );
 
                 this._updateDisabled();
                 map.on('zoomend zoomlevelschange', this._updateDisabled, this);
@@ -3585,8 +3613,14 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                 action: function() {
                     self.map.locate();
                 },
-                className: 'icon-my-location',
-                title: 'Find your location on map'
+                title: 'Find your location on map',
+                innerHTML: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
+                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M12 ' +
+                    '8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 ' +
+                    '3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 ' +
+                    '11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 ' +
+                    '7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 ' +
+                    '7-7 7z"/></svg>'
             }).addTo(self.map);
         }
     };

@@ -715,8 +715,9 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.0em;
-  height: 3.0em;
+  box-sizing: border-box;
+  width: 3.6em;
+  height: 3.6em;
   padding: 0.2em;
   background-color: #002171;
   border: 0.1em solid #002171;
@@ -1541,8 +1542,8 @@ section {
   box-sizing: border-box;
   position: absolute;
   z-index: -1;
-  width: 1.7em;
-  height: 1.7em;
+  width: 1.8em;
+  height: 1.8em;
   background: inherit;
   transform-origin: bottom right;
   content: ''

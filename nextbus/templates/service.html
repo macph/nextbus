@@ -112,7 +112,7 @@ let data, diagram;
 data = {{ layout|tojson }};
 window.addEventListener('load', function () {
     resizeIndicator('.indicator');
-    diagram = setupGraph('diag', data);
+    diagram = new Diagram('diag', data);
 });
 </script>
 {% endblock %}

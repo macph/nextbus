@@ -75,27 +75,43 @@ def test_bank_holidays(holidays, region, expected):
     assert bank_holidays(None, nodes, region) == expected
 
 
-def test_transform_tnds(asserts):
-    expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
+def always_true(_, *args):
+    return True
+
+
+@pytest.fixture
+def xslt():
+    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT)))
     # Set up functions to assign IDs
     RowIds(check_existing=False)
-
-    def always_true(_, *args):
-        return True
-
     # Replicate functions which check for existing stops and operators
     xslt_func["stop_exists"] = always_true
 
-    try:
-        output = xslt_transform(
-            et.parse(TNDS_RAW),
-            et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT))),
-            region="Y",
-            file="TNDS_raw.xml"
-        )
-    except et.XSLTError as err:
-        for msg in getattr(err, "error_log"):
-            print(msg)
-        raise
+    return xslt
+
+
+def test_transform_tnds(asserts, xslt):
+    output = xslt_transform(et.parse(TNDS_RAW), xslt, region="Y",
+                            file="TNDS_raw.xml")
+    expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
 
     asserts.xml_elements_equal(output.getroot(), expected.getroot())
+
+
+def test_transform_tnds_empty(asserts, xslt):
+    # Set modification to 'delete' - should be excluded
+    raw = et.parse(TNDS_RAW)
+    raw.getroot().set("Modification", "Delete")
+    output = xslt_transform(raw, xslt, region="Y", file="TNDS_raw.xml")
+
+    asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
+
+
+def test_transform_tnds_wrong_type(asserts, xslt):
+    # Set service mode to ferry - should be excluded
+    raw = et.parse(TNDS_RAW)
+    ns = {"t": raw.xpath("namespace-uri()")}
+    raw.xpath("//t:Service/t:Mode", namespaces=ns)[0].text = "ferry"
+    output = xslt_transform(raw, xslt, region="Y", file="TNDS_raw.xml")
+
+    asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))

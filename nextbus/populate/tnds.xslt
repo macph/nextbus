@@ -38,7 +38,7 @@
 
   <xsl:template match="txc:TransXChange">
     <Data>
-      <xsl:if test="boolean($services)">
+      <xsl:if test="not(@Modification='Delete' or @Modification='delete') and boolean($services)">
         <xsl:apply-templates select="$operators" mode="national"/>
         <xsl:apply-templates select="$operators" mode="local"/>
         <xsl:apply-templates select="$services"/>

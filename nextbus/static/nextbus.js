@@ -62,6 +62,7 @@ function Overlay(overlayElement, focusFirst) {
     this.focusFirst = (focusFirst instanceof HTMLElement) ?
         focusFirst : document.getElementById(focusFirst) || null;
 
+    this.active = false;
     this.transition = getTransitionEnd(this.overlay);
     this.focusable = [];
     this.lastFocused = null;
@@ -141,9 +142,15 @@ function Overlay(overlayElement, focusFirst) {
      * @param {overlayOpen} whenOpen
      */
     this.open = function(whenOpen) {
+        if (self.active) {
+            return;
+        }
+        let overlays = parseInt(document.body.dataset.overlays) || 0;
+        document.body.dataset.overlays = (overlays + 1).toString();
+        document.body.classList.add('body-with-overlay');
+
         self.lastFocused = document.activeElement;
         document.addEventListener('keydown', self._handleKeys);
-        document.body.classList.add('body-with-overlay');
         self.overlay.classList.add('overlay-visible');
         if (whenOpen != null) {
             whenOpen();
@@ -156,18 +163,30 @@ function Overlay(overlayElement, focusFirst) {
             };
             self.overlay.addEventListener(self.transition, onEndTransition);
         }
+        self.active = true;
     };
 
     /**
      * Closes overlay and remove keyboard events.
      */
     this.close = function() {
+        if (!self.active) {
+            return;
+        }
+        let overlays = parseInt(document.body.dataset.overlays) || 0;
+        if (overlays < 2) {
+            document.body.classList.remove('body-with-overlay');
+            document.body.dataset.overlays = '0';
+        } else {
+            document.body.dataset.overlays = (overlays - 1).toString();
+        }
+
         document.removeEventListener('keydown', self._handleKeys);
-        document.body.classList.remove('body-with-overlay');
         self.overlay.classList.remove('overlay-visible');
         if (self.lastFocused != null) {
             self.lastFocused.focus();
         }
+        self.active = false;
     }
 }
 

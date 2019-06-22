@@ -50,6 +50,93 @@ function getTransitionEnd(element) {
 
 
 /**
+ * Applies callback function to each attribute in object
+ * @param obj
+ * @param func
+ */
+function objForEach(obj, func) {
+    for (let attr in obj) {
+        if (obj.hasOwnProperty(attr)) {
+            func(obj[attr], attr, obj);
+        }
+    }
+}
+
+
+/**
+ * Shorthand for creating a new element without namespace
+ * @param {string} tag tag name
+ * @param {?(object|HTMLElement|string|(HTMLElement|string)[])} [properties] object to set DOM
+ * attributes for new element. 'style' and 'dataset' have their attributes copied over. 'attr' have
+ * their
+ * Can also be first child element or array of children if no attributes are required
+ * @param  {...?(HTMLElement|string|(HTMLElement|string)[])} children child elements or array of
+ * elements to be appended
+ * @returns {HTMLElement}
+ */
+function element(tag, properties, children) {
+    let element = document.createElement(tag);
+
+    let start = 2;
+    if (typeof properties === 'string' || properties instanceof HTMLElement ||
+        properties instanceof Array)
+    {
+        // include 'properties' in argument list
+        start = 1;
+    } else if (properties != null) {
+        for (let attr in properties) {
+            if (!properties.hasOwnProperty(attr)) {
+                continue;
+            }
+            let data = properties[attr];
+            if (attr === 'attr') {
+                objForEach(data, function(v, k) { element.setAttribute(k, v); });
+            } else if (attr === 'dataset') {
+                objForEach(data, function(v, k) { element.dataset[k] = v; });
+            } else if (attr === 'style') {
+                objForEach(data, function(v, k) { element.style[k] = v; });
+            } else {
+                element[attr] = data;
+            }
+        }
+    }
+
+    let append = function(child) {
+        if (typeof child == 'string') {
+            element.appendChild(document.createTextNode(child));
+        } else if (child instanceof HTMLElement) {
+            element.appendChild(child);
+        } else if (child != null) {
+            throw new TypeError('Child element is not a valid HTML element or string.');
+        }
+    };
+
+    for (let i = start; i < arguments.length; i++) {
+        let c = arguments[i];
+        if (c instanceof Array) {
+            c.forEach(append);
+        } else {
+            append(c);
+        }
+    }
+
+    return element;
+}
+
+/**
+ * Removes all sub-elements from an element
+ * @param {HTMLElement} element Element to remove all children from
+ */
+function removeSubElements(element) {
+    let last = element.lastChild;
+    while (last) {
+        element.removeChild(last);
+        last = element.lastChild;
+    }
+}
+
+
+/**
  * Dialog / overlay handler. Thanks to https://bitsofco.de/accessible-modal-dialog/
  * @param {HTMLElement|string} overlayElement
  * @param {?HTMLElement|string} focusFirst
@@ -1797,99 +1884,6 @@ function revertColours(selectors) {
 
 
 /**
- * Shorthand for creating a new element without namespace
- * @param {string} tag tag name
- * @param {?(object|HTMLElement|string|(HTMLElement|string)[])} [attr] object to set DOM attributes
- * for new element, eg style. If attribute 'attr' is specified it can be used to set HTML attributes
- * for element manually which can't be done with DOM element attributes, eg 'aria-label'. Can also
- * be first child element or array of children if no attributes are required
- * @param  {...?(HTMLElement|string|(HTMLElement|string)[])} children child elements or array of
- * elements to be appended
- * @returns {HTMLElement}
- */
-function element(tag, attr, ...children) {
-    let element = document.createElement(tag);
-
-    if (attr == null && !children) {
-        return element;
-    }
-
-    if (attr != null && (typeof attr === 'string' || attr instanceof HTMLElement ||
-                         attr instanceof Array)) {
-        children.unshift(attr);
-    } else if (attr != null) {
-        let k, v, s;
-        for (k in attr) {
-            if (!attr.hasOwnProperty(k)) {
-                continue;
-            }
-            v = attr[k];
-            if (k === 'attr') {
-                for (s in v) {
-                    if (v.hasOwnProperty(s)) {
-                        element.setAttribute(s, v[s]);
-                    }
-                }
-            } else if (k === 'dataset') {
-                for (s in v) {
-                    if (v.hasOwnProperty(s)) {
-                        element.dataset[s] = v[s];
-                    }
-                }
-            } else if (k === 'style') {
-                for (s in v) {
-                    if (v.hasOwnProperty(s)) {
-                        element.style[s] = v[s];
-                    }
-                }
-            } else {
-                element[k] = v;
-            }
-        }
-    }
-
-    let append = function(child) {
-        if (child == null) {
-            return;
-        }
-        if (typeof child == 'string') {
-            element.appendChild(document.createTextNode(child));
-        } else if (child instanceof HTMLElement) {
-            element.appendChild(child);
-        } else {
-            throw new TypeError('Child element is not a valid HTML element or string.');
-        }
-    };
-
-    if (children) {
-        let i, c;
-        for (i = 0; i < children.length; i++) {
-            c = children[i];
-            if (c instanceof Array) {
-                c.forEach(append);
-            } else {
-                append(c);
-            }
-        }
-    }
-
-    return element;
-}
-
-/**
- * Removes all sub-elements from an element
- * @param {HTMLElement} element Element to remove all children from
- */
-function removeSubElements(element) {
-    let last = element.lastChild;
-    while (last) {
-        element.removeChild(last);
-        last = element.lastChild;
-    }
-}
-
-
-/**
  * Creates filter list from a list of groups of stops for each service and returns it.
  * @param {HTMLElement} list
  * @param {{
@@ -2384,7 +2378,7 @@ function mapCoordinateAccuracy(zoomLevel) {
 
 /**
  * Creates control for map with buttons for each content, title and action
- * @param {{
+ * @param {...{
  *   action: function,
  *   content: ?Element|string,
  *   innerHTML: ?string,
@@ -2392,8 +2386,10 @@ function mapCoordinateAccuracy(zoomLevel) {
  *   title: ?string
  * }} actions
  */
-function mapControl(...actions) {
-    let buttons = actions.map(function(a) {
+function mapControl(actions) {
+    let buttons = [];
+    for (let i = 0; i < arguments.length; i++) {
+        let a = arguments[i];
         let titleText = (a.title != null) ? a.title : '';
         let className = (a.className != null) ? a.className : '';
         let button = element('a',
@@ -2404,8 +2400,8 @@ function mapControl(...actions) {
         if (a.innerHTML != null) {
             button.innerHTML = a.innerHTML;
         }
-        return button;
-    });
+        buttons.push(button);
+    }
 
     let CustomControl = L.Control.extend({
         options: {position: 'topleft'},
@@ -3901,17 +3897,9 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
  */
 function svgNode(tag, attr) {
     let node = document.createElementNS('http://www.w3.org/2000/svg', tag);
-
-    if (typeof attr === 'undefined') {
-        return node;
+    if (typeof attr != null) {
+        objForEach(attr, function(v, k) { node.setAttributeNS(null, k, v); });
     }
-
-    for (let a in attr) {
-        if (attr.hasOwnProperty(a)) {
-            node.setAttributeNS(null, a, attr[a]);
-        }
-    }
-
     return node;
 }
 
@@ -3919,14 +3907,16 @@ function svgNode(tag, attr) {
 /**
  * Creates a path command, eg 'C' and [0, 0], [0, 1], [1, 1] -> 'C 0,0 0,1 1,1'.
  * @param {string} command - path command type, eg 'M' or 'L'
- * @param {Array} values - Array of arrays, each containing numbers/coordinates
+ * @param {...number[]} values - Array of arrays, each containing numbers/coordinates
  * @returns {string}
  * @private
  */
-function pathCommand(command, ...values) {
-    return command + ' ' + values.map(function(v) {
-        return v.join(',');
-    }).join(' ');
+function pathCommand(command, values) {
+    let path = command + ' ';
+    for (let i = 1; i < arguments.length; i++) {
+        path += arguments[i].join(',') + ' ';
+    }
+    return path
 }
 
 

@@ -671,6 +671,8 @@ function _FilterSelected(filterList) {
                 event.preventDefault();
                 event.stopPropagation();
                 break;
+            default:
+                focusOrIgnore(self.list.menu.search(event, null));
         }
     };
 
@@ -691,12 +693,12 @@ function _FilterSelected(filterList) {
             case 'ArrowLeft':
                 event.preventDefault();
                 event.stopPropagation();
-                focusOrIgnore(self.adjacent(-1, this) || self.adjacent(-1));
+                focusOrIgnore(self.adjacent(-1, event.target) || self.adjacent(-1));
                 break;
             case 'ArrowRight':
                 event.preventDefault();
                 event.stopPropagation();
-                focusOrIgnore(self.adjacent(1, this) || self.adjacent(1));
+                focusOrIgnore(self.adjacent(1, event.target) || self.adjacent(1));
                 break;
             case 'Enter':
                 event.preventDefault();
@@ -704,8 +706,8 @@ function _FilterSelected(filterList) {
             case 'Backspace':
             case 'Delete':
                 event.preventDefault();
-                let adj = self.adjacent(1, this) || self.adjacent(-1, this);
-                self.list.deselect(this.dataset.value);
+                let adj = self.adjacent(1, event.target) || self.adjacent(-1, event.target);
+                self.list.deselect(event.target.dataset.value);
                 if (adj != null) {
                     adj.focus();
                 } else {
@@ -805,10 +807,12 @@ function _FilterMenu(filterList) {
         if (!direction) {
             throw new TypeError('Direction must be a positive or negative number.');
         }
-        if (item != null) {
+        if (item != null && item.parentNode === self.element) {
             adj = (direction > 0) ? item.nextSibling : item.previousSibling;
-        } else {
+        } else if (item == null) {
             adj = (direction > 0) ? self.element.firstChild : self.element.lastChild;
+        } else {
+            throw new Error('Element passed to adjacent() is not a menu item.');
         }
         while (adj != null) {
             if (adj.nodeType === Node.ELEMENT_NODE && adj.dataset.value != null) {
@@ -823,16 +827,40 @@ function _FilterMenu(filterList) {
         return adj;
     };
 
+    this.search = function(event, current) {
+        if (!/^[0-9a-z]$/i.test(event.key)) {
+            return null;
+        }
+        let startsWith = new RegExp('^' + event.key, 'i'),
+            subset = new Set(),
+            last = null;
+        self.shown.forEach(function(v) {
+            if (startsWith.test(self.list.data.get(v).label)) {
+                subset.add(v);
+                last = v;
+            }
+        });
+        if (subset.size < 2) {
+            return self.items.get(last) || null;
+        }
+        let next = current || null;
+        while ((next = self.adjacent(1, next)) !== current) {
+            if (next != null && subset.has(next.dataset.value)) {
+                return next;
+            }
+        }
+        return null;
+    };
+
     this._handleKeys = function(event) {
-        let adj;
         switch (event.key) {
             case 'ArrowUp':
                 event.preventDefault();
-                focusOrIgnore(self.adjacent(-1, this) || self.adjacent(-1));
+                focusOrIgnore(self.adjacent(-1, event.target) || self.adjacent(-1));
                 break;
             case 'ArrowDown':
                 event.preventDefault();
-                focusOrIgnore(self.adjacent(1, this) || self.adjacent(1));
+                focusOrIgnore(self.adjacent(1, event.target) || self.adjacent(1));
                 break;
             case 'ArrowLeft':
                 event.preventDefault();
@@ -844,14 +872,16 @@ function _FilterMenu(filterList) {
                 break;
             case 'Enter':
                 event.preventDefault();
-                adj = self.adjacent(-1, this) || self.adjacent(1, this);
-                self.list.select(this.dataset.value);
+                let adj = self.adjacent(-1, event.target) || self.adjacent(1, event.target);
+                self.list.select(event.target.dataset.value);
                 if (adj != null) {
                     adj.focus();
                 } else {
                     self.list.selected.adjacent(1).focus();
                 }
                 break;
+            default:
+                focusOrIgnore(self.search(event, event.target));
         }
     };
 
@@ -1340,11 +1370,11 @@ function SortableList(list, options) {
         switch (event.key) {
             case 'ArrowUp':
                 event.preventDefault();
-                self._handleArrowKey(-1, this);
+                self._handleArrowKey(-1, event.target);
                 break;
             case 'ArrowDown':
                 event.preventDefault();
-                self._handleArrowKey(1, this);
+                self._handleArrowKey(1, event.target);
                 break;
             case ' ':
             case 'Enter':
@@ -1352,7 +1382,7 @@ function SortableList(list, options) {
                 if (self.active != null) {
                     self._end();
                 } else {
-                    self._hold(this);
+                    self._hold(event.target);
                 }
                 break;
             case 'Escape':
@@ -1361,7 +1391,7 @@ function SortableList(list, options) {
                     // Cancel the move but don't trigger other events such as overlay closing
                     event.stopPropagation();
                     self._cancel();
-                    this.focus();
+                    event.target.focus();
                 }
                 break;
             case 'Tab':
@@ -1372,7 +1402,7 @@ function SortableList(list, options) {
                 break;
             case 'Delete':
                 event.preventDefault();
-                self.delete(this, true);
+                self.delete(event.target, true);
                 break;
         }
     };

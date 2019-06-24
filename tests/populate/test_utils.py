@@ -136,6 +136,18 @@ def test_commit_data(load_db):
     assert [(r.code, r.name) for r in regions] == EXISTING + EXPECTED
 
 
+def test_commit_data_overwrite(load_db):
+    l_modified = {"code": "L", "name": "London"}
+    pop_utils.populate_database(
+        {models.Region: [l_modified]},
+        overwrite=True
+    )
+
+    regions = models.Region.query.order_by("code").all()
+    expected = [EXISTING[0], ("L", "London")]
+    assert [(r.code, r.name) for r in regions] == expected
+
+
 def test_commit_data_delete(load_db):
     pop_utils.populate_database(
         {models.Region: [EXPECTED_NW, EXPECTED_Y]},

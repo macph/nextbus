@@ -330,9 +330,10 @@ def _temp_table(metadata, table):
     )
 
 
-def _populate_table(connection, metadata, model, entries, delete_table=False):
-    """ Fills a table with data by using COPY and an intermediate table so
-        ON CONFLICT DO NOTHING can be used.
+def _populate_table(connection, metadata, model, entries, overwrite=False,
+                    delete_first=False):
+    """ Fills a table with data by using COPY and an intermediate table so a
+        ON CONFLICT clause can be used.
     """
     if not entries:
         return
@@ -340,7 +341,7 @@ def _populate_table(connection, metadata, model, entries, delete_table=False):
     temp_table = _temp_table(metadata, table)
     temp_table.create(connection)
 
-    if delete_table:
+    if delete_first:
         logger.debug(f"Truncating table {table.name}")
         truncate(connection, table)
 
@@ -349,17 +350,25 @@ def _populate_table(connection, metadata, model, entries, delete_table=False):
     # Add entries to temporary table using COPY
     _copy(connection, temp_table, entries)
     # Insert entries from temporary table into main table avoiding conflicts
-    insert_main = (
+    insert = (
         postgresql.insert(table)
         .from_select([c.name for c in temp_table.columns],
                      db.select([temp_table]))
-        .on_conflict_do_nothing()
     )
-    connection.execute(insert_main)
+    if overwrite and not delete_first:
+        p_key = table.primary_key.name
+        columns = {c.name: getattr(insert.excluded, c.name)
+                   for c in temp_table.columns}
+        insert = insert.on_conflict_do_update(constraint=p_key, set_=columns)
+    else:
+        insert = insert.on_conflict_do_nothing()
+
+    connection.execute(insert)
     metadata.remove(temp_table)
 
 
-def populate_database(data, metadata=None, delete=False, exclude=None):
+def populate_database(data, metadata=None, overwrite=False, delete=False,
+                      exclude=None):
     """ Populates the database using a dictionary of models and lists of
         entries.
     """
@@ -369,4 +378,5 @@ def populate_database(data, metadata=None, delete=False, exclude=None):
     with database_connection() as connection:
         for model, entries in data.items():
             del_ = delete and (exclude is None or model not in exclude)
-            _populate_table(connection, metadata_, model, entries, del_)
+            _populate_table(connection, metadata_, model, entries, overwrite,
+                            del_)

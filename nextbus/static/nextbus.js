@@ -3256,8 +3256,9 @@ function Panel(stopMap, mapPanel) {
             element('div', {id: 'departures', class: 'departures-container'})
         );
 
-        let services = element('section', element('h2', 'Services'));
+        let services = null;
         if (data.services.length > 0) {
+            services = element('section', element('h2', 'Services'))
             let listNonTerminating = [],
                 listTerminating = [];
             data.services.forEach(function(s) {
@@ -3296,8 +3297,6 @@ function Panel(stopMap, mapPanel) {
                 services.appendChild(element('h3', 'Terminating services'));
                 services.appendChild(element('ul', {className: 'list'}, listTerminating));
             }
-        } else {
-            services.appendChild(element('p', 'No services stop here.'));
         }
 
         let infoLine = null,
@@ -3333,7 +3332,9 @@ function Panel(stopMap, mapPanel) {
         self.mapPanel.appendChild(headingText);
         self.mapPanel.appendChild(actions);
         self.mapPanel.appendChild(liveTimes);
-        self.mapPanel.appendChild(services);
+        if (services != null) {
+            self.mapPanel.appendChild(services);
+        }
         self.mapPanel.appendChild(stopInfo);
         resizeIndicator('.indicator');
 

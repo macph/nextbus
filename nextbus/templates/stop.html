@@ -35,9 +35,9 @@
       </div>
       <div id="departures" class="departures-container"></div>
     </section>
+    {% if services -%}
     <section>
       <h2>Services</h2>
-      {% if services -%}
       {% call(s) f.print_list(services|rejectattr('terminates')) -%}
       <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
         <span class="line-outer">
@@ -57,10 +57,8 @@
       </a>
       {%- endcall %}
       {%- endif %}
-      {%- else -%}
-      <p>No services stop here.</p>
-      {%- endif %}
     </section>
+    {%- endif %}
   </div>
   <div class="column-1">
     <section>

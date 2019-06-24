@@ -13,8 +13,9 @@ html {
 
 h1 {
   margin: 0.6em 0;
+
   font-size: 3.2rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
@@ -24,13 +25,16 @@ h2 {
   border-bottom: 0.1rem solid #212121;
 
   font-size: 2.4rem;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 h3 {
-  font-size: 2.4rem;
-  letter-spacing: -0.02em;
   margin: 0.5em 0;
+
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 h4 {
@@ -93,7 +97,7 @@ input[type="file"] {
   border: 0.1rem solid #212121;
 
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #212121;
   transition:
     0.2s background-color ease-out,
@@ -209,7 +213,7 @@ header a {
   border: none;
 
   font-size: 1.7rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
 
@@ -316,7 +320,7 @@ section {
   border: 0.1rem solid white;
 
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25em;
   text-align: center;
   color: #212121;
@@ -1587,7 +1591,6 @@ section {
 @media screen and (min-width: 480px) {
   h1 {
     font-size: 3.6rem;
-    font-weight: 600;
   }
 
   .body-narrow > main {
@@ -1715,7 +1718,6 @@ section {
 
   .body-map h1 {
     font-size: 2.8rem;
-    font-weight: 700;
   }
 }
 

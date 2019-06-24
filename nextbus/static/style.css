@@ -953,6 +953,7 @@ section {
   column-width: auto;
   column-span: none;
   column-gap: 0;
+  overflow-x: hidden;
 }
 
 .list-relative {
@@ -1086,6 +1087,12 @@ section {
 .item-action {
   flex: none;
   font-size: 1.5rem;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+  transition-property:
+    background-color, color,
+    padding-left, padding-right, margin-left, margin-right,
+    opacity, visibility;
 }
 
 .item-action .icon {
@@ -1103,7 +1110,13 @@ section {
 }
 
 .item-action-hidden {
-  display: none;
+  width: 0;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  visibility: hidden;
+  opacity: 0;
 }
 
 .item-action-drag {

@@ -90,6 +90,23 @@ def xml_as_dict(element):
 xslt_func = et.FunctionNamespace(NXB_EXT_URI)
 
 
+def _convert_to_text(result):
+    """ Takes first element from list and returns text or None. """
+    if isinstance(result, list) and not result:
+        node = None
+    elif isinstance(result, list) and len(result) == 1:
+        node = result[0]
+    elif isinstance(result, list):
+        raise ValueError("XPath query returned multiple elements.")
+    else:
+        node = result
+
+    if not isinstance(node, str) and node is not None:
+        node = node.text
+
+    return node
+
+
 def xslt_text_func(func, _name=None):
     """ Registers a XSLT function with all arguments converted into text from
         single elements.
@@ -100,39 +117,15 @@ def xslt_text_func(func, _name=None):
         :param _name: Internal parameter for registering function name
     """
     if not callable(func):
-        return lambda f: xslt_text_func(f, _name=func)
+        return functools.partial(xslt_text_func, _name=func)
 
     @functools.wraps(func)
     def func_with_text(*args):
-        list_ = list(args)
-        is_method = isinstance(func, types.MethodType)
         # If a method, pass through both self/cls and XSLT context
-        context = list_[:2] if is_method else list_[:1]
-        user_args = list_[2:] if is_method else list_[1:]
+        start = 2 if isinstance(func, types.MethodType) else 1
+        context, user_args = args[:start], args[start:]
 
-        new = []
-        for result in user_args:
-            # Get single element from result list
-            try:
-                if isinstance(result, str) or result is None:
-                    element = result
-                elif len(result) == 0:
-                    element = None
-                elif len(result) == 1:
-                    element = result[0]
-                else:
-                    raise ValueError("XPath query returned multiple elements.")
-            except TypeError:
-                element = result
-
-            try:
-                text = element.text
-            except AttributeError:
-                text = str(element) if element is not None else None
-
-            new.append(text)
-
-        return func(*tuple(context), *tuple(new))
+        return func(*context, *map(_convert_to_text, user_args))
 
     if _name is not None:
         func_with_text.__name__ = _name

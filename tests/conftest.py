@@ -151,7 +151,7 @@ def _load_db_data():
 
 
 @pytest.fixture(scope="module")
-def db_loaded(app, db_status):
+def _db_loaded(app, db_status):
     """ Creates DB tables and load data for tests on module level. """
     with app.app_context():
         try:
@@ -163,6 +163,15 @@ def db_loaded(app, db_status):
             db.session.remove()
             db.drop_all()
             db_status.loaded = False
+
+
+@pytest.fixture
+def db_loaded(_db_loaded):
+    """ Runs test with loaded database in separate sessions. """
+    try:
+        yield
+    finally:
+        db.session.remove()
 
 
 @pytest.fixture

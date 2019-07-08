@@ -1823,7 +1823,7 @@ function StarredStopList(options) {
         );
         self.deleteButton = element('button',
             {
-                className: 'action-danger',
+                className: 'button-danger',
                 title: 'Delete all starred stops',
                 style: {display: 'none'},
                 onclick: function() {

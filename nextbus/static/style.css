@@ -317,7 +317,7 @@ section {
   box-sizing: border-box;
 
   background-color: transparent;
-  border: 0.1rem solid white;
+  border: 0.1rem solid transparent;
 
   font-size: 1.5rem;
   font-weight: 600;
@@ -326,23 +326,22 @@ section {
   color: #212121;
   transition:
     0.2s background-color ease-out,
-    0.2s color ease-out,
-    0.2s border-color ease-out;
+    0.2s color ease-out;
   cursor: pointer;
 }
 
 .action:hover {
   background-color: #212121;
-  border-color: #212121;
+  border-color: transparent;
   color: white;
 }
 
-.action-danger {
+.button-danger {
   border-color: #C62828;
   color: #C62828;
 }
 
-.action-danger:hover {
+.button-danger:hover {
   background-color: #C62828;
   border-color: #C62828;
   color: white;
@@ -476,17 +475,17 @@ section {
 }
 
 .overlay-content .action:hover {
-  border-color: white;
+  border-color: transparent;
   background-color: white;
   color: #212121;
 }
 
-.overlay-content .action-danger {
+.overlay-content .button-danger {
   border-color: #C62828;
   color: #C62828;
 }
 
-.overlay-content .action-danger:hover {
+.overlay-content .button-danger:hover {
   border-color: #C62828;
   background-color: #C62828;
   color: white;

@@ -167,9 +167,8 @@ def _query_times(service_id, direction, date):
     )
 
     # Find last sequence number for each journey pattern
-    last_sequence = db.func.first_value(models.JourneyLink.sequence).over(
-        partition_by=(journeys.c.journey_id, journeys.c.departure),
-        order_by=db.desc(models.JourneyLink.sequence)
+    last_sequence = db.func.max(models.JourneyLink.sequence).over(
+        partition_by=(journeys.c.journey_id, journeys.c.departure)
     )
 
     # Sum all running and wait intervals from preceding rows plus this row's

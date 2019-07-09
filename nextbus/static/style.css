@@ -1356,7 +1356,7 @@ section {
 .timetable th {
   width: 18rem;
   min-width: 18rem;
-  padding: 0.5rem;
+  padding: 0;
 
   position: -webkit-sticky; /* Sticky requires prefix on Safari */
   position: sticky;
@@ -1378,22 +1378,18 @@ section {
   z-index: 1;
 }
 
-.timetable-row > th {
-  transition: 0.2s background-color ease-out;
-}
-
-.timetable-row > th:hover {
-  background-color: #212121;
-}
-
 .timetable-stop {
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   border: none;
-  transition: 0.2s color ease-out;
+  transition:
+    0.2s color ease-out,
+    0.2s background-color ease-out;
 }
 
-.timetable-row > th:hover > .timetable-stop {
+.timetable-stop:hover {
+  background-color: #212121;
   color: white;
 }
 

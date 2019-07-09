@@ -366,8 +366,8 @@ section {
   -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
   background-color: rgba(0, 0, 0, 0.94);
   transition:
-    0.2s opacity ease-out,
-    0.2s visibility;
+    opacity 0.2s ease-out,
+    visibility 0.2s ease-out;
 }
 
 .overlay-visible {
@@ -384,7 +384,7 @@ section {
   max-width: 96rem;
   width: 100%;
   color: white;
-  transition: 0.2s transform ease-out;
+  transition: transform 0.2s ease-out;
 }
 
 .overlay-content-dialog {
@@ -407,7 +407,7 @@ section {
   width: calc(100% - 3.2rem);
 
   transform: translate(0, -1rem);
-  transition: 0.2s transform ease-out;
+  transition: transform 0.2s ease-out;
 }
 
 .overlay-visible .overlay-content-body {
@@ -539,7 +539,7 @@ section {
 
 .overlay-content .item-action-drag .icon-shape {
   fill: #9E9E9E;
-  transition: 0.2s fill ease-out;
+  transition: fill 0.2s ease-out;
 }
 
 .overlay-content .item-action-danger .icon-shape {
@@ -682,8 +682,8 @@ section {
 .tab:not(.tab-active) {
   border-style: none none solid;
   transition:
-    0.2s background-color ease-out,
-    0.2s color ease-out;
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
   cursor: pointer;
 }
 
@@ -993,8 +993,8 @@ section {
   cursor: pointer;
 
   transition:
-    0.2s background-color ease-out,
-    0.2s color ease-out;
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
 }
 
 .item:hover {
@@ -1086,12 +1086,15 @@ section {
 .item-action {
   flex: none;
   font-size: 1.5rem;
-  transition-duration: 0.2s;
-  transition-timing-function: ease-out;
-  transition-property:
-    background-color, color,
-    padding-left, padding-right, margin-left, margin-right,
-    opacity, visibility;
+  transition:
+    background-color 0.2s ease-out,
+    color 0.2s ease-out,
+    padding-left 0.2s ease-out,
+    padding-right 0.2s ease-out,
+    margin-left 0.2s ease-out,
+    margin-right 0.2s ease-out,
+    opacity 0.2s ease-out,
+    visibility 0.2s ease-out;
 }
 
 .item-action .icon {
@@ -1101,7 +1104,7 @@ section {
 
 .item-action .icon-shape {
   fill: #212121;
-  transition: 0.2s fill ease-out;
+  transition: fill 0.2s ease-out;
 }
 
 .item-action:hover .icon-shape {
@@ -1140,7 +1143,7 @@ section {
 
 .item-action-drag .icon-shape {
   fill: #9E9E9E;
-  transition: 0.2s fill ease-out;
+  transition: fill 0.2s ease-out;
 }
 
 .item-action-drag:hover .icon-shape {
@@ -1195,9 +1198,9 @@ section {
   font-weight: 600;
 
   transition:
-    0.2s border-color ease-out,
-    0.2s background-color ease-out,
-    0.2s color ease-out;
+    border-color 0.2s ease-out,
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
 }
 
 .filter-selected:not(.filter-selected-disabled)::after {
@@ -1232,7 +1235,7 @@ section {
   border-color: #212121;
   border-style: solid;
   background-color: white;
-  transition: 0.2s height ease-out;
+  transition: height 0.2s ease-out;
 }
 
 .filter-menu-hidden {
@@ -1245,8 +1248,8 @@ section {
   padding: 0.75rem 1rem;
   border: none;
   transition:
-    0.2s background-color ease-out,
-    0.2s color ease-out;
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
 }
 
 .filter-menu-item-disabled {
@@ -1384,8 +1387,8 @@ section {
   align-items: center;
   border: none;
   transition:
-    0.2s color ease-out,
-    0.2s background-color ease-out;
+    color 0.2s ease-out,
+    background-color 0.2s ease-out;
 }
 
 .timetable-stop:hover {
@@ -1418,8 +1421,8 @@ section {
   text-align: center;
   font-size: 2rem;
   transition:
-    0.2s background-color ease-out,
-    0.2s color ease-out;
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
 }
 
 .timetable-action {

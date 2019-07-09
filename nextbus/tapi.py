@@ -61,7 +61,7 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             raise ValueError("Data is expected to be in JSON format.") from err
         if data.get("error") is not None:
             raise ValueError("Error with data: " + data["error"])
-        current_app.logger.debug("Data received:\n" + repr(data))
+        current_app.logger.debug("Data received: %r" % req.reason)
 
     else:
         if group:

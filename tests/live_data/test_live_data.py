@@ -175,7 +175,7 @@ def test_live_stop_ambiguous(api_data):
     }
 
 
-class Mocker:
+class Tracker:
     def __init__(self, func):
         self.func = func
         self.calls = []
@@ -189,6 +189,8 @@ class Mocker:
 @pytest.fixture
 def mock_response(monkeypatch):
     class Response:
+        reason = "OK"
+
         def raise_for_status(self):
             pass
 
@@ -202,7 +204,7 @@ def mock_response(monkeypatch):
 
 @pytest.fixture
 def mock_request(monkeypatch, mock_response):
-    @Mocker
+    @Tracker
     def get(*args, **kwargs):
         return mock_response()
 

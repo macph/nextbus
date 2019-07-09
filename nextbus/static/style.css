@@ -574,15 +574,15 @@ section {
 /* LISTS */
 
 .dashed-list {
-  margin: 10px 0;
-  padding-left: 20px;
+  margin: 1rem 0;
+  padding-left: 2rem;
   list-style-type: none;
   font-size: 1.5rem;
   line-height: 1.5em;
 }
 
 .dashed-list > li {
-  margin: 5px 0;
+  margin: 0.5rem 0;
 }
 
 .dashed-list > li:before {
@@ -666,7 +666,7 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 32px;
+  height: 2.8rem;
   padding: 0.5rem;
   border-width: 0.1rem;
   border-color: #212121;

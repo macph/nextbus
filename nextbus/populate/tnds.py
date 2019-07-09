@@ -112,6 +112,10 @@ class IndexList(object):
 
         return self._map.get(item)
 
+    def clear(self):
+        """ Clear all records in IndexList. """
+        self._map.clear()
+
 
 class RowIds(object):
     """ Create XSLT functions to assign each row for journey patterns, sections
@@ -151,7 +155,7 @@ class RowIds(object):
 
             self._id[name] = IndexList(initial=initial)
 
-        new_id = self._id[name].add(ids if ids else None)
+        new_id = self._id[name].add(tuple(map(str, ids)) if ids else None)
         utils.logger.debug(f"Added ID {new_id} for {name!r} and identifiers "
                            f"{ids!r}")
 
@@ -162,11 +166,16 @@ class RowIds(object):
         if name not in self._id or ids not in self._id[name]:
             raise ValueError(f"IDs {ids!r} does not exist for model {name!r}.")
 
-        got_id = self._id[name].get(ids)
+        got_id = self._id[name].get(tuple(map(str, ids)))
         utils.logger.debug(f"Retrieved ID {got_id} for {name} and identifiers "
                            f"{ids!r}")
 
         return got_id
+
+    def clear(self):
+        """ Clear all stored values in each IndexList. """
+        for ids in self._id.values():
+            ids.clear()
 
 
 @utils.xslt_text_func
@@ -658,7 +667,7 @@ def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
         )
 
     setup_tnds_functions()
-    RowIds(check_existing=not delete)
+    ids = RowIds(check_existing=not delete)
 
     # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
@@ -678,6 +687,7 @@ def commit_tnds_data(directory=None, delete=True, warn=False, merge=True):
                 delete=del_,
                 exclude=excluded
             )
+            ids.clear()
             del_ = False
 
     _delete_empty_services()

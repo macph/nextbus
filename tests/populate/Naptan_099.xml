@@ -1,4 +1,4 @@
-<NaPTAN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" CreationDateTime="2018-01-30T20:13:00" ModificationDateTime="2018-01-30T20:13:00" Modification="revise" RevisionNumber="0" FileName="Naptan.xml" SchemaVersion="2.1" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NaPTAN.xsd">
+<NaPTAN xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" CreationDateTime="2018-01-30T20:13:00" ModificationDateTime="2018-01-30T20:13:00" Modification="revise" RevisionNumber="0" FileName="Naptan_099.xml" SchemaVersion="2.1" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NaPTAN.xsd">
   <StopPoints>
     <StopPoint CreationDateTime="1993-06-07T12:00:00" ModificationDateTime="2011-05-13T09:40:31" RevisionNumber="0" Status="active">
       <AtcoCode>370010113</AtcoCode>

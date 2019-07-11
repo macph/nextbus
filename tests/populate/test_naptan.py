@@ -1,7 +1,9 @@
 """
 Testing the populate functions.
 """
+import io
 import os
+import zipfile
 
 import lxml.etree as et
 import pytest
@@ -11,18 +13,19 @@ from nextbus import db, models
 from nextbus.populate.utils import xslt_transform
 from nextbus.populate.naptan import (
     NAPTAN_XSLT, _create_ind_parser, _remove_stop_areas,
-    _set_stop_area_locality, _setup_naptan_functions, commit_naptan_data
+    _set_stop_area_locality, _setup_naptan_functions, split_naptan_data,
+    commit_naptan_data
 )
 from nextbus.populate.nptg import NPTG_XSLT, _remove_districts, commit_nptg_data
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-NPTG_ALL = os.path.join(TEST_DIR, "NPTG_all.xml")
-NPTG_RAW = os.path.join(TEST_DIR, "NPTG_raw.xml")
-NAPTAN_ALL = os.path.join(TEST_DIR, "NaPTAN_all.xml")
-NAPTAN_RAW = os.path.join(TEST_DIR, "NaPTAN_raw.xml")
-NAPTAN_RAW_370 = os.path.join(TEST_DIR, "NaPTAN_raw_370.xml")
-NAPTAN_RAW_940 = os.path.join(TEST_DIR, "NaPTAN_raw_940.xml")
+NPTG_ALL = os.path.join(TEST_DIR, "NPTG_data.xml")
+NPTG_RAW = os.path.join(TEST_DIR, "NPTG.xml")
+NAPTAN_ALL = os.path.join(TEST_DIR, "Naptan_data.xml")
+NAPTAN_RAW = os.path.join(TEST_DIR, "Naptan.xml")
+NAPTAN_RAW_099 = os.path.join(TEST_DIR, "Naptan_099.xml")
+NAPTAN_RAW_147 = os.path.join(TEST_DIR, "Naptan_147.xml")
 
 NPTG_XSLT = os.path.join(ROOT_DIR, NPTG_XSLT)
 NAPTAN_XSLT = os.path.join(ROOT_DIR, NAPTAN_XSLT)
@@ -229,6 +232,31 @@ def test_commit_nptg_data(create_db):
     }
 
 
+def test_split_naptan_xml_data(with_app, asserts):
+    areas = ["099", "147"]
+    incoming = io.BytesIO()
+    outgoing = io.BytesIO()
+    parser = et.XMLParser(remove_blank_text=True)
+
+    with zipfile.ZipFile(incoming, "w") as zp:
+        zp.write(NAPTAN_RAW, os.path.basename(NAPTAN_RAW))
+
+    split_naptan_data(areas, incoming, outgoing)
+
+    with zipfile.ZipFile(outgoing) as zp:
+        assert set(zp.namelist()) == {"Naptan_099.xml", "Naptan_147.xml"}
+        with zp.open("Naptan_099.xml") as xf:
+            result_sy = et.parse(xf, parser=parser)
+        with zp.open("Naptan_147.xml") as xf:
+            result_tram = et.parse(xf, parser=parser)
+
+    expected_sy = et.parse(NAPTAN_RAW_099, parser=parser).getroot()
+    expected_tram = et.parse(NAPTAN_RAW_147, parser=parser).getroot()
+
+    asserts.xml_elements_equal(result_sy.getroot(), expected_sy)
+    asserts.xml_elements_equal(result_tram.getroot(), expected_tram)
+
+
 def test_commit_naptan_data_no_nptg(create_db):
     with pytest.raises(ValueError, match="NPTG tables are not populated"):
         commit_naptan_data(list_files=[NAPTAN_RAW])
@@ -272,6 +300,6 @@ def test_commit_naptan_data(create_db):
 
 def test_commit_naptan_data_multiple_files(create_db):
     commit_nptg_data(list_files=[NPTG_RAW])
-    commit_naptan_data(list_files=[NAPTAN_RAW_370, NAPTAN_RAW_940])
+    commit_naptan_data(list_files=[NAPTAN_RAW_099, NAPTAN_RAW_147])
 
     assert _collect_naptan_data() == NAPTAN_EXPECTED

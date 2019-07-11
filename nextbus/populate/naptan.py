@@ -2,9 +2,12 @@
 Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import collections
+import copy
 import functools
 import operator
 import os
+import tempfile
+import zipfile
 
 import lxml.etree as et
 import pyparsing as pp
@@ -312,20 +315,119 @@ def _set_tram_admin_area():
         utils.logger.warning(f"Area {area}: ambiguous admin areas {areas}")
 
 
-def commit_naptan_data(archive=None, list_files=None):
+def _iter_xml(source, **kw):
+    """ Iterates over each element in a file.
+
+        https://www.ibm.com/developerworks/xml/library/x-hiperfparse/
+    """
+    context = et.iterparse(source, **kw)
+    for event, element in context:
+        yield event, element
+        if event == "end":
+            element.clear()
+            while element.getprevious() is not None:
+                del element.getparent()[0]
+
+    for m in context.error_log:
+        utils.logger.info(m)
+
+
+def _split_naptan_file(area_codes, source, directory):
+    """ Takes file object for a XML file, iterate over and append to new files
+        in directory.
+    """
+    utils.logger.info(f"Acquiring namespace for XML file {source.name!r}")
+    source.seek(0)
+    ns = ""
+    for event, obj in _iter_xml(source, events=("start-ns", "end")):
+        if event == "start-ns" and obj[0] == "":
+            ns = "{" + obj[1] + "}"
+            break
+
+    stop_point = ns + "StopPoint"
+    stop_area = ns + "StopArea"
+    admin_area_ref = ns + "AdministrativeAreaRef"
+
+    base_name = os.path.splitext(os.path.basename(source.name))[0]
+    current_name = None
+    data = None
+    root = None
+
+    utils.logger.info(f"Iterating over and splitting {source.name!r}")
+    source.seek(0)
+    for event, obj in _iter_xml(
+        source,
+        events=("end",),
+        tag=(stop_point, stop_area)
+    ):
+        ref = obj.find(admin_area_ref)
+        if ref is None or ref.text not in area_codes:
+            continue
+
+        new_name = f"{base_name}_{ref.text}.xml"
+        if new_name != current_name:
+            if root is not None:
+                data.write(os.path.join(directory, current_name))
+            current_name = new_name
+            if current_name in os.listdir(directory):
+                data = et.parse(os.path.join(directory, current_name))
+                root = data.getroot()
+            else:
+                r = obj.getparent().getparent()
+                root = et.Element(r.tag, r.attrib, r.nsmap)
+                root.set("FileName", current_name)
+                data = et.ElementTree(root)
+
+        parent = obj.getparent()
+        new = root.find(parent.tag)
+        if new is None:
+            new = et.SubElement(root, parent.tag, parent.attrib, parent.nsmap)
+
+        new.append(copy.copy(obj))
+
+    if root is not None:
+        data.write(os.path.join(directory, current_name))
+
+
+def split_naptan_data(areas, original, new):
+    """ Splits large NaPTAN XML file into several smaller ones, grouped by admin
+        area code and saved in a new archive.
+
+        :param areas: List of admin area codes to split files by.
+        :param original: Archive with original XML files.
+        :param new: Path for new archive with split XML files.
+    """
+    area_codes = set(areas)
+    utils.logger.info(f"Creating temporary directory and opening original "
+                      f"archive {original!r}")
+    with tempfile.TemporaryDirectory() as temp_d:
+        for f in file_ops.iter_archive(original):
+            _split_naptan_file(area_codes, f, temp_d)
+
+        files = os.listdir(temp_d)
+        utils.logger.info(f"Saving {len(files)} files to archive {new!r}")
+        with zipfile.ZipFile(new, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for f in files:
+                zf.write(os.path.join(temp_d, f), f)
+
+
+def commit_naptan_data(archive=None, list_files=None, split=True):
     """ Convert NaPTAN data (stop points and areas) to database objects and
         commit them to the application database.
 
         :param archive: Path to zipped archive file for NaPTAN XML files.
         :param list_files: List of file paths for NaPTAN XML files.
+        :param split: Splits NaPTAN XML files in archive by admin area code. Has
+        no effect if list_files is used.
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
-    with utils.database_connection() as conn:
+    with db.engine.connect() as conn:
         query_area = conn.execute(db.select([models.AdminArea.code]))
         query_local = conn.execute(db.select([models.Locality.code]))
 
-    areas = query_area.fetchall()
-    localities = query_local.fetchall()
+        areas = [a[0] for a in query_area.fetchall()]
+        localities = [l[0] for l in query_local.fetchall()]
+
     if not areas or not localities:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data. "
@@ -335,13 +437,26 @@ def commit_naptan_data(archive=None, list_files=None):
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
-        iter_files = file_ops.iter_archive(archive)
+        path = archive
     elif list_files is not None:
-        iter_files = iter(list_files)
+        path = None
     else:
-        downloaded = file_ops.download(NAPTAN_URL, directory="temp",
-                                       params={"format": "xml"})
-        iter_files = file_ops.iter_archive(downloaded)
+        path = downloaded = file_ops.download(
+            NAPTAN_URL,
+            directory=os.path.join(ROOT_DIR, "temp"),
+            params={"format": "xml"}
+        )
+
+    split_path = None
+    if path is not None and split:
+        split_path = os.path.join(ROOT_DIR, "temp", "NaPTAN_split.zip")
+        split_naptan_data(areas, path, split_path)
+        path = split_path
+
+    if path is not None:
+        iter_files = file_ops.iter_archive(path)
+    else:
+        iter_files = iter(list_files)
 
     # Go through data and create objects for committing to database
     _setup_naptan_functions()
@@ -366,4 +481,6 @@ def commit_naptan_data(archive=None, list_files=None):
 
     if downloaded is not None:
         utils.logger.info(f"New file {downloaded!r} downloaded; can be deleted")
+    if split_path is not None:
+        utils.logger.info(f"New archive {split_path!r} created; can be deleted")
     utils.logger.info("NaPTAN population done")

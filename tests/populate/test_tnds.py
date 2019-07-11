@@ -14,8 +14,8 @@ from nextbus.populate.tnds import (
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-TNDS_OUT = os.path.join(TEST_DIR, "TNDS_output.xml")
-TNDS_RAW = os.path.join(TEST_DIR, "TNDS_raw.xml")
+TNDS_OUT = os.path.join(TEST_DIR, "TNDS_data.xml")
+TNDS_RAW = os.path.join(TEST_DIR, "TNDS.xml")
 
 
 @pytest.mark.parametrize("days, expected", [

@@ -74,10 +74,11 @@
     <p>No stops found for this service.</p>
     {%- endif %}
   </section>
+  {% if operators -%}
   <section class="card">
     <h2>Operators</h2>
     <div class="operators">
-      {%- for o in service.operators|sort(attribute='name') %}
+      {%- for o in operators %}
       <div>
         <h3>{{ o.name }}</h3>
         {% if o.address -%}
@@ -95,6 +96,7 @@
       {%- endfor %}
     </div>
   </section>
+  {%- endif %}
 </main>
 {% endblock %}
 

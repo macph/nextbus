@@ -571,6 +571,14 @@ def _query_service(service_id, reverse=None):
     return sv, is_reverse, mirrored
 
 
+def _display_operators(operators):
+    """ Returns sorted list of operators with any information. """
+    def sort_name(o): return o.name
+    def filter_op(o): return any([o.email, o.address, o.website, o.twitter])
+
+    return sorted(filter(filter_op, operators), key=sort_name)
+
+
 @page.route("/service/<service_id>")
 @page.route("/service/<service_id>/<direction:reverse>")
 def service(service_id, reverse=None):
@@ -599,6 +607,7 @@ def service(service_id, reverse=None):
 
     return render_template("service.html", service=sv, dest=destinations,
                            reverse=is_reverse, mirrored=mirrored,
+                           operators=_display_operators(sv.operators),
                            sequence=sequence, stops=d_stops, layout=layout)
 
 
@@ -624,7 +633,9 @@ def service_timetable(service_id, reverse=None):
     tt_data = timetable.Timetable(sv.id, is_reverse, select_date.date.data)
 
     return render_template("timetable.html", service=sv, reverse=is_reverse,
-                           mirrored=mirrored, timetable=tt_data,
+                           mirrored=mirrored,
+                           operators=_display_operators(sv.operators),
+                           timetable=tt_data,
                            select_date=select_date, is_today=is_today)
 
 

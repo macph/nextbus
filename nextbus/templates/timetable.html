@@ -130,17 +130,18 @@
     <p>No stops found for this service.</p>
     {%- endif %}
   </section>
+  {% if operators -%}
   <section class="card">
     <h2>Operators</h2>
     <div class="operators">
-      {%- for o in service.operators|sort(attribute='name') %}
-      {% set break = joiner('<br>'|safe) -%}
+      {%- for o in operators %}
       <div>
         <h3>{{ o.name }}</h3>
         {% if o.address -%}
         <p>{{ o.split_address|join('<br>'|safe) }}</p>
         {%- endif %}
         {% if o.website or o.email or o.twitter -%}
+        {% set break = joiner('<br>'|safe) -%}
         <p>
           {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
           {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
@@ -151,6 +152,7 @@
       {%- endfor %}
     </div>
   </section>
+  {%- endif %}
 </main>
 {% endblock %}
 

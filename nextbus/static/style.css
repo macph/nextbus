@@ -1492,6 +1492,9 @@ section {
 
 .map-panel {
   background-color: white;
+  border-width: 0.1rem;
+  border-style: solid none none;
+  border-color: #212121;
 }
 
 .body-map .overlay-content {
@@ -1508,6 +1511,14 @@ section {
 
 
 /* LEAFLET STYLE OVERRIDES */
+
+.leaflet-container a {
+  color: #212121;
+}
+
+.leaflet-container a:hover {
+  text-decoration: none;
+}
 
 .leaflet-bar,
 .leaflet-bar a{
@@ -1700,6 +1711,7 @@ section {
     flex-direction: column;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
+    border-style: none solid none none;
   }
 
   .body-map > .map-panel > main {

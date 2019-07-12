@@ -2989,7 +2989,7 @@ function RouteLayer(stopMap) {
             self.layer.addTo(self.stopMap.map);
             // Rearrange layers with route behind markers and front of tiles
             self.layer.bringToBack();
-            self.stopMap.tileLayer.bringToBack();
+            self.stopMap.resetOrder();
         }
         if (fit) {
             self.stopMap.map.fitBounds(self.layer.getBounds());
@@ -3580,6 +3580,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                 'contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         }
     );
+    this.geoLayer = null;
 
     this.panel = new Panel(this, this.mapPanel);
     this.services = new ServicesData();
@@ -3589,6 +3590,30 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
     this.currentStop = null;
     this.currentService = null;
+
+    this._drawGeoMarker = function(e) {
+        if (self.geoLayer != null) {
+            self.map.removeLayer(self.geoLayer);
+        }
+        let colour = '#FF9800';
+        let centre = L.circleMarker(e.latlng, {
+            radius: 8,
+            stroke: false,
+            fill: true,
+            color: colour,
+            fillOpacity: 1,
+            interactive: false
+        });
+        let bounds = L.circle(e.latlng, {
+            radius: e.accuracy,
+            stroke: true,
+            fill: false,
+            color: colour,
+            interactive: false
+        });
+        self.geoLayer = L.featureGroup([centre, bounds]).addTo(self.map);
+        self.resetOrder();
+    };
 
     this._addMapControls = function() {
         let ZoomControl = L.Control.Zoom.extend({
@@ -3629,9 +3654,10 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         new ZoomControl().addTo(self.map);
 
         if (self.geolocation) {
-            self.map.on('locationfound', function (e) {
+            self.map.on('locationfound', function(e) {
                 self.map.setView([e.latitude, e.longitude], TILE_ZOOM + 1);
                 self.update({stop: null, service: null});
+                self._drawGeoMarker(e);
             });
             mapControl({
                 action: function() {
@@ -3774,6 +3800,16 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         } else {
             self._initComponents(stop, service);
         }
+    };
+
+    /**
+     * Resets order of base layers including geolocation marker
+     */
+    this.resetOrder = function() {
+        if (self.geoLayer != null) {
+            self.geoLayer.bringToBack();
+        }
+        self.tileLayer.bringToBack();
     };
 
     /**

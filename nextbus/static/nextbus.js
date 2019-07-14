@@ -2851,6 +2851,20 @@ function StopPointsData() {
  */
 
 
+/**.
+ * @param {ServiceID?} a
+ * @param {ServiceID?} b
+ * @return {boolean}
+ */
+function serviceIdEqual(a, b) {
+    if (a != null && b != null) {
+        return a.id === b.id && a.reverse === b.reverse;
+    } else {
+        return a === b;
+    }
+}
+
+
 /**
  * Gets URL component used to identify data for routes.
  * @param {ServiceID} service
@@ -3005,7 +3019,7 @@ function RouteLayer(stopMap) {
         self.current = service;
         self.stopMap.services.retrieve(service, function(data) {
             // Route only loads if it's the one most recently called
-            if (self.current === service) {
+            if (serviceIdEqual(self.current, service)) {
                 self.loadLayer(data, fit);
             }
         });
@@ -3548,6 +3562,8 @@ function Panel(stopMap, mapPanel) {
 
 // TODO: iOS Safari in landscape: live stop panel keeps jumping up to front when countdown updated
 // TODO: SVG diagram extends past bottom of list into footer. Can an extra row be added?
+// TODO: History: What about fitStop/fitService? The pan/zoom is captured by the map's listener
+//  which in turn pushes an incomplete state. Need to delay push somehow.
 
 
 /**
@@ -3590,6 +3606,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
     this.currentStop = null;
     this.currentService = null;
+    this.justChanged = false;
 
     this._drawGeoMarker = function(e) {
         if (self.geoLayer != null) {
@@ -3800,6 +3817,11 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         } else {
             self._initComponents(stop, service);
         }
+
+        // Add event listener when going back or forward in history, update to new state
+        window.addEventListener('popstate', function(e) {
+            self.update(e.state);
+        });
     };
 
     /**
@@ -3819,12 +3841,25 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
      * @param {ServiceID} [options.service] Sets service (or removes if null) unless it is undefined
      * @param {boolean} [options.fitService] Fit map to path bounds. True by default
      * @param {boolean} [options.fitStop] If setting a new stop, fit map to stop. False by default
+     * @param {[number, number]} [options.coords] New coordinates for map as latitude and longitude
+     * @param {number} [options.zoom] New zoom level for map
      */
     this.update = function(options) {
+        let changed = false;
         let andFinally = function() {
             self.panel.updatePanel();
-            self.setURL();
+            self.setURL(changed);
             self.setTitle();
+
+            let coords = (options && options.coords != null) ? options.coords : null;
+            let zoom = (options && options.zoom != null) ? options.zoom : null;
+            if (coords && zoom) {
+                self.map.setView(coords, zoom);
+            } else if (coords) {
+                self.map.setView(coords)
+            } else if (zoom) {
+                self.map.setZoom(zoom);
+            }
         };
 
         if (!options) {
@@ -3834,9 +3869,11 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         }
 
         if (typeof options.stop !== 'undefined') {
+            changed = changed || options.stop !== self.currentStop;
             self.currentStop = options.stop;
         }
         if (typeof options.service !== 'undefined') {
+            changed = changed || !serviceIdEqual(options.service, self.currentService);
             self.currentService = options.service;
         }
 
@@ -3926,28 +3963,43 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
     /**
      * Sets page to new URL with current stop, coordinates and zoom
+     * @param {boolean} [changed] Pushes new state instead of replacing it
      */
-    this.setURL = function() {
+    this.setURL = function(changed) {
         let routeData = self.routeLayer.data,
             stopData = self.stopLayer.data;
         let routeURL = '',
             stopURL = '';
+        let state = {};
 
         if (routeData != null) {
             let direction = (routeData.reverse) ? 'inbound' : 'outbound';
             routeURL = 'service/' + routeData.service + '/' + direction + '/';
+            state.service = {id: routeData.service, reverse: routeData.reverse}
+        } else {
+            state.service = null;
         }
         if (stopData != null) {
             stopURL = 'stop/' + stopData.atcoCode + '/';
+            state.stop = stopData.atcoCode
+        } else {
+            state.stop = null;
         }
 
         let centre = self.map.getCenter(),
             zoom = Math.round(self.map.getZoom()),
             accuracy = mapCoordinateAccuracy(zoom),
             coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy), zoom];
+        state.coords = [coords[0], coords[1]];
+        state.zoom = coords[2];
 
         let newURL = URL.MAP + routeURL + stopURL + coords.join(',');
-        history.replaceState(null, null, newURL);
+        if (self.justChanged) {
+            history.pushState(state, null, newURL);
+        } else  {
+            history.replaceState(state, null, newURL);
+        }
+        self.justChanged = changed || false;
     };
 }
 

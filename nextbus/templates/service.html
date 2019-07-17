@@ -44,7 +44,7 @@
       <dt>To</dt>
       <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
     </dl>
-    <div id="diag" class="diagram"></div>
+    <div id="diag" class="diagram" data-layout="{{ layout|tojson|forceescape }}"></div>
     {% if sequence|length > 0 -%}
     {% call(s) f.print_list(sequence, class='list-relative', name='listStops') -%}
     {% if s -%}
@@ -102,11 +102,10 @@
 
 {% block script %}
 <script>
-let data, diagram;
-data = {{ layout|tojson }};
+let diagram;
 window.addEventListener('load', function () {
     resizeIndicator('.indicator');
-    diagram = new Diagram('diag', data);
+    diagram = new Diagram('diag');
 });
 </script>
 {% endblock %}

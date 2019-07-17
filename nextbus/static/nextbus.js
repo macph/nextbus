@@ -4065,7 +4065,7 @@ function maxSet(set) {
  * Class for constructing service diagrams.
  * @constructor
  * @param {HTMLElement|string} container - DOM node
- * @param data Service layout
+ * @param data - service layout, if not defined the layout dataset attribute can be used instead
  */
 function Diagram(container, data) {
     let self = this;
@@ -4261,7 +4261,8 @@ function Diagram(container, data) {
                 c1 = self.colours[r + 1];
                 c0 = c0 || c1;
             } else {
-                r1 = c1 = null;
+                r1 = null;
+                c1 = null;
             }
 
             current = new Map();
@@ -4404,5 +4405,9 @@ function Diagram(container, data) {
         window.addEventListener('resize', self.buildTimer);
     };
 
-    this.setUp(data);
+    if (data != null) {
+        this.setUp(data);
+    } else if (self.container.dataset.layout != null) {
+        this.setUp(JSON.parse(self.container.dataset.layout));
+    }
 }

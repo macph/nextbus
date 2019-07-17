@@ -21,7 +21,6 @@ const TILE_ZOOM = 15;
 const LAYOUT_SPACE_X = 30;
 const LAYOUT_CURVE_MARGIN = 6;
 const LAYOUT_LINE_STROKE = 7.2;
-const LAYOUT_INVISIBLE = 'rgba(255, 255, 255, 0)';
 const LAYOUT_TIMEOUT = 500;
 
 const LAYOUT_DOM_ITEM_LEFT = 15;
@@ -4054,6 +4053,41 @@ function maxSet(set) {
 
 
 /**
+ * Replaces values in a colour property of the form 'rgb()' or 'rgba()'.
+ * @param {string} colour
+ * @param {object} values
+ * @property {number} [r]
+ * @property {number} [g]
+ * @property {number} [b]
+ * @property {number} [a]
+ * @return {string}
+ */
+function replaceColour(colour, values) {
+    let match = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/.exec(colour) ||
+        /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d*\.?\d+)\s*\)/.exec(colour);
+    if (match == null) {
+        throw Error('Colour value not does not match "rgb()" or "rgba()" patterns.');
+    }
+    let comp = [parseInt(match[1]), parseInt(match[2]), parseInt(match[3]),
+                parseFloat(match[4]) || 1];
+
+    let prop = ['r', 'g', 'b', 'a'];
+    for (let i = 0; i < 4; i++) {
+        if (values[prop[i]] != null) {
+            comp[i] = values[prop[i]];
+        }
+    }
+
+    let toString = function(i) { return i.toString(); };
+    if (comp[3] === 1) {
+        return 'rgb(' + comp.slice(0, 3).map(toString).join(', ') + ')';
+    } else {
+        return 'rgba(' + comp.map(toString).join(', ') + ')';
+    }
+}
+
+
+/**
  * @typedef {{colour: ?string, fade: ?number }} PathGradient
  */
 
@@ -4166,12 +4200,15 @@ function Diagram(container, data) {
         if (gColour != null) {
             stops = {start: '35%', end: '65%'};
             colours = {start: colour, end: gColour};
-        } else if (gFade < 0) {
-            stops = {start: '40%', end: '100%'};
-            colours = {start: colour, end: LAYOUT_INVISIBLE};
-        } else if (gFade > 0) {
-            stops = {start: '0%', end: '60%'};
-            colours = {start: LAYOUT_INVISIBLE, end: colour};
+        } else if (gFade !== 0) {
+            let invisible = replaceColour(colour, {a: 0});
+            if (gFade < 0) {
+                stops = {start: '40%', end: '100%'};
+                colours = {start: colour, end: invisible};
+            } else {
+                stops = {start: '0%', end: '60%'};
+                colours = {start: invisible, end: colour};
+            }
         }
 
         let gradientDef = svgNode('linearGradient', {

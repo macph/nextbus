@@ -86,7 +86,7 @@ def _select_fts_vectors():
     region = (
         db.select([
             utils.table_name(Region).label("table_name"),
-            Region.code.label("code"),
+            db.cast(Region.code, db.Text).label("code"),
             Region.name.label("name"),
             null.label("short_ind"),
             null.label("street"),
@@ -105,7 +105,7 @@ def _select_fts_vectors():
     admin_area = (
         db.select([
             utils.table_name(AdminArea).label("table_name"),
-            AdminArea.code.label("code"),
+            db.cast(AdminArea.code, db.Text).label("code"),
             AdminArea.name.label("name"),
             null.label("short_ind"),
             null.label("street"),
@@ -124,7 +124,7 @@ def _select_fts_vectors():
     district = (
         db.select([
             utils.table_name(District).label("table_name"),
-            District.code.label("code"),
+            db.cast(District.code, db.Text).label("code"),
             District.name.label("name"),
             null.label("short_ind"),
             null.label("street"),
@@ -134,10 +134,11 @@ def _select_fts_vectors():
             null.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array((AdminArea.code,)).label("admin_areas"),
+            db.cast(pg.array((AdminArea.code,)), pg.ARRAY(db.Text))
+            .label("admin_areas"),
             _tsvector_column(
                 (District.name, "A"),
-                (AdminArea.name, "B")
+                (AdminArea.name, "C")
             ).label("vector")
         ])
         .select_from(
@@ -149,7 +150,7 @@ def _select_fts_vectors():
     locality = (
         db.select([
             utils.table_name(Locality).label("table_name"),
-            Locality.code.label("code"),
+            db.cast(Locality.code, db.Text).label("code"),
             Locality.name.label("name"),
             null.label("short_ind"),
             null.label("street"),
@@ -159,11 +160,12 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array((AdminArea.code,)).label("admin_areas"),
+            db.cast(pg.array((AdminArea.code,)), pg.ARRAY(db.Text))
+            .label("admin_areas"),
             _tsvector_column(
                 (Locality.name, "A"),
-                (db.func.coalesce(District.name, ""), "B"),
-                (AdminArea.name, "B")
+                (db.func.coalesce(District.name, ""), "C"),
+                (AdminArea.name, "C")
             ).label("vector")
         ])
         .select_from(
@@ -178,7 +180,7 @@ def _select_fts_vectors():
     stop_area = (
         db.select([
             utils.table_name(StopArea).label("table_name"),
-            StopArea.code.label("code"),
+            db.cast(StopArea.code, db.Text).label("code"),
             StopArea.name.label("name"),
             db.cast(db.func.count(StopPoint.atco_code), db.Text)
             .label("short_ind"),
@@ -189,9 +191,10 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array((AdminArea.code,)).label("admin_areas"),
+            db.cast(pg.array((AdminArea.code,)), pg.ARRAY(db.Text))
+            .label("admin_areas"),
             _tsvector_column(
-                (StopArea.name, "A"),
+                (StopArea.name, "B"),
                 (db.func.coalesce(Locality.name, ""), "C"),
                 (db.func.coalesce(District.name, ""), "D"),
                 (AdminArea.name, "D")
@@ -214,7 +217,7 @@ def _select_fts_vectors():
     stop_point = (
         db.select([
             utils.table_name(StopPoint).label("table_name"),
-            StopPoint.atco_code.label("code"),
+            db.cast(StopPoint.atco_code, db.Text).label("code"),
             StopPoint.name.label("name"),
             StopPoint.short_ind.label("short_ind"),
             StopPoint.street.label("street"),
@@ -224,9 +227,10 @@ def _select_fts_vectors():
             District.name.label("district_name"),
             AdminArea.code.label("admin_area_ref"),
             AdminArea.name.label("admin_area_name"),
-            pg.array((AdminArea.code,)).label("admin_areas"),
+            db.cast(pg.array((AdminArea.code,)), pg.ARRAY(db.Text))
+            .label("admin_areas"),
             _tsvector_column(
-                (StopPoint.name, "A"),
+                (StopPoint.name, "B"),
                 (StopPoint.street, "B"),
                 (Locality.name, "C"),
                 (db.func.coalesce(District.name, ""), "D"),
@@ -255,11 +259,13 @@ def _select_fts_vectors():
             null.label("district_name"),
             null.label("admin_area_ref"),
             null.label("admin_area_name"),
-            db.func.array_agg(db.distinct(AdminArea.code)).label("admin_areas"),
+            db.cast(db.func.array_agg(db.distinct(AdminArea.code)),
+                    pg.ARRAY(db.Text))
+            .label("admin_areas"),
             _tsvector_column(
-                (Service.line, "A"),
-                (Service.description, "A"),
-                (db.func.string_agg(db.distinct(Operator.name), " "), "B"),
+                (Service.line, "B"),
+                (Service.description, "B"),
+                (db.func.string_agg(db.distinct(Operator.name), " "), "C"),
                 (db.func.string_agg(db.distinct(Locality.name), " "), "C"),
                 (db.func.coalesce(
                     db.func.string_agg(db.distinct(District.name), " "),
@@ -286,8 +292,11 @@ def _select_fts_vectors():
         .group_by(Service.id)
     )
 
-    return db.union_all(region, admin_area, district, locality, stop_area,
-                        stop_point, service)
+    selectable = db.union_all(region, admin_area, district, locality, stop_area,
+                              stop_point, service)
+    selectable.c.code.primary_key = True
+
+    return selectable
 
 
 class NaturalSort(utils.MaterializedView):
@@ -383,7 +392,7 @@ class FTS(utils.MaterializedView):
         tsquery = db.func.querytree(db.func.websearch_to_tsquery(dict_, query))
 
         return db.func.ts_rank(db.bindparam("weights", cls.WEIGHTS), cls.vector,
-                               db.cast(tsquery, TSQUERY))
+                               db.cast(tsquery, TSQUERY), 1)
 
     @classmethod
     def _apply_filters(cls, match, groups=None, areas=None):

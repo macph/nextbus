@@ -1621,17 +1621,7 @@ function StarredStopList(options) {
                 ),
                 (sub) ? element('p', sub.join(', ')) : null
             );
-            let mapLink = element('a',
-                {
-                    className: 'item item-action',
-                    innerHTML: '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" ' +
-                        'height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/>' +
-                        '<path class="icon-shape" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 ' +
-                        '13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 ' +
-                        '0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 ' +
-                        '2.5z"/></svg>'
-                }
-            );
+            let mapLink = element('a', {className: 'item item-action'}, 'Map');
             if (self.map != null) {
                 mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
                 mapLink.tabIndex = 0;
@@ -3410,13 +3400,7 @@ function Panel(stopMap, mapPanel) {
             },
             '\u2717 Close'
         );
-        let direction = (data.reverse) ? 'inbound' : 'outbound',
-            timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
-        let timetable = element('a',
-            {className: 'action', href: timetableURL, title: data.line + ' timetable'},
-            'Timetable'
-        );
-        let actions = element('div', {className: 'actions'}, timetable, closePanel);
+        let actions = element('div', {className: 'actions'}, closePanel);
 
         let listOperators = null;
         if (data.operators) {
@@ -3444,30 +3428,37 @@ function Panel(stopMap, mapPanel) {
         );
         let subtitle = element('p', 'Operated by ', listOperators);
 
-        let tabs = null;
-        if (data.mirrored) {
-            tabs = element('ul',
-                {className: 'tabs tabs-2'},
-                element('li',
-                    element('div',
-                        {className: (data.reverse) ? 'tab' : 'tab tab-active',
-                         onclick: (data.reverse) ? function() {
-                             map.update({service: {id: data.service, reverse: false}});
-                         } : null},
-                        'Outbound'
-                    )
-                ),
-                element('li',
-                    element('div',
-                        {className: (data.reverse) ? 'tab tab-active' : 'tab',
-                         onclick: (data.reverse) ? null : function() {
-                             map.update({service: {id: data.service, reverse: true}});
-                         }},
-                        'Inbound'
-                    )
+        let direction = (data.reverse) ? 'inbound' : 'outbound',
+            timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
+        let outbound = (!data.mirrored) ? null : element('li',
+            element('div',
+                {className: (data.reverse) ? 'tab' : 'tab tab-active',
+                 onclick: (data.reverse) ? function() {
+                     map.update({service: {id: data.service, reverse: false}});
+                 } : null},
+                'Outbound'
+            )
+        );
+        let inbound = (!data.mirrored) ? null : element('li',
+            element('div',
+                {className: (data.reverse) ? 'tab tab-active' : 'tab',
+                 onclick: (data.reverse) ? null : function() {
+                     map.update({service: {id: data.service, reverse: true}});
+                 }},
+                'Inbound'
+            )
+        );
+        let tabs = element('ul',
+            {className: 'tabs tabs-3'},
+            outbound,
+            inbound,
+            element('li',
+                element('a',
+                    {className: 'tab', href: timetableURL, title: data.line + ' timetable'},
+                    'Timetable'
                 )
-            );
-        }
+            )
+        );
 
         let list = element('section', {style: {position: 'relative'}}),
             diagram = element('div', {className: 'diagram'});

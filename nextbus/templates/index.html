@@ -38,7 +38,7 @@
         </span>
         <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>
       </a>
-      <a href="{{ url_for('page.show_map_stop', atco_code=s.atco_code) }}" title="Go to map for {{ s.long_name }}" class="item item-action">{{ f.place_icon() }}</a>
+      <a href="{{ url_for('page.show_map_stop', atco_code=s.atco_code) }}" title="Go to map for {{ s.long_name }}" class="item item-action">Map</a>
       {%- endcall %}
       {%- else -%}
       <p class="text-middle">You can have your favourite stops here! Just find them and star them.</p>

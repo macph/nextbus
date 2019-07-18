@@ -16,28 +16,22 @@
   </h1>
   <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
   <div class="actions">
-    <a class="action" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a>
     <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
   </div>
 
-  {% if mirrored %}
-  <ul class="tabs tabs-2">
-    {% if not reverse %}
+  <ul class="tabs tabs-3">
+    {% if mirrored and not reverse -%}
     <li><div class="tab tab-active">Outbound</div></li>
     <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=true) }}">Inbound</a></li>
-    {% else %}
+    {%- elif mirrored -%}
     <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=false) }}">Outbound</a></li>
     <li><div class="tab tab-active">Inbound</div></li>
-    {% endif %}
+    {%- endif %}
+    <li><a class="tab" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a></li>
   </ul>
-  {% endif %}
 
   <section>
-    {% if mirrored -%}
     <h3>Diagram</h3>
-    {%- else -%}
-    <h2>Diagram</h2>
-    {%- endif %}
     <dl class="description-list">
       <dt>From</dt>
       <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>

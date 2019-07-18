@@ -596,7 +596,8 @@ function focusOrIgnore(element) {
  * @property {?boolean} closeOnSelect - Closes menu when an item has been selected - default true
  * @property {?string} defaultText - Text to display when no items are selected
  * @property {?string} classFilterList - Class for filter list container element
- * @property {?string} classInput Class - for selected items component
+ * @property {?string} classInput - Class for selected items component
+ * @property {?string} classInputMenuHidden - Class for selected items while menu is hidden
  * @property {?string} classInputDefault - lass for default text for selected items
  * @property {?string} classSelected - Class for selected item
  * @property {?string} classSelectedDisabled - Class for disabled selected item
@@ -734,7 +735,8 @@ function _FilterSelected(filterList) {
             }
         };
         self.element = element('div',{
-            className: self.options.classInput || '',
+            className: (self.options.classInput || '') + ' ' +
+                (self.options.classInputMenuHidden || ''),
             tabIndex: 0,
             onfocus: showMenu,
             onclick: showMenu,
@@ -899,6 +901,7 @@ function _FilterMenu(filterList) {
             return;
         }
         self.hidden = false;
+        self.list.selected.element.classList.remove(self.options.classInputMenuHidden);
         self.element.classList.remove(self.options.classMenuHidden);
         self.updateHeight();
     };
@@ -908,6 +911,7 @@ function _FilterMenu(filterList) {
             return;
         }
         self.hidden = true;
+        self.list.selected.element.classList.add(self.options.classInputMenuHidden);
         self.element.classList.add(self.options.classMenuHidden);
     };
 
@@ -971,6 +975,7 @@ function FilterList(options) {
         defaultText: null,
         classFilterList: 'filter-list',
         classInput: 'filter-input',
+        classInputMenuHidden: 'filter-input-menu-hidden',
         classInputDefault: 'filter-default',
         classSelected: 'filter-selected',
         classSelectedDisabled: 'filter-selected-disabled',

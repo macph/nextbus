@@ -597,6 +597,7 @@ def service(service_id, reverse=None):
         "destination": {p.destination for p in sv.patterns
                         if p.direction == is_reverse}
     }
+    similar = sv.similar(is_reverse, 0.5)
 
     s_graph, d_stops = graph.service_graph_stops(sv.id, is_reverse)
     sequence = s_graph.sequence()
@@ -607,6 +608,7 @@ def service(service_id, reverse=None):
 
     return render_template("service.html", service=sv, dest=destinations,
                            reverse=is_reverse, mirrored=mirrored,
+                           similar=similar,
                            operators=_display_operators(sv.operators),
                            sequence=sequence, stops=d_stops, layout=layout)
 

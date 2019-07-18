@@ -808,6 +808,78 @@ class Service(db.Model):
 
         return reverse, has_mirror
 
+    def similar(self, direction=None, threshold=None):
+        """ Find all services sharing stops with this service in a direction.
+
+            :param direction: Service direction, or None to include both.
+            :param threshold: Minimum similarity value, or None to include all.
+        """
+        id_ = db.bindparam("id", self.id)
+        similar0 = (
+            db.session.query(ServicePair.service0.label("id"),
+                             ServicePair.direction0.label("direction"))
+            .filter(ServicePair.service1 == id_)
+        )
+        similar1 = (
+            db.session.query(ServicePair.service1.label("id"),
+                             ServicePair.direction1.label("direction"))
+            .filter(ServicePair.service0 == id_)
+        )
+
+        if direction is not None:
+            dir_ = db.bindparam("dir", direction)
+            similar0 = similar0.filter(ServicePair.direction1 == dir_)
+            similar1 = similar1.filter(ServicePair.direction0 == dir_)
+
+        if threshold is not None:
+            value = db.bindparam("threshold", threshold)
+            similar0 = similar0.filter(ServicePair.similarity > value)
+            similar1 = similar1.filter(ServicePair.similarity > value)
+
+        service = db.aliased(self, name="service")
+        similar = db.union_all(similar0, similar1).alias()
+
+        return (
+            db.session.query(
+                service,
+                JourneyPattern.direction,
+                db.func.string_agg(JourneyPattern.origin.distinct(), ' / ')
+                .label("origin"),
+                db.func.string_agg(JourneyPattern.destination.distinct(), ' / ')
+                .label("destination")
+            )
+            .join(similar, similar.c.id == service.id)
+            .join(JourneyPattern,
+                  (service.id == JourneyPattern.service_ref) &
+                  (similar.c.direction == JourneyPattern.direction))
+            .group_by(service, similar.c.direction, JourneyPattern.direction)
+            .order_by(service.line_index, service.description,
+                      similar.c.direction)
+            .all()
+        )
+
+
+class ServicePair(db.Model):
+    """ Pairs of services sharing stops, used to find similar services. """
+    __tablename__ = "service_pair"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    service0 = db.Column(db.Integer,
+                         db.ForeignKey("service.id", ondelete="CASCADE"),
+                         nullable=False, index=True)
+    direction0 = db.Column(db.Boolean, nullable=False, index=True)
+    count0 = db.Column(db.Integer, nullable=False)
+    service1 = db.Column(db.Integer,
+                         db.ForeignKey("service.id", ondelete="CASCADE"),
+                         nullable=False, index=True)
+    direction1 = db.Column(db.Boolean, nullable=False, index=True)
+    count1 = db.Column(db.Integer, nullable=False)
+    similarity = db.Column(db.Float, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("service0 < service1"),
+    )
+
 
 class JourneyPattern(db.Model):
     """ Sequences of timing links. """

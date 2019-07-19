@@ -3428,37 +3428,46 @@ function Panel(stopMap, mapPanel) {
             subtitle = element('p', 'Operated by ', listOperators);
         }
 
+        let tabs = null;
         let direction = (data.reverse) ? 'inbound' : 'outbound',
             timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
-        let outbound = (!data.mirrored) ? null : element('li',
-            element('div',
-                {className: (data.reverse) ? 'tab' : 'tab tab-active',
-                 onclick: (data.reverse) ? function() {
-                     map.update({service: {id: data.service, reverse: false}});
-                 } : null},
-                'Outbound'
-            )
-        );
-        let inbound = (!data.mirrored) ? null : element('li',
-            element('div',
-                {className: (data.reverse) ? 'tab tab-active' : 'tab',
-                 onclick: (data.reverse) ? null : function() {
-                     map.update({service: {id: data.service, reverse: true}});
-                 }},
-                'Inbound'
-            )
-        );
-        let tabs = element('ul',
-            {className: 'tabs tabs-3'},
-            outbound,
-            inbound,
-            element('li',
-                element('a',
-                    {className: 'tab', href: timetableURL, title: data.line + ' timetable'},
-                    'Timetable'
+        if (data.mirrored) {
+            let outbound = element('li',
+                element('div',
+                    {className: (data.reverse) ? 'tab' : 'tab tab-active',
+                     onclick: (data.reverse) ? function() {
+                         map.update({service: {id: data.service, reverse: false}});
+                     } : null},
+                    'Outbound'
                 )
-            )
-        );
+            );
+            let inbound = element('li',
+                element('div',
+                    {className: (data.reverse) ? 'tab tab-active' : 'tab',
+                     onclick: (data.reverse) ? null : function() {
+                         map.update({service: {id: data.service, reverse: true}});
+                     }},
+                    'Inbound'
+                )
+            );
+            tabs = element('ul',
+                {className: 'tabs tabs-3'},
+                outbound,
+                inbound,
+                element('li',
+                    element('a',
+                        {className: 'tab', href: timetableURL, title: data.line + ' timetable'},
+                        'Timetable'
+                    )
+                )
+            );
+        } else {
+            let timetable = element('a',
+                { className: 'action', title: data.line + ' timetable', href: timetableURL},
+                'Timetable'
+            );
+            actions.insertBefore(timetable, actions.firstChild);
+        }
 
         let list = element('section', {style: {position: 'relative'}}),
             diagram = element('div', {className: 'diagram'});

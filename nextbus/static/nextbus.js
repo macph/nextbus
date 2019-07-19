@@ -185,22 +185,17 @@ function Overlay(overlayElement, focusFirst) {
      * @private
      */
     this._cycleTabs = function(event) {
-        const KEY_TAB = 'Tab';
-
-        if (event.key === KEY_TAB && !event.shiftKey) {
-            if (document.activeElement === self.last() ||
-                self.focusable.indexOf(document.activeElement) === -1)
-            {
-                event.preventDefault();
-                self.first().focus();
-            }
-        } else if (event.key === KEY_TAB) {
-            if (document.activeElement === self.first() ||
-                self.focusable.indexOf(document.activeElement) === -1)
-            {
-                event.preventDefault();
-                self.last().focus();
-            }
+        if (event.key !== 'Tab' || !self.overlay.contains(event.target)) {
+            return;
+        }
+        if (!event.shiftKey && (document.activeElement === self.last() ||
+                                self.focusable.indexOf(document.activeElement) === -1)) {
+            event.preventDefault();
+            self.first().focus();
+        } else if (event.shiftKey && (document.activeElement === self.first() ||
+                                      self.focusable.indexOf(document.activeElement) === -1)) {
+            event.preventDefault();
+            self.last().focus();
         }
     };
 
@@ -214,8 +209,10 @@ function Overlay(overlayElement, focusFirst) {
                 self._cycleTabs(event);
                 break;
             case 'Escape':
-                self.close();
-                break;
+                // Ensure only current overlay is closed
+                if (self.overlay.contains(event.target)) {
+                    self.close();
+                }
         }
     };
 

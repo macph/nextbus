@@ -188,7 +188,7 @@ def test_stop_data_not_found(client, db_loaded):
 
 
 SERVICE_JSON = {
-    "service": 645,
+    "id": 645,
     "line": "Dagenham Sunday Market Shuttle",
     "description": "Barking – Dagenham Sunday Market",
     "direction": "outbound",
@@ -213,7 +213,8 @@ SERVICE_JSON = {
     "layout": [
         ["490000015G", 0, [[0, 0, 0, None]]],
         ["490008638S", 0, []]
-    ]
+    ],
+    "other": []
 }
 
 

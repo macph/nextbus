@@ -392,6 +392,8 @@ def _delete_empty_services():
     )
 
     with utils.database_connection() as connection:
+        utils.logger.info("Querying journey patterns without stop point "
+                          "references")
         # All associated journey links and journeys will be deleted too
         jp = connection.execute(pattern.delete().where(empty_patterns))
         utils.logger.info(f"JourneyPattern: {jp.rowcount} without stop "
@@ -512,12 +514,12 @@ def _find_service_pairs():
     )
 
     with db.engine.begin() as connection:
-        current_app.logger.info("Querying all services and stops they call at")
+        utils.logger.info("Querying all services and stops they call at")
         service_stops.create(connection)
         connection.execute(fill_service_stops)
-        current_app.logger.info("Deleting existing pairs of services")
+        utils.logger.info("Deleting existing pairs of services")
         connection.execute(delete_existing)
-        current_app.logger.info("Adding services pairs found")
+        utils.logger.info("Adding services pairs found")
         connection.execute(fill_pairs)
 
 

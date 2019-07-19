@@ -601,7 +601,7 @@ def service(service_id, reverse=None):
         "destination": {p.destination for p in sv.patterns
                         if p.direction == is_reverse}
     }
-    similar = sv.similar(is_reverse, 0.5)
+    similar = sv.similar(is_reverse, 0.333)
 
     s_graph, d_stops = graph.service_graph_stops(sv.id, is_reverse)
     sequence = s_graph.sequence()

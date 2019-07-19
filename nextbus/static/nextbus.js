@@ -2471,9 +2471,9 @@ function mapControl(actions) {
  *     reverse: boolean,
  *     origin: string,
  *     destination: string,
- *     terminates: boolean,
- *     operators: string[]
- * }} StopServiceData
+ *     terminates: boolean?,
+ *     operators: string[]?
+ * }} ServiceRefData
  */
 
 /**
@@ -2496,7 +2496,7 @@ function mapControl(actions) {
  *     adminArea: {code: string, name: string},
  *     district: ?{code: string, name: string},
  *     locality: {code: string, name: string},
- *     services: StopServiceData[],
+ *     services: ServiceRefData[],
  *     operators: {code: string, name: string}[]
  * }} StopPointData
  */
@@ -2515,7 +2515,7 @@ function mapControl(actions) {
 /**
  * Data for service route
  * @typedef {{
- *     service: string,
+ *     id: string,
  *     line: string,
  *     description: string,
  *     direction: string,
@@ -2525,7 +2525,8 @@ function mapControl(actions) {
  *     stops: StopPoint[],
  *     sequence: string[],
  *     paths: RoutePaths,
- *     layout: Array
+ *     layout: Array,
+ *     other: OtherServiceData[]
  * }} ServiceData
  */
 
@@ -3429,14 +3430,16 @@ function Panel(stopMap, mapPanel) {
         }
 
         let tabs = null;
-        let direction = (data.reverse) ? 'inbound' : 'outbound',
-            timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
+        let timetableURL = URL.TIMETABLE.replace(
+            '//',
+            '/' + data.id + '/' + data.direction + '/'
+        );
         if (data.mirrored) {
             let outbound = element('li',
                 element('div',
                     {className: (data.reverse) ? 'tab' : 'tab tab-active',
                      onclick: (data.reverse) ? function() {
-                         map.update({service: {id: data.service, reverse: false}});
+                         map.update({service: {id: data.id, reverse: false}});
                      } : null},
                     'Outbound'
                 )
@@ -3445,7 +3448,7 @@ function Panel(stopMap, mapPanel) {
                 element('div',
                     {className: (data.reverse) ? 'tab tab-active' : 'tab',
                      onclick: (data.reverse) ? null : function() {
-                         map.update({service: {id: data.service, reverse: true}});
+                         map.update({service: {id: data.id, reverse: true}});
                      }},
                     'Inbound'
                 )
@@ -3529,6 +3532,35 @@ function Panel(stopMap, mapPanel) {
         list.appendChild(diagram);
         list.appendChild(listStops);
 
+        let other = null;
+        if (data.other) {
+            other = element('section',
+                element('h2', 'Similar services')
+            );
+            let listServices = element('ul', {className: 'list'});
+            data.other.forEach(function(s) {
+                console.log({id: s.id, reverse: s.reverse});
+                let item = element('li',
+                    element('div',
+                        {className: 'item item-service', onclick: function() {
+                            self.stopMap.update({
+                                stop: null,
+                                service: {id: s.id, reverse: s.reverse},
+                                fitService: true
+                            });
+                        }},
+                        element('span',
+                            {className: 'line-outer'},
+                            element('span', {className: 'line'}, s.line)
+                        ),
+                        element('div', {className: 'item-label'}, s.description)
+                    )
+                );
+                listServices.appendChild(item);
+            });
+            other.appendChild(listServices);
+        }
+
         self.clearPanel();
         self.mapPanel.appendChild(heading);
         if (subtitle) {
@@ -3539,6 +3571,9 @@ function Panel(stopMap, mapPanel) {
             self.mapPanel.appendChild(tabs);
         }
         self.mapPanel.appendChild(list);
+        if (other) {
+            self.mapPanel.appendChild(other);
+        }
 
         // Add control for fitting service to map
         self.currentMapControl = mapControl({
@@ -3980,8 +4015,8 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
         if (routeData != null) {
             let direction = (routeData.reverse) ? 'inbound' : 'outbound';
-            routeURL = 'service/' + routeData.service + '/' + direction + '/';
-            state.service = {id: routeData.service, reverse: routeData.reverse}
+            routeURL = 'service/' + routeData.id + '/' + direction + '/';
+            state.service = {id: routeData.id, reverse: routeData.reverse}
         } else {
             state.service = null;
         }

@@ -1459,6 +1459,16 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     # Check line patterns - is there more than 1 direction?
     reverse_, mirrored = service.has_mirror(reverse)
 
+    other_services = [{
+        "id": s.service.id,
+        "line": s.service.line,
+        "direction": "inbound" if s.direction else "outbound",
+        "reverse": s.direction,
+        "description": s.service.description,
+        "origin": s.origin,
+        "destination": s.destination
+    } for s in service.similar(reverse_, 0.5)]
+
     graph, stops = service_graph_stops(service.id, reverse_)
     paths, sequence = graph.analyse()
     try:
@@ -1479,7 +1489,7 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     }
 
     data = {
-        "service": service.id,
+        "id": service.id,
         "line": service.line,
         "description": service.description,
         "direction": "inbound" if reverse_ else "outbound",
@@ -1489,7 +1499,8 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         "stops": {c: s.to_geojson() for c, s in stops.items()},
         "sequence": sequence,
         "paths": paths,
-        "layout": layout
+        "layout": layout,
+        "other": other_services
     }
 
     return data

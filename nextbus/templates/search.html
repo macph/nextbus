@@ -57,9 +57,7 @@
 
     {% if results.items|length > 0 -%}
     {% call(item) f.print_list(results.items, class='list-actions') -%}
-    {% if item.table_name == 'region' -%}
-    <a class="item item-place item-tall" href="{{ url_for('page.list_in_region', region_code=item.code) }}"><strong>{{ item.name }}</strong></a>
-    {%- elif item.table_name == 'admin_area' -%}
+    {% if item.table_name == 'admin_area' -%}
     <a class="item item-place item-tall" href="{{ url_for('page.list_in_area', area_code=item.code) }}"><strong>{{ item.name }}</strong></a>
     {%- elif item.table_name == 'district' -%}
     <a class="item item-place item-tall" href="{{ url_for('page.list_in_district', district_code=item.code) }}"><strong>{{ item.name }}</strong>, {{ item.admin_area_name }}</a>

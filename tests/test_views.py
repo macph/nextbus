@@ -222,21 +222,8 @@ def test_list_regions(client, db_loaded):
 
     assert response.status_code == 200
     assert b"L" in response.data
+    assert b"Barking" in response.data
     assert b"GB" not in response.data
-
-
-def test_region(client, db_loaded):
-    response = client.get("/list/region/L")
-
-    assert response.status_code == 200
-    assert b"Barking and Dagenham" in response.data
-
-
-def test_wrong_region(client, db_loaded):
-    response = client.get("/list/region/Y")
-
-    assert response.status_code == 404
-    assert b"Region with code <strong>Y</strong> does not exist" in response.data
 
 
 def test_area(client, db_loaded):

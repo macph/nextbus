@@ -25,7 +25,6 @@
 <nav>
   <ul class="breadcrumbs breadcrumbs-trailing">
     <li><a href="{{ url_for('page.list_regions') }}">All regions</a></li>
-    <li><a href="{{ url_for('page.list_in_region', region_code=locality.admin_area.region.code) }}">{{ locality.admin_area.region.name }}</a></li>
     {% if locality.district is not none %}
     <li><a href="{{ url_for('page.list_in_district', district_code=locality.district.code) }}">{{ locality.district.name }}</a></li>
     {% else %}

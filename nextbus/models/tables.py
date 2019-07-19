@@ -144,27 +144,6 @@ class Region(db.Model):
     def __repr__(self):
         return "<Region(%r)>" % self.code
 
-    def list_areas(self):
-        """ Queries a list of districts and areas (that do not contain any
-            districts) within the region, sorted by name.
-        """
-        query_areas = (
-            db.session.query(
-                db.case([(District.code.is_(None),
-                          utils.table_name(AdminArea))],
-                        else_=utils.table_name(District)).label("table_name"),
-                db.case([(District.code.is_(None), AdminArea.code)],
-                        else_=District.code).label("code"),
-                db.case([(District.code.is_(None), AdminArea.name)],
-                        else_=District.name).label("name")
-            ).select_from(AdminArea)
-            .outerjoin(AdminArea.districts)
-            .filter(AdminArea.region_ref == self.code)
-            .order_by("name")
-        )
-
-        return query_areas.all()
-
 
 class AdminArea(db.Model):
     """ NPTG administrative area. """

@@ -257,35 +257,32 @@ def search_bad_query(error):
 
 @page.route("/list/")
 def list_regions():
-    """ Shows list of all regions. """
-    regions = (
-        models.Region.query
+    """ Shows list of all regions and their areas. """
+    regions_areas = (
+        db.session.query(
+            models.Region.code.label("region_code"),
+            models.Region.name.label("region_name"),
+            db.case([(models.District.code.is_(None),
+                      db.literal_column("'admin_area'"))],
+                    else_=db.literal_column("'district'")).label("area_type"),
+            db.case([(models.District.code.is_(None), models.AdminArea.code)],
+                    else_=models.District.code).label("area_code"),
+            db.case([(models.District.code.is_(None), models.AdminArea.name)],
+                    else_=models.District.name).label("area_name")
+        ).select_from(models.Region)
+        .join(models.Region.areas)
+        .outerjoin(models.AdminArea.districts)
         .filter(models.Region.code != "GB")
-        .order_by("name")
+        .order_by("region_name", "area_name")
         .all()
     )
+    regions = {}
+    areas = {}
+    for row in regions_areas:
+        regions[row.region_code] = row.region_name
+        areas.setdefault(row.region_code, []).append(row)
 
-    return render_template("all_regions.html", regions=regions)
-
-
-@page.route("/list/region/<region_code>")
-def list_in_region(region_code):
-    """ Shows list of administrative areas and districts in a region.
-        Administrative areas with districts are excluded in favour of listing
-        districts.
-    """
-    region = models.Region.query.get(region_code.upper())
-
-    if region is None:
-        raise NotFound(Markup("Region with code <strong>%s</strong> does not "
-                              "exist.") % region_code)
-    if region.code != region_code:
-        return redirect(url_for(".list_in_region", region_code=region.code),
-                        code=302)
-
-    areas = region.list_areas()
-
-    return render_template("region.html", region=region, areas=areas)
+    return render_template("regions.html", regions=regions, areas=areas)
 
 
 @page.route("/list/area/<area_code>")
@@ -555,11 +552,9 @@ def _query_service(service_id, reverse=None):
         models.Service.query
         .join(models.Service.patterns)
         .join(models.JourneyPattern.operator)
-        .join(models.JourneyPattern.region)
         .options(db.undefer(models.Service.mode_name),
                  db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators),
-                 db.contains_eager(models.Service.regions),
                  db.defaultload(models.Service.operators)
                  .undefer_group("contacts"))
         .filter(models.Service.id == service_id)

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import 'functions.html' as f %}
+{% block title %}Regions{% endblock %}
+
+{% block content %}
+<main>
+  <h1>Regions</h1>
+  <section>
+    {%- for code, name in regions|dictsort %}
+    <h2 id="{{ code }}">{{ name }}</h2>
+    {% call(a) f.print_list(areas[code], 'list-places') -%}
+    {% if a.area_type == 'admin_area' -%}
+    <a class="item item-place" href="{{ url_for('page.list_in_area', area_code=a.area_code) }}">{{ a.area_name }}</a>
+    {%- elif a.area_type == 'district' -%}
+    <a class="item item-place" href="{{ url_for('page.list_in_district', district_code=a.area_code) }}">{{ a.area_name }}</a>
+    {%- endif %}
+    {%- endcall %}
+    {%- endfor %}
+  </section>
+</main>
+{% endblock %}

@@ -30,82 +30,87 @@
     <li><a class="tab" href="{{ url_for('page.service_timetable', service_id=service.id, reverse=reverse) }}">Timetable</a></li>
   </ul>
 
-  <section>
-    <h3>Diagram</h3>
-    <dl class="description-list">
-      <dt>From</dt>
-      <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
-      <dt>To</dt>
-      <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
-    </dl>
-    <div id="diag" class="diagram" data-layout="{{ layout|tojson|forceescape }}"></div>
-    {% if sequence|length > 0 -%}
-    {% call(s) f.print_list(sequence, class='list-relative', name='listStops') -%}
-    {% if s -%}
-    {% set stop = stops[s] -%}
-    <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item item-stop item-service-stop">
-      <span id="{{ 'c' + stop.atco_code }}" class="item-multiline">
-        <span>
-            {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
-            <span class="item-label">{{ stop.name }}</span>
-        </span>
-        {% if stop.street and stop.street != stop.locality.name -%}
-        <p>{{ stop.street }}, {{ stop.locality.name }}</p>
+  <div class="columns">
+    <div class="column-2">
+      <section>
+        <dl class="description-list">
+          <dt>From</dt>
+          <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
+          <dt>To</dt>
+          <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
+        </dl>
+        <div id="diag" class="diagram" data-layout="{{ layout|tojson|forceescape }}"></div>
+        {% if sequence|length > 0 -%}
+        {% call(s) f.print_list(sequence, class='list-relative', name='listStops') -%}
+        {% if s -%}
+        {% set stop = stops[s] -%}
+        <a href="{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="item item-stop item-service-stop">
+          <span id="{{ 'c' + stop.atco_code }}" class="item-multiline">
+            <span>
+                {{ f.print_stop_indicator(stop, name="i"+stop.atco_code) }}
+                <span class="item-label">{{ stop.name }}</span>
+            </span>
+            {% if stop.street and stop.street != stop.locality.name -%}
+            <p>{{ stop.street }}, {{ stop.locality.name }}</p>
+            {%- else -%}
+            <p>{{ stop.locality.name }}</p>
+            {%- endif %}
+          </span>
+        </a>
         {%- else -%}
-        <p>{{ stop.locality.name }}</p>
+        <div class="item item-stop item-service-stop item-service-stop-empty">
+          <span id="cNull">
+            <span class="indicator" id="iNull"></span>
+          </span>
+        </div>
         {%- endif %}
-      </span>
-    </a>
-    {%- else -%}
-    <div class="item item-stop item-service-stop item-service-stop-empty">
-      <span id="cNull">
-        <span class="indicator" id="iNull"></span>
-      </span>
+        {%- endcall %}
+        {%- else -%}
+        <p>No stops found for this service.</p>
+        {%- endif %}
+      </section>
+    </div>
+    {% if operators or similar -%}
+    <div class="column-1">
+      {% if operators -%}
+      <section>
+        <h2>Operators</h2>
+        <div class="operators">
+          {%- for o in operators %}
+          <div>
+            <h4>{{ o.name }}</h4>
+            {% if o.address -%}
+            <p>{{ o.split_address|join('<br>'|safe) }}</p>
+            {%- endif %}
+            {% if o.website or o.email or o.twitter -%}
+            {% set break = joiner('<br>'|safe) -%}
+            <p>
+              {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
+              {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
+              {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
+            </p>
+            {%- endif %}
+          </div>
+          {%- endfor %}
+        </div>
+      </section>
+      {%- endif %}
+      {% if similar -%}
+      <section>
+        <h2>Similar services</h2>
+        {% call(s) f.print_list(similar) -%}
+        <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
+          <span class="line-outer">
+            <span class="line">{{ s.service.line }}</span>
+          </span>
+          <span class="item-label">{{ s.service.description }}</span>
+        </a>
+        {%- endcall %}
+      </section>
+      {%- endif %}
     </div>
     {%- endif %}
-    {%- endcall %}
-    {%- else -%}
-    <p>No stops found for this service.</p>
-    {%- endif %}
-  </section>
-
-  {% if similar -%}
-  <section>
-    <h2>Similar services</h2>
-    {% call(s) f.print_list(similar) -%}
-    <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
-      <span class="line-outer">
-        <span class="line">{{ s.service.line }}</span>
-      </span>
-      <span class="item-label">{{ s.service.description }}</span>
-    </a>
-    {%- endcall %}
-  </section>
-  {%- endif %}
-
-  {% if operators -%}
-  <section>
-    <h2>Operators</h2>
-    <div class="operators">
-      {%- for o in operators %}
-      <div>
-        <h3>{{ o.name }}</h3>
-        {% if o.address -%}
-        <p>{{ o.split_address|join('<br>'|safe) }}</p>
-        {%- endif %}
-        {% if o.website or o.email or o.twitter -%}
-        {% set break = joiner('<br>'|safe) -%}
-        <p>
-          {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
-          {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
-          {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
-        </p>
-        {%- endif %}
-      </div>
-      {%- endfor %}
-    </div>
-  </section>
-  {%- endif %}
+  </div>
 </main>
 {% endblock %}
 

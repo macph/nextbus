@@ -32,7 +32,6 @@
   </ul>
 
   <section id="timetable">
-    <h3>Timetable</h3>
     <div class="inline">
       <p style="margin-right: 10px;">{{ display_long_date(select_date.date.data) }}</p>
       <form method="GET" action="" class="form">
@@ -130,7 +129,7 @@
     <div class="operators">
       {%- for o in operators %}
       <div>
-        <h3>{{ o.name }}</h3>
+        <h4>{{ o.name }}</h4>
         {% if o.address -%}
         <p>{{ o.split_address|join('<br>'|safe) }}</p>
         {%- endif %}

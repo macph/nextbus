@@ -1443,7 +1443,7 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     service = (
         models.Service.query
         .join(models.Service.patterns)
-        .join(models.JourneyPattern.operator)
+        .outerjoin(models.JourneyPattern.operator)
         .options(db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators))
         .filter(models.Service.id == service_id)

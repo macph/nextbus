@@ -551,7 +551,7 @@ def _query_service(service_id, reverse=None):
     sv = (
         models.Service.query
         .join(models.Service.patterns)
-        .join(models.JourneyPattern.operator)
+        .outerjoin(models.JourneyPattern.operator)
         .options(db.undefer(models.Service.mode_name),
                  db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators),

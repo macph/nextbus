@@ -265,11 +265,12 @@ def _select_fts_vectors():
             _tsvector_column(
                 (Service.line, "B"),
                 (Service.description, "B"),
-                (db.func.string_agg(db.distinct(Operator.name), " "), "C"),
+                (db.func.coalesce(
+                    db.func.string_agg(db.distinct(Operator.name), " "), ""
+                ), "C"),
                 (db.func.string_agg(db.distinct(Locality.name), " "), "C"),
                 (db.func.coalesce(
-                    db.func.string_agg(db.distinct(District.name), " "),
-                    ""
+                    db.func.string_agg(db.distinct(District.name), " "), ""
                 ), "D"),
                 (db.func.string_agg(db.distinct(AdminArea.name), " "), "D")
             ).label("vector")
@@ -280,7 +281,7 @@ def _select_fts_vectors():
             .join(LocalOperator,
                   (JourneyPattern.local_operator_ref == LocalOperator.code) &
                   (JourneyPattern.region_ref == LocalOperator.region_ref))
-            .join(Operator, LocalOperator.operator_ref == Operator.code)
+            .outerjoin(Operator, LocalOperator.operator_ref == Operator.code)
             .join(JourneyLink, JourneyPattern.id == JourneyLink.pattern_ref)
             .join(StopPoint,
                   (JourneyLink.stop_point_ref == StopPoint.atco_code) &

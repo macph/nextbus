@@ -551,7 +551,10 @@ class StopPoint(db.Model):
 
         # Give service instance name in keyed tuple object
         service = db.aliased(Service, name="service")
-        operator = pg.array((LocalOperator.code, Operator.name))
+        operator = pg.array((
+            LocalOperator.code,
+            db.func.coalesce(Operator.name, LocalOperator.name)
+        ))
         query_services = (
             db.session.query(
                 service,
@@ -566,7 +569,7 @@ class StopPoint(db.Model):
             .join(service.patterns)
             .join(JourneyPattern.links)
             .join(JourneyPattern.local_operator)
-            .join(LocalOperator.operator)
+            .outerjoin(LocalOperator.operator)
             .filter(JourneyLink.stop_point_ref == self.atco_code)
             .group_by(service.id, JourneyPattern.direction)
             .order_by(service.line_index, service.description,

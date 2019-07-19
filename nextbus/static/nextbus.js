@@ -3402,19 +3402,6 @@ function Panel(stopMap, mapPanel) {
         );
         let actions = element('div', {className: 'actions'}, closePanel);
 
-        let listOperators = null;
-        if (data.operators) {
-            listOperators = [];
-            data.operators.forEach(function(op, i) {
-                listOperators.push(element('strong', op));
-                if (i < data.operators.length - 2) {
-                    listOperators.push(', ');
-                } else if (i === data.operators.length - 2) {
-                    listOperators.push(' and ');
-                }
-            });
-        }
-
         let heading = element('h1',
             {className: 'heading-service'},
             element('span',
@@ -3426,7 +3413,20 @@ function Panel(stopMap, mapPanel) {
             ),
             element('span', data.description)
         );
-        let subtitle = element('p', 'Operated by ', listOperators);
+
+        let subtitle = null;
+        if (data.operators.length > 0) {
+            let listOperators = [];
+            data.operators.forEach(function(op, i) {
+                listOperators.push(element('strong', op));
+                if (i < data.operators.length - 2) {
+                    listOperators.push(', ');
+                } else if (i === data.operators.length - 2) {
+                    listOperators.push(' and ');
+                }
+            });
+            subtitle = element('p', 'Operated by ', listOperators);
+        }
 
         let direction = (data.reverse) ? 'inbound' : 'outbound',
             timetableURL = URL.TIMETABLE.replace('//', '/' + data.service + '/' + direction + '/');
@@ -3522,7 +3522,9 @@ function Panel(stopMap, mapPanel) {
 
         self.clearPanel();
         self.mapPanel.appendChild(heading);
-        self.mapPanel.appendChild(subtitle);
+        if (subtitle) {
+            self.mapPanel.appendChild(subtitle);
+        }
         self.mapPanel.appendChild(actions);
         if (tabs) {
             self.mapPanel.appendChild(tabs);

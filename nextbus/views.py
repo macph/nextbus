@@ -548,6 +548,10 @@ def _query_service(service_id, reverse=None):
     """ Finds service as well as all journey patterns and local operators
         associated with the service.
     """
+    if not service_id.isdecimal():
+        raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
+                       % service_id)
+
     sv = (
         models.Service.query
         .join(models.Service.patterns)
@@ -665,6 +669,9 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
         stop = None
 
     if service_id is not None:
+        if not service_id.isdecimal():
+            raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
+                           % service_id)
         sv = (
             models.Service.query
             .options(db.joinedload(models.Service.patterns))

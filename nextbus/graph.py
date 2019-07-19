@@ -1440,6 +1440,9 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         outbound and True for inbound.
         :param max_columns: Maximum columns before giving up on drawing graph
     """
+    if not service_id.isdecimal():
+        return None
+
     service = (
         models.Service.query
         .join(models.Service.patterns)

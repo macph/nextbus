@@ -1,0 +1,11 @@
+.git
+.pytest_cache
+.vscode
+instance
+nextbus.egg-info
+temp
+.coverage
+.env
+.gitignore
+.pylintrc
+*.log*

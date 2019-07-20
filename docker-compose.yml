@@ -1,0 +1,35 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:11-alpine
+    environment:
+      LANG: "en_GB.UTF-8"
+      LANGUAGE: "en_GB.UTF-8"
+      POSTGRES_USER: "prod"
+      POSTGRES_PASSWORD: "hello_world"
+      POSTGRES_DB: "nextbus"
+    volumes:
+      - ./temp:/temp
+      - ~/postgres-data:/var/lib/postgresql/data
+  nxb:
+    build: .
+    volumes:
+      - ./temp:/app/temp
+      - ./instance:/app/instance
+      - static:/app/nextbus/static
+      - logs:/var/log
+    environment:
+      APP_CONFIG: nxb_config.py
+      GUNICORN_CMD_ARGS: --config=instance/gu_config.py
+    ports:
+      - "8000:8000"
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - static:/static
+      - logs:/var/log
+volumes:
+  static: {}
+  logs: {}

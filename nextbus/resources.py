@@ -189,19 +189,8 @@ class StarredStop(MethodView):
 
 def starred_stop_data():
     """ GET endpoint for GeoJSON data for starred stops. """
-    if "stops" not in session:
-        return jsonify(_list_geojson([]))
-
-    codes = session["stops"]
-    def _by_index(s): return codes.index(s.naptan_code)
-
-    stops = (
-        models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.locality))
-        .filter(models.StopPoint.naptan_code.in_(codes))
-        .all()
-    )
-    return jsonify(_list_geojson(sorted(stops, key=_by_index)))
+    starred = models.StopPoint.from_list(session.get("stops", []))
+    return jsonify(_list_geojson(starred))
 
 
 api.add_url_rule("/starred/", view_func=StarredStop.as_view("starred"),

@@ -454,6 +454,31 @@ class StopPoint(db.Model):
             return self.name
 
     @classmethod
+    def from_list(cls, list_naptan_codes):
+        """ Finds all stops from a list of NaPTAN codes, ordered using the
+            same list.
+
+            :param list_naptan_codes: List of NaPTAN/SMS codes.
+            :returns: Ordered list of StopPoint objects.
+        """
+
+        if list_naptan_codes:
+            def _stop_index(stop):
+                return list_naptan_codes.index(stop.naptan_code)
+
+            stops = (
+                cls.query
+                .options(db.joinedload(cls.locality, innerjoin=True))
+                .filter(cls.naptan_code.in_(list_naptan_codes))
+                .all()
+            )
+            stops.sort(key=_stop_index)
+        else:
+            stops = []
+
+        return stops
+
+    @classmethod
     def within_box(cls, box, *options, active_only=True):
         """ Finds all stop points within a box with latitude and longitude
             coordinates for each side.

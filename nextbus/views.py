@@ -67,23 +67,6 @@ def _group_objects(list_, attr=None, key=None, default=None,
     return groups
 
 
-def _get_starred_stops():
-    """ Get list of starred stops from session, querying and ordering them. """
-    if "stops" not in session:
-        return
-
-    starred = (
-        models.StopPoint.query
-        .options(db.joinedload(models.StopPoint.locality, innerjoin=True),
-                 db.joinedload(models.StopPoint.admin_area, innerjoin=True))
-        .filter(models.StopPoint.naptan_code.in_(session["stops"]))
-        .all()
-    )
-    starred.sort(key=lambda s: session["stops"].index(s.naptan_code))
-
-    return starred
-
-
 @page.before_app_request
 def add_search_form():
     """ Search form enabled in every view within blueprint by adding the form
@@ -159,7 +142,8 @@ def display_long_date(date):
 @page.route("/")
 def index():
     """ The home page. """
-    return render_template("index.html", starred=_get_starred_stops())
+    starred = models.StopPoint.from_list(session.get("stops", []))
+    return render_template("index.html", starred=starred)
 
 
 @page.route("/about")

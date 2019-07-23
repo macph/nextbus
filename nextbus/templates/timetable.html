@@ -16,24 +16,23 @@
   </h1>
   <p>{{ service.mode_name.capitalize() }} service{% if service.operators|length > 0 %} operated by {{ f.print_inline(service.operators|map(attribute='name')|sort) }}{% endif %}</p>
   <div class="actions">
+    <a class="action" href="{{ url_for('page.service', service_id=service.id, reverse=reverse) }}">Diagram</a>
     <a class="action" href="{{ url_for('page.show_map_service_direction', service_id=service.id, reverse=reverse) }}" title="View on map">Map</a>
   </div>
 
   <ul class="tabs tabs-3">
-    {% set date = select_date.date.data if not is_today else none %}
     {% if mirrored and not reverse -%}
     <li><div class="tab tab-active">Outbound</div></li>
-    <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true, date=date) }}">Inbound</a></li>
+    <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=true, date=select_date.date.data) }}">Inbound</a></li>
     {%- elif mirrored -%}
-    <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false, date=date) }}">Outbound</a></li>
+    <li><a class="tab" href="{{ url_for('.service_timetable', service_id=service.id, reverse=false, date=select_date.date.data) }}">Outbound</a></li>
     <li><div class="tab tab-active">Inbound</div></li>
     {%- endif %}
-    <li><a class="tab" href="{{ url_for('page.service', service_id=service.id, reverse=reverse) }}">Diagram</a></li>
   </ul>
 
   <section id="timetable">
     <div class="inline">
-      <p style="margin-right: 10px;">{{ display_long_date(select_date.date.data) }}</p>
+      <p style="margin-right: 10px;">{% if select_date.date.data is not none %}{{ display_long_date(select_date.date.data) }}{% endif %}</p>
       <form method="GET" action="" class="form">
         <label>Change date</label>
         {{ select_date.date() }}
@@ -44,9 +43,7 @@
     {%- for e in select_date.errors.date %}
     <p>{{ e }}</p>
     {%- endfor -%}
-    {%- endif %}
-
-    {% if timetable -%}
+    {% elif timetable -%}
     <div class="timetable-wrapper">
       <table class="timetable" id="tt">
         {% if timetable.notes -%}

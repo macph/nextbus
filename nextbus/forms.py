@@ -58,6 +58,8 @@ class SelectDate(FlaskForm):
 
     def validate_date(self, field):
         """ Validates date based on starting and ending dates given. """
+        if field.data is None:
+            return
         if self._start is not None and field.data < self._start:
             raise validators.ValidationError(
                 "Timetable data for this service is available from %s." %

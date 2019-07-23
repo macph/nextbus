@@ -3401,7 +3401,15 @@ function Panel(stopMap, mapPanel) {
             },
             '\u2717 Close'
         );
-        let actions = element('div', {className: 'actions'}, closePanel);
+        let timetableURL = URL.TIMETABLE.replace(
+            '//',
+            '/' + data.id + '/' + data.direction + '/'
+        );
+        let timetable = element('a',
+            { className: 'action', title: data.line + ' timetable', href: timetableURL},
+            'Timetable'
+        );
+        let actions = element('div', {className: 'actions'}, timetable, closePanel);
 
         let heading = element('h1',
             {className: 'heading-service'},
@@ -3429,11 +3437,7 @@ function Panel(stopMap, mapPanel) {
             subtitle = element('p', 'Operated by ', listOperators);
         }
 
-        let tabs = null;
-        let timetableURL = URL.TIMETABLE.replace(
-            '//',
-            '/' + data.id + '/' + data.direction + '/'
-        );
+        let tabs = element('ul', {className: 'tabs tabs-3'});
         if (data.mirrored) {
             let outbound = element('li',
                 element('div',
@@ -3453,23 +3457,8 @@ function Panel(stopMap, mapPanel) {
                     'Inbound'
                 )
             );
-            tabs = element('ul',
-                {className: 'tabs tabs-3'},
-                outbound,
-                inbound,
-                element('li',
-                    element('a',
-                        {className: 'tab', href: timetableURL, title: data.line + ' timetable'},
-                        'Timetable'
-                    )
-                )
-            );
-        } else {
-            let timetable = element('a',
-                { className: 'action', title: data.line + ' timetable', href: timetableURL},
-                'Timetable'
-            );
-            actions.insertBefore(timetable, actions.firstChild);
+            tabs.appendChild(outbound);
+            tabs.appendChild(inbound);
         }
 
         let list = element('section', {style: {position: 'relative'}}),
@@ -3567,9 +3556,7 @@ function Panel(stopMap, mapPanel) {
             self.mapPanel.appendChild(subtitle);
         }
         self.mapPanel.appendChild(actions);
-        if (tabs) {
-            self.mapPanel.appendChild(tabs);
-        }
+        self.mapPanel.appendChild(tabs);
         self.mapPanel.appendChild(list);
         if (other) {
             self.mapPanel.appendChild(other);

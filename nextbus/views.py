@@ -6,6 +6,7 @@ import datetime
 import re
 import string
 
+import dateutil.tz
 from flask import (abort, Blueprint, current_app, g, jsonify, Markup,
                    render_template, redirect, request, session, url_for)
 from sqlalchemy.dialects import postgresql as pg
@@ -16,6 +17,7 @@ from nextbus import db, forms, graph, location, models, search, timetable
 
 MIN_GROUPED = 72
 REMOVE_BRACKETS = re.compile(r"\s*\([^)]*\)\s*")
+GB_TZ = dateutil.tz.gettz("Europe/London")
 
 
 page = Blueprint("page", __name__, template_folder="templates")
@@ -607,26 +609,28 @@ def service_timetable(service_id, reverse=None):
     """ Shows timetable for service with ID and optional direction. """
     sv, is_reverse, mirrored = _query_service(service_id, reverse)
 
-    if reverse is None or reverse != is_reverse:
+    if reverse is None or reverse != is_reverse or "date" not in request.args:
+        if "date" in request.args:
+            today = request.args["date"]
+        else:
+            today = datetime.datetime.now(GB_TZ).strftime("%Y-%m-%d")
+
         return redirect(url_for(".service_timetable", service_id=service_id,
-                                reverse=is_reverse))
+                                reverse=is_reverse, date=today))
 
     select_date = forms.SelectDate(request.args)
-    is_today = select_date.date.data is None
-    if is_today:
-        # Set to today by default
-        select_date.date.data = datetime.date.today()
-
     select_date.set_dates(sv)
-    select_date.validate()
 
-    tt_data = timetable.Timetable(sv.id, is_reverse, select_date.date.data)
+    if select_date.validate():
+        tt_data = timetable.Timetable(sv.id, is_reverse, select_date.date.data)
+    else:
+        tt_data = None
 
     return render_template("timetable.html", service=sv, reverse=is_reverse,
                            mirrored=mirrored,
                            operators=_display_operators(sv.operators),
                            timetable=tt_data,
-                           select_date=select_date, is_today=is_today)
+                           select_date=select_date)
 
 
 def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):

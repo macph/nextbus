@@ -80,7 +80,7 @@ def add_search_form():
 
 @page.after_request
 def set_cache_control(response):
-    if response.cache_control.max_age is None:
+    if response.cache_control.max_age is None and response.status_code != 302:
         response.cache_control.max_age = 604800
 
     return response

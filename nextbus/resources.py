@@ -35,7 +35,7 @@ def bad_request(status, message):
 
 @api.after_request
 def set_cache_control(response):
-    if response.cache_control.max_age is None:
+    if response.cache_control.max_age is None and response.status_code != 302:
         response.cache_control.max_age = 604800
 
     return response
@@ -63,6 +63,7 @@ def stop_get_times(atco_code=None):
     # Set headers to ensure data is up to date
     response.cache_control.private = True
     response.cache_control.max_age = 60
+    response.headers["X-Robots-Tag"] = "noindex"
 
     return response
 

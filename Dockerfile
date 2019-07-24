@@ -1,29 +1,33 @@
 FROM python:3.7-alpine
 
-# Copy app data
-RUN set -ex && mkdir /app
-COPY . /app
-WORKDIR /app
-
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# Install required packages - need build lxml and psycopg2 with muslc
+RUN pip3 install pipenv
+# Need shared libraries for python C extensions
 RUN set -ex \
-    && pip3 install pipenv \
     && apk update \
-    && apk add --no-cache postgresql-dev \
+    && apk add --no-cache \
+        postgresql-dev \
+        libxml2-dev \
+        libxslt-dev
+# Required libraries installed in /usr/lib
+ENV LD_LIBRARY_PATH /usr/lib
+
+# Copy over app data
+RUN mkdir /app
+COPY . /app
+
+# Install required packages - need to build lxml and psycopg2 with muslc
+WORKDIR /app
+RUN set -ex \
+    && apk update \
     && apk add --no-cache --virtual .build-deps \
         gcc \
         musl-dev \
         python3-dev \
-        libxml2-dev \
-        libxslt-dev \
     && pipenv install --deploy --system \
-    && apk del --no-cache .build-deps \
-    && pip3 uninstall --yes pipenv
-
-# psycopg2 requires libpq.so installed in /usr/lib
-ENV LD_LIBRARY_PATH /usr/lib
+    && apk del --no-cache .build-deps
+RUN pip3 uninstall --yes pipenv
 
 # Expose port 8000 to reverse proxy
 EXPOSE 8000

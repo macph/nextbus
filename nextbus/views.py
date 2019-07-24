@@ -786,6 +786,6 @@ def error_msg(error):
         Note that this page does not appear in debug mode.
     """
     if request.path.startswith("/api"):
-        return jsonify({"message": error}), 500
+        return jsonify({"message": str(error)}), 500
     else:
         return render_template("error.html", message=error), 500

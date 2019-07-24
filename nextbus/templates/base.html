@@ -27,7 +27,7 @@
 {% block header -%}
 <header>
   <a href="{{ url_for('page.index') }}">nxb</a>
-  {% if not hide_map|default(false) -%}
+  {% if not hide_menu|default(false) -%}
   <a id="menu-open" title="Open menu" style="display: none;">Menu</a>
   {%- endif %}
 </header>

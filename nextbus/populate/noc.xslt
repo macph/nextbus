@@ -56,22 +56,23 @@
 
   <xsl:template match="NOCTableRecord">
     <xsl:variable name="line" select="key('key_lines', NOCCODE)"/>
+    <xsl:variable name="public_name" select="key('key_public_name', PubNmId)"/>
     <xsl:variable name="mode_id" select="$set_mode_ids/mode[. = $line/Mode]/@id"/>
     <xsl:if test="$line and $mode_id">
       <Operator>
         <code><xsl:value-of select="NOCCODE"/></code>
         <region_ref><xsl:value-of select="$set_regions/region[. = $line/TLRegOwn]/@nptg_code"/></region_ref>
-        <name><xsl:value-of select="OperatorPublicName"/></name>
+        <name><xsl:value-of select="OperatorPublicName | $public_name/OperatorPublicName | $line/PubNm"/></name>
         <licence_name><xsl:value-of select="VOSA_PSVLicenseName"/></licence_name>
         <mode><xsl:value-of select="$mode_id"/></mode>
-        <email><xsl:value-of select="key('key_public_name', PubNmId)/TTRteEnq"/></email>
-        <address><xsl:value-of select="func:scrub_whitespace(key('key_public_name', PubNmId)/ComplEnq)"/></address>
+        <email><xsl:value-of select="$public_name/TTRteEnq"/></email>
+        <address><xsl:value-of select="func:scrub_whitespace($public_name/ComplEnq)"/></address>
         <website>
-          <xsl:if test="key('key_public_name', PubNmId)/Website != ''">
-            <xsl:value-of select="func:format_website(key('key_public_name', PubNmId)/Website)"/>
+          <xsl:if test="$public_name/Website != ''">
+            <xsl:value-of select="func:format_website($public_name/Website)"/>
           </xsl:if>
         </website>
-        <twitter><xsl:value-of select="key('key_public_name', PubNmId)/Twitter"/></twitter>
+        <twitter><xsl:value-of select="$public_name/Twitter"/></twitter>
       </Operator>
     </xsl:if>
   </xsl:template>

@@ -511,14 +511,6 @@ section {
   color: #212121;
 }
 
-.overlay-content .item .icon-shape {
-  fill: white;
-}
-
-.overlay-content .item:hover .icon-shape {
-  fill: #212121;
-}
-
 .overlay-content .item-action-drag {
   color: #9E9E9E;
 }
@@ -535,20 +527,6 @@ section {
 .overlay-content .item-action-danger:hover {
   background-color: #C62828;
   color: white;
-}
-
-.overlay-content .item-action-drag .icon-shape {
-  fill: #9E9E9E;
-  transition: fill 0.2s ease-out;
-}
-
-.overlay-content .item-action-danger .icon-shape {
-  fill: #C62828;
-}
-
-.overlay-content .item-action-drag:hover .icon-shape,
-.overlay-content .item-action-danger:hover .icon-shape {
-  fill: white;
 }
 
 
@@ -724,6 +702,7 @@ section {
   padding: 0.2em;
   background-color: #002171;
   border: 0.1em solid #002171;
+  fill: white;
   border-radius: 1.8em;
   color: white;
   text-align: center;
@@ -732,6 +711,11 @@ section {
 .indicator > span {
   font-size: 1em;
   font-weight: 700;
+}
+
+.indicator > svg {
+  width: 4.8rem;
+  height: 4.8rem;
 }
 
 .indicator-1 > span {
@@ -823,6 +807,7 @@ section {
     background-color: #EFE000;
     border-color: #EFE000;
     color: #333333;
+    fill: #333333;
 }
 
 /* West Yorkshire */
@@ -1097,20 +1082,6 @@ section {
     visibility 0.2s ease-out;
 }
 
-.item-action .icon {
-  width: 2.4rem;
-  height: 2.4rem;
-}
-
-.item-action .icon-shape {
-  fill: #212121;
-  transition: fill 0.2s ease-out;
-}
-
-.item-action:hover .icon-shape {
-  fill: white;
-}
-
 .item-action-hidden {
   width: 0;
   margin-left: 0;
@@ -1138,23 +1109,6 @@ section {
 
 .item-action-danger:hover {
   background-color: #C62828;
-  color: white;
-}
-
-.item-action-drag .icon-shape {
-  fill: #9E9E9E;
-  transition: fill 0.2s ease-out;
-}
-
-.item-action-drag:hover .icon-shape {
-  fill: #212121;
-}
-
-.item-action-danger .icon-shape {
-  fill: #C62828;
-}
-
-.item-action-danger:hover .icon-shape {
   color: white;
 }
 

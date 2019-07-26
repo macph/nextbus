@@ -27,6 +27,75 @@ const LAYOUT_DOM_ITEM_LEFT = 15;
 const LAYOUT_DOM_TEXT_LEFT = 12;
 const LAYOUT_DOM_IND_WIDTH = 36 * 0.9;
 
+const BUS = '<svg width="24" height="24" version="1.1" viewBox="0 0 6.35 6.35" ' +
+    'xmlns="http://www.w3.org/2000/svg"><g transform="translate(.3766 -271.9)"><path d="m1.092 ' +
+    '275.5c-.1735 0-.3142.1407-.3142.3143 0 .1735.1407.3142.3142.3142.1735 0 .3142-.1407.3142' +
+    '-.3142 0-.1736-.1407-.3143-.3142-.3143zm0 .158c.08631 0 .1563.0699.1563.1563 0 .0863-.06995' +
+    '.1563-.1563.1563-.08634 0-.1563-.07-.1563-.1563 0-.0864.06998-.1563.1563-.1563z"/><path d="' +
+    'm4.2 275.5c-.1735 0-.3143.1407-.3143.3143 0 .1735.1407.3142.3143.3142.1735 0 .3142-.1407' +
+    '.3142-.3142 0-.1736-.1407-.3143-.3142-.3143zm0 .158c.08634 0 .1563.0699.1563.1563 0 .0863' +
+    '-.06998.1563-.1563.1563-.08631 0-.1563-.07-.1563-.1563 0-.0864.06996-.1563.1563-.1563z"/>' +
+    '<path d="m-.0864 274.1c-.02233-.001-.1119.002-.1163.1372l-.02737.7947s-.0803.006-.0803.0752' +
+    'v.6204s-.003469.1828.1726.1828h.85c-.007912-.0309-.0121-.0636-.0121-.0971 0-.2163.1753-.3916' +
+    '.3916-.3916.2162 0 .3915.1753.3915.3916 0 .0336-.00422.066-.01219.0971h2.349c-.00792-.0309' +
+    '-.01205-.0636-.01205-.0971 0-.2163.1753-.3916.3915-.3916.2163 0 .3915.1753.3915.3916 0 .0336' +
+    '-.00422.066-.0122.0971l1.328-.2563v-1.174c0-.1402-.1316-.3794-.3777-.3794h-5.611s-.001843' +
+    '-.00028-.004986-.00046zm.2494.3132h.2194c.0472 0 .08544.0382.08544.0855v1.134c0 .0471-.03825' +
+    '.0855-.08544.0855h-.2194c-.04721 0-.0855-.0382-.0855-.0855v-1.134c0-.0473.03828-.0855.0855' +
+    '-.0855zm.6657 0h.922c.04721 0 .08544.0382.08544.0855v.3709c0 .0472-.03823.0854-.08544.0854' +
+    'h-.922c-.04719 0-.08544-.0382-.08544-.0854v-.3709c0-.0473.03825-.0855.08544-.0855zm1.289 0' +
+    'h.922c.04721 0 .0855.0382.0855.0855v.3709c0 .0472-.03828.0854-.0855.0854h-.922c-.04718 0' +
+    '-.08544-.0382-.08544-.0854v-.3709c0-.0473.03826-.0855.08544-.0855zm1.28 0h.9221c.04718 0 ' +
+    '.08544.0382.08544.0855v.3709c0 .0472-.03826.0854-.08544.0854h-.9221c-.04718 0-.08544-.0382' +
+    '-.08544-.0854v-.3709c0-.0473.03826-.0855.08544-.0855zm1.277 0h.7606c.1296 0 .2407.1088.2407' +
+    '.2452v.2111c0 .0472-.03826.0854-.08544.0854h-.9158c-.04718 0-.08544-.0382-.08544-.0854v-' +
+    '.3709c0-.0473.03826-.0855.08544-.0855z"/></g></svg>';
+const TRAM = '<svg width="24" height="24" version="1.1" viewBox="0 0 6.35 6.35" ' +
+    'xmlns="http://www.w3.org/2000/svg"><g transform="translate(.8365 -274.3)"><path d="m2.301 ' +
+    '275.6c-0.04922 0-0.08912 0.0399-0.08912 0.0891v0.1105l-0.5274 0.3671 0.5133 0.3654h-0.4194' +
+    's-0.04725-7e-3 -0.0975 0.0421l-0.0621 0.0625h-2.048s-0.1315-2e-3 -0.1662 0.1365l-0.1754 0' +
+    '.6996v0.9388h0.5224v0.1011h0.3087s0.01277 0.2058 0.2155 0.2058c0.2028 0 0.2155-0.2058 0.2155' +
+    '-0.2058h0.2904s0.01278 0.2058 0.2155 0.2058c0.2027 0 0.2155-0.2058 0.2155-0.2058h2.25' +
+    's0.01277 0.2058 0.2155 0.2058c0.2027 0 0.2155-0.2058 0.2155-0.2058h0.2904s0.01275 0.2058 ' +
+    '0.2155 0.2058c0.2028 0 0.2155-0.2058 0.2155-0.2058h0.3087v-0.1011h0.5224v-0.9388l-0.1754' +
+    '-0.6996c-0.03469-0.1388-0.1662-0.1365-0.1662-0.1365h-2.048l-0.0621-0.0625c-0.05021-0.049' +
+    '-0.0975-0.0421-0.0975-0.0421h-0.4194l0.5133-0.3654-0.5273-0.3671v-0.1105c0-0.0491-0.0399' +
+    '-0.0891-0.08912-0.0891zm0.03745 0.2088 0.5133 0.358-0.5133 0.3654-0.5133-0.3654zm-2.527 ' +
+    '1.087c0.04841 0 0.08771 0.0393 0.08771 0.0876v0.4c0 0.0484-0.0393 0.0876-0.08771 0.0876' +
+    'h-0.2569c-0.04841 0-0.08766-0.0393-0.08766-0.0876l0.1041-0.4c2e-8 0 0.009919-0.0856 0.08982' +
+    '-0.0856zm0.3405 0h0.2394c0.04844 0 0.08771 0.0393 0.08771 0.0876v1.235c0 0.0484-0.03927 ' +
+    '0.0876-0.08771 0.0876h-0.2394c-0.04843 0-0.08766-0.0393-0.08766-0.0876v-1.235c0-0.0484 ' +
+    '0.03923-0.0876 0.08766-0.0876zm0.5205 0h0.2394c0.04842 0 0.08766 0.0393 0.08766 0.0876v1.235' +
+    'c0 0.0484-0.03924 0.0876-0.08766 0.0876h-0.2394c-0.04841 0-0.08771-0.0393-0.08771-0.0876' +
+    'v-1.235c0-0.0484 0.0393-0.0876 0.08771-0.0876zm0.5447 0h0.5466c0.04843 0 0.08766 0.0393 ' +
+    '0.08766 0.0876v0.4c0 0.0484-0.03923 0.0876-0.08766 0.0876h-0.5466c-0.04843 0-0.08766-0.0393' +
+    '-0.08766-0.0876v-0.4c0-0.0484 0.03923-0.0876 0.08766-0.0876zm0.848 0h0.5461c0.04843 0 ' +
+    '0.08771 0.0393 0.08771 0.0876v0.4c0 0.0484-0.03928 0.0876-0.08771 0.0876h-0.5461c-0.04843 ' +
+    '0-0.08766-0.0393-0.08766-0.0876v-0.4c0-0.0484 0.03923-0.0876 0.08766-0.0876zm0.8475 0' +
+    'h0.5466c0.0484 0 0.08766 0.0393 0.08766 0.0876v0.4c0 0.0484-0.03926 0.0876-0.08766 0.0876h' +
+    '-0.5466c-0.0484 0-0.08761-0.0393-0.08761-0.0876v-0.4c0-0.0484 0.03922-0.0876 0.08761-0.0876' +
+    'zm0.8521 0h0.2393c0.04846 0 0.08771 0.0393 0.08771 0.0876v1.235c0 0.0484-0.03925 0.0876' +
+    '-0.08771 0.0876h-0.2393c-0.04846 0-0.08771-0.0393-0.08771-0.0876v-1.235c0-0.0484 0.03925' +
+    '-0.0876 0.08771-0.0876zm0.5204 0h0.2394c0.04846 0 0.08771 0.0393 0.08771 0.0876v1.235c0 ' +
+    '0.0484-0.03925 0.0876-0.08771 0.0876h-0.2394c-0.0484 0-0.08766-0.0393-0.08766-0.0876v-1.235' +
+    'c0-0.0484 0.03926-0.0876 0.08766-0.0876zm0.5799 0 0.1506 2e-3c0.07993 0 0.08987 0.0856 ' +
+    '0.08987 0.0856l0.1041 0.4c0 0.0484-0.03923 0.0876-0.08766 0.0876h-0.2569c-0.04843 0-0.08766' +
+    '-0.0393-0.08766-0.0876v-0.4c0-0.0484 0.03923-0.0877 0.08766-0.0877z"/></g></svg>';
+const FIT_TO_MAP = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
+    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M15 3l2.3 2.3-2.89 2.87 ' +
+    '1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3' +
+    '-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 ' +
+    '21h6v-6z"/></svg>';
+const ZOOM_IN = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"' +
+    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 13h-6v6h-2v-6H5v-2' +
+    'h6V5h2v6h6v2z"/></svg>';
+const ZOOM_OUT = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 ' +
+    '24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 13H5v-2h14v2z"/></svg>';
+const GEOLOCATION = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 ' +
+    '24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4' +
+    '-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 ' +
+    '3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2' +
+    'h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>';
 
 /**
  * Checks transition ending events to see which one is applicable, from Modernizr
@@ -1613,10 +1682,7 @@ function StarredStopList(options) {
                     dataset: {smscode: stop.properties.smsCode}
                 },
                 element('span',
-                    element('span',
-                        {className: 'indicator area-' + stop.properties.adminAreaRef},
-                        createIndicator(stop.properties)
-                    ),
+                    createIndicator(stop.properties),
                     element('span', {className: 'item-label'}, stop.properties.name)
                 ),
                 (sub) ? element('p', sub.join(', ')) : null
@@ -1892,6 +1958,7 @@ function _revertColours(element) {
     let background = style.getPropertyValue('background-color');
     element.style.backgroundColor = foreground;
     element.style.color = background;
+    element.style.fill = background;
 }
 
 
@@ -2530,22 +2597,39 @@ function mapControl(actions) {
  * }} ServiceData
  */
 
-
 /**
  * Creates indicator element from stop point data
- * @param {{indicator: string, stopType: string}} stopData
+ * @param {{
+ *     atcoCode: string,
+ *     indicator: string,
+ *     bearing: ?string,
+ *     stopType: string,
+ *     adminAreaRef: string
+ * }} stopData
+ * @param {object} [options]
+ * @param {boolean} [options.id] - Add ID for element in form 'i' + atcoCode
+ * @param {boolean} [options.marker] - Add direction if true
  * @returns {?HTMLElement}
  */
-function createIndicator(stopData) {
-    let ind;
+function createIndicator(stopData, options) {
+    let className = 'indicator area-' + stopData.adminAreaRef;
+    if (options && options.marker) {
+        className += ' ' + 'indicator-marker';
+        if (options && options.marker && !self.isIE && stopData.bearing) {
+            className += ' ' + 'indicator-arrow indicator-arrow-' + stopData.bearing;
+        }
+    }
+
+    let ind = element('span', {className: className});
+    if (options && options.id) {
+        ind.id = 'i' + stopData.atcoCode;
+    }
     if (stopData.indicator !== '') {
-        ind = element('span', stopData.indicator);
+        ind.appendChild(element('span', stopData.indicator));
     } else if (stopData.stopType === 'BCS' || stopData.stopType === 'BCT') {
-        ind = element('img', {src: URL.STATIC + 'img/bus-white.svg', width: '28', alt: 'Bus stop'});
+        ind.innerHTML = BUS;
     } else if (stopData.stopType === 'PLT') {
-        ind = element('img', {src: URL.STATIC + 'img/tram-white.svg', width: '28', alt: 'Tram stop'});
-    } else {
-        ind = null;
+        ind.innerHTML = TRAM;
     }
 
     return ind;
@@ -2688,23 +2772,6 @@ function StopLayer(stopMap) {
     };
 
     /**
-     * Creates marker element to be used in map
-     * @param {StopPoint} stop Point object from data
-     * @returns {HTMLElement} Element for marker
-     * @private
-     */
-    this._markerElement = function(stop) {
-        let className = 'indicator indicator-marker area-' + stop.properties.adminAreaRef;
-        if (!self.isIE && stop.properties.bearing) {
-            className += ' ' + 'indicator-arrow indicator-arrow-' + stop.properties.bearing;
-        }
-        return element('span',
-            {className: className},
-            createIndicator(stop.properties)
-        );
-    };
-
-    /**
      * Creates GeoJSON layer of stops from list of stops
      * @param {{
      *     type: string,
@@ -2717,7 +2784,7 @@ function StopLayer(stopMap) {
                 let icon = L.divIcon({
                     className: 'marker',
                     iconSize: null,
-                    html: self._markerElement(stop).outerHTML
+                    html: createIndicator(stop.properties, {marker: true}).outerHTML
                 });
                 let marker = L.marker(latLng, {
                         icon: icon,
@@ -3058,11 +3125,6 @@ function Panel(stopMap, mapPanel) {
         'W': 'westbound',
         'NW': 'northwest bound'
     };
-    this.fitToMap = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
-        'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M15 3l2.3 2.3-2.89 ' +
-        '2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 ' +
-        '12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 ' +
-        '2.89 2.87L15 21h6v-6z"/></svg>';
 
     /**
      * Gets live data object for a bus stop or create one if it does not exist
@@ -3249,10 +3311,7 @@ function Panel(stopMap, mapPanel) {
 
         let heading = element('h1',
                 {className: 'heading-stop'},
-                element('span',
-                    {className: 'indicator area-' + data.adminAreaRef},
-                    createIndicator(data)
-                ),
+                createIndicator(data),
                 element('span', data.name),
         );
 
@@ -3372,7 +3431,7 @@ function Panel(stopMap, mapPanel) {
                 self.stopMap.map.flyTo(L.latLng(data.latitude, data.longitude), 18);
             },
             title: 'Fly to stop',
-            innerHTML: self.fitToMap
+            innerHTML: FIT_TO_MAP
         });
         self.currentMapControl.addTo(self.stopMap.map);
     };
@@ -3483,11 +3542,7 @@ function Panel(stopMap, mapPanel) {
                     let inner = element('span',
                         {id: 'c' + s.properties.atcoCode, className: 'item-multiline'},
                         element('span',
-                            element('span',
-                                {className: 'indicator area-' + s.properties.adminAreaRef,
-                                 id: 'i' + s.properties.atcoCode},
-                                createIndicator(s.properties)
-                            ),
+                            createIndicator(s.properties, {id: true}),
                             element('span', {className: 'item-label'}, s.properties.name),
                         ),
                         subtitle
@@ -3568,7 +3623,7 @@ function Panel(stopMap, mapPanel) {
                 self.stopMap.map.fitBounds(self.stopMap.routeLayer.layer.getBounds());
             },
             title: 'Fit route to map',
-            innerHTML: self.fitToMap
+            innerHTML: FIT_TO_MAP
         });
         self.currentMapControl.addTo(self.stopMap.map);
 
@@ -3672,17 +3727,14 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                 );
 
                 this._zoomInButton  = this._createButton(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
-                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 ' +
-                    '13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>',
-                    this.options.zoomInTitle, 'leaflet-control-zoom-in',
+                    ZOOM_IN,
+                    this.options.zoomInTitle,
+                    'leaflet-control-zoom-in',
                     container,
                     this._zoomIn
                 );
                 this._zoomOutButton = this._createButton(
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
-                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 1' +
-                    '3H5v-2h14v2z"/></svg>',
+                    ZOOM_OUT,
                     this.options.zoomOutTitle,
                     'leaflet-control-zoom-out',
                     container,
@@ -3709,13 +3761,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
                     self.map.locate();
                 },
                 title: 'Find your location on map',
-                innerHTML: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" ' +
-                    'viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M12 ' +
-                    '8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 ' +
-                    '3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 ' +
-                    '11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 ' +
-                    '7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 ' +
-                    '7-7 7z"/></svg>'
+                innerHTML: GEOLOCATION
             }).addTo(self.map);
         }
     };

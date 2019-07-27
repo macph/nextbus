@@ -11,6 +11,7 @@ services:
     volumes:
       - ./temp:/temp
       - ~/postgres-data:/var/lib/postgresql/data
+    restart: always
   nxb:
     build: .
     volumes:
@@ -23,6 +24,7 @@ services:
       GUNICORN_CMD_ARGS: --config=instance/gu_config.py
     ports:
       - "8000:8000"
+    restart: always
   nginx:
     build: ./nginx
     ports:
@@ -30,6 +32,7 @@ services:
     volumes:
       - static:/static
       - logs:/var/log
+    restart: always
 volumes:
   static: {}
   logs: {}

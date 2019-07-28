@@ -36,6 +36,20 @@ def api_data():
                 "operator": "ATC",
                 "date": "2019-06-02",
                 "expected_departure_date": "2019-06-02",
+                "aimed_departure_time": "09:00",
+                "expected_departure_time": "09:00",
+                "best_departure_estimate": "09:00",
+                "source": "Countdown instant",
+                "dir": "outbound",
+                "operator_name": "AT Coaches"
+            }, {
+                "mode": "bus",
+                "line": "Barking Dagenham Sunday Market Shuttle",
+                "line_name": "Barking Dagenham Sunday Market Shuttle",
+                "direction": "Dagenham Sunday Market, Dagenham",
+                "operator": "ATC",
+                "date": "2019-06-02",
+                "expected_departure_date": "2019-06-02",
                 "aimed_departure_time": "09:30",
                 "expected_departure_time": "09:30",
                 "best_departure_estimate": "09:30",
@@ -111,12 +125,24 @@ def test_live_json(api_data):
 
 
 def test_live_json_threshold(api_data):
-    assert tapi.LiveData(api_data).to_json(max_minutes=1) == {
+    # Setting max minutes to 10 should filter out the last departure
+    assert tapi.LiveData(api_data).to_json(max_minutes=10) == {
         "atcoCode": "490000015G",
         "smsCode": "53272",
         "isoDate": "2019-06-02T08:25:45+00:00",
         "localTime": "09:25",
-        "services": []
+        "services": [{
+            "line": "Barking Dagenham Sunday Market Shuttle",
+            "name": "Barking Dagenham Sunday Market Shuttle",
+            "dest": "Dagenham Sunday Market",
+            "opName": "AT Coaches",
+            "opCode": "ATC",
+            "expected": [{
+                "live": True,
+                "secs": 255,
+                "expDate": "2019-06-02T09:30:00+01:00"
+            }]
+        }]
     }
 
 

@@ -136,12 +136,12 @@ class Departure:
                                             self.expected)
 
 
-def _get_expected(journey):
-    return journey.expected
+def _seconds(journey):
+    return journey.seconds
 
 
 def _first_expected(journeys):
-    return journeys[0].expected
+    return journeys[0].seconds
 
 
 class LiveData:
@@ -173,11 +173,11 @@ class LiveData:
             for data in departures:
                 journey = Departure.from_data(data, self.datetime)
                 key = journey.line, journey.operator, journey.destination
-                if journey.expected is not None:
+                if journey.seconds is not None and journey.seconds >= 0:
                     groups.setdefault(key, []).append(journey)
 
         for service in groups.values():
-            service.sort(key=_get_expected)
+            service.sort(key=_seconds)
 
         return sorted(groups.values(), key=_first_expected)
 
@@ -192,15 +192,12 @@ class LiveData:
             first = service[0]
             times = []
             for j in service:
-                if j.seconds is None or j.seconds < 0:
-                    continue
-                if max_minutes and j.seconds > max_minutes * 60:
-                    continue
-                times.append({
-                    "live": j.is_live,
-                    "secs": j.seconds,
-                    "expDate": j.expected
-                })
+                if not max_minutes or j.seconds <= max_minutes * 60:
+                    times.append({
+                        "live": j.is_live,
+                        "secs": j.seconds,
+                        "expDate": j.expected
+                    })
             if not times:
                 continue
 

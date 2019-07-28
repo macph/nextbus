@@ -219,7 +219,7 @@ SERVICE_JSON = {
 
 
 def test_service_json(db_loaded):
-    assert graph.service_json(645, False) == SERVICE_JSON
+    assert graph.service_json("645", False) == SERVICE_JSON
 
 
 def test_api_bad_parameter(client, db_loaded):

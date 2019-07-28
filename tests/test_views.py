@@ -1,6 +1,10 @@
 """
 Test web app views.
 """
+import datetime
+
+import dateutil.tz
+
 from nextbus import db, models
 
 
@@ -237,7 +241,8 @@ def test_wrong_area(client, db_loaded):
     response = client.get("/list/area/099")
 
     assert response.status_code == 404
-    assert b"Area with code <strong>099</strong> does not exist" in response.data
+    assert (b"Area with code <strong>099</strong> does not exist"
+            in response.data)
 
 
 def test_district(client, db_loaded):
@@ -399,9 +404,13 @@ def test_service_wrong_direction(client, db_loaded):
 
 
 def test_service_timetable(client, db_loaded):
+    gb_tz = dateutil.tz.gettz("Europe/London")
+    date = datetime.datetime.now(gb_tz).strftime("%Y-%m-%d")
+
     response = client.get("/service/645/outbound/timetable")
 
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert f"/service/645/outbound/timetable?date={date}" in response.location
 
 
 def test_service_timetable_redirect(client, db_loaded):

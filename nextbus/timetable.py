@@ -39,8 +39,8 @@ def _query_journeys(service_id, direction, date):
     weekday = db.cast(db.extract("ISODOW", p_date), db.Integer)
 
     # PostgreSQL can repeat or skip times over daylight savings time changes in
-    # a time series so we generate one from 1 hour before to 1 hour after and
-    # exclude these times.
+    # a time series so we generate timestamps from 1 hour before to 1 hour after
+    # and exclude times not matching the original departure time
     tz = db.bindparam("tz", "Europe/London")
     one_hour = db.cast("1 hour", db.Interval)
     departures = db.func.generate_series(
@@ -111,7 +111,7 @@ def _query_journeys(service_id, direction, date):
             models.JourneyPattern.date_end.is_(None) |
             (models.JourneyPattern.date_end >= p_date),
             # Filter out generated times 1 hour before and after departures
-            db.extract("HOUR", departure) ==
+            db.extract("HOUR", db.func.timezone(tz, departure)) ==
             db.extract("HOUR", models.Journey.departure),
             # In order of precedence:
             # - Do not run on special days

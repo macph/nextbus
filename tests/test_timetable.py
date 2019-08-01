@@ -119,6 +119,10 @@ def _set_journeys():
     return {400012 + i for i in range(13)}
 
 
+def _set_timezone(tz):
+    db.session.execute("SET LOCAL TIME ZONE :tz", {"tz": tz})
+
+
 def test_journeys_sunday_gmt(load_db):
     # Should be Sunday 3rd March 2019
     date = datetime.date(2019, 3, 3)
@@ -337,9 +341,14 @@ def test_journeys_dst_march(set_night_times):
     # Journeys between 0100-0200 omitted as timezone changes from GMT to BST
     date = datetime.date(2019, 3, 31)
     query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
-    result = query.all()
 
-    assert result == [
+    # Test in different time zones, all queries should return the same results
+    _set_timezone("Europe/London")
+    result_gb = query.all()
+    _set_timezone("UTC")
+    result_utc = query.all()
+
+    expected = [
         (400012, datetime.datetime(2019, 3, 31, 0, 15, tzinfo=GMT)),
         (400013, datetime.datetime(2019, 3, 31, 0, 45, tzinfo=GMT)),
         (400016, datetime.datetime(2019, 3, 31, 2, 15, tzinfo=BST)),
@@ -353,14 +362,22 @@ def test_journeys_dst_march(set_night_times):
         (400024, datetime.datetime(2019, 3, 31, 6, 15, tzinfo=BST))
     ]
 
+    assert result_gb == expected
+    assert result_utc == expected
+
 
 def test_journeys_dst_october(set_night_times):
     # Journeys between 0100-0200 repeated as timezone changes from BST to GMT
     date = datetime.date(2019, 10, 27)
     query = _query_journeys(SERVICE, DIRECTION, date).order_by("departure")
-    result = query.all()
 
-    assert result == [
+    # Test in different time zones, all queries should return the same results
+    _set_timezone("Europe/London")
+    result_gb = query.all()
+    _set_timezone("UTC")
+    result_utc = query.all()
+
+    expected = [
         (400012, datetime.datetime(2019, 10, 27, 0, 15, tzinfo=BST)),
         (400013, datetime.datetime(2019, 10, 27, 0, 45, tzinfo=BST)),
         (400014, datetime.datetime(2019, 10, 27, 1, 15, tzinfo=BST)),
@@ -377,6 +394,9 @@ def test_journeys_dst_october(set_night_times):
         (400023, datetime.datetime(2019, 10, 27, 5, 45, tzinfo=GMT)),
         (400024, datetime.datetime(2019, 10, 27, 6, 15, tzinfo=GMT))
     ]
+
+    assert result_gb == expected
+    assert result_utc == expected
 
 
 def test_query_timetable_fields(load_db):

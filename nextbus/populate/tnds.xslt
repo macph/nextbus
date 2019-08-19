@@ -79,21 +79,22 @@
 
   <xsl:template match="txc:Service">
     <xsl:variable name="mode" select="txc:Mode"/>
+    <xsl:variable name="line" select="func:l_split(txc:Lines/txc:Line[1]/txc:LineName, '|')"/>
+    <xsl:variable name="desc_text">
+      <xsl:choose>
+        <xsl:when test="txc:Description"><xsl:value-of select="txc:Description"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat(txc:StandardService/txc:Origin, ' - ', txc:StandardService/txc:Destination)"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="desc" select="func:format_description($desc_text)"/>
     <Service>
       <id><xsl:value-of select="func:add_id('Service', $file)"/></id>
-      <code>
-        <xsl:choose>
-          <xsl:when test="txc:PrivateCode"><xsl:value-of select="txc:PrivateCode"/></xsl:when>
-          <xsl:otherwise><xsl:value-of select="txc:ServiceCode"/></xsl:otherwise>
-        </xsl:choose>
-      </code>
-      <line><xsl:value-of select="func:l_split(txc:Lines/txc:Line[1]/txc:LineName, '|')"/></line>
-      <description default="">
-        <xsl:if test="txc:Description">
-          <xsl:value-of select="func:format_description(txc:Description)"/>
-        </xsl:if>
-      </description>
+      <code><xsl:value-of select="func:service_code($line, $desc)"/></code>
+      <line><xsl:value-of select="$line"/></line>
+      <description><xsl:value-of select="$desc"/></description>
+      <short_description><xsl:value-of select="func:short_description($desc)"/></short_description>
       <mode><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></mode>
+      <filename><xsl:value-of select="$file"/></filename>
     </Service>
   </xsl:template>
 

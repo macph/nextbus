@@ -33,7 +33,7 @@
       {% call(s) f.print_list(starred, class='list-actions', name='starred-list') -%}
       <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" data-smscode="{{ s.naptan_code }}" class="item item-stop item-multiline">
         <span>
-          {{ f.print_stop_indicator(s) }}
+          {{ f.print_stop_indicator(s.short_ind, s.stop_type, s.admin_area_ref) }}
           <span class="item-label">{{ s.name }}</span>
         </span>
         <p>{{ [s.street, s.locality.name]|join(', ') if s.street else s.locality.name }}</p>

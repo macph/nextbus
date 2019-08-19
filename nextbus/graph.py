@@ -1432,7 +1432,7 @@ def service_stop_list(service_id, direction):
     return [dict_stops[v] for v in graph.sequence()]
 
 
-def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
+def service_json(service_code, reverse, max_columns=MAX_COLUMNS):
     """ Creates geometry JSON data for map.
 
         :param service_id: Service ID.
@@ -1440,16 +1440,13 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
         outbound and True for inbound.
         :param max_columns: Maximum columns before giving up on drawing graph
     """
-    if not service_id.isdecimal():
-        return None
-
     service = (
         models.Service.query
         .join(models.Service.patterns)
         .outerjoin(models.JourneyPattern.operator)
         .options(db.contains_eager(models.Service.patterns),
                  db.contains_eager(models.Service.operators))
-        .filter(models.Service.id == service_id)
+        .filter(models.Service.code == service_code)
         .one_or_none()
     )
 
@@ -1460,11 +1457,11 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     reverse_, mirrored = service.has_mirror(reverse)
 
     other_services = [{
-        "id": s.service.id,
+        "code": s.service.code,
         "line": s.service.line,
         "direction": "inbound" if s.direction else "outbound",
         "reverse": s.direction,
-        "description": s.service.description,
+        "shortDescription": s.service.short_description,
         "origin": s.origin,
         "destination": s.destination
     } for s in service.similar(reverse_, 0.5)]
@@ -1489,9 +1486,10 @@ def service_json(service_id, reverse, max_columns=MAX_COLUMNS):
     }
 
     data = {
-        "id": service.id,
+        "code": service.code,
         "line": service.line,
         "description": service.description,
+        "shortDescription": service.short_description,
         "direction": "inbound" if reverse_ else "outbound",
         "reverse": reverse_,
         "mirrored": mirrored,

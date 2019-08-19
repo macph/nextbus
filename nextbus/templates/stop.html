@@ -17,7 +17,7 @@
 </nav>
 <main>
 <h1 class="heading-stop">
-  {{ f.print_stop_indicator(stop) }}
+  {{ f.print_stop_indicator(stop.short_ind, stop.stop_type, stop.admin_area_ref) }}
   <span>{{ stop.name }}</span>
 </h1>
 {% if stop.street or stop.bearing -%}
@@ -39,7 +39,7 @@
     <section>
       <h2>Services</h2>
       {% call(s) f.print_list(services|rejectattr('terminates')) -%}
-      <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
+      <a href="{{ url_for('page.service', service_code=s.service.code, reverse=s.direction) }}" class="item service">
         <span class="line-outer">
           <span class="line {{ 'area-%s'|format(stop.admin_area_ref) }}">{{ s.service.line }}</span>
         </span>
@@ -49,7 +49,7 @@
       {% if services|selectattr('terminates')|list -%}
       <h3>Terminating services</h3>
       {% call(s) f.print_list(services|selectattr('terminates')) -%}
-      <a href="{{ url_for('page.service', service_id=s.service.id, reverse=s.direction) }}" class="item service">
+      <a href="{{ url_for('page.service', service_code=s.service.code, reverse=s.direction) }}" class="item service">
         <span class="line-outer">
           <span class="line {{ 'area-%s'|format(stop.admin_area_ref) }}">{{ s.service.line }}</span>
         </span>
@@ -83,7 +83,7 @@
         {%- for s in stop.other_stops %}
         <li>
           <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" class="item item-stop">
-            {{ f.print_stop_indicator(s) }}
+            {{ f.print_stop_indicator(s.short_ind, s.stop_type, s.admin_area_ref) }}
             <span class="item-label">{{ s.name }}</span>
           </a>
         </li>

@@ -252,11 +252,13 @@ TEST_DATA = {
     ],
     "service": [
         {
-            "code": "66-DSM-_-y05-1",
+            "id": 645,
+            "code": "dagenham-sunday-market-shuttle",
             "line": "Dagenham Sunday Market Shuttle",
             "description": "Barking – Dagenham Sunday Market",
+            "short_description": "Barking – Dagenham Sunday Market",
             "mode": 1,
-            "id": 645
+            "filename": "66-DSM-_-y05-1"
         }
     ],
     "journey_pattern": [

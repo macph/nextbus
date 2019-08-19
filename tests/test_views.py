@@ -372,7 +372,7 @@ def test_query_service(db_loaded):
 
 
 def test_service(client, db_loaded):
-    response = client.get("/service/645/outbound")
+    response = client.get("/service/dagenham-sunday-market-shuttle/outbound")
 
     assert response.status_code == 200
     assert b"Outbound" in response.data
@@ -384,21 +384,31 @@ def test_service(client, db_loaded):
 
 
 def test_service_redirect(client, db_loaded):
-    response = client.get("/service/645")
+    response = client.get("/service/dagenham-sunday-market-shuttle")
 
     assert response.status_code == 302
-    assert "/service/645/outbound" in response.location
+    assert "/service/dagenham-sunday-market-shuttle/outbound" \
+           in response.location
+
+
+def test_service_redirect_case(client, db_loaded):
+    response = client.get("/service/Dagenham-Sunday-Market-Shuttle")
+
+    assert response.status_code == 302
+    assert "/service/dagenham-sunday-market-shuttle/outbound" \
+           in response.location
 
 
 def test_wrong_service(client, db_loaded):
-    response = client.get("/service/655")
+    response = client.get("/service/dagenham")
 
     assert response.status_code == 404
-    assert b"Service <strong>655</strong> does not exist" in response.data
+    assert b"Service <strong>dagenham</strong> does not exist" \
+           in response.data
 
 
 def test_service_wrong_direction(client, db_loaded):
-    response = client.get("/service/645/neither")
+    response = client.get("/service/dagenham-sunday-market-shuttle/neither")
 
     assert response.status_code == 404
 
@@ -407,17 +417,20 @@ def test_service_timetable(client, db_loaded):
     gb_tz = dateutil.tz.gettz("Europe/London")
     date = datetime.datetime.now(gb_tz).strftime("%Y-%m-%d")
 
-    response = client.get("/service/645/outbound/timetable")
+    response = client.get("/service/dagenham-sunday-market-shuttle/outbound/"
+                          "timetable")
 
     assert response.status_code == 302
-    assert f"/service/645/outbound/timetable?date={date}" in response.location
+    assert f"/service/dagenham-sunday-market-shuttle/outbound/timetable" \
+           f"?date={date}" in response.location
 
 
 def test_service_timetable_redirect(client, db_loaded):
-    response = client.get("/service/645/timetable")
+    response = client.get("/service/dagenham-sunday-market-shuttle/timetable")
 
     assert response.status_code == 302
-    assert "/service/645/outbound/timetable" in response.location
+    assert "/service/dagenham-sunday-market-shuttle/outbound/timetable" \
+           in response.location
 
 
 def test_postcode(client, db_loaded):
@@ -462,5 +475,5 @@ def test_location_oob(client, db_loaded):
     response = client.get("/near/54,-10")
 
     assert response.status_code == 404
-    assert (b"Latitude and longitude coordinates are too far from Great Britain"
-            ) in response.data
+    assert b"Latitude and longitude coordinates are too far from Great Britain"\
+           in response.data

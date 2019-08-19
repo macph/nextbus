@@ -86,13 +86,13 @@
 {%- endmacro %}
 
 {# Prints the stop indicator #}
-{% macro print_stop_indicator(stop, reverse=false, name=none) -%}
-<span class="indicator{{ ' indicator-reversed' if reverse else '' }} area-{{ stop.admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
-  {% if stop.short_ind != '' -%}
-  <span>{{ stop.short_ind }}</span>
-  {%- elif stop.stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] -%}
+{% macro print_stop_indicator(stop_ind, stop_type, admin_area_ref, reverse=false, name=none) -%}
+<span class="indicator{{ ' indicator-reversed' if reverse else '' }} area-{{ admin_area_ref }}" {% if name %}id="{{ name }}"{% endif %}>
+  {% if stop_ind != '' -%}
+  <span>{{ stop_ind }}</span>
+  {%- elif stop_type in ['BCT', 'BCS', 'GBCS', 'GCLS', 'GPBS'] -%}
   {{ bus_icon() }}
-  {%- elif stop.stop_type in ['PLT', 'GTMU'] -%}
+  {%- elif stop_type in ['PLT', 'GTMU'] -%}
   {{ tram_icon() }}
   {%- endif %}
 </span>

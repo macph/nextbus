@@ -13,10 +13,12 @@
   </LocalOperator>
   <Service>
     <id>1</id>
-    <code>YSCO120</code>
-    <line>120</line>
-    <description default="">Halfway – Fulwood</description>
+    <code>120a-halfway-fulwood</code>
+    <line>120A</line>
+    <description>Halfway – Fulwood</description>
+    <short_description>Halfway – Fulwood</short_description>
     <mode>1</mode>
+    <filename>SVRYSBO120A.xml</filename>
   </Service>
   <JourneyPattern>
     <id>1</id>

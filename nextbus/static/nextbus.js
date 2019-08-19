@@ -1975,7 +1975,7 @@ function revertColours(selectors) {
  * Creates filter list from a list of groups of stops for each service and returns it.
  * @param {HTMLElement} list
  * @param {{
- *     id: number,
+ *     code: string,
  *     direction: boolean,
  *     line: string,
  *     destination: string,
@@ -1992,7 +1992,7 @@ function stopServiceFilter(list, groups) {
     let stops = new Map();
 
     groups.forEach(function(g) {
-        let value = g.id.toString() + ((g.direction) ? 't' : 'f'),
+        let value = g.code + ((g.direction) ? 't' : 'f'),
             label = g.line + ' to ' + g.destination;
         services.set(value, label);
         stops.set(value, g.stops);
@@ -2529,10 +2529,10 @@ function mapControl(actions) {
  */
 
 /**
- * JSON data for each service associated with a stop point
+ * JSON data for services associated with a stop point or similar services
  * @typedef {{
- *     id: number,
- *     description: string,
+ *     code: string,
+ *     shortDescription: string,
  *     line: string,
  *     direction: string,
  *     reverse: boolean,
@@ -2582,9 +2582,10 @@ function mapControl(actions) {
 /**
  * Data for service route
  * @typedef {{
- *     id: string,
+ *     code: string,
  *     line: string,
  *     description: string,
+ *     shortDescription: string,
  *     direction: string,
  *     reverse: boolean,
  *     mirrored: boolean,
@@ -2593,7 +2594,7 @@ function mapControl(actions) {
  *     sequence: string[],
  *     paths: RoutePaths,
  *     layout: Array,
- *     other: OtherServiceData[]
+ *     other: ServiceRefData[]
  * }} ServiceData
  */
 
@@ -2909,18 +2910,18 @@ function StopPointsData() {
 
 
 /**
- * @typedef {{id: string, reverse: ?boolean}} ServiceID
+ * @typedef {{code: string, reverse: ?boolean}} ServiceID
  */
 
 
-/**.
+/**
  * @param {ServiceID?} a
  * @param {ServiceID?} b
  * @return {boolean}
  */
 function serviceIdEqual(a, b) {
     if (a != null && b != null) {
-        return a.id === b.id && a.reverse === b.reverse;
+        return a.code === b.code && a.reverse === b.reverse;
     } else {
         return a === b;
     }
@@ -2933,7 +2934,7 @@ function serviceIdEqual(a, b) {
  * @returns {string}
  */
 function urlPart(service) {
-    let url = service.id;
+    let url = service.code;
     if (service.reverse != null) {
         url += '/';
         url += (service.reverse) ? 'inbound' : 'outbound';
@@ -3335,7 +3336,7 @@ function Panel(stopMap, mapPanel) {
                         {className: 'item item-service', onclick: function() {
                             self.stopMap.update({
                                 stop: null,
-                                service: {id: s.id, reverse: s.reverse},
+                                service: {code: s.code, reverse: s.reverse},
                                 fitService: true
                             });
                         }},
@@ -3462,7 +3463,7 @@ function Panel(stopMap, mapPanel) {
         );
         let timetableURL = URL.TIMETABLE.replace(
             '//',
-            '/' + data.id + '/' + data.direction + '/'
+            '/' + data.code + '/' + data.direction + '/'
         );
         let timetable = element('a',
             { className: 'action', title: data.line + ' timetable', href: timetableURL},
@@ -3502,7 +3503,7 @@ function Panel(stopMap, mapPanel) {
                 element('div',
                     {className: (data.reverse) ? 'tab' : 'tab tab-active',
                      onclick: (data.reverse) ? function() {
-                         map.update({service: {id: data.id, reverse: false}});
+                         map.update({service: {code: data.code, reverse: false}});
                      } : null},
                     'Outbound'
                 )
@@ -3511,7 +3512,7 @@ function Panel(stopMap, mapPanel) {
                 element('div',
                     {className: (data.reverse) ? 'tab tab-active' : 'tab',
                      onclick: (data.reverse) ? null : function() {
-                         map.update({service: {id: data.id, reverse: true}});
+                         map.update({service: {code: data.code, reverse: true}});
                      }},
                     'Inbound'
                 )
@@ -3583,13 +3584,12 @@ function Panel(stopMap, mapPanel) {
             );
             let listServices = element('ul', {className: 'list'});
             data.other.forEach(function(s) {
-                console.log({id: s.id, reverse: s.reverse});
                 let item = element('li',
                     element('div',
                         {className: 'item item-service', onclick: function() {
                             self.stopMap.update({
                                 stop: null,
-                                service: {id: s.id, reverse: s.reverse},
+                                service: {code: s.code, reverse: s.reverse},
                                 fitService: true
                             });
                         }},
@@ -3597,7 +3597,7 @@ function Panel(stopMap, mapPanel) {
                             {className: 'line-outer'},
                             element('span', {className: 'line'}, s.line)
                         ),
-                        element('div', {className: 'item-label'}, s.description)
+                        element('div', {className: 'item-label'}, s.shortDescription)
                     )
                 );
                 listServices.appendChild(item);
@@ -3838,7 +3838,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
             stop = options.stop,
             service;
         if (options && options.service) {
-            service = {id: options.service, reverse: options.reverse}
+            service = {code: options.service, reverse: options.reverse}
         }
 
         if (options && options.service && options.stop) {
@@ -4025,7 +4025,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
         if (stopData != null) {
             components.push(self.stopLayer.data.title);
         } else if (routeData != null) {
-            components.push(routeData.line + ': ' + routeData.description);
+            components.push(routeData.line + ': ' + routeData.shortDescription);
         }
         components.push('nxb');
         let title = components.join(' – ');
@@ -4048,8 +4048,8 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
         if (routeData != null) {
             let direction = (routeData.reverse) ? 'inbound' : 'outbound';
-            routeURL = 'service/' + routeData.id + '/' + direction + '/';
-            state.service = {id: routeData.id, reverse: routeData.reverse}
+            routeURL = 'service/' + routeData.code + '/' + direction + '/';
+            state.service = {code: routeData.code, reverse: routeData.reverse}
         } else {
             state.service = null;
         }

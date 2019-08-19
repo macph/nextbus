@@ -84,14 +84,14 @@ def get_stops_tile(coord):
     return jsonify(_list_geojson(stops))
 
 
-@api.route("/route/<service_id>")
-@api.route("/route/<service_id>/<direction:reverse>")
-def get_service_route(service_id, reverse=False):
+@api.route("/route/<service_code>")
+@api.route("/route/<service_code>/<direction:reverse>")
+def get_service_route(service_code, reverse=False):
     """ Gets service data including a MultiLineString GeoJSON object. """
-    data = graph.service_json(service_id, reverse)
+    data = graph.service_json(service_code, reverse)
 
     if data is None:
-        return bad_request(404, "Service '%s' does not exist." % service_id)
+        return bad_request(404, "Service '%s' does not exist." % service_code)
     else:
         return jsonify(data)
 

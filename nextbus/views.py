@@ -108,23 +108,6 @@ def modify_query(**values):
 
 
 @page.app_template_global()
-def truncate_description(description):
-    """ Truncate longer descriptions such that only starting and ending
-        labels remain.
-    """
-    truncated = REMOVE_BRACKETS.sub(" ", description)
-
-    sep = " – "  # en dash
-    places = truncated.split(sep)
-    if len(places) > 3:
-        new_description = sep.join([places[0], places[-1]])
-    else:
-        new_description = truncated
-
-    return new_description
-
-
-@page.app_template_global()
 def display_long_date(date):
     """ Displays a date in long form, eg 'Monday 29th April 2019'. """
     second_last = (date.day // 10) % 10
@@ -372,7 +355,7 @@ def _group_lines_stops(list_stops):
     array_stops = pg.array_agg(db.distinct(models.JourneyLink.stop_point_ref))
     groups = (
         db.session.query(
-            models.Service.id.label("id"),
+            models.Service.code.label("code"),
             models.JourneyPattern.direction.label("direction"),
             models.Service.line.label("line"),
             destinations.label("destination"),
@@ -382,7 +365,8 @@ def _group_lines_stops(list_stops):
         .join(models.Service.patterns)
         .join(models.JourneyPattern.links)
         .filter(models.JourneyLink.stop_point_ref.in_(stops))
-        .group_by(models.Service.id, models.JourneyPattern.direction)
+        .group_by(models.Service.code, models.Service.line,
+                  models.JourneyPattern.direction)
         .order_by(models.Service.line_index, models.JourneyPattern.direction)
         .all()
     )
@@ -530,14 +514,10 @@ def stop_atco(atco_code=""):
                            operators=list_operators)
 
 
-def _query_service(service_id, reverse=None):
+def _query_service(service_code, reverse=None):
     """ Finds service as well as all journey patterns and local operators
         associated with the service.
     """
-    if not service_id.isdecimal():
-        raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                       % service_id)
-
     sv = (
         models.Service.query
         .join(models.Service.patterns)
@@ -547,13 +527,13 @@ def _query_service(service_id, reverse=None):
                  db.contains_eager(models.Service.operators),
                  db.defaultload(models.Service.operators)
                  .undefer_group("contacts"))
-        .filter(models.Service.id == service_id)
+        .filter(models.Service.code == service_code.lower())
         .one_or_none()
     )
 
     if sv is None:
         raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                       % service_id)
+                       % service_code)
 
     # Check line patterns - is there more than 1 direction?
     is_reverse, mirrored = sv.has_mirror(reverse)
@@ -569,16 +549,16 @@ def _display_operators(operators):
     return sorted(filter(filter_op, operators), key=sort_name)
 
 
-@page.route("/service/<service_id>")
-@page.route("/service/<service_id>/<direction:reverse>")
-def service(service_id, reverse=None):
-    """ Shows service with ID and optional direction, which is outbound by
+@page.route("/service/<service_code>")
+@page.route("/service/<service_code>/<direction:reverse>")
+def service(service_code, reverse=None):
+    """ Shows service with code and optional direction, which is outbound by
         default.
     """
-    sv, is_reverse, mirrored = _query_service(service_id, reverse)
+    sv, is_reverse, mirrored = _query_service(service_code, reverse)
 
-    if reverse is None or reverse != is_reverse:
-        return redirect(url_for(".service", service_id=service_id,
+    if sv.code != service_code or reverse is None or reverse != is_reverse:
+        return redirect(url_for(".service", service_code=sv.code,
                                 reverse=is_reverse))
 
     destinations = {
@@ -603,19 +583,20 @@ def service(service_id, reverse=None):
                            sequence=sequence, stops=d_stops, layout=layout)
 
 
-@page.route("/service/<service_id>/timetable")
-@page.route("/service/<service_id>/<direction:reverse>/timetable")
-def service_timetable(service_id, reverse=None):
+@page.route("/service/<service_code>/timetable")
+@page.route("/service/<service_code>/<direction:reverse>/timetable")
+def service_timetable(service_code, reverse=None):
     """ Shows timetable for service with ID and optional direction. """
-    sv, is_reverse, mirrored = _query_service(service_id, reverse)
+    sv, is_reverse, mirrored = _query_service(service_code, reverse)
 
-    if reverse is None or reverse != is_reverse or "date" not in request.args:
+    if (sv.code != service_code or reverse is None or reverse != is_reverse or
+            "date" not in request.args):
         if "date" in request.args:
             today = request.args["date"]
         else:
             today = datetime.datetime.now(GB_TZ).strftime("%Y-%m-%d")
 
-        return redirect(url_for(".service_timetable", service_id=service_id,
+        return redirect(url_for(".service_timetable", service_code=sv.code,
                                 reverse=is_reverse, date=today))
 
     select_date = forms.SelectDate(request.args)
@@ -633,15 +614,15 @@ def service_timetable(service_id, reverse=None):
                            select_date=select_date)
 
 
-def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
+def _show_map(service_code=None, reverse=None, atco_code=None, coords=None):
     """ Shows map.
 
         The map, service line, stop being shown and coordinates/zoom are
         expected to be the same as if the user has navigated there through the
         map interface.
 
-        :param service_id: Service ID to show the paths on map. If ATCO code is
-        None the service diagram will be shown in panel.
+        :param service_code: Service code to show the paths on map. If ATCO code
+        is None the service diagram will be shown in panel.
         :param reverse: Direction of service. Ignored if service ID is None.
         :param atco_code: Stop point code to show live data in panel.
         :param coords: Starting map coordinates. If None, the coordinates will
@@ -656,18 +637,16 @@ def _show_map(service_id=None, reverse=None, atco_code=None, coords=None):
     else:
         stop = None
 
-    if service_id is not None:
-        if not service_id.isdecimal():
-            raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                           % service_id)
+    if service_code is not None:
         sv = (
             models.Service.query
             .options(db.joinedload(models.Service.patterns))
-            .get(service_id)
+            .filter(models.Service.code == service_code)
+            .one_or_none()
         )
         if sv is None:
             raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                           % service_id)
+                           % service_code)
 
         is_reverse, _ = sv.has_mirror(reverse)
     else:
@@ -693,19 +672,19 @@ def show_map(coords=None):
     return _show_map(coords=coords)
 
 
-@page.route("/map/service/<service_id>")
-@page.route("/map/service/<service_id>/<lat_long_zoom:coords>")
-def show_map_service_no_direction(service_id, coords=None):
+@page.route("/map/service/<service_code>")
+@page.route("/map/service/<service_code>/<lat_long_zoom:coords>")
+def show_map_service_no_direction(service_code, coords=None):
     """ Shows map with service and unspecified direction. """
-    return _show_map(service_id, coords=coords)
+    return _show_map(service_code, coords=coords)
 
 
-@page.route("/map/service/<service_id>/<direction:reverse>")
-@page.route("/map/service/<service_id>/<direction:reverse>/"
+@page.route("/map/service/<service_code>/<direction:reverse>")
+@page.route("/map/service/<service_code>/<direction:reverse>/"
             "<lat_long_zoom:coords>")
-def show_map_service_direction(service_id, reverse, coords=None):
+def show_map_service_direction(service_code, reverse, coords=None):
     """ Shows map with service and direction. """
-    return _show_map(service_id, reverse, coords=coords)
+    return _show_map(service_code, reverse, coords=coords)
 
 
 @page.route("/map/stop/<atco_code>")
@@ -715,20 +694,21 @@ def show_map_stop(atco_code, coords=None):
     return _show_map(atco_code=atco_code, coords=coords)
 
 
-@page.route("/map/service/<service_id>/stop/<atco_code>")
-@page.route("/map/service/<service_id>/stop/<atco_code>/<lat_long_zoom:coords>")
-def show_map_service_no_direction_stop(service_id, atco_code, coords=None):
-    """ Shows map with service, unspecified direction and stop. """
-    return _show_map(service_id, atco_code=atco_code, coords=coords)
-
-
-@page.route("/map/service/<service_id>/<direction:reverse>/stop/<atco_code>")
-@page.route("/map/service/<service_id>/<direction:reverse>/stop/<atco_code>/"
+@page.route("/map/service/<service_code>/stop/<atco_code>")
+@page.route("/map/service/<service_code>/stop/<atco_code>/"
             "<lat_long_zoom:coords>")
-def show_map_service_direction_stop(service_id, reverse, atco_code,
+def show_map_service_no_direction_stop(service_code, atco_code, coords=None):
+    """ Shows map with service, unspecified direction and stop. """
+    return _show_map(service_code, atco_code=atco_code, coords=coords)
+
+
+@page.route("/map/service/<service_code>/<direction:reverse>/stop/<atco_code>")
+@page.route("/map/service/<service_code>/<direction:reverse>/stop/<atco_code>/"
+            "<lat_long_zoom:coords>")
+def show_map_service_direction_stop(service_code, reverse, atco_code,
                                     coords=None):
     """ Shows map with service, direction and stop. """
-    return _show_map(service_id, reverse, atco_code, coords)
+    return _show_map(service_code, reverse, atco_code, coords)
 
 
 @page.route("/map/place/<locality_code>")

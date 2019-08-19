@@ -130,8 +130,8 @@ STOP_POINT_JSON = {
     },
     "services": [
         {
-            "id": 645,
-            "description": "Barking – Dagenham Sunday Market",
+            "code": "dagenham-sunday-market-shuttle",
+            "shortDescription": "Barking – Dagenham Sunday Market",
             "line": "Dagenham Sunday Market Shuttle",
             "direction": "outbound",
             "reverse": False,
@@ -140,8 +140,8 @@ STOP_POINT_JSON = {
             "terminates": False,
             "operatorCodes": ["ATC"]
         }, {
-            "id": 645,
-            "description": "Barking – Dagenham Sunday Market",
+            "code": "dagenham-sunday-market-shuttle",
+            "shortDescription": "Barking – Dagenham Sunday Market",
             "line": "Dagenham Sunday Market Shuttle",
             "direction": "inbound",
             "reverse": True,
@@ -188,9 +188,10 @@ def test_stop_data_not_found(client, db_loaded):
 
 
 SERVICE_JSON = {
-    "id": 645,
+    "code": "dagenham-sunday-market-shuttle",
     "line": "Dagenham Sunday Market Shuttle",
     "description": "Barking – Dagenham Sunday Market",
+    "shortDescription": "Barking – Dagenham Sunday Market",
     "direction": "outbound",
     "reverse": False,
     "mirrored": True,
@@ -219,7 +220,8 @@ SERVICE_JSON = {
 
 
 def test_service_json(db_loaded):
-    assert graph.service_json("645", False) == SERVICE_JSON
+    data = graph.service_json("dagenham-sunday-market-shuttle", False)
+    assert data == SERVICE_JSON
 
 
 def test_api_bad_parameter(client, db_loaded):
@@ -232,18 +234,19 @@ def test_api_bad_parameter(client, db_loaded):
 
 
 def test_service_api(client, db_loaded):
-    response = client.get("/api/route/645/outbound")
+    response = client.get("/api/route/dagenham-sunday-market-shuttle/"
+                          "outbound")
 
     assert response.status_code == 200
     assert json.loads(response.data) == SERVICE_JSON
 
 
 def test_service_api_not_found(client, db_loaded):
-    response = client.get("/api/route/646/outbound")
+    response = client.get("/api/route/dagenham/outbound")
 
     assert response.status_code == 404
     assert json.loads(response.data) == {
-        "message": "Service '646' does not exist."
+        "message": "Service 'dagenham' does not exist."
     }
 
 

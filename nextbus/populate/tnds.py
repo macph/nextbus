@@ -1,6 +1,7 @@
 """
 Populate bus route and timetable data from TNDS.
 """
+import collections
 import ftplib
 import os
 import re
@@ -15,6 +16,10 @@ from nextbus.populate import file_ops, utils
 
 TNDS_URL = r"ftp.tnds.basemap.co.uk"
 TNDS_XSLT = r"nextbus/populate/tnds.xslt"
+
+BRACKETS = re.compile(r"\((.*)\)")
+SPLIT_PLACES = re.compile(r"\s+-\s+|-\s+|\s+-")
+FIND_EXTRA = re.compile(r"(.+\S),(\S.+)")
 
 
 def _get_regions():
@@ -57,7 +62,7 @@ def download_tnds_files():
     return paths
 
 
-class IndexList(object):
+class IndexList:
     """ Unique list using a dict with keys as the list and values its indices.
     """
     def __init__(self, iterable=None, initial=0):
@@ -81,8 +86,7 @@ class IndexList(object):
         for k, j in self._map.items():
             if index == j:
                 return k
-        else:
-            raise IndexError("Index out of range")
+        raise IndexError("Index out of range")
 
     def __iter__(self):
         return iter(sorted(self._map, key=self._map.get))
@@ -117,7 +121,7 @@ class IndexList(object):
         self._map.clear()
 
 
-class RowIds(object):
+class RowIds:
     """ Create XSLT functions to assign each row for journey patterns, sections
         and links an unique ID.
 
@@ -136,12 +140,11 @@ class RowIds(object):
     def _get_sequence(self, model_name):
         """ Check database to find max value to start from or use 1. """
         start = 1
-        if self.existing:
+        model = getattr(models, model_name, None)
+        if self.existing and model is not None:
             # Get maximum ID integer from table and start off from there
-            model = getattr(models, model_name)
             query = db.select([db.func.max(model.id)])
             max_ = db.engine.execute(query).scalar()
-
             start = max_ + 1 if max_ is not None else start
 
         return start
@@ -183,16 +186,84 @@ def format_description(_, text):
     if text.isupper():
         text = utils.capitalize(None, text)
 
-    places = " ".join(text.split())
-    places = places.split(" - ")
+    places = SPLIT_PLACES.split(" ".join(text.split()))
     new_places = []
-
-    sep = re.compile(r"(.+\S),(\S.+)")
     for p in places:
-        separated = sep.search(p)
+        # Some service descriptions have extra data before origin/destination
+        # which are mostly irrelevant
+        separated = FIND_EXTRA.search(p)
         new_places.append(separated.group(2) if separated else p)
 
     return " – ".join(new_places)
+
+
+def _remove_subset_words(main, sub):
+    main_seq_case = main.split()
+    main_seq = main.lower().split()
+    sub_seq = sub.lower().split()
+
+    length = len(sub_seq)
+    if length > len(main_seq):
+        return main
+    for i in range(len(main_seq) - length, -1, -1):
+        if main_seq[i:i+length] == sub_seq:
+            del main_seq_case[i:i+length]
+
+    return " ".join(main_seq_case)
+
+
+@utils.xslt_text_func
+def short_description(_, text, remove_stop_words=False):
+    without_brackets = BRACKETS.sub(" ", text)
+    places = without_brackets.split(" – ")
+
+    if remove_stop_words:
+        new_places = []
+        to_remove = ["and", "circular", "in", "or", "of", "the", "via",
+                    "town centre", "city centre"]
+        for p in places:
+            for s in to_remove:
+                p = _remove_subset_words(p, s)
+            new_places.append(p)
+
+        places = [p for p in new_places if p]
+
+    if not places:
+        return without_brackets
+
+    while len(places) > 1 and places[0] == places[-1]:
+        del places[-1]
+
+    if len(places) > 1:
+        return f"{places[0]} – {places[-1]}"
+    else:
+        return places[0]
+
+
+class ServiceCodes:
+    """ Creates unique codes, keeping track of region and lines passed. """
+    NON_WORDS = re.compile(r"[^A-Za-z0-9\.]+")
+
+    def __init__(self):
+        self._unique = collections.defaultdict(int)
+        utils.xslt_text_func(self.service_code)
+
+    def service_code(self, _, line, description):
+        """ Creates unique code based on line name and description. """
+        line_name = self.NON_WORDS.sub("-", line.lower())
+        components = [line_name]
+
+        if len(line_name) <= 5:
+            # Add description as shorter line name is less likely to be unique
+            short_desc = short_description(None, description, True)
+            components.append(self.NON_WORDS.sub("-", short_desc.lower()))
+
+        key = "-".join(components)
+        self._unique[key] += 1
+        if self._unique[key] > 1:
+            key += f"-{self._unique[key]}"
+
+        return key
 
 
 @utils.xslt_text_func
@@ -563,7 +634,8 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
         )
 
     setup_tnds_functions()
-    ids = RowIds(check_existing=not delete)
+    row_ids = RowIds(check_existing=not delete)
+    ServiceCodes()
 
     # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
@@ -583,7 +655,7 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
                 delete=del_,
                 exclude=excluded
             )
-            ids.clear()
+            row_ids.clear()
             del_ = False
 
     _delete_empty_services()

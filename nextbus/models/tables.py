@@ -641,8 +641,8 @@ class StopPoint(db.Model):
                 "name": self.locality.name,
             },
             "services": [{
-                "id": s.service.id,
-                "description": s.service.description,
+                "code": s.service.code,
+                "shortDescription": s.service.short_description,
                 "line": s.service.line,
                 "direction": "inbound" if s.direction else "outbound",
                 "reverse": s.direction,
@@ -776,9 +776,11 @@ class Service(db.Model):
     __tablename__ = "service"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    code = db.Column(db.Text)
+    code = db.Column(db.Text, index=True, nullable=True, unique=True)
+    filename = db.Column(db.Text)
     line = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=False)
+    short_description = db.Column(db.Text, nullable=False)
     mode = db.Column(
         db.Integer,
         db.ForeignKey("service_mode.id"),

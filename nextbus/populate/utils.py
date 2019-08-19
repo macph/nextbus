@@ -101,10 +101,10 @@ def _convert_to_text(result):
     else:
         node = result
 
-    if not isinstance(node, str) and node is not None:
-        node = node.text
-
-    return node
+    try:
+        return node.text
+    except AttributeError:
+        return node
 
 
 def xslt_text_func(func, _name=None):

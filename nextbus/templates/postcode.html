@@ -15,7 +15,7 @@
     {% call(s) f.print_list(list_stops, name='list-stops') -%}
     <a href="{{ url_for('page.stop_atco', atco_code=s.atco_code) }}" data-code="{{ s.atco_code }}" class="item item-stop item-multiline">
       <span>
-        {{ f.print_stop_indicator(s) }}
+        {{ f.print_stop_indicator(s.short_ind, s.stop_type, s.admin_area_ref) }}
         <span class="item-label">{{ s.name }}{% if s.street and s.street not in s.name and s.name not in s.street %}, <span class="item-label-small">{{ s.street }}</span>{% endif %}</span>
         <span class="item-label item-label-distance">{{ '%.0f m'|format(s.distance) }}</span>
       </span>

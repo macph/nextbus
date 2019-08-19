@@ -2,7 +2,6 @@
 {% import 'functions.html' as f %}
 {% set body="body-map" %}
 
-{% set name = stop.long_name if stop else ('Service %s'|format(service.description) if service else none) %}
 {% block title %}Map{% endblock %}
 
 {% block head %}
@@ -28,8 +27,8 @@
 URL.LIVE = "{{ url_for('api.stop_get_times', atco_code='') }}";
 URL.STOP = "{{ url_for('api.get_stop', atco_code='') }}";
 URL.TILE = "{{ url_for('api.get_stops_tile', coord='') }}";
-URL.ROUTE = "{{ url_for('api.get_service_route', service_id='') }}";
-URL.TIMETABLE = "{{ url_for('page.service_timetable', service_id='') }}";
+URL.ROUTE = "{{ url_for('api.get_service_route', service_code='') }}";
+URL.TIMETABLE = "{{ url_for('page.service_timetable', service_code='') }}";
 
 let map;
 let useGeolocation = {{ config.get('GEOLOCATION_ENABLED', false)|tojson }};
@@ -43,7 +42,7 @@ options.longitude = {{ longitude }};
 options.zoom = {{ zoom }};
 {%- endif %}
 {% if service -%}
-options.service = {{ service.id }};
+options.service = '{{ service.code }}';
 options.reverse = {{ reverse|tojson }};
 {%- endif %}
 

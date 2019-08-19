@@ -88,7 +88,7 @@ def _select_fts_vectors():
             utils.table_name(Region).label("table_name"),
             db.cast(Region.code, db.Text).label("code"),
             Region.name.label("name"),
-            null.label("short_ind"),
+            null.label("indicator"),
             null.label("street"),
             null.label("stop_type"),
             null.label("stop_area_ref"),
@@ -107,7 +107,7 @@ def _select_fts_vectors():
             utils.table_name(AdminArea).label("table_name"),
             db.cast(AdminArea.code, db.Text).label("code"),
             AdminArea.name.label("name"),
-            null.label("short_ind"),
+            null.label("indicator"),
             null.label("street"),
             null.label("stop_type"),
             null.label("stop_area_ref"),
@@ -126,7 +126,7 @@ def _select_fts_vectors():
             utils.table_name(District).label("table_name"),
             db.cast(District.code, db.Text).label("code"),
             District.name.label("name"),
-            null.label("short_ind"),
+            null.label("indicator"),
             null.label("street"),
             null.label("stop_type"),
             null.label("stop_area_ref"),
@@ -152,7 +152,7 @@ def _select_fts_vectors():
             utils.table_name(Locality).label("table_name"),
             db.cast(Locality.code, db.Text).label("code"),
             Locality.name.label("name"),
-            null.label("short_ind"),
+            null.label("indicator"),
             null.label("street"),
             null.label("stop_type"),
             null.label("stop_area_ref"),
@@ -183,7 +183,7 @@ def _select_fts_vectors():
             db.cast(StopArea.code, db.Text).label("code"),
             StopArea.name.label("name"),
             db.cast(db.func.count(StopPoint.atco_code), db.Text)
-            .label("short_ind"),
+            .label("indicator"),
             null.label("street"),
             StopArea.stop_area_type.label("stop_type"),
             null.label("stop_area_ref"),
@@ -219,7 +219,7 @@ def _select_fts_vectors():
             utils.table_name(StopPoint).label("table_name"),
             db.cast(StopPoint.atco_code, db.Text).label("code"),
             StopPoint.name.label("name"),
-            StopPoint.short_ind.label("short_ind"),
+            StopPoint.short_ind.label("indicator"),
             StopPoint.street.label("street"),
             StopPoint.stop_type.label("stop_type"),
             StopPoint.stop_area_ref.label("stop_area_ref"),
@@ -249,9 +249,9 @@ def _select_fts_vectors():
     service = (
         db.select([
             utils.table_name(Service).label("table_name"),
-            db.cast(Service.id, db.Text).label("code"),
-            Service.description.label("name"),
-            Service.line.label("short_ind"),
+            Service.code.label("code"),
+            Service.short_description.label("name"),
+            Service.line.label("indicator"),
             null.label("street"),
             null.label("stop_type"),
             null.label("stop_area_ref"),
@@ -333,8 +333,8 @@ class FTS(utils.MaterializedView):
         - ``table_name`` Name of the table this row comes from
         - ``code`` Primary key for row
         - ``name`` Name of area/locality/stop
-        - ``short_ind`` Indicator for stop point or number of stops for stop
-        area; empty for other results
+        - ``indicator`` Indicator for stop point, number of stops for stop area,
+        line for service or empty for other results
         - ``street`` Street stop point is on; empty for other results
         - ``stop_type`` Type of stop or area
         - ``locality_name`` Locality name for stop points and areas; empty for
@@ -436,7 +436,7 @@ class FTS(utils.MaterializedView):
         match = (
             cls.query
             .options(db.defer(cls.vector), db.defer(cls.admin_areas))
-            .outerjoin(NaturalSort, cls.short_ind == NaturalSort.string)
+            .outerjoin(NaturalSort, cls.indicator == NaturalSort.string)
             .filter(
                 cls.match(query),
                 # Ignore stops whose stop areas already match

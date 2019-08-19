@@ -9,7 +9,8 @@ import pytest
 from definitions import ROOT_DIR
 from nextbus.populate.utils import xslt_func, xslt_transform
 from nextbus.populate.tnds import (
-    TNDS_XSLT, bank_holidays, days_week, weeks_month, RowIds
+    TNDS_XSLT, bank_holidays, days_week, weeks_month, format_description,
+    short_description, ServiceCodes, RowIds
 )
 
 
@@ -75,6 +76,70 @@ def test_bank_holidays(holidays, region, expected):
     assert bank_holidays(None, nodes, region) == expected
 
 
+@pytest.mark.parametrize("text, expected", [
+    ("HALFWAY - FULWOOD", "Halfway – Fulwood"),
+    ("Halfway - Fulwood", "Halfway – Fulwood"),
+    ("Halfway -Fulwood", "Halfway – Fulwood"),
+    ("Halfway- Fulwood", "Halfway – Fulwood"),
+    ("Halfway-Fulwood", "Halfway-Fulwood"),
+])
+def test_format_description(text, expected):
+    assert format_description(None, text) == expected
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("Halfway – Fulwood", "Halfway – Fulwood"),
+    ("Halfway – Sheffield City Centre – Fulwood", "Halfway – Fulwood"),
+    ("Halfway – Sheffield City Centre", "Halfway – Sheffield City Centre"),
+    ("Halfway – Sheffield City Centre or Fulwood",
+     "Halfway – Sheffield City Centre or Fulwood"),
+])
+def test_short_description(text, expected):
+    assert short_description(None, text, False) == expected
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("Halfway – Fulwood", "Halfway – Fulwood"),
+    ("Halfway – Sheffield City Centre – Fulwood", "Halfway – Fulwood"),
+    ("Halfway – Sheffield City Centre", "Halfway – Sheffield"),
+    ("Halfway – Sheffield City Centre or Fulwood",
+     "Halfway – Sheffield Fulwood"),
+])
+def test_short_description_remove_stop_words(text, expected):
+    assert short_description(None, text, True) == expected
+
+
+@pytest.fixture
+def service_codes():
+    return ServiceCodes()
+
+
+@pytest.mark.parametrize("line, description, expected", [
+    ("Red Arrow", "Nottingham – Derby", "red-arrow"),
+    ("120", "Halfway – Fulwood", "120-halfway-fulwood"),
+    ("120A", "Halfway – Fulwood", "120a-halfway-fulwood"),
+    ("6.1", "Derby – Belper – Matlock – Bakewell", "6.1-derby-bakewell"),
+    ("5", "Inverness – Balloch or Croy", "5-inverness-balloch-croy")
+])
+def test_service_code(service_codes, line, description, expected):
+    assert service_codes.service_code(None, line, description) == expected
+
+
+def test_service_code_incremenet(service_codes):
+    get_code = service_codes.service_code
+    line = "120"
+    description = "Halfway – Fulwood"
+    assert get_code(None, line, description) == "120-halfway-fulwood"
+    assert get_code(None, line, description) == "120-halfway-fulwood-2"
+    assert get_code(None, line, description) == "120-halfway-fulwood-3"
+
+
+@pytest.fixture
+def row_ids():
+    # Set up functions to assign IDs
+    return RowIds(check_existing=False)
+
+
 def always_true(_, *args):
     return True
 
@@ -82,36 +147,52 @@ def always_true(_, *args):
 @pytest.fixture
 def xslt():
     xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT)))
-    # Set up functions to assign IDs
-    RowIds(check_existing=False)
     # Replicate functions which check for existing stops and operators
     xslt_func["stop_exists"] = always_true
 
     return xslt
 
 
-def test_transform_tnds(asserts, xslt):
+def test_transform_tnds(asserts, xslt, row_ids, service_codes):
     output = xslt_transform(et.parse(TNDS_RAW), xslt, region="Y",
-                            file="TNDS_raw.xml")
+                            file="SVRYSBO120A.xml")
     expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
 
     asserts.xml_elements_equal(output.getroot(), expected.getroot())
 
 
-def test_transform_tnds_empty(asserts, xslt):
+def test_transform_alt_description(asserts, xslt, row_ids, service_codes):
+    data = et.parse(TNDS_RAW)
+    ns = {"txc": data.xpath("namespace-uri()")}
+    description = data.xpath(
+        "/txc:TransXChange/txc:Services/txc:Service/txc:Description",
+        namespaces=ns
+    )[0]
+    # Clear description text, output should be same as origin/destination from
+    # standard service will be used instead
+    description.text = ""
+
+    output = xslt_transform(et.parse(TNDS_RAW), xslt, region="Y",
+                            file="SVRYSBO120A.xml")
+    expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
+
+    asserts.xml_elements_equal(output.getroot(), expected.getroot())
+
+
+def test_transform_tnds_empty(asserts, xslt, row_ids):
     # Set modification to 'delete' - should be excluded
     raw = et.parse(TNDS_RAW)
     raw.getroot().set("Modification", "Delete")
-    output = xslt_transform(raw, xslt, region="Y", file="TNDS_raw.xml")
+    output = xslt_transform(raw, xslt, region="Y", file="SVRYSBO120.xml")
 
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
 
 
-def test_transform_tnds_wrong_type(asserts, xslt):
+def test_transform_tnds_wrong_type(asserts, xslt, row_ids):
     # Set service mode to ferry - should be excluded
     raw = et.parse(TNDS_RAW)
     ns = {"t": raw.xpath("namespace-uri()")}
     raw.xpath("//t:Service/t:Mode", namespaces=ns)[0].text = "ferry"
-    output = xslt_transform(raw, xslt, region="Y", file="TNDS_raw.xml")
+    output = xslt_transform(raw, xslt, region="Y", file="SVRYSBO120.xml")
 
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))

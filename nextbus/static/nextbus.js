@@ -1992,10 +1992,14 @@ function stopServiceFilter(list, groups) {
     let stops = new Map();
 
     groups.forEach(function(g) {
-        let value = g.code + ((g.direction) ? 't' : 'f'),
-            label = g.line + ' to ' + g.destination;
+        let value = g.line + ' - ' + g.destination;
+        let label = g.line + ' to ' + g.destination;
         services.set(value, label);
-        stops.set(value, g.stops);
+        if (stops.has(value)) {
+            Array.prototype.push.apply(stops.get(value), g.stops);
+        } else {
+            stops.set(value, g.stops);
+        }
     });
 
     let updateList = function(filterList) {
@@ -3398,7 +3402,9 @@ function Panel(stopMap, mapPanel) {
 
         self.clearPanel();
         self.mapPanel.appendChild(heading);
-        self.mapPanel.appendChild(headingText);
+        if (headingText != null) {
+            self.mapPanel.appendChild(headingText);
+        }
         self.mapPanel.appendChild(actions);
         self.mapPanel.appendChild(liveTimes);
         if (services != null) {
@@ -3578,7 +3584,7 @@ function Panel(stopMap, mapPanel) {
         list.appendChild(listStops);
 
         let other = null;
-        if (data.other) {
+        if (data.other.length > 0) {
             other = element('section',
                 element('h2', 'Similar services')
             );

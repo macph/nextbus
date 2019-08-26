@@ -1688,6 +1688,7 @@ function StarredStopList(options) {
                 (sub) ? element('p', sub.join(', ')) : null
             );
             let mapLink = element('a', {className: 'item item-action'}, 'Map');
+            mapLink.href = URL.MAP + 'stop/' + stop.properties.atcoCode;
             if (self.map != null) {
                 mapLink.title = 'Go to stop ' + stop.properties.title + ' on map';
                 mapLink.tabIndex = 0;
@@ -1700,6 +1701,7 @@ function StarredStopList(options) {
                     if (self.menuOverlay != null) {
                         self.menuOverlay.close();
                     }
+                    return false;
                 };
                 mapLink.onkeydown = function(event) {
                     if (event.key === 'Enter') {
@@ -1708,7 +1710,6 @@ function StarredStopList(options) {
                 };
             } else {
                 mapLink.title = 'Go to map for ' + stop.properties.title;
-                mapLink.href = URL.MAP + 'stop/' + stop.properties.atcoCode;
             }
 
             self.list.appendChild(element('li', item, mapLink));
@@ -3335,15 +3336,21 @@ function Panel(stopMap, mapPanel) {
             let listNonTerminating = [],
                 listTerminating = [];
             data.services.forEach(function(s) {
+                let serviceID = {code: s.code, reverse: s.reverse};
                 let listItem = element('li',
-                    element('div',
-                        {className: 'item item-service', onclick: function() {
-                            self.stopMap.update({
-                                stop: null,
-                                service: {code: s.code, reverse: s.reverse},
-                                fitService: true
-                            });
-                        }},
+                    element('a',
+                        {
+                            className: 'item item-service',
+                            href: self.stopMap.getURL({stop: null, service: serviceID}),
+                            onclick: function() {
+                                self.stopMap.update({
+                                    stop: null,
+                                    service: serviceID,
+                                    fitService: true
+                                });
+                                return false;
+                            }
+                        },
                         element('span',
                             {className: 'line-outer'},
                             element('span',
@@ -3505,26 +3512,28 @@ function Panel(stopMap, mapPanel) {
 
         let tabs = element('ul', {className: 'tabs tabs-3'});
         if (data.mirrored) {
-            let outbound = element('li',
-                element('div',
-                    {className: (data.reverse) ? 'tab' : 'tab tab-active',
-                     onclick: (data.reverse) ? function() {
-                         map.update({service: {code: data.code, reverse: false}});
-                     } : null},
-                    'Outbound'
+            let newState = {service: {code: data.code, reverse: !data.reverse}};
+            let active = element('li',
+                element('a',
+                    {
+                        className: 'tab',
+                        href: self.stopMap.getURL(newState),
+                        onclick: function() {
+                            self.stopMap.update(newState);
+                            return false;
+                        }
+                    },
+                    (data.reverse) ? 'Outbound' : 'Inbound'
                 )
             );
-            let inbound = element('li',
+            let current = element('li',
                 element('div',
-                    {className: (data.reverse) ? 'tab tab-active' : 'tab',
-                     onclick: (data.reverse) ? null : function() {
-                         map.update({service: {code: data.code, reverse: true}});
-                     }},
-                    'Inbound'
+                    {className: 'tab tab-active'},
+                    (data.reverse) ? 'Inbound' : 'Outbound'
                 )
             );
-            tabs.appendChild(outbound);
-            tabs.appendChild(inbound);
+            tabs.appendChild((data.reverse) ? active : current);
+            tabs.appendChild((data.reverse) ? current : active);
         }
 
         let list = element('section', {style: {position: 'relative'}}),
@@ -3537,9 +3546,7 @@ function Panel(stopMap, mapPanel) {
                 let s = data.stops[code],
                     item;
                 if (code) {
-                    item = element('div',
-                        {className: 'item item-stop item-service-stop'}
-                    );
+                    item = element('a', {className: 'item item-stop item-service-stop'});
 
                     let sub = [s.properties.street, s.properties.locality].filter(function (p) {
                         return p;
@@ -3562,8 +3569,13 @@ function Panel(stopMap, mapPanel) {
                             self.stopMap.map.panTo(coords);
                         }
                     };
+                    item.href = self.stopMap.getURL({
+                        stop: s.properties.atcoCode,
+                        service: {code: data.code, reverse: data.reverse}
+                    });
                     item.onclick = function() {
                         self.stopMap.update({stop: s.properties.atcoCode, fitStop: true});
+                        return false;
                     };
                 } else {
                     item = element('div',
@@ -3590,15 +3602,21 @@ function Panel(stopMap, mapPanel) {
             );
             let listServices = element('ul', {className: 'list'});
             data.other.forEach(function(s) {
+                let serviceID = {code: s.code, reverse: s.reverse};
                 let item = element('li',
-                    element('div',
-                        {className: 'item item-service', onclick: function() {
-                            self.stopMap.update({
-                                stop: null,
-                                service: {code: s.code, reverse: s.reverse},
-                                fitService: true
-                            });
-                        }},
+                    element('a',
+                        {
+                            className: 'item item-service',
+                            href: self.stopMap.getURL({service: serviceID}),
+                            onclick: function() {
+                                self.stopMap.update({
+                                    stop: null,
+                                    service: serviceID,
+                                    fitService: true
+                                });
+                                return false;
+                            }
+                        },
                         element('span',
                             {className: 'line-outer'},
                             element('span', {className: 'line'}, s.line)
@@ -3656,6 +3674,17 @@ function Panel(stopMap, mapPanel) {
 
 
 /**
+ * @typedef {object} MapState - Sets stop and service for map
+ * @property {string} [stop] - Sets stop (or removes if null) unless it is undefined
+ * @property {ServiceID} [service] - Sets service (or removes if null) unless it is undefined
+ * @property {boolean} [fitService] - Fit map to path bounds. True by default
+ * @property {boolean} [fitStop] - If setting a new stop, fit map to stop. False by default
+ * @property {[number, number]} [coords] - New coordinates for map as latitude and longitude
+ * @property {number} [zoom] - New zoom level for map
+ */
+
+
+/**
  * Handles the map container and stops
  * @constructor
  * @param {string} mapContainer ID for map container element
@@ -3666,6 +3695,7 @@ function Panel(stopMap, mapPanel) {
  */
 function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
     let self = this;
+    this.mapURL = URL.MAP.replace(/\/$/, '');
     this.mapContainer = document.getElementById(mapContainer);
     this.mapPanel = document.getElementById(mapPanel);
     this.geolocation = useGeolocation;
@@ -3916,13 +3946,7 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
 
     /**
      * Updates map with a specified stop point with live times or a service diagram based on stops
-     * @param {object} [options] Sets stop and service for map
-     * @param {string} [options.stop] Sets stop (or removes if null) unless it is undefined
-     * @param {ServiceID} [options.service] Sets service (or removes if null) unless it is undefined
-     * @param {boolean} [options.fitService] Fit map to path bounds. True by default
-     * @param {boolean} [options.fitStop] If setting a new stop, fit map to stop. False by default
-     * @param {[number, number]} [options.coords] New coordinates for map as latitude and longitude
-     * @param {number} [options.zoom] New zoom level for map
+     * @param {MapState} [options] - Sets stop and service for map
      */
     this.update = function(options) {
         let changed = false;
@@ -4017,8 +4041,29 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
             self.stopLayer.removeRoute();
             andFinally();
         }
-
     };
+
+    /**
+     * Gets new URL updating the map to a new state
+     * @param {MapState} [state]
+     * @returns {string}
+     */
+    this.getURL = function(state) {
+        let path = [self.mapURL];
+
+        if (state && state.service != null) {
+            let direction = (state.service.reverse) ? 'inbound' : 'outbound';
+            path.push('service/' + state.service.code + '/' + direction);
+        }
+        if (state && state.stop != null) {
+            path.push('stop/' + state.stop);
+        }
+        if (state && state.coords != null && state.zoom != null) {
+            path.push([state.coords[0], state.coords[1], state.zoom].join(','));
+        }
+
+        return path.join("/");
+    }
 
     /**
      * Updates title with current stop or route
@@ -4046,34 +4091,21 @@ function StopMap(mapContainer, mapPanel, starred, starredList, useGeolocation) {
      * @param {boolean} [changed] Pushes new state instead of replacing it
      */
     this.setURL = function(changed) {
-        let routeData = self.routeLayer.data,
-            stopData = self.stopLayer.data;
-        let routeURL = '',
-            stopURL = '';
+        let routeData = self.routeLayer.data;
+        let stopData = self.stopLayer.data;
         let state = {};
 
-        if (routeData != null) {
-            let direction = (routeData.reverse) ? 'inbound' : 'outbound';
-            routeURL = 'service/' + routeData.code + '/' + direction + '/';
-            state.service = {code: routeData.code, reverse: routeData.reverse}
-        } else {
-            state.service = null;
-        }
-        if (stopData != null) {
-            stopURL = 'stop/' + stopData.atcoCode + '/';
-            state.stop = stopData.atcoCode
-        } else {
-            state.stop = null;
-        }
+        state.service = (routeData != null) ?
+            {code: routeData.code, reverse: routeData.reverse} : null;
+        state.stop = (stopData != null) ? stopData.atcoCode : null;
 
-        let centre = self.map.getCenter(),
-            zoom = Math.round(self.map.getZoom()),
-            accuracy = mapCoordinateAccuracy(zoom),
-            coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy), zoom];
-        state.coords = [coords[0], coords[1]];
-        state.zoom = coords[2];
+        let zoom = Math.round(self.map.getZoom());
+        let accuracy = mapCoordinateAccuracy(zoom);
+        let centre = self.map.getCenter();
+        state.coords = [roundTo(centre.lat, accuracy), roundTo(centre.lng, accuracy)];
+        state.zoom = zoom;
 
-        let newURL = URL.MAP + routeURL + stopURL + coords.join(',');
+        let newURL = self.getURL(state);
         if (self.justChanged) {
             history.pushState(state, null, newURL);
         } else  {

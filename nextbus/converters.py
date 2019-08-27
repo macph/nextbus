@@ -1,6 +1,9 @@
 """
 URL converters for strings and coordinates.
 """
+import os
+
+from flask import current_app
 from werkzeug import routing, urls
 
 
@@ -21,6 +24,17 @@ class PathString(routing.PathConverter):
     def to_url(self, value):
         escaped = urls.url_quote(value, charset=self.map.charset)
         return escaped.replace("%20", "+")
+
+
+class PathExists(routing.PathConverter):
+    """ Path URL converter checking beforehand if static URL exists. """
+    def to_python(self, value):
+        if current_app.has_static_folder:
+            path = os.path.join(current_app.static_folder, value)
+            if os.path.isfile(path):
+                return value
+
+        raise routing.ValidationError
 
 
 class LatLong(routing.BaseConverter):
@@ -76,6 +90,7 @@ def add_converters(app):
     app.url_map.converters.update({
         "string": String,
         "path_string": PathString,
+        "exists": PathExists,
         "lat_long": LatLong,
         "lat_long_zoom": LatLongZoom,
         "direction": Direction

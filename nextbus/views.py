@@ -124,6 +124,11 @@ def display_long_date(date):
     return f"{date:%A} {date.day}{ordinal} {date:%B} {date.year}"
 
 
+@page.route("/<exists:filename>")
+def send_from_root(filename):
+    return current_app.send_static_file(filename)
+
+
 @page.route("/")
 def index():
     """ The home page. """

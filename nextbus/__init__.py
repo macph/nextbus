@@ -25,7 +25,7 @@ def create_app(config_obj=None, config_file=None):
         are specified.
     """
     # Create app
-    app = Flask(__name__, instance_relative_config=True, static_url_path="/")
+    app = Flask(__name__, instance_relative_config=True)
     app.logger = logger.app_logger
     # Load logging configuration
     logger.load_config(app)

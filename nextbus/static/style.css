@@ -4,6 +4,7 @@
 
 html {
   font-family: 'Inter', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10', 'cv11';
   font-size: 62.5%;
   color: #212121;
 }
@@ -73,6 +74,7 @@ input,
 button,
 label {
   font-family: inherit;
+  font-feature-settings: inherit;
   font-size: 1.5rem;
   line-height: 1.25em;
 }
@@ -1175,7 +1177,6 @@ section {
   border-color: inherit;
 }
 
-
 .filter-menu {
   position: absolute;
   top: 100%;
@@ -1466,6 +1467,11 @@ section {
 
 /* LEAFLET STYLE OVERRIDES */
 
+.leaflet-container {
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10', 'cv11';
+}
+
 .leaflet-container a {
   color: #212121;
 }
@@ -1475,16 +1481,8 @@ section {
 }
 
 .leaflet-bar,
-.leaflet-bar a{
+.leaflet-bar a {
   border-radius: 0 !important;
-}
-
-.leaflet-control-attribution {
-  font-family: 'Inter', sans-serif;
-}
-
-.leaflet-control-custom {
-  font-family: 'Inter', sans-serif;
 }
 
 .leaflet-control-custom > a {
@@ -1501,7 +1499,6 @@ section {
 /* MAP MARKERS */
 
 .marker {
-  font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   transition: font-size 0.2s ease-out;
 }
@@ -1705,8 +1702,7 @@ section {
 /* use Inter variable font if supported */
 
 @supports (font-variation-settings: normal) {
-  html,
-  .marker {
+  html {
     font-family: 'Inter var', sans-serif;
   }
 }

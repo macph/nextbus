@@ -604,6 +604,8 @@ def service_timetable(service_code, reverse=None):
         return redirect(url_for(".service_timetable", service_code=sv.code,
                                 reverse=is_reverse, date=today))
 
+    similar = sv.similar(is_reverse, 0.5)
+
     select_date = forms.SelectDate(request.args)
     select_date.set_dates(sv)
 
@@ -613,7 +615,7 @@ def service_timetable(service_code, reverse=None):
         tt_data = None
 
     return render_template("timetable.html", service=sv, reverse=is_reverse,
-                           mirrored=mirrored,
+                           mirrored=mirrored, similar=similar,
                            operators=_display_operators(sv.operators),
                            timetable=tt_data,
                            select_date=select_date)

@@ -51,7 +51,6 @@
 </svg>
 {%- endmacro %}
 
-
 {# Prints an inline list, using strong tags if required #}
 {% macro print_inline(items, strong=true) -%}
 {% if items|length == 1 %}
@@ -98,7 +97,6 @@
 </span>
 {%- endmacro %}
 
-
 {% macro stop_description(stop) -%}
 {% set dir = {"N": "northbound", "NE": "northeast bound", "E": "eastbound", "SE": "southeast bound",
               "S": "southbound", "SW": "southwest bound", "W": "westbound", "NW": "northwest bound"} %}
@@ -109,4 +107,31 @@
 {% elif stop.bearing is not none %}
 {{ dir.get(stop.bearing, "")|capitalize }}
 {% endif %}
+{%- endmacro %}
+
+{# Prints operators for a service #}
+{% macro print_operators(operators) -%}
+{% if operators -%}
+<section>
+  <h2>Operators</h2>
+  <div class="operators">
+    {%- for o in operators %}
+    <div>
+      <h4>{{ o.name }}</h4>
+      {% if o.address -%}
+      <p>{{ o.split_address|join('<br>'|safe) }}</p>
+      {%- endif %}
+      {% if o.website or o.email or o.twitter -%}
+      {% set break = joiner('<br>'|safe) -%}
+      <p class="text-nowrap">
+        {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
+        {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
+        {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
+      </p>
+      {%- endif %}
+    </div>
+    {%- endfor %}
+  </div>
+</section>
+{%- endif %}
 {%- endmacro %}

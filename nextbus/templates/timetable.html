@@ -1,7 +1,23 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
-{% block title %}{{ service.line }}: {{ service.description }}{% endblock %}
+{% macro print_similar_services() -%}
+{% if similar -%}
+<section>
+  <h2>Similar services</h2>
+  {% call(s) f.print_list(similar) -%}
+  <a href="{{ url_for('page.service_timetable', service_code=s.service.code, reverse=s.direction, date=select_date.date.data) }}" class="item service">
+    <span class="line-outer">
+      <span class="line">{{ s.service.line }}</span>
+    </span>
+    <span class="item-label">{{ s.service.short_description }}</span>
+  </a>
+  {%- endcall %}
+</section>
+{%- endif %}
+{%- endmacro %}
+
+{% block title %}{{ service.line }}: {{ service.short_description }}{% endblock %}
 
 {% block content %}
 <nav>
@@ -73,7 +89,11 @@
         <tr class="timetable-row{{ row_class }}">
           <th>
             <a href= "{{ url_for('page.stop_atco', atco_code=stop.atco_code) }}" class="timetable-stop">
+              {% if stop.locality.name in stop.name -%}
+              <span class="timetable-label">{{ stop.name }}</span>
+              {%- else -%}
               <span class="timetable-label">{{ stop.locality.name }}, {{ stop.name }}</span>
+              {%- endif %}
               <span class="timetable-ind">{{ f.print_stop_indicator(stop.short_ind, stop.stop_type, stop.admin_area_ref) }}</span>
             </a>
           </th>
@@ -120,28 +140,18 @@
     <p>No stops found for this service.</p>
     {%- endif %}
   </section>
-  {% if operators -%}
-  <section class="card">
-    <h2>Operators</h2>
-    <div class="operators">
-      {%- for o in operators %}
-      <div>
-        <h4>{{ o.name }}</h4>
-        {% if o.address -%}
-        <p>{{ o.split_address|join('<br>'|safe) }}</p>
-        {%- endif %}
-        {% if o.website or o.email or o.twitter -%}
-        {% set break = joiner('<br>'|safe) -%}
-        <p>
-          {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
-          {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
-          {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
-        </p>
-        {%- endif %}
-      </div>
-      {%- endfor %}
+  {% if operators and similar -%}
+  <div class="columns">
+    <div class="column-1">
+      {{ f.print_operators(operators) }}
     </div>
-  </section>
+    <div class="column-1">
+      {{ print_similar_services() }}
+    </div>
+  </div>
+  {%- else -%}
+  {{ f.print_operators(operators) }}
+  {{ print_similar_services() }}
   {%- endif %}
 </main>
 {% endblock %}

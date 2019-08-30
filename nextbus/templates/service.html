@@ -1,6 +1,22 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
 
+{% macro print_similar_services() -%}
+{% if similar -%}
+<section>
+  <h2>Similar services</h2>
+  {% call(s) f.print_list(similar) -%}
+  <a href="{{ url_for('page.service', service_code=s.service.code, reverse=s.direction) }}" class="item service">
+    <span class="line-outer">
+      <span class="line">{{ s.service.line }}</span>
+    </span>
+    <span class="item-label">{{ s.service.short_description }}</span>
+  </a>
+  {%- endcall %}
+</section>
+{%- endif %}
+{%- endmacro %}
+
 {% block title %}{{ service.line }}: {{ service.short_description }}{% endblock %}
 
 {% block content %}
@@ -71,43 +87,9 @@
       </section>
     </div>
     {% if operators or similar -%}
-    <div class="column-1">
-      {% if operators -%}
-      <section>
-        <h2>Operators</h2>
-        <div class="operators">
-          {%- for o in operators %}
-          <div>
-            <h4>{{ o.name }}</h4>
-            {% if o.address -%}
-            <p>{{ o.split_address|join('<br>'|safe) }}</p>
-            {%- endif %}
-            {% if o.website or o.email or o.twitter -%}
-            {% set break = joiner('<br>'|safe) -%}
-            <p>
-              {% if o.website %}{{ break() }}<a href="{{ o.website }}">{{ o.website }}</a>{% endif %}
-              {% if o.email %}{{ break() }}<a href="mailto:{{ o.email }}">{{ o.email }}</a>{% endif %}
-              {% if o.twitter %}{{ break() }}<a href="https://twitter.com/{{ o.twitter[1:] if o.twitter.startswith('@') else o.twitter }}">{{ o.twitter }}</a>{% endif %}
-            </p>
-            {%- endif %}
-          </div>
-          {%- endfor %}
-        </div>
-      </section>
-      {%- endif %}
-      {% if similar -%}
-      <section>
-        <h2>Similar services</h2>
-        {% call(s) f.print_list(similar) -%}
-        <a href="{{ url_for('page.service', service_code=s.service.code, reverse=s.direction) }}" class="item service">
-          <span class="line-outer">
-            <span class="line">{{ s.service.line }}</span>
-          </span>
-          <span class="item-label">{{ s.service.short_description }}</span>
-        </a>
-        {%- endcall %}
-      </section>
-      {%- endif %}
+    <div class="column-1 {% if mirrored %}column-offset{% endif %}">
+      {{ f.print_operators(operators) }}
+      {{ print_similar_services() }}
     </div>
     {%- endif %}
   </div>

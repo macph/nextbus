@@ -107,23 +107,6 @@ def modify_query(**values):
         return request.base_url
 
 
-@page.app_template_global()
-def display_long_date(date):
-    """ Displays a date in long form, eg 'Monday 29th April 2019'. """
-    second_last = (date.day // 10) % 10
-    last = date.day % 10
-    if second_last != 1 and last == 1:
-        ordinal = "st"
-    elif second_last != 1 and last == 2:
-        ordinal = "nd"
-    elif second_last != 1 and last == 3:
-        ordinal = "rd"
-    else:
-        ordinal = "th"
-
-    return f"{date:%A} {date.day}{ordinal} {date:%B} {date.year}"
-
-
 @page.route("/<exists:filename>")
 def send_from_root(filename):
     return current_app.send_static_file(filename)

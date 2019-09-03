@@ -48,7 +48,7 @@
 
   <section id="timetable">
     <div class="inline">
-      <p style="margin-right: 10px;">{% if select_date.date.data is not none %}{{ display_long_date(select_date.date.data) }}{% endif %}</p>
+      <p style="margin-right: 10px;">{% if select_date.date.data is not none %}{{ select_date.date_long_form }}{% endif %}</p>
       <form method="GET" action="" class="form">
         <label>Change date</label>
         {{ select_date.date() }}

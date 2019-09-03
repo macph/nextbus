@@ -35,6 +35,22 @@ class FilterResults(FlaskForm):
         self.area.choices = sorted(areas.items(), key=lambda a: a[1])
 
 
+def _date_long_form(date):
+    """ Displays a date in long form, eg 'Monday 29th April 2019'. """
+    second_last = (date.day // 10) % 10
+    last = date.day % 10
+    if second_last != 1 and last == 1:
+        ordinal = "st"
+    elif second_last != 1 and last == 2:
+        ordinal = "nd"
+    elif second_last != 1 and last == 3:
+        ordinal = "rd"
+    else:
+        ordinal = "th"
+
+    return f"{date:%A} {date.day}{ordinal} {date:%B} {date.year}"
+
+
 class SelectDate(FlaskForm):
     """ Pick a date for service timetable. """
     class Meta(object):
@@ -44,6 +60,13 @@ class SelectDate(FlaskForm):
     date = html5_fields.DateField("date")
     _start = None
     _end = None
+
+    @property
+    def date_long_form(self):
+        if self.date.data is not None:
+            return _date_long_form(self.date.data)
+        else:
+            return None
 
     def set_dates(self, service):
         """ Sets starting and ending dates from a service's patterns for
@@ -62,12 +85,12 @@ class SelectDate(FlaskForm):
             return
         if self._start is not None and field.data < self._start:
             raise validators.ValidationError(
-                "Timetable data for this service is available from %s." %
-                self._start.strftime("%d/%m/%Y")
+                f"Timetable data for this service is available from "
+                f"{_date_long_form(self._end)}."
             )
 
         if self._end is not None and field.data > self._end:
             raise validators.ValidationError(
-                "Timetable data for this service is available up to %s." %
-                self._end.strftime("%d/%m/%Y")
+                f"Timetable data for this service is available up to "
+                f"{_date_long_form(self._end)}."
             )

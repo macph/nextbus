@@ -5,8 +5,8 @@
 {% block content %}
 <main>
   <h1>Regions</h1>
+  {%- for code, name in regions|dictsort %}
   <section>
-    {%- for code, name in regions|dictsort %}
     <h2 id="{{ code }}">{{ name }}</h2>
     {% call(a) f.print_list(areas[code], 'list-places') -%}
     {% if a.area_type == 'admin_area' -%}
@@ -15,7 +15,7 @@
     <a class="item item-place" href="{{ url_for('page.list_in_district', district_code=a.area_code) }}">{{ a.area_name }}</a>
     {%- endif %}
     {%- endcall %}
-    {%- endfor %}
   </section>
+  {%- endfor %}
 </main>
 {% endblock %}

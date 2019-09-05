@@ -60,7 +60,7 @@ window.addEventListener('load', function() {
     if (list != null && (fl = stopServiceFilter(list, groups)) != null) {
         let main = document.querySelector('main');
         let first = main.querySelector('section');
-        let section = element('section', fl.container);
+        let section = element('section', {className: 'aside'}, fl.container);
         main.insertBefore(section, first);
         fl.menu.updateHeight();
     }

@@ -6,9 +6,31 @@
 {% set f_areas = filters|default(false) and filters.area.choices|length > 1 %}
 
 {# Set checkbox as checked if matching value is in query string #}
-{% macro checked(name, value) %}
+{% macro checked(name, value) -%}
 {% if value in request.args.getlist(name) %}checked{% endif %}
-{% endmacro %}
+{%- endmacro %}
+
+{% macro list_pages(left=2, right=5) -%}
+<p>
+  {% if results.page - left > 1 -%}
+  <a class="action" title="Go to first page" href="{{ modify_query(page=1) }}">«</a>
+  {%- else -%}
+  <span class="inactive">«</span>
+  {%- endif %}
+  {%- for page in results.iter_pages(left_current=left, left_edge=0, right_current=right, right_edge=0) %}
+  {% if page and page != results.page -%}
+  <a class="action" title="Go to page {{ page }}" href="{{ modify_query(page=page) }}">{{ page }}</a>
+  {%- elif page -%}
+  <span class="inactive">{{ results.page }}</span>
+  {%- endif %}
+  {%- endfor %}
+  {% if results.page + right - 1 < results.pages -%}
+  <a class="action" title="Go to last page" href="{{ modify_query(page=results.pages) }}">»</a>
+  {%- else -%}
+  <span class="inactive">»</span>
+  {%- endif %}
+</p>
+{%- endmacro %}
 
 {% macro group_tab(value, name, selected) %}
 <li>
@@ -23,22 +45,20 @@
 {% block content %}
 <main>
   <h1>Search</h1>
-  <section>
+  <section class="aside">
     <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
       {{ g.form.hidden_tag() }}
       <input type="search" name="search" placeholder="Find a stop..." value="{{ query if query is not none else '' }}" aria-label="Find a bus stop" required>
       <button type="submit" name="submit" title="Search" value="1">Search</button>
     </form>
-  </section>
 
-  {% if f_areas -%}
-  <section>
-    <form method="get" id="form-select-area">
+    {% if f_areas -%}
+    <form method="get" id="form-select-area" class="form">
       {{ filters.area(id="select-area") }}
       <button id="select-area-refresh" type="submit">Refresh</button>
     </form>
+    {%- endif %}
   </section>
-  {%- endif %}
 
   {% if query is not none -%}
 
@@ -98,12 +118,8 @@
 
     {% if results.has_next or results.has_prev -%}
     <div class="inline">
-      <p>
-        {% if results.has_prev %}<a class="action" href="{{ modify_query(page=1) }}">Start</a>{% endif %}
-        {% if results.page > 2 %}<a class="action" href="{{ modify_query(page=results.prev_num) }}">Previous</a>{% endif %}
-      </p>
-      <p>{{ results.page }} of {{ results.pages }}</p>
-      <p>{% if results.has_next %}<a class="action" href="{{ modify_query(page=results.next_num) }}">Next</a>{% endif %}</p>
+      <p></p>
+      {{ list_pages() }}
     </div>
     {%- endif %}
 

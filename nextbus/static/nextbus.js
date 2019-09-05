@@ -23,7 +23,6 @@ const LAYOUT_CURVE_MARGIN = 6;
 const LAYOUT_LINE_STROKE = 7.2;
 const LAYOUT_TIMEOUT = 500;
 
-const LAYOUT_DOM_ITEM_LEFT = 15;
 const LAYOUT_DOM_TEXT_LEFT = 12;
 const LAYOUT_DOM_IND_WIDTH = 36 * 0.9;
 
@@ -3510,7 +3509,7 @@ function Panel(stopMap, mapPanel) {
             subtitle = element('p', 'Operated by ', listOperators);
         }
 
-        let tabs = element('ul', {className: 'tabs tabs-3'});
+        let tabs = element('ul', {className: 'tabs tabs-2'});
         if (data.mirrored) {
             let newState = {service: {code: data.code, reverse: !data.reverse}};
             let active = element('li',
@@ -4240,7 +4239,6 @@ function Diagram(container, data) {
      */
     this._adjustItems = function() {
         let space = self.scale * LAYOUT_SPACE_X,
-            itemLeft = LAYOUT_DOM_ITEM_LEFT,
             textLeft = self.scale * LAYOUT_DOM_TEXT_LEFT,
             paraLeft = self.scale * LAYOUT_DOM_IND_WIDTH + textLeft;
 
@@ -4263,7 +4261,7 @@ function Diagram(container, data) {
             text = item.querySelector('.item-label');
             para = item.querySelector('p');
 
-            item.style.paddingLeft = itemLeft + space * v.column + 'px';
+            item.style.paddingLeft = space * v.column + 'px';
             if (text != null) {
                 text.style.marginLeft = textLeft + space * (width - v.column) + 'px';
             }

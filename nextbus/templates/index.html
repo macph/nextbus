@@ -15,9 +15,9 @@
 
 {% block content %}
 <main>
-  <h1 class="text-middle">Live times in Great&nbsp;Britain</h1>
   <div>
-    <section>
+    <h1 class="text-middle">Live times in Great&nbsp;Britain</h1>
+    <section class="aside">
       <form class="form" action="{{ g.action }}" method="post" name="search" autocomplete="off">
         {{ g.form.hidden_tag() }}
         <input type="search" name="search" placeholder="Find a stop..." aria-label="Find a bus stop" required>
@@ -25,8 +25,8 @@
         <button id="help-open" type="button" title="Help with searching">?</button>
       </form>
     </section>
+    {% if starred|length > 0 -%}
     <section>
-      {% if starred|length > 0 -%}
       <div class="h3-inline">
         <h3>Starred stops</h3>
       </div>
@@ -40,10 +40,10 @@
       </a>
       <a href="{{ url_for('page.show_map_stop', atco_code=s.atco_code) }}" title="Go to map for {{ s.long_name }}" class="item item-action">Map</a>
       {%- endcall %}
-      {%- else -%}
-      <p class="text-middle">You can have your favourite stops here! Just find them and star them.</p>
-      {%- endif %}
     </section>
+    {%- else -%}
+    <p class="text-middle">You can have your favourite stops here! Just find them and star them.</p>
+    {%- endif %}
   </div>
 </main>
 {% endblock %}

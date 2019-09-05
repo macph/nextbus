@@ -36,15 +36,17 @@
     <a class="action" href="{{ url_for('page.show_map_service_direction', service_code=service.code, reverse=reverse) }}" title="View on map">Map</a>
   </div>
 
-  <ul class="tabs tabs-3">
-    {% if mirrored and not reverse -%}
+  {% if mirrored -%}
+  <ul class="tabs tabs-2">
+    {% if not reverse -%}
     <li><div class="tab tab-active">Outbound</div></li>
     <li><a class="tab" href="{{ url_for('.service_timetable', service_code=service.code, reverse=true, date=select_date.date.data) }}">Inbound</a></li>
-    {%- elif mirrored -%}
+    {%- else -%}
     <li><a class="tab" href="{{ url_for('.service_timetable', service_code=service.code, reverse=false, date=select_date.date.data) }}">Outbound</a></li>
     <li><div class="tab tab-active">Inbound</div></li>
     {%- endif %}
   </ul>
+  {%- endif %}
 
   <section id="timetable">
     <div class="inline">

@@ -2319,12 +2319,13 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
 
         self.get(onStart);
 
-        let time = INTERVAL;
+        let expires = Date.now() + INTERVAL * 1000;
+        let left;
         self.loopActive = true;
         self.interval = setInterval(function() {
-            time--;
-            self.headingCountdown.textContent = (time > 0) ? time : 'now';
-            if (time <= 0) {
+            left = expires - Date.now();
+            self.headingCountdown.textContent = (left < 1000) ? 'now' : Math.round(left / 1000);
+            if (left <= 0) {
                 if (self.loopEnding) {
                     self.headingCountdown.textContent = '';
                     self.loopActive = false;
@@ -2335,7 +2336,7 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
                     }
                 } else {
                     self.get(onInter);
-                    time = INTERVAL;
+                    expires = Date.now() + INTERVAL * 1000;
                 }
             }
         }, 1000);

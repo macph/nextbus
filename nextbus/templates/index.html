@@ -6,7 +6,7 @@
 
 {% block header -%}
 <header>
-  <a href="{{ url_for('page.index') }}">nxb</a>
+  <a title="Home page" href="{{ url_for('page.index') }}">nxb</a>
   {% if config.get('GEOLOCATION_ENABLED', false) %}<a href="{{ url_for('page.find_near_location') }}" title="Find stops nearby">Nearby</a>{% endif %}
   <a href="{{ url_for('page.list_regions') }}" title="Browse regions">Regions</a>
   <a href="{{ url_for('page.show_map') }}" title="View stops on map">Map</a>

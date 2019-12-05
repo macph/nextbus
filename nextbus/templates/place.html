@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% import 'functions.html' as f %}
+{% set body = 'body-slim' %}
 
 {% set area_name = locality.district.name|default(locality.admin_area.name) %}
 {% set place_name = (locality.name + ', ' + area_name) if locality.name != area_name else locality.name %}

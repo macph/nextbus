@@ -26,7 +26,7 @@
 
 {% block header -%}
 <header>
-  <a href="{{ url_for('page.index') }}">nxb</a>
+  <a title="Home page" href="{{ url_for('page.index') }}">nxb</a>
   {% if not hide_menu|default(false) -%}
   <a id="menu-open" title="Open menu" style="display: none;">Menu</a>
   {%- endif %}
@@ -56,7 +56,7 @@ window.addEventListener('load', function() {
 <div class="overlay" id="overlay-menu">
   <div class="overlay-content">
     <header>
-      <a href="/">nxb</a>
+      <a title="Home page" href="/">nxb</a>
       <a id="menu-close" title="Close menu">Close</a>
     </header>
     <div class="overlay-content-body">

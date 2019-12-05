@@ -4,7 +4,7 @@
 
 html {
   font-family: 'Inter', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10', 'cv11';
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10';
   font-size: 62.5%;
   color: #212121;
 }
@@ -57,10 +57,13 @@ a {
   color: #212121;
   text-decoration: none;
   cursor: pointer;
-  transition: 0.2s border-color ease-out;
+  transition:
+    0.2s color ease-out,
+    0.2s border-color ease-out;
 }
 
 a:hover {
+  color: #FF9800;
   border-color: #FF9800;
 }
 
@@ -101,6 +104,7 @@ input[type="file"] {
   color: #212121;
   transition:
     0.2s background-color ease-out,
+    0.2s border-color ease-out,
     0.2s color ease-out;
   cursor: pointer;
 }
@@ -108,8 +112,8 @@ input[type="file"] {
 button:hover,
 input[type="submit"]:hover,
 input[type="file"]:hover {
-  background-color: #212121;
-  color: white;
+  background-color: #FF9800;
+  color: #212121;
 }
 
 input:not([type="submit"]):not([type="file"]) {
@@ -230,7 +234,7 @@ header a:first-child {
 }
 
 header a:hover {
-  background-color: white;
+  background-color: #FF9800;
   color: #212121;
 }
 
@@ -357,9 +361,9 @@ section {
 }
 
 .action:hover {
-  background-color: #212121;
+  background-color: #FF9800;
   border-color: transparent;
-  color: white;
+  color: #212121;
 }
 
 .button-danger {
@@ -453,6 +457,7 @@ section {
 }
 
 .overlay-content a:hover {
+  color: #FF9800;
   border-color: #FF9800;
 }
 
@@ -466,7 +471,8 @@ section {
 .overlay-content button:hover,
 .overlay-content input[type="submit"]:hover,
 .overlay-content input[type="file"]:hover {
-  background-color: white;
+  background-color: #FF9800;
+  border-color: #FF9800;
   color: #212121;
 }
 
@@ -489,7 +495,8 @@ section {
 }
 
 .overlay-content header a:hover {
-  background-color: white;
+  background-color: #FF9800;
+  color: #212121;
 }
 
 .overlay-content .action {
@@ -499,7 +506,7 @@ section {
 
 .overlay-content .action:hover {
   border-color: transparent;
-  background-color: white;
+  background-color: #FF9800;
   color: #212121;
 }
 
@@ -530,7 +537,7 @@ section {
 }
 
 .overlay-content .item:hover {
-  background-color: white;
+  background-color: #FF9800;
   color: #212121;
 }
 
@@ -690,8 +697,8 @@ section {
 }
 
 .tab:not(.tab-active):hover {
-  background-color: #212121;
-  color: white;
+  background-color: #E0E0E0;
+  color: #212121;
 }
 
 .tab.tab-active {
@@ -936,9 +943,9 @@ section {
 /* LIST OF ITEMS */
 
 .list {
-  margin: 1rem -1rem;
+  margin: 1rem -2rem;
   padding: 0;
-  width: calc(100% + 2rem);
+  width: calc(100% + 4rem);
   list-style: none;
   column-width: auto;
   column-span: none;
@@ -971,7 +978,7 @@ section {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 2rem;
   /* Prevent elements breaking up between columns */
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
@@ -989,8 +996,8 @@ section {
 }
 
 .item:hover {
-  background-color: #212121;
-  color: white;
+  background-color: #E0E0E0;
+  color: #212121;
 }
 
 .item-multiline {
@@ -1131,7 +1138,10 @@ section {
   width: calc(100% - 1rem);
   padding: 0.25rem 1rem 0.25rem 0;
   cursor: pointer;
-  border: none;
+
+  border-width: 0.1rem;
+  border-color: #212121;
+  border-style: none none solid;
 }
 
 .filter-input::before {
@@ -1169,9 +1179,9 @@ section {
 }
 
 .filter-selected:not(.filter-selected-disabled):hover {
+  background-color: #FF9800;
   border-color: #212121;
-  background-color: #212121;
-  color: white;
+  color: #212121;
 }
 
 .filter-selected-disabled {
@@ -1193,7 +1203,7 @@ section {
 
   border-width: 0.1rem;
   border-color: #212121;
-  border-style: solid;
+  border-style: none solid solid;
   background-color: white;
   transition: height 0.2s ease-out;
 }
@@ -1218,8 +1228,8 @@ section {
 }
 
 .filter-menu-item:not(.filter-menu-item-disabled):hover {
-  background-color: #212121;
-  color: white;
+  background-color: #E0E0E0;
+  color: #212121;
 }
 
 
@@ -1299,7 +1309,7 @@ section {
 /* SERVICE TIMETABLE */
 
 .timetable-wrapper {
-  margin: 1.6rem -1rem;
+  margin: 1.6rem -2rem;
   overflow-x: auto;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch; /* Momentum-based scrolling on Safari */
@@ -1352,8 +1362,8 @@ section {
 }
 
 .timetable-stop:hover {
-  background-color: #212121;
-  color: white;
+  background-color: #E0E0E0;
+  color: #212121;
 }
 
 .timetable-row > td {
@@ -1392,8 +1402,8 @@ section {
 }
 
 .timetable-action:hover {
-  background: #212121;
-  color: white;
+  background: #E0E0E0;
+  color: #212121;
 }
 
 .timetable-label {
@@ -1456,7 +1466,7 @@ section {
 
 .leaflet-container {
   font-family: 'Inter', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10', 'cv11';
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10';
 }
 
 .leaflet-container a {
@@ -1555,6 +1565,12 @@ section {
     margin-right: 0;
   }
 
+  .body-slim > nav,
+  .body-slim > main {
+    max-width: 96rem;
+  }
+
+  .body-narrow > nav,
   .body-narrow > main {
     max-width: 72rem;
   }

@@ -1,8 +1,7 @@
-FROM python:3.7-alpine
+FROM python:3.8-alpine as base
 
 ENV PYTHONDONTWRITEBYTECODE 1
 
-RUN pip3 install pipenv
 # Need shared libraries for python C extensions
 RUN set -ex \
     && apk update \
@@ -13,21 +12,26 @@ RUN set -ex \
 # Required libraries installed in /usr/lib
 ENV LD_LIBRARY_PATH /usr/lib
 
-# Copy over app data
-RUN mkdir /app
-COPY . /app
+# Set poetry version
+ENV POETRY_VERSION 0.12.17
+RUN pip3 install "poetry==$POETRY_VERSION"
 
-# Install required packages - need to build lxml and psycopg2 with muslc
 WORKDIR /app
+COPY pyproject.toml poetry.lock /app/
+# Install required packages - need to build lxml and psycopg2 with muslc
 RUN set -ex \
     && apk update \
     && apk add --no-cache --virtual .build-deps \
         gcc \
         musl-dev \
         python3-dev \
-    && pipenv install --deploy --system \
+    && poetry config settings.virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi \
     && apk del --no-cache .build-deps
-RUN pip3 uninstall --yes pipenv
+RUN pip3 uninstall --yes poetry
+
+# Copy over app data
+COPY . .
 
 # Expose port 8000 to reverse proxy
 EXPOSE 8000

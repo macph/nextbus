@@ -34,19 +34,19 @@ PostgreSQL must be at least version 11 to support particular full text search fu
 With the configuration set up, use docker or `poetry run` to access the application. Run the database migrations:
 
 ```bash
-nxb db upgrade
+python manage.py db upgrade
 ```
 
 Populate with data:
 
 ```bash
-nxb populate --all
+python manage.py populate --all
 ```
 
 which will download NPTG, NaPTAN and NSPL data and commits them, as well as doing some modifications. If you've added TNDS FTP credentials to the config, TNDS service data will be added as well. Run the server locally in development mode with
 
 ```bash
-nxb run
+python manage.py run
 ```
 
 or run the Docker container.

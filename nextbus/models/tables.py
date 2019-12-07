@@ -124,6 +124,18 @@ def _insert_bank_holiday_dates(target, connection, **kw):
         {"holiday_ref": 7, "date": "2019-08-26"},
         {"holiday_ref": 9, "date": "2019-12-25"},
         {"holiday_ref": 10, "date": "2019-12-26"},
+        {"holiday_ref": 1, "date": "2020-01-01"},
+        {"holiday_ref": 2, "date": "2020-01-02"},
+        {"holiday_ref": 3, "date": "2020-04-10"},
+        {"holiday_ref": 4, "date": "2020-04-13"},
+        {"holiday_ref": 5, "date": "2020-05-08"},
+        {"holiday_ref": 6, "date": "2020-05-25"},
+        {"holiday_ref": 7, "date": "2020-08-03"},
+        {"holiday_ref": 8, "date": "2020-08-31"},
+        {"holiday_ref": 14, "date": "2020-12-24"},
+        {"holiday_ref": 9, "date": "2020-12-25"},
+        {"holiday_ref": 12, "date": "2020-12-28"},
+        {"holiday_ref": 15, "date": "2020-12-31"},
     ])
     connection.execute(statement)
 

@@ -12,7 +12,7 @@ Clone the repo:
 git clone https://github.com/macph/nextbus.git
 ```
 
-The server can be set up using Docker or installed locally with pipenv. If you're using Docker Compose, `docker_compose.yml` assumes you've added `nxb_config.py` and `gu_config.py` to the `instance` folder ignored by git.
+The server can be set up using Docker or installed locally with poetry. If you're using Docker Compose, `docker_compose.yml` assumes you've added `nxb_config.py` and `gu_config.py` to the `instance` folder ignored by git.
 
 ```bash
 mkdir instance
@@ -25,13 +25,13 @@ echo 'bind = ["0.0.0.0:8000"]' > instance/gu_config.py
 
 See `default_config.py` for all options.
 
-Use `docker-compose up` or `pipenv install` to set up the application.
+Use `docker-compose up` or `poetry install` to set up the application.
 
 ## Starting up
 
 PostgreSQL must be at least version 11 to support particular full text search functionality.
 
-With the configuration set up, use `docker exec` or `pipenv run` to access the application. Run the database migrations:
+With the configuration set up, use docker or `poetry run` to access the application. Run the database migrations:
 
 ```bash
 nxb db upgrade

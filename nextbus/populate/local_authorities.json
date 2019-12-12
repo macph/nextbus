@@ -532,11 +532,11 @@
         "district_code": "206"
     },
     {
-        "la_name": "Christchurch",
-        "la_code": "E07000048",
+        "la_name": "Dorset",
+        "la_code": "E06000059",
         "admin_area_code": "077",
         "atco_area_code": "120",
-        "district_code": "47"
+        "district_code": null
     },
     {
         "la_name": "Portsmouth",
@@ -551,13 +551,6 @@
         "admin_area_code": "106",
         "atco_area_code": "440",
         "district_code": "54"
-    },
-    {
-        "la_name": "East Dorset",
-        "la_code": "E07000049",
-        "admin_area_code": "077",
-        "atco_area_code": "120",
-        "district_code": "66"
     },
     {
         "la_name": "Tonbridge and Malling",
@@ -595,13 +588,6 @@
         "district_code": null
     },
     {
-        "la_name": "North Dorset",
-        "la_code": "E07000050",
-        "admin_area_code": "077",
-        "atco_area_code": "120",
-        "district_code": "132"
-    },
-    {
         "la_name": "Tunbridge Wells",
         "la_code": "E07000116",
         "admin_area_code": "086",
@@ -635,13 +621,6 @@
         "admin_area_code": "025",
         "atco_area_code": "230",
         "district_code": null
-    },
-    {
-        "la_name": "Purbeck",
-        "la_code": "E07000051",
-        "admin_area_code": "077",
-        "atco_area_code": "120",
-        "district_code": "150"
     },
     {
         "la_name": "Richmond upon Thames",
@@ -686,13 +665,6 @@
         "district_code": "303"
     },
     {
-        "la_name": "West Dorset",
-        "la_code": "E07000052",
-        "admin_area_code": "077",
-        "atco_area_code": "120",
-        "district_code": "225"
-    },
-    {
         "la_name": "Darlington",
         "la_code": "E06000005",
         "admin_area_code": "015",
@@ -733,13 +705,6 @@
         "admin_area_code": "078",
         "atco_area_code": "130",
         "district_code": null
-    },
-    {
-        "la_name": "Weymouth and Portland",
-        "la_code": "E07000053",
-        "admin_area_code": "077",
-        "atco_area_code": "120",
-        "district_code": "231"
     },
     {
         "la_name": "Gwynedd",
@@ -1687,11 +1652,11 @@
         "district_code": null
     },
     {
-        "la_name": "Taunton Deane",
-        "la_code": "E07000190",
+        "la_name": "Somerset West and Taunton",
+        "la_code": "E07000246",
         "admin_area_code": "098",
         "atco_area_code": "360",
-        "district_code": "200"
+        "district_code": null
     },
     {
         "la_name": "Orkney Islands",
@@ -1727,13 +1692,6 @@
         "admin_area_code": "089",
         "atco_area_code": "270",
         "district_code": "135"
-    },
-    {
-        "la_name": "West Somerset",
-        "la_code": "E07000191",
-        "admin_area_code": "098",
-        "atco_area_code": "360",
-        "district_code": "229"
     },
     {
         "la_name": "Aylesbury Vale",
@@ -2163,8 +2121,8 @@
         "district_code": "96"
     },
     {
-        "la_name": "Bournemouth",
-        "la_code": "E06000028",
+        "la_name": "Bournemouth, Christchurch and Poole",
+        "la_code": "E06000058",
         "admin_area_code": "005",
         "atco_area_code": "129",
         "district_code": null
@@ -2177,11 +2135,11 @@
         "district_code": null
     },
     {
-        "la_name": "Forest Heath",
-        "la_code": "E07000201",
+        "la_name": "West Suffolk",
+        "la_code": "E07000245",
         "admin_area_code": "101",
         "atco_area_code": "390",
-        "district_code": "83"
+        "district_code": null
     },
     {
         "la_name": "South Norfolk",
@@ -2189,13 +2147,6 @@
         "admin_area_code": "091",
         "atco_area_code": "290",
         "district_code": "180"
-    },
-    {
-        "la_name": "Poole",
-        "la_code": "E06000029",
-        "admin_area_code": "043",
-        "atco_area_code": "128",
-        "district_code": null
     },
     {
         "la_name": "Havant",
@@ -2303,13 +2254,6 @@
         "district_code": null
     },
     {
-        "la_name": "St Edmundsbury",
-        "la_code": "E07000204",
-        "admin_area_code": "101",
-        "atco_area_code": "390",
-        "district_code": "189"
-    },
-    {
         "la_name": "East Northamptonshire",
         "la_code": "E07000152",
         "admin_area_code": "093",
@@ -2352,11 +2296,11 @@
         "district_code": "109"
     },
     {
-        "la_name": "Suffolk Coastal",
-        "la_code": "E07000205",
+        "la_name": "East Suffolk",
+        "la_code": "E07000244",
         "admin_area_code": "101",
         "atco_area_code": "390",
-        "district_code": "195"
+        "district_code": null
     },
     {
         "la_name": "South Lakeland",
@@ -2394,13 +2338,6 @@
         "district_code": "141"
     },
     {
-        "la_name": "Waveney",
-        "la_code": "E07000206",
-        "admin_area_code": "101",
-        "atco_area_code": "390",
-        "district_code": "218"
-    },
-    {
         "la_name": "Bedford",
         "la_code": "E06000055",
         "admin_area_code": "069",
@@ -2423,7 +2360,7 @@
     },
     {
         "la_name": "North Lanarkshire",
-        "la_code": "S12000044",
+        "la_code": "S12000050",
         "admin_area_code": "133",
         "atco_area_code": "616",
         "district_code": null
@@ -2507,7 +2444,7 @@
     },
     {
         "la_name": "Glasgow City",
-        "la_code": "S12000046",
+        "la_code": "S12000049",
         "admin_area_code": "127",
         "atco_area_code": "609",
         "district_code": null

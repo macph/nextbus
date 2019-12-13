@@ -26,21 +26,23 @@ def create_app(config_obj=None, config_file=None):
     """
     # Create app
     app = Flask(__name__, instance_relative_config=True)
-    app.logger = logger.app_logger
-    # Load logging configuration
-    logger.load_config(app)
 
     # Load application configuration
     if not bool(config_obj) ^ bool(config_file):
         raise ValueError("A configuration object or file must be specified.")
     elif config_obj is not None:
         app.config.from_object(config_obj)
-        app.logger.info("Configuration loaded from object '%s'" % config_obj)
+        message = "Configuration loaded from object '%s'" % config_obj
     else:
         # Load app defaults first
         app.config.from_object("default_config.Config")
         app.config.from_pyfile(config_file)
-        app.logger.info("Configuration loaded from file '%s'" % config_file)
+        message = "Configuration loaded from file '%s'" % config_file
+
+    app.logger = logger.app_logger
+    # Load logging configuration and log initial configuration
+    logger.load_config(app)
+    app.logger.info(message)
 
     # Initialise SQLAlchemy and Migrate in app
     db.init_app(app)

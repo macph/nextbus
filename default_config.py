@@ -1,6 +1,7 @@
 """
 Configuration file for running current version of nextbus.
 """
+import os
 
 
 class Config(object):
@@ -10,8 +11,11 @@ class Config(object):
                                     # the above address
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False         # Must be kept False and let all SQLAlchemy queries be logged
+
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
     DATABASE_DUMP_PATH = "temp/nextbus.db.dump"
                                     # Location of file to dump database to and restore from
+
 
     WTF_CSRF_ENABLED = True         # Enables CSRF in WTForms objects
     SECRET_KEY = None               # A different secret key must be set in production

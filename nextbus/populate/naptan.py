@@ -3,23 +3,22 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import collections
 import copy
+from importlib.resources import open_binary
 import functools
 import operator
 import os
 import tempfile
 import zipfile
 
+from flask import current_app
 import lxml.etree as et
 import pyparsing as pp
 
-from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import file_ops, utils
 
 
 NAPTAN_URL = r"http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx"
-NAPTAN_XSLT = r"nextbus/populate/naptan.xslt"
-NAPTAN_XML = r"temp/naptan_data.xml"
 IND_MAX_CHARS = 5
 IND_MAX_WORDS = 2
 
@@ -428,6 +427,8 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
         areas = [a[0] for a in query_area.fetchall()]
         localities = [l[0] for l in query_local.fetchall()]
 
+    root = current_app.config["ROOT_DIRECTORY"]
+
     if not areas or not localities:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data. "
@@ -443,13 +444,13 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
     else:
         path = downloaded = file_ops.download(
             NAPTAN_URL,
-            directory=os.path.join(ROOT_DIR, "temp"),
+            directory=os.path.join(root, "temp"),
             params={"format": "xml"}
         )
 
     split_path = None
     if path is not None and split:
-        split_path = os.path.join(ROOT_DIR, "temp", "NaPTAN_split.zip")
+        split_path = os.path.join(root, "temp", "NaPTAN_split.zip")
         split_naptan_data(areas, path, split_path)
         path = split_path
 
@@ -461,7 +462,8 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
     # Go through data and create objects for committing to database
     _setup_naptan_functions()
 
-    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, NAPTAN_XSLT)))
+    with open_binary("nextbus.populate", "naptan.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
     metadata = utils.reflect_metadata()
     delete = True
     for file_ in iter_files:

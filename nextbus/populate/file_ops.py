@@ -11,18 +11,20 @@ import requests
 import sqlalchemy as sa
 from flask import current_app
 
-from definitions import ROOT_DIR
 from nextbus.populate import utils
 
 
 def _full_path(path=None):
     """ Use the project directory for relative paths, or the absolute path. """
-    if path is None:
-        abs_path = ROOT_DIR
+    root = current_app.config.get("ROOT_DIRECTORY")
+    if root is None and not os.path.isabs(path):
+        raise ValueError("The ROOT_DIRECTORY option is not defined.")
+    elif path is None:
+        abs_path = root
     elif os.path.isabs(path):
         abs_path = path
     else:
-        abs_path = os.path.join(ROOT_DIR, path)
+        abs_path = os.path.join(root, path)
 
     return abs_path
 

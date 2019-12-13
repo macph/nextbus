@@ -2,18 +2,16 @@
 Modify populated data with list of modify and delete entries, for example to
 handle errata in stop point names.
 """
-import os
+from importlib.resources import open_binary
 
 import dateutil.parser as dp
 import lxml.etree as et
 
-from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import utils
 
 
 logger = utils.logger.getChild("modify")
-POST_XML_PATH = os.path.join(ROOT_DIR, "nextbus/populate/modify.xml")
 
 
 def _create_row(model, element):
@@ -112,30 +110,6 @@ def _replace_row(model, element):
         return 0
 
 
-def _load_xml_file(xml_file):
-    """ Finds path for XML file used to modify data and opens it; it can be
-        relative to ROOT_PATH, an absolute path or a file-like object.
-
-        :param xml_file: Path to the XML file or a file-like object.
-        :returns: lxml.etree.ElementTree object.
-    """
-    try:
-        if xml_file is not None and os.path.isabs(xml_file):
-            xml_path = xml_file
-        elif xml_file is not None:
-            xml_path = os.path.join(ROOT_DIR, xml_file)
-        else:
-            xml_path = POST_XML_PATH
-    except TypeError as err:
-        if "expected str, bytes or os.PathLike object" in str(err):
-            # Assume to be a file-like object, for example an opened file
-            xml_path = xml_file
-        else:
-            raise
-
-    return et.parse(xml_path)
-
-
 def modify_data(xml_file=None):
     """ Function to modify data after population from creating, deleting and
         replacing rows with a XML file.
@@ -150,7 +124,12 @@ def modify_data(xml_file=None):
         elements with same names as columns and optional ``old`` attribute. If
         the old value does not match existing values, a warning is issued.
     """
-    data = _load_xml_file(xml_file)
+    if xml_file is None:
+        with open_binary("nextbus.populate", "modify.xml") as file_:
+            data = et.parse(file_)
+    else:
+        data = et.parse(xml_file)
+
     list_tables = data.xpath("table")
     if not all(hasattr(models, t.get("model", "")) for t in list_tables):
         raise ValueError("Every <table> element in the data must have a "

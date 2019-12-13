@@ -1,15 +1,15 @@
 """
 Testing live retrieval of data; will use sample data in the same format.
 """
-import os
+from importlib.resources import open_text
 import json
+import os
 
 from flask import current_app
 import pytest
 import requests
 
-from definitions import ROOT_DIR
-from nextbus import tapi
+from nextbus.live import tapi
 
 
 ATCO_CODE = "490013767D"
@@ -243,7 +243,7 @@ def test_sample_data_ungrouped(with_app, mock_request):
     current_app.config["TRANSPORT_API_ACTIVE"] = False
     sample_data = tapi.get_live_data("", group=False)
 
-    with open(os.path.join(ROOT_DIR, "samples/tapi_live.json")) as f:
+    with open_text("nextbus.live", "tapi_live.json") as f:
         assert sample_data == json.load(f)
 
 
@@ -251,7 +251,7 @@ def test_sample_data_grouped(with_app, mock_request):
     current_app.config["TRANSPORT_API_ACTIVE"] = False
     sample_data = tapi.get_live_data("", group=True)
 
-    with open(os.path.join(ROOT_DIR, "samples/tapi_live_group.json")) as f:
+    with open_text("nextbus.live", "tapi_live_group.json") as f:
         assert sample_data == json.load(f)
 
 

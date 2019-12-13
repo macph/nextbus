@@ -1,18 +1,15 @@
 """
 Populate service operators with the NOC dataset.
 """
-import os
+from importlib.resources import open_binary
 import re
 
 import lxml.etree as et
 
-from definitions import ROOT_DIR
 from nextbus.populate import file_ops, utils
 
 
 NOC_URL = r"https://www.travelinedata.org.uk/noc/api/1.0/nocrecords.xml"
-NOC_XSLT = r"nextbus/populate/noc.xslt"
-NOC_XML = r"temp/noc_data.xml"
 
 REGEX_OP_WEBSITE = re.compile(r"^[^#]*#(.+)#[^#]*$")
 
@@ -57,7 +54,8 @@ def commit_noc_data(path=None):
                              "trying again with CP1252" % file_path)
         data = et.parse(file_path, et.XMLParser(encoding="CP1252"))
 
-    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, NOC_XSLT)))
+    with open_binary("nextbus.populate", "noc.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
     utils.populate_database(
         utils.collect_xml_data(utils.xslt_transform(data, xslt)),
         delete=True

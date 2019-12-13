@@ -13,11 +13,11 @@ import shutil
 import tempfile
 import types
 
+from flask import current_app
 import lxml.etree as et
 import psycopg2.sql
 from sqlalchemy.dialects import postgresql
 
-from definitions import ROOT_DIR
 from nextbus import db, logger, models
 
 
@@ -248,7 +248,10 @@ def _copy_executor(table, null_value):
             cursor.copy_expert(statement, file_)
         except Exception:
             logger.error("Error with COPY", exc_info=1)
-            error_path = os.path.join(ROOT_DIR, "temp/error_data")
+            error_path = os.path.join(
+                current_app.config["ROOT_DIRECTORY"],
+                "temp/error_data"
+            )
             with open(error_path, "w") as error_f:
                 file_.seek(0)
                 shutil.copyfileobj(file_, error_f)

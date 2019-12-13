@@ -1,18 +1,16 @@
 """
 Populate postcode data from NSPL.
 """
+from importlib.resources import open_text
 import json
-import os
 
 from flask import current_app
 
-from definitions import ROOT_DIR
 from nextbus import models
 from nextbus.populate import file_ops, utils
 
 
 NSPL_API = r"https://opendata.camden.gov.uk/resource/ry6e-hbqy.json"
-LA_JSON = r"nextbus/populate/local_authorities.json"
 
 LIST_COLUMNS = [
     "postcode_3",
@@ -60,7 +58,7 @@ def _get_dict_local_authorities():
 
         :returns: Dict with local authority codes as keys
     """
-    with open(os.path.join(ROOT_DIR, LA_JSON), "r") as file_:
+    with open_text("nextbus.populate", "local_authorities.json") as file_:
         la_data = json.load(file_)
 
     local_authorities = {}

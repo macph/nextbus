@@ -1,15 +1,13 @@
 """
 Interacts with Transport API to retrieve live bus times data.
 """
+from importlib.resources import open_text
 import json
-import os
 
 import dateutil.parser
 import dateutil.tz
 import requests
 from flask import current_app
-
-from definitions import ROOT_DIR
 
 
 GB_TZ = dateutil.tz.gettz("Europe/London")
@@ -64,11 +62,8 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
         current_app.logger.debug("Data received: %r" % req.reason)
 
     else:
-        if group:
-            file_name = "samples/tapi_live_group.json"
-        else:
-            file_name = "samples/tapi_live.json"
-        with open(os.path.join(ROOT_DIR, file_name), "r") as sample_file:
+        file_name = "tapi_live_group.json" if group else "tapi_live.json"
+        with open_text("nextbus.live", file_name) as sample_file:
             data = json.load(sample_file)
         current_app.logger.debug("Received sample data from file '%s'" %
                                  file_name)

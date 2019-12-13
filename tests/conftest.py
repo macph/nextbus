@@ -6,7 +6,6 @@ import os
 import lxml.etree as et
 import pytest
 
-from definitions import CONFIG_ENV
 from nextbus import create_app, db, models
 
 from data import TEST_DATA
@@ -94,7 +93,7 @@ def asserts():
 @pytest.fixture(scope="session")
 def app():
     """ Creates app during test, using test database URI if applicable. """
-    config = os.environ.get(CONFIG_ENV)
+    config = os.environ.get("APP_CONFIG")
     os.environ["FLASK_ENV"] = "development"
     if config:
         app = create_app(config_file=config)

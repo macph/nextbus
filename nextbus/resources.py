@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, jsonify, session
 from flask.views import MethodView
 from requests import HTTPError
 
-from nextbus import db, graph, location, models, tapi
+from nextbus import db, graph, location, models, live
 
 
 api = Blueprint("api", __name__, template_folder="templates", url_prefix="/api")
@@ -52,7 +52,7 @@ def stop_get_times(atco_code=None):
         return bad_request(404, "ATCO code %r does not exist." % atco_code)
 
     try:
-        times = tapi.get_nextbus_times(atco_code)
+        times = live.get_nextbus_times(atco_code)
     except (HTTPError, ValueError):
         # Error came up when accessing the external API or it can't be accessed
         current_app.logger.error("Error occurred when retrieving live times "

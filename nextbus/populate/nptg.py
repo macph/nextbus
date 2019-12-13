@@ -1,17 +1,15 @@
 """
 Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
-import os
+from importlib.resources import open_binary
 
 import lxml.etree as et
 
-from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import file_ops, utils
 
+
 NPTG_URL = r"http://naptan.app.dft.gov.uk/datarequest/nptg.ashx"
-NPTG_XSLT = r"nextbus/populate/nptg.xslt"
-NPTG_XML = r"temp/nptg_data.xml"
 
 
 def _remove_districts():
@@ -52,7 +50,9 @@ def commit_nptg_data(archive=None, list_files=None):
         iter_files = file_ops.iter_archive(downloaded)
 
     metadata = utils.reflect_metadata()
-    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, NPTG_XSLT)))
+    with open_binary("nextbus.populate", "nptg.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
+
     delete = True
     for file_ in iter_files:
         file_name = file_.name if hasattr(file_, "name") else file_

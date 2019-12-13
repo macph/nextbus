@@ -6,14 +6,12 @@ import os
 import click
 from flask.cli import FlaskGroup
 
-from definitions import CONFIG_ENV
-
 
 def run_cli_app():
     """ Runs app from CLI. """
     from nextbus import create_app
 
-    config = os.environ.get(CONFIG_ENV)
+    config = os.environ.get("APP_CONFIG")
     if config:
         app = create_app(config_file=config)
     else:

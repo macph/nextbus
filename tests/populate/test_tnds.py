@@ -1,16 +1,16 @@
 """
 Testing TNDS population.
 """
+from importlib.resources import open_binary
 import os
 
 import lxml.etree as et
 import pytest
 
-from definitions import ROOT_DIR
 from nextbus.populate.utils import xslt_func, xslt_transform
 from nextbus.populate.tnds import (
-    TNDS_XSLT, bank_holidays, days_week, weeks_month, format_description,
-    short_description, ServiceCodes, RowIds
+    bank_holidays, days_week, weeks_month, format_description, short_description,
+    ServiceCodes, RowIds
 )
 
 
@@ -146,7 +146,8 @@ def always_true(_, *args):
 
 @pytest.fixture
 def xslt():
-    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT)))
+    with open_binary("nextbus.populate", "tnds.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
     # Replicate functions which check for existing stops and operators
     xslt_func["stop_exists"] = always_true
 

@@ -6,9 +6,6 @@ import logging.config
 import os
 
 
-from definitions import ROOT_DIR
-
-
 app_logger = logging.getLogger("nextbus")
 
 
@@ -44,7 +41,7 @@ PROD_LOG_CONFIG = {
                     "level": "INFO"},
         "file":    {"class": "logging.handlers.RotatingFileHandler",
                     "backupCount": 4,
-                    "filename": os.path.join(ROOT_DIR, "nxb.log"),
+                    "filename": "nxb.log",
                     "formatter": "precise",
                     "level": "INFO",
                     "maxBytes": 2 * 1024 * 1024}
@@ -72,7 +69,7 @@ DEBUG_LOG_CONFIG = {
                     "formatter": "brief",
                     "level": "DEBUG"},
         "file":    {"class": "logging.FileHandler",
-                    "filename": os.path.join(ROOT_DIR, "nxb_debug.log"),
+                    "filename": "nxb_debug.log",
                     "formatter": "precise",
                     "level": "DEBUG",
                     "mode": "w"}
@@ -89,8 +86,17 @@ def load_config(app):
         'ENV' flag was set to 'production' or 'development'.
     """
     if app.config.get("ENV") != "development":
-        logging.config.dictConfig(PROD_LOG_CONFIG)
+        config = PROD_LOG_CONFIG
     else:
         # Set up SQLAlchemy to log all queries
         logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-        logging.config.dictConfig(DEBUG_LOG_CONFIG)
+        config = DEBUG_LOG_CONFIG
+
+    for handler, data in config["handlers"].items():
+        if "filename" in data:
+            data["filename"] = os.path.join(
+                app.config["ROOT_DIRECTORY"],
+                data["filename"]
+            )
+
+    logging.config.dictConfig(PROD_LOG_CONFIG)

@@ -5,17 +5,16 @@ import collections
 import ftplib
 import os
 import re
+from importlib.resources import open_binary
 
 from flask import current_app
 import lxml.etree as et
 
-from definitions import ROOT_DIR
 from nextbus import db, models
 from nextbus.populate import file_ops, utils
 
 
 TNDS_URL = r"ftp.tnds.basemap.co.uk"
-TNDS_XSLT = r"nextbus/populate/tnds.xslt"
 
 BRACKETS = re.compile(r"\((.*)\)")
 SPLIT_PLACES = re.compile(r"\s+-\s+|-\s+|\s+-")
@@ -53,7 +52,11 @@ def download_tnds_files():
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
         for region in regions:
             file_name = region + ".zip"
-            file_path = os.path.join(ROOT_DIR, "temp", file_name)
+            file_path = os.path.join(
+                current_app.config["ROOT_DIRECTORY"],
+                "temp",
+                file_name
+            )
             utils.logger.info(f"Downloading file {file_name!r}")
             with open(file_path, "wb") as file_:
                 ftp.retrbinary("RETR " + file_name, file_.write)
@@ -640,7 +643,8 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
     # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
     metadata = utils.reflect_metadata()
-    xslt = et.XSLT(et.parse(os.path.join(ROOT_DIR, TNDS_XSLT)))
+    with open_binary("nextbus.populate", "tnds.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
 
     del_ = delete
     for region, archive in data.items():

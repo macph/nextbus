@@ -425,7 +425,7 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
         query_local = conn.execute(db.select([models.Locality.code]))
 
         areas = [a[0] for a in query_area.fetchall()]
-        localities = [l[0] for l in query_local.fetchall()]
+        localities = [local[0] for local in query_local.fetchall()]
 
     root = current_app.config["ROOT_DIRECTORY"]
 

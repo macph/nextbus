@@ -13,8 +13,8 @@ from flask import current_app
 GB_TZ = dateutil.tz.gettz("Europe/London")
 UTC = dateutil.tz.UTC
 
-URL_API = r"https://transportapi.com/v3/uk/bus/stop/%s/live.json"
-URL_FCC = r"http://fcc.transportapi.com/v3/uk/bus/stop/%s/live.json"
+URL_API = r"https://transportapi.com/v3/uk/bus/stop/{code}/live.json"
+URL_FCC = r"http://fcc.transportapi.com/v3/uk/bus/stop/{code}/live.json"
 
 
 def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
@@ -49,9 +49,10 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             # experimentation
             url = URL_FCC
 
-        current_app.logger.debug("Requesting live data for ATCO code %s"
-                                 % atco_code)
-        req = requests.get(url % atco_code, params=parameters)
+        current_app.logger.debug(
+            f"Requesting live data for ATCO code {atco_code}"
+        )
+        req = requests.get(url.format(code=atco_code), params=parameters)
         req.raise_for_status()
         try:
             data = req.json()
@@ -59,14 +60,13 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
             raise ValueError("Data is expected to be in JSON format.") from err
         if data.get("error") is not None:
             raise ValueError("Error with data: " + data["error"])
-        current_app.logger.debug("Data received: %r" % req.reason)
+        current_app.logger.debug(f"Data received: {req.reason!r}")
 
     else:
         file_name = "tapi_live_group.json" if group else "tapi_live.json"
         with open_text("nextbus.live", file_name) as sample_file:
             data = json.load(sample_file)
-        current_app.logger.debug("Received sample data from file '%s'" %
-                                 file_name)
+        current_app.logger.debug(f"Received sample data from {file_name!r}")
 
     return data
 
@@ -127,8 +127,9 @@ class Departure:
                    expected, seconds)
 
     def __repr__(self):
-        return "<Departure(%r, %r, %r)>" % (self.line, self.operator,
-                                            self.expected)
+        return (
+            f"<Departure({self.line!r}, {self.operator!r}, {self.expected!r})>"
+        )
 
 
 def _seconds(journey):
@@ -157,7 +158,7 @@ class LiveData:
         self.services = self._group_journeys(data)
 
     def __repr__(self):
-        return "<LiveData(%r, %r)>" % (self.atco_code, self.datetime)
+        return f"<LiveData({self.atco_code!r}, {self.datetime!r})>"
 
     def _group_journeys(self, data):
         """ Group journeys by line, operator and destination and sorted by
@@ -229,7 +230,9 @@ def get_nextbus_times(atco_code, **kwargs):
     data = get_live_data(atco_code, **params)
     new_data = LiveData(data).to_json()
 
-    current_app.logger.debug("%d services for ATCO code %s:\n%r" %
-                             (len(new_data["services"]), atco_code, new_data))
+    current_app.logger.debug(
+        f"{len(new_data['services'])} services for ATCO code {atco_code!r}:\n"
+        f"{new_data!r}"
+    )
 
     return new_data

@@ -18,7 +18,7 @@ class NoPostcode(Exception):
     """ Raised if a postcode was identified but it doesn't exist. """
     def __init__(self, query, postcode, msg=None):
         if msg is None:
-            msg = "Postcode '%s' does not exist." % postcode
+            msg = f"Postcode {postcode!r} does not exist."
         super().__init__(msg)
         self.query = query
         self.postcode = postcode
@@ -28,8 +28,10 @@ class InvalidParameters(Exception):
     """ Raised if invalid parameters are given by a search query request. """
     def __init__(self, query, param, values, msg=None):
         if msg is None:
-            msg = ("Parameter %r for query %r contained invalid values %r"
-                   % (param, query, values))
+            msg = (
+                f"Parameter {param!r} for query {query!r} contained invalid "
+                f"values {values!r}"
+            )
         super().__init__(msg)
         self.query = query
         self.param = param
@@ -41,7 +43,7 @@ class SearchNotDefined(Exception):
         have terms that restricts the scope of the query. """
     def __init__(self, query, msg=None):
         if msg is None:
-            msg = "Query %r is not defined enough." % query
+            msg = f"Query {query!r} is not defined enough."
         super().__init__(msg)
         self.query = query
         self.not_defined = True
@@ -84,8 +86,9 @@ def search_code(query):
         found = stop
 
     if found is not None:
-        current_app.logger.debug("Search query %r returned exact match %r"
-                                 % (query, found))
+        current_app.logger.debug(
+            f"Search query {query!r} returned exact match {found!r}"
+        )
 
     return found
 
@@ -122,8 +125,8 @@ def search_all(query, groups=None, admin_areas=None, page=1):
 
     count = result.total
     current_app.logger.debug(
-        "Search query %r returned %s result%s" %
-        (query, count, "" if count == 1 else "s")
+        f"Search query {query!r} returned {count} result"
+        f"{'s' if count != 1 else ''}"
     )
 
     return result
@@ -142,7 +145,8 @@ def filter_args(query, admin_areas=None):
     else:
         raise SearchNotDefined(query)
 
-    current_app.logger.debug("Search query %r have possible filters %r and %r"
-                             % (query, groups, args))
+    current_app.logger.debug(
+        f"Search query {query!r} have possible filters {groups!r} and {args!r}"
+    )
 
     return groups, args

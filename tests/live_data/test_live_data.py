@@ -272,7 +272,7 @@ def test_live_data_arguments_default(with_app, mock_request):
         "limit": 6
     }
     assert mock_request.calls == [
-        ((tapi.URL_FCC % ATCO_CODE,), {"params": parameters})
+        ((tapi.URL_FCC.format(code=ATCO_CODE),), {"params": parameters})
     ]
 
 
@@ -286,7 +286,7 @@ def test_live_data_arguments_ungrouped(with_app, mock_request):
         "limit": 8
     }
     assert mock_request.calls == [
-        ((tapi.URL_FCC % ATCO_CODE,), {"params": parameters})
+        ((tapi.URL_FCC.format(code=ATCO_CODE),), {"params": parameters})
     ]
 
 
@@ -307,7 +307,7 @@ def test_live_data_arguments_api_key(with_app, mock_request):
         "app_key": api_key
     }
     assert mock_request.calls == [
-        ((tapi.URL_API % ATCO_CODE,), {"params": parameters})
+        ((tapi.URL_API.format(code=ATCO_CODE),), {"params": parameters})
     ]
 
 

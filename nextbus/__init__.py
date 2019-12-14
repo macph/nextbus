@@ -32,12 +32,12 @@ def create_app(config_obj=None, config_file=None):
         raise ValueError("A configuration object or file must be specified.")
     elif config_obj is not None:
         app.config.from_object(config_obj)
-        message = "Configuration loaded from object '%s'" % config_obj
+        message = f"Configuration loaded from object '{config_obj}'"
     else:
         # Load app defaults first
         app.config.from_object("default_config.Config")
         app.config.from_pyfile(config_file)
-        message = "Configuration loaded from file '%s'" % config_file
+        message = f"Configuration loaded from file '{config_file}'"
 
     app.logger = logger.app_logger
     # Load logging configuration and log initial configuration

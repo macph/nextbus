@@ -48,7 +48,7 @@ class LatLong(routing.BaseConverter):
         return latitude, longitude
 
     def to_url(self, value):
-        return "%f,%f" % value if value else ""
+        return f"{value[0]},{value[1]}" if value else ""
 
 
 class LatLongZoom(routing.BaseConverter):
@@ -68,7 +68,7 @@ class LatLongZoom(routing.BaseConverter):
         return latitude, longitude, zoom
 
     def to_url(self, value):
-        return "%f,%f,%d" % value if value else ""
+        return f"{value[0]},{value[1]},{value[2]}" if value else ""
 
 
 class Direction(routing.BaseConverter):

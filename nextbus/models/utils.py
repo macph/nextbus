@@ -13,7 +13,7 @@ from nextbus import db
 
 def table_name(model):
     """ Returns column with literal name of model table. """
-    return db.literal_column("'%s'" % model.__tablename__)
+    return db.literal_column(f"'{model.__tablename__}'")
 
 
 class _CreateMatView(sa.schema.DDLElement):
@@ -39,31 +39,29 @@ class _RefreshMatView(sa.schema.DDLElement):
 
 @sa_compiler.compiles(_CreateMatView)
 def _compile_create_mat_view(clause, compiler):
-    statement = "CREATE MATERIALIZED VIEW %s AS %s WITH %s"
     name = compiler.preparer.quote(clause.name)
     selectable = compiler.sql_compiler.process(clause.selectable,
                                                literal_binds=True)
     with_data = "DATA" if clause.with_data else "NO DATA"
 
-    return statement % (name, selectable, with_data)
+    return (
+        f"CREATE MATERIALIZED VIEW {name} AS {selectable} WITH {with_data}"
+    )
 
 
 @sa_compiler.compiles(_DropMatView)
 def _compile_drop_mat_view(clause, compiler):
-    statement = "DROP MATERIALIZED VIEW IF EXISTS "
     name = compiler.preparer.quote(clause.name)
 
-    return statement + name
+    return f"DROP MATERIALIZED VIEW IF EXISTS {name}"
 
 
 @sa_compiler.compiles(_RefreshMatView)
 def _compile_refresh_mat_view(clause, compiler):
-    statement = "REFRESH MATERIALIZED VIEW "
-    if clause.concurrently:
-        statement += "CONCURRENTLY "
+    concurrently = "CONCURRENTLY" if clause.concurrently else ""
     name = compiler.preparer.quote(clause.name)
 
-    return statement + name
+    return f"REFRESH MATERIALIZED VIEW {concurrently} {name}"
 
 
 def create_mat_view(name, selectable, metadata=db.metadata):
@@ -153,11 +151,9 @@ def _compile_values(element, compiler, asfrom=False, **kw):
     )
 
     if asfrom and element.alias_name is not None:
-        expression = "(%s) AS %s (%s)" % (
-            expression,
-            compiler.preparer.quote(element.alias_name),
-            ", ".join(column.name for column in element.columns)
-        )
+        name = compiler.preparer.quote(element.alias_name)
+        columns = ", ".join(column.name for column in element.columns)
+        expression = f"({expression}) AS {name} ({columns})"
     elif asfrom:
         expression = "(" + expression + ")"
 

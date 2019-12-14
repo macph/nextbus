@@ -223,7 +223,7 @@ def short_description(_, text, remove_stop_words=False):
     if remove_stop_words:
         new_places = []
         to_remove = ["and", "circular", "in", "or", "of", "the", "via",
-                    "town centre", "city centre"]
+                     "town centre", "city centre"]
         for p in places:
             for s in to_remove:
                 p = _remove_subset_words(p, s)
@@ -245,7 +245,7 @@ def short_description(_, text, remove_stop_words=False):
 
 class ServiceCodes:
     """ Creates unique codes, keeping track of region and lines passed. """
-    NON_WORDS = re.compile(r"[^A-Za-z0-9\.]+")
+    NON_WORDS = re.compile(r"[^A-Za-z0-9.]+")
 
     def __init__(self):
         self._unique = collections.defaultdict(int)

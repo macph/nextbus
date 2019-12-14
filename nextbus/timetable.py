@@ -286,8 +286,9 @@ class TimetableStop:
         self.utc_depart = utc_depart
 
     def __repr__(self):
-        return "<TimetableStop(%r, %r, %r, %r)>" % (
-            self.stop, self.arrive, self.depart, self.timing
+        return (
+            f"<TimetableStop({self.stop!r}, {self.arrive!r}, {self.depart!r},"
+            f"{self.timing!r})>"
         )
 
     def __eq__(self, other):
@@ -332,8 +333,9 @@ class TimetableJourney(abc.MutableSequence):
                 self.append(TimetableStop.from_row(row))
 
     def __repr__(self):
-        return "<TimetableJourney(%r, %r, %r, %r)>" % (
-            self.journey_id, self.departure, self.operator, self.note
+        return (
+            f"<TimetableJourney({self.journey_id!r}, {self.departure!r},"
+            f"{self.operator!r}, {self.note!r})>"
         )
 
     def __len__(self):
@@ -354,15 +356,16 @@ class TimetableJourney(abc.MutableSequence):
         self._stops.insert(index, TimetableStop.from_row(value))
 
     def _check(self, row):
-        if any([self.journey_id != row.journey_id,
-                self.departure != row.departure,
-                self.operator != (row.local_operator_code, row.operator_name),
-                self.note != (row.note_code, row.note_text)]):
+        this = (self.journey_id, self.departure, self.operator, self.note)
+        other = (
+            row.journey_id,
+            row.departure,
+            (row.local_operator_code, row.operator_name),
+            (row.note_code, row.note_text)
+        )
+        if this != other:
             raise ValueError(
-                "Row %r does not match with journey attributes %r" % (
-                    row,
-                    (self.journey_id, self.departure, self.operator, self.note)
-                )
+                f"Row {row!r} does not match with journey attributes {this!r}"
             )
 
     def wrap(self, sequence):
@@ -376,8 +379,9 @@ class TimetableJourney(abc.MutableSequence):
 
         for row in self:
             if row.stop not in sequence:
-                raise ValueError("Row %r stop point ref does not exist in "
-                                 "sequence." % row)
+                raise ValueError(
+                    f"Row {row!r} stop point ref does not exist in sequence."
+                )
             # Skip over sequence until the next stop in journey
             while index < len_ and row.stop != sequence[index]:
                 columns[col].append(None)
@@ -412,7 +416,7 @@ class TimetableRow:
         self.timing = any(t is not None and t.timing for t in self.times)
 
     def __repr__(self):
-        return "<TimetableRow(%r, %r)>" % (self.stop, self.timing)
+        return f"<TimetableRow({self.stop!r}, {self.timing!r})>"
 
 
 class Timetable:
@@ -460,8 +464,10 @@ class Timetable:
             self.timed_rows = []
 
     def __repr__(self):
-        return "<Timetable(%r, %r, %r)>" % (self.service_id, self.direction,
-                                            self.date)
+        return (
+            f"<Timetable({self.service_id!r}, {self.direction!r}, "
+            f"{self.date!r})>"
+        )
 
     def __bool__(self):
         return bool(self.journeys)

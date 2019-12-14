@@ -26,28 +26,28 @@ def _xml_elements_diffs(a, b, _root=None):
     elem_diffs = []
     # Check tags, text, tails, attributes and number of subelements
     if a.tag != b.tag:
-        elem_diffs.append("tags: %r != %r" % (a.tag, b.tag))
+        elem_diffs.append(f"tags: {a.tag!r} != {b.tag!r}")
     if a.text != b.text:
-        elem_diffs.append("text: %r != %r" % (a.text, b.text))
+        elem_diffs.append(f"text: {a.text!r} != {b.text!r}")
     if a.tail != b.tail:
-        elem_diffs.append("tail: %r != %r" % (a.tail, b.tail))
+        elem_diffs.append(f"tail: {a.tail!r} != {b.tail!r}")
     if a.attrib != b.attrib:
-        elem_diffs.append("attr: %r != %r" % (a.attrib, b.attrib))
+        elem_diffs.append(f"attr: {a.attrib!r} != {b.attrib!r}")
     if len(a) != len(b):
-        elem_diffs.append("%d != %d subelements" % (len(a), len(b)))
+        elem_diffs.append(f"{len(a)} != {len(b)} subelements")
         # Find differences in number of named subelements
         e1_tags = [e.tag for e in a]
         e2_tags = [e.tag for e in b]
         for t in set(e1_tags) | set(e2_tags):
             count = e2_tags.count(t) - e1_tags.count(t)
             if count != 0:
-                elem_diffs.append("    %+d %r" % (count, t))
+                elem_diffs.append(f"    {count:+d} {t!r}")
 
     if elem_diffs:
         if _root is not None and a.tag == b.tag:
             within = _root.getpath(a)
         elif _root is not None and a.tag != b.tag:
-            within = "within %s" % _root.getpath(a.getparent())
+            within = f"within {_root.getpath(a.getparent())}"
         else:
             within = "within root"
         elem_diffs.insert(0, within)
@@ -63,8 +63,10 @@ def _xml_elements_diffs(a, b, _root=None):
         diffs.extend(sub_diffs)
 
     if _root is None and diffs:
-        diffs.insert(0, "%d difference%s found: " %
-                     (len(diffs), "" if len(diffs) == 1 else "s"))
+        diffs.insert(
+            0,
+            f"{len(diffs):d} difference{'' if len(diffs) == 1 else 's'} found: "
+        )
 
     return diffs
 
@@ -102,12 +104,13 @@ def app():
 
     # Find the test database address
     if not app.config.get(TEST):
-        raise ValueError("%s is not set." % TEST)
+        raise ValueError(f"{TEST} is not set.")
 
     if app.config.get(TEST) == app.config.get(MAIN):
-        raise ValueError("The %s and %s parameters must not be the same; "
-                         "the unit tests will commit destructive edits."
-                         % (TEST, MAIN))
+        raise ValueError(
+            f"The {TEST} and {MAIN} parameters must not be the same; the unit "
+            f"tests will commit destructive edits."
+        )
 
     # Set SQLAlchemy database address to test database address
     app.config[MAIN] = app.config.get(TEST)

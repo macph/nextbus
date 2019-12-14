@@ -50,8 +50,10 @@ def commit_noc_data(path=None):
     except (UnicodeDecodeError, et.XMLSyntaxError):
         # NOC data is encoded in Windows-1252 for some reason despite the XML
         # declaration specifying UTF-8 encoding
-        utils.logger.warning("NOC XML file %r cannot be parsed with UTF-8 - "
-                             "trying again with CP1252" % file_path)
+        utils.logger.warning(
+            f"NOC XML file {file_path!r} cannot be parsed with UTF-8 - trying "
+            f"again with CP1252"
+        )
         data = et.parse(file_path, et.XMLParser(encoding="CP1252"))
 
     with open_binary("nextbus.populate", "noc.xslt") as file_:

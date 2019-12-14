@@ -33,7 +33,7 @@ class Path(abc.Sequence):
         self._v = tuple(vertices) if vertices is not None else ()
 
     def __repr__(self):
-        return "<Path(%r, cyclic=%s)>" % (self._v, self.cyclic)
+        return f"<Path({self._v!r}, cyclic={self.cyclic})>"
 
     def __getitem__(self, index):
         return self._v[index]
@@ -207,8 +207,9 @@ def _rearrange_cycles(graph, sequence):
         )
         cycles = _count_cycles(graph, sequence)
         if cycle in cycles:
-            raise ValueError("Cycle %r still in set for graph %r" %
-                             (cycle, graph))
+            raise ValueError(
+                f"Cycle {cycle!r} still in set for graph {graph!r}"
+            )
 
 
 def _analyse_graph(graph):
@@ -266,8 +267,9 @@ def _analyse_graph(graph):
 
     if g.vertices:
         # Expect all vertices and edges to be removed from connected graph.
-        raise ValueError("Vertices %r still left over from graph %r" %
-                         (g.vertices, g0))
+        raise ValueError(
+            f"Vertices {g.vertices!r} still left over from graph {g0!r}"
+        )
 
     _rearrange_cycles(g0, sequence)
 
@@ -279,8 +281,9 @@ class LayoutRow:
     def __init__(self, layout, vertex, column=None, start=None, end=None,
                  cycles_start=None, cycles_end=None):
         if vertex not in layout.sequence:
-            raise ValueError("Vertex %r not in sequence %r." %
-                             (vertex, layout.sequence))
+            raise ValueError(
+                f"Vertex {vertex!r} not in sequence {layout.sequence!r}."
+            )
 
         self.layout = layout
         self.vertex = vertex
@@ -293,8 +296,7 @@ class LayoutRow:
         self._is_set = False
 
     def __repr__(self):
-        return "<LayoutRow(%r, %r, %r)>" % (self.layout, self.vertex,
-                                            self.column)
+        return f"<LayoutRow({self.layout!r}, {self.vertex!r}, {self.column!r})>"
 
     @property
     def index(self):
@@ -473,15 +475,20 @@ class LayoutRow:
 
         found = [c for c in self.end if next_row.vertex in c]
         if not found:
-            raise LayoutError("Vertex %r for next row not in lines %r." %
-                              (next_row.vertex, self.end))
+            raise LayoutError(
+                f"Vertex {next_row.vertex!r} for next row not in lines "
+                f"{self.end!r}."
+            )
         elif len(found) > 2:
-            raise LayoutError("Next vertex %r is found in multiple columns for "
-                              "lines %r." % (next_row.vertex, self.end))
+            raise LayoutError(
+                f"Next vertex {next_row.vertex!r} is found in multiple columns "
+                f"for lines {self.end!r}."
+            )
         elif len(found[0]) > 1:
-            raise LayoutError("Multiple vertices found in lines %r for column "
-                              "where next vertex %r is supposed to be." %
-                              (self.end, next_row.vertex))
+            raise LayoutError(
+                f"Multiple vertices found in lines {self.end!r} for column "
+                f"where next vertex {next_row.vertex!r} is supposed to be."
+            )
 
         next_row.column = self.end.index({next_row.vertex})
 
@@ -584,16 +591,23 @@ class LayoutRow:
         len_outgoing = len(self.start)
 
         if previous is not None and len_incoming != len_outgoing:
-            raise LayoutError("Incoming lines %r and outgoing lines %r do not "
-                              "have the same number of columns." %
-                              (previous.end, self.start))
+            raise LayoutError(
+                f"Incoming lines {previous.end!r} and outgoing lines "
+                f"{self.start!r} do not have the same number of columns."
+            )
 
         if set(new_order) != set(range(len_outgoing)):
-            prev_lines = (" incoming lines %r or" % previous.end
-                          if previous is not None else "")
-            raise ValueError("New order %r is not a permutation with same "
-                             "length as%s outgoing lines %r for row %r" %
-                             (new_order, prev_lines, self.start, self))
+            if previous is not None:
+                raise ValueError(
+                    f"New order {new_order!r} is not a permutation with same "
+                    f"length as incoming lines {previous.end} or outgoing "
+                    f"lines {self.start!r} for row {self!r}."
+                )
+            else:
+                raise ValueError(
+                    f"New order {new_order!r} is not a permutation with same "
+                    f"length as outgoing lines {self.start!r} for row {self!r}"
+                )
 
         if new_order == list(range(len_outgoing)):
             # Same order already; leave as is
@@ -761,7 +775,7 @@ class Layout:
             self._draw_paths()
 
     def __repr__(self):
-        return "<Layout(%s)>" % self.g
+        return f"<Layout({self.g!r})>"
 
     def _adjacent(self, vertex, direct, cyclic, forward):
         index = self.sequence.index(vertex)
@@ -790,8 +804,10 @@ class Layout:
     def copy_from(self, layout):
         """ Copies data from another layout. """
         if self.g != layout.g or self.sequence != layout.sequence:
-            raise ValueError("This layout %r and other layout %r do not "
-                             "reference the same graph." % (self, layout))
+            raise ValueError(
+                f"This layout {self!r} and other layout {layout!r} do not "
+                f"reference the same graph."
+            )
 
         self.rows = {v: layout.rows[v].copy(self) for v in layout.sequence}
         self.cycles = {tuple(c) for c in layout.cycles}
@@ -949,7 +965,7 @@ class Graph:
         self.draw = _memoize_graph(self, self.draw)
 
     def __repr__(self):
-        return "<Graph(%s)>" % (repr(set(self)) if self else "")
+        return f"<Graph({set(self)!r})>" if self else "<Graph()>"
 
     def __iter__(self):
         return iter(self.vertices)
@@ -1093,7 +1109,7 @@ class Graph:
         try:
             u, v = edge
         except TypeError as err:
-            raise TypeError("%r is not a tuple of two values" % edge) from err
+            raise TypeError(f"{edge!r} is not a tuple of two values") from err
 
         return u in self._v and v in self._v[u]
 
@@ -1144,7 +1160,7 @@ class Graph:
             try:
                 v1, v2 = e
             except TypeError as err:
-                raise TypeError("%r is not a tuple of two values" % e) from err
+                raise TypeError(f"{e!r} is not a tuple of two values") from err
             self.add_edge(v1, v2)
 
     def remove_path(self, path, delete=True):
@@ -1158,8 +1174,10 @@ class Graph:
 
         for e in edges:
             if not self.contains_edge(e):
-                raise ValueError("Edge %r on path %r does not exist in graph "
-                                 "%r" % (e, path, self))
+                raise ValueError(
+                    f"Edge {e!r} on path {path!r} does not exist in graph "
+                    f"{self!r}"
+                )
 
         for v1, v2 in edges:
             self.remove_edge(v1, v2, delete)
@@ -1427,7 +1445,7 @@ def service_stop_list(service_id, direction):
     """
     graph, dict_stops = service_graph_stops(service_id, direction)
     if not dict_stops:
-        raise ValueError("No stops exist for service ID %s" % service_id)
+        raise ValueError(f"No stops exist for service ID {service_id}")
 
     return [dict_stops[v] for v in graph.sequence()]
 

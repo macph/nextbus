@@ -47,16 +47,20 @@ def stop_get_times(atco_code=None):
     matching_stop = (db.session.query(models.StopPoint.atco_code)
                      .filter_by(atco_code=atco_code).one_or_none())
     if not matching_stop:
-        current_app.logger.warning("API accessed with invalid ATCO code %s."
-                                   % atco_code)
-        return bad_request(404, "ATCO code %r does not exist." % atco_code)
+        current_app.logger.warning(
+            f"API accessed with invalid ATCO code {atco_code!r}."
+        )
+        return bad_request(404, f"ATCO code {atco_code!r} does not exist.")
 
     try:
         times = live.get_nextbus_times(atco_code)
     except (HTTPError, ValueError):
         # Error came up when accessing the external API or it can't be accessed
-        current_app.logger.error("Error occurred when retrieving live times "
-                                 "with data %r." % atco_code, exc_info=True)
+        current_app.logger.error(
+            f"Error occurred when retrieving live times with data "
+            f"{atco_code!r}.",
+            exc_info=True
+        )
         return bad_request(503, "There was a problem with the external API.")
 
     response = jsonify(times)
@@ -74,7 +78,7 @@ def get_stops_tile(coord):
     try:
         x, y = map(int, coord.split(","))
     except ValueError:
-        return bad_request(400, "API accessed with invalid args: %r." % coord)
+        return bad_request(400, f"API accessed with invalid args: {coord!r}.")
 
     stops = models.StopPoint.within_box(
         location.tile_to_box(x, y, location.TILE_ZOOM),
@@ -91,7 +95,7 @@ def get_service_route(service_code, reverse=False):
     data = graph.service_json(service_code, reverse)
 
     if data is None:
-        return bad_request(404, "Service '%s' does not exist." % service_code)
+        return bad_request(404, f"Service {service_code!r} does not exist.")
     else:
         return jsonify(data)
 
@@ -108,7 +112,7 @@ def get_stop(atco_code):
     )
 
     if not stop:
-        return bad_request(404, "Stop point '%s' does not exist." % atco_code)
+        return bad_request(404, f"Stop point {atco_code!r} does not exist.")
 
     return jsonify(stop.to_full_json())
 
@@ -131,12 +135,12 @@ class StarredStop(MethodView):
 
         code = naptan_code.lower()
         if "stops" in session and code in session["stops"]:
-            message = "SMS code %r already in list of starred stops." % code
+            message = f"SMS code {code!r} already in list of starred stops."
             return bad_request(422, message)
 
         stop = models.StopPoint.query.filter_by(naptan_code=code).one_or_none()
         if stop is None:
-            return bad_request(404, "SMS code %r does not exist." % code)
+            return bad_request(404, f"SMS code {code!r} does not exist.")
 
         if "stops" in session:
             session["stops"].append(code)
@@ -154,12 +158,12 @@ class StarredStop(MethodView):
 
         code = naptan_code.lower()
         if code not in session["stops"]:
-            message = "Stop %r not in list of starred stops." % code
+            message = f"Stop {code!r} not in list of starred stops."
             return bad_request(404, message)
 
         length = len(session["stops"])
         if index not in range(length):
-            message = "Index %d is outside range [0, %d]." % (index, length - 1)
+            message = f"Index {index} is outside range [0, {length - 1}]."
             return bad_request(400, message)
 
         if session["stops"].index(code) != index:
@@ -182,7 +186,7 @@ class StarredStop(MethodView):
             session["stops"].remove(code)
             session.modified = True
         else:
-            message = "SMS code %r not in list of starred stops." % code
+            message = f"SMS code {code!r} not in list of starred stops."
             return bad_request(404, message)
 
         return "", 204

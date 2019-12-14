@@ -370,7 +370,7 @@ class FTS(utils.MaterializedView):
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
 
     def __repr__(self):
-        return "<FTS(%s, %s)>" % (self.table_name, self.code)
+        return f"<FTS({self.table_name!r}, {self.code!r})>"
 
     @classmethod
     def match(cls, query):
@@ -406,7 +406,7 @@ class FTS(utils.MaterializedView):
         """
         if groups is not None:
             if set(groups) - cls.GROUP_NAMES.keys():
-                raise ValueError("Groups %r contain invalid values." % groups)
+                raise ValueError(f"Groups {groups!r} contain invalid values.")
             tables = []
             for g in groups:
                 tables.extend(cls.GROUPS[g])

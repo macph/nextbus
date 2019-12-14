@@ -32,8 +32,10 @@ TNDS_RAW = os.path.join(TEST_DIR, "TNDS.xml")
 ])
 def test_days_week(days, expected):
     if days is not None:
-        node = et.XML('<RegularDayType xmlns="http://www.transxchange.org.uk/">'
-                      '%s</RegularDayType>' % days)
+        node = et.XML(
+            f'<RegularDayType xmlns="http://www.transxchange.org.uk/">{days}'
+            f'</RegularDayType>'
+        )
         nodes = [node]
     else:
         nodes = None
@@ -49,10 +51,12 @@ def test_days_week(days, expected):
 def test_weeks_month(weeks, expected):
     nodes = []
     if weeks is not None:
-        week_num = ["<WeekNumber>%d</WeekNumber>" % w for w in weeks]
-        weeks = "<WeekOfMonth>%s</WeekOfMonth>" % "".join(week_num)
-        n = et.XML('<PeriodicDayType xmlns="http://www.transxchange.org.uk/">'
-                   '%s</PeriodicDayType>' % weeks)
+        week_num = [f"<WeekNumber>{w}</WeekNumber>" for w in weeks]
+        weeks = f"<WeekOfMonth>{''.join(week_num)}</WeekOfMonth>"
+        n = et.XML(
+            f'<PeriodicDayType xmlns="http://www.transxchange.org.uk/">{weeks}'
+            '</PeriodicDayType>'
+        )
         nodes.append(n)
 
     assert weeks_month(None, nodes) == expected
@@ -69,8 +73,8 @@ def test_weeks_month(weeks, expected):
     (["LateSummerBankHolidayNotScotland"], "S", 0)
 ])
 def test_bank_holidays(holidays, region, expected):
-    elements = "".join("<%s/>" % h for h in holidays)
-    node = et.XML("<DaysOfOperation>%s</DaysOfOperation>" % elements)
+    elements = "".join(f"<{h}/>" for h in holidays)
+    node = et.XML(f"<DaysOfOperation>{elements}</DaysOfOperation>")
     nodes = [node]
 
     assert bank_holidays(None, nodes, region) == expected

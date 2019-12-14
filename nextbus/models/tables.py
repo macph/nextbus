@@ -154,7 +154,7 @@ class Region(db.Model):
                                innerjoin=True, lazy="raise")
 
     def __repr__(self):
-        return "<Region(%r)>" % self.code
+        return f"<Region({self.code!r})>"
 
 
 class AdminArea(db.Model):
@@ -189,7 +189,7 @@ class AdminArea(db.Model):
                                  lazy="raise")
 
     def __repr__(self):
-        return "<AdminArea(%r)>" % self.code
+        return f"<AdminArea({self.code!r})>"
 
     def list_localities(self):
         """ Queries all localities containing active stops. """
@@ -222,7 +222,7 @@ class District(db.Model):
                                 order_by="Postcode.text", lazy="raise")
 
     def __repr__(self):
-        return "<District(%r)>" % self.code
+        return f"<District({self.code!r})>"
 
     def list_localities(self):
         """ Queries all localities containing active stops. """
@@ -267,7 +267,7 @@ class Locality(db.Model):
                                  order_by="StopArea.name", lazy="raise")
 
     def __repr__(self):
-        return "<Locality(%r)>" % self.code
+        return f"<Locality({self.code!r})>"
 
     def list_stops(self, group_areas=True):
         """ Queries all stop areas and stop points (those not already in
@@ -362,7 +362,7 @@ class StopArea(db.Model):
     )
 
     def __repr__(self):
-        return "<StopArea(%r)>" % self.code
+        return f"<StopArea({self.code!r})>"
 
 
 def _array_lines(code):
@@ -452,16 +452,16 @@ class StopPoint(db.Model):
 
     def __repr__(self):
         if "atco_code" in self.__dict__:
-            repr_text = "<StopPoint(atco_code=%r)>" % self.atco_code
+            repr_text = f"<StopPoint(atco_code={self.atco_code!r})>"
         else:
-            repr_text = "<StopPoint(naptan_code=%r)>" % self.naptan_code
+            repr_text = f"<StopPoint(naptan_code={self.naptan_code!r})>"
 
         return repr_text
 
     @property
     def long_name(self):
         if self.indicator:
-            return "%s (%s)" % (self.name, self.indicator)
+            return f"{self.name} ({self.indicator})"
         else:
             return self.name
 
@@ -512,7 +512,7 @@ class StopPoint(db.Model):
                 db.between(cls.longitude, box.west, box.east)
             )
         except AttributeError:
-            raise TypeError("Box %r is not a valid BoundingBox object." % box)
+            raise TypeError(f"Box {box!r} is not a valid BoundingBox object.")
 
         return nearby_stops.all()
 
@@ -693,12 +693,7 @@ class Postcode(db.Model):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
 
     def __repr__(self):
-        if "index" in self.__dict__:
-            repr_text = "index=%r" % self.index
-        else:
-            repr_text = "text=%r" % self.text
-
-        return "<Postcode(%s)>" % repr_text
+        return f"<Postcode({self.text!r})>"
 
     def stops_in_range(self, *options):
         """ Returns a list of all stop points within range.

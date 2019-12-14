@@ -173,8 +173,9 @@ def search_results(query=None):
         result = search.search_all(query, groups=groups, admin_areas=areas,
                                    page=filters.page.data)
     except ValueError:
-        current_app.logger.error("Query %r resulted in an parsing error" %
-                                 query, exc_info=True)
+        current_app.logger.error(
+            f"Query {query!r} resulted in an parsing error", exc_info=True
+        )
         abort(500)
         return
 
@@ -255,8 +256,10 @@ def list_in_area(area_code):
     )
 
     if area is None:
-        raise NotFound(Markup("Area with code <strong>%s</strong> does not "
-                              "exist.") % area_code)
+        raise NotFound(
+            Markup("Area with code <strong>{}</strong> does not exist.")
+            .format(area_code)
+        )
 
     # Show list of localities with stops if districts do not exist
     if not area.districts:
@@ -279,8 +282,10 @@ def list_in_district(district_code):
     )
 
     if district is None:
-        raise NotFound(Markup("District with code <strong>%s</strong> does not "
-                              "exist.") % district_code)
+        raise NotFound(
+            Markup("District with code <strong>{}</strong> does not exist.")
+            .format(district_code)
+        )
 
     group_local = _group_objects(district.list_localities(), attr="name",
                                  default="Places")
@@ -307,8 +312,10 @@ def list_in_locality(locality_code):
     )
 
     if locality is None:
-        raise NotFound(Markup("Place with code <strong>%s</strong> does not "
-                              "exist.") % locality_code)
+        raise NotFound(
+            Markup("Place with code <strong>{}</strong> does not exist.")
+            .format(locality_code)
+        )
     if locality.code != locality_code:
         code = locality.code
         return redirect(url_for(".list_in_locality", locality_code=code),
@@ -393,8 +400,9 @@ def list_near_postcode(code):
     postcode = models.Postcode.query.get(index_postcode)
 
     if postcode is None:
-        raise NotFound(Markup("Postcode <strong>%s</strong> does not exist.")
-                       % code)
+        raise NotFound(
+            Markup("Postcode <strong>{}</strong> does not exist.").format(code)
+        )
     if postcode.text != code:
         # Redirect to correct URL, eg 'W1A+1AA' instead of 'w1a1aa'
         return redirect(url_for(".list_near_postcode", code=postcode.text),
@@ -419,8 +427,10 @@ def stop_area(stop_area_code):
     )
 
     if area is None:
-        raise NotFound(Markup("Stop area <strong>%s</strong> does not exist.")
-                       % stop_area_code)
+        raise NotFound(
+            Markup("Stop area <strong>{}</strong> does not exist.")
+            .format(stop_area_code)
+        )
     if area.code != stop_area_code:
         return redirect(url_for(".stop_area", stop_area_code=area.code),
                         code=302)
@@ -468,8 +478,10 @@ def stop_naptan(naptan_code):
     stop = _query_stop(naptan_code=naptan_code)
 
     if stop is None:
-        raise NotFound(Markup("Stop with SMS code <strong>%s</strong> does not "
-                              "exist.") % naptan_code)
+        raise NotFound(
+            Markup("Stop with SMS code <strong>{}</strong> does not exist.")
+            .format(naptan_code)
+        )
     if stop.naptan_code != naptan_code:
         return redirect(url_for(".stop_naptan", naptan_code=stop.naptan_code),
                         code=302)
@@ -489,8 +501,10 @@ def stop_atco(atco_code=""):
     stop = _query_stop(atco_code=atco_code)
 
     if stop is None:
-        raise NotFound(Markup("Stop with ATCO code <strong>%s</strong> does "
-                              "not exist.") % atco_code)
+        raise NotFound(
+            Markup("Stop with ATCO code <strong>{}</strong> does not exist.")
+            .format(atco_code)
+        )
     if stop.atco_code != atco_code:
         return redirect(url_for(".stop_atco", atco_code=stop.atco_code),
                         code=302)
@@ -520,8 +534,10 @@ def _query_service(service_code, reverse=None):
     )
 
     if sv is None:
-        raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                       % service_code)
+        raise NotFound(
+            Markup("Service <strong>{}</strong> does not exist.")
+            .format(service_code)
+        )
 
     # Check line patterns - is there more than 1 direction?
     is_reverse, mirrored = sv.has_mirror(reverse)
@@ -622,8 +638,10 @@ def _show_map(service_code=None, reverse=None, atco_code=None, coords=None):
     if atco_code is not None:
         stop = models.StopPoint.query.get(atco_code.upper())
         if stop is None:
-            raise NotFound(Markup("Stop with ATCO code <strong>%s</strong> "
-                                  "does not exist.") % atco_code)
+            raise NotFound(
+                Markup("Stop with code <strong>{}</strong> does not exist.")
+                .format(atco_code)
+            )
     else:
         stop = None
 
@@ -635,9 +653,10 @@ def _show_map(service_code=None, reverse=None, atco_code=None, coords=None):
             .one_or_none()
         )
         if sv is None:
-            raise NotFound(Markup("Service <strong>%s</strong> does not exist.")
-                           % service_code)
-
+            raise NotFound(
+                Markup("Service <strong>{}</strong> does not exist.")
+                .format(service_code)
+            )
         is_reverse, _ = sv.has_mirror(reverse)
     else:
         sv = None
@@ -713,8 +732,10 @@ def show_map_locality(locality_code):
     if locality is not None:
         return _show_map(coords=(locality.latitude, locality.longitude, 16))
     else:
-        raise NotFound(Markup("Place with code <strong>%s</strong> does not "
-                              "exist.") % locality_code)
+        raise NotFound(
+            Markup("Place with code <strong>{}</strong> does not exist.")
+            .format(locality_code)
+        )
 
 
 @page.route("/map/stop_area/<stop_area_code>")
@@ -725,8 +746,10 @@ def show_map_stop_area(stop_area_code):
     if area is not None:
         return _show_map(coords=(area.latitude, area.longitude, 17))
     else:
-        raise NotFound(Markup("Stop area <strong>%s</strong> does not exist.")
-                       % stop_area_code)
+        raise NotFound(
+            Markup("Stop area <strong>{}</strong> does not exist.")
+            .format(stop_area_code)
+        )
 
 
 @page.app_errorhandler(NotFound)
@@ -740,7 +763,7 @@ def not_found_msg(error):
         if isinstance(error, NotFound):
             message = str(error)
         else:
-            message = "API endpoint %r does not exist." % request.path
+            message = f"API endpoint {request.path!r} does not exist."
         response = jsonify({"message": message}), 404
     else:
         # Respond with 404 page

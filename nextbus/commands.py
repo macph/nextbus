@@ -36,8 +36,10 @@ class MutexOption(click.Option):
         self.mutually_exclusive = set(kwargs.pop("exclude", []))
         super().__init__(*args, **kwargs)
         if self.name in self.mutually_exclusive:
-            raise ValueError("Option %r cannot be mutually exclusive with "
-                             "itself." % self.name)
+            raise ValueError(
+                f"Option {self.name!r} cannot be mutually exclusive with "
+                f"itself."
+            )
 
     def handle_parse_result(self, ctx, opts, args):
         set_opts = set(opts) - {self.name}
@@ -49,8 +51,8 @@ class MutexOption(click.Option):
                 params = (", ".join("/".join(p) for p in options[:-1]) +
                           " and " + "/".join(options[-1]))
             raise click.UsageError(
-                "%s is mutually exclusive with arguments %s." %
-                ("/".join(self.opts), params)
+                f"{'/'.join(self.opts)} is mutually exclusive with arguments "
+                f"{params}."
             )
 
         return super().handle_parse_result(ctx, opts, args)

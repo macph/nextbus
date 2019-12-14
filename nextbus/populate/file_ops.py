@@ -50,7 +50,7 @@ def download(url, file_name=None, directory=None, **kw):
         a path. If None, the name is derived from the URL or the header.
         :param directory: Path for directory. If directory is None, the root
         directory is used instead.
-        :param kwargs: Keyword arguments for requests.get().
+        :param kw: Keyword arguments for requests.get().
     """
     response = requests.get(url, stream=True, **kw)
     name = _file_name(response) if file_name is None else file_name

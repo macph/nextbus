@@ -194,8 +194,6 @@ body {
 
 header {
   flex: none;
-  position: -webkit-sticky; /* Sticky requires prefix on Safari */
-  position: sticky;
   top: 0;
   left: 0;
   display: flex;
@@ -298,10 +296,6 @@ section {
 
 .body-index > main > div {
   margin: -2.4rem 0;
-}
-
-.body-index > header {
-  position: static;
 }
 
 .body-index section {
@@ -486,7 +480,6 @@ section {
 }
 
 .overlay-content header {
-  position: static;
   background-color: transparent;
 }
 
@@ -1645,7 +1638,6 @@ section {
   }
 
   .body-map > header {
-    position: static;
     grid-row: 1;
     grid-column: 1 / 3;
     -ms-grid-row: 1;

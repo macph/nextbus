@@ -12,12 +12,10 @@
 {% if value in request.args.getlist(name) %}checked{% endif %}
 {%- endmacro %}
 
-{% macro list_pages(left=2, right=5) -%}
+{% macro list_pages(left=2, right=3) -%}
 <p>
   {% if results.page - left > 1 -%}
   <a class="action" title="Go to first page" href="{{ modify_query(page=1) }}">«</a>
-  {%- else -%}
-  <span class="inactive">«</span>
   {%- endif %}
   {%- for page in results.iter_pages(left_current=left, left_edge=0, right_current=right, right_edge=0) %}
   {% if page and page != results.page -%}
@@ -28,8 +26,6 @@
   {%- endfor %}
   {% if results.page + right - 1 < results.pages -%}
   <a class="action" title="Go to last page" href="{{ modify_query(page=results.pages) }}">»</a>
-  {%- else -%}
-  <span class="inactive">»</span>
   {%- endif %}
 </p>
 {%- endmacro %}
@@ -75,7 +71,14 @@
 
   <section>
     {% if results is defined and results.total > 0 -%}
+    {% if results.has_next or results.has_prev -%}
+    <div class="inline">
+      <h3>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h3>
+      {{ list_pages() }}
+    </div>
+    {%- else -%}
     <h3>{{ results.total }} {{ 'result' if results.total == 1 else 'results' }}</h3>
+    {%- endif %}
 
     {% if results.items|length > 0 -%}
     {% call(item) f.print_list(results.items) -%}

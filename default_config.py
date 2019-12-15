@@ -6,33 +6,42 @@ import os
 
 class Config(object):
     """ Default config. """
-    SQLALCHEMY_DATABASE_URI = None  # Location of PostgreSQL database
-    TEST_DATABASE_URI = None        # Location of test PostgreSQL database. Must be distinct from
-                                    # the above address
+    # Location of PostgreSQL database
+    SQLALCHEMY_DATABASE_URI = None
+    # Location of test PostgreSQL database. Must be distinct from the above
+    # address
+    TEST_DATABASE_URI = None
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False         # Must be kept False and let all SQLAlchemy queries be logged
+    # Must be kept False and let all SQLAlchemy queries be logged
+    SQLALCHEMY_ECHO = False
 
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+    # Location of file to dump database to and restore from
     DATABASE_DUMP_PATH = "temp/nextbus.db.dump"
-                                    # Location of file to dump database to and restore from
 
-
-    WTF_CSRF_ENABLED = True         # Enables CSRF in WTForms objects
-    SECRET_KEY = None               # A different secret key must be set in production
+    # Enables CSRF in WTForms objects
+    WTF_CSRF_ENABLED = True
+    # A different secret key must be set in production
+    SECRET_KEY = None
+    # Time to expire if cookie is permanent (1 year)
     PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60
-                                    # Time to expire if cookie is permanent (1 year)
+    # With permanent cookie, only update if necessary
     SESSION_REFRESH_EACH_REQUEST = False
-                                    # With permanent cookie, only update if necessary
 
-    GEOLOCATION_ENABLED = False     # Enables geolocation on webpages, which requires HTTPS
-    TRANSPORT_API_ACTIVE = False    # Requests data from API if True, else use local sample for
-                                    # testing
-    TRANSPORT_API_ID = None         # ID for Transport API
-    TRANSPORT_API_KEY = None        # Key for Transport API
-    CAMDEN_APP_TOKEN = None         # App token to access Camden's NSPL API; only required to
-                                    # bypass throtting limits
-    TNDS_USERNAME = None            # FTP username password for TNDS files
-    TNDS_PASSWORD = None            # FTP access password for TNDS files
+    # Enables geolocation on webpages, which requires HTTPS
+    GEOLOCATION_ENABLED = False
+    # Requests data from API if True, else use local sample for testing
+    TRANSPORT_API_ACTIVE = False
+    # ID for Transport API
+    TRANSPORT_API_ID = None
+    # Key for Transport API
+    TRANSPORT_API_KEY = None
+    # App token to access Camden's NSPL API; only required to bypass throttling
+    # limits
+    CAMDEN_APP_TOKEN = None
+    # FTP username and password for TNDS files
+    TNDS_USERNAME = None
+    TNDS_PASSWORD = None
 
 
 class DevelopmentConfig(Config):

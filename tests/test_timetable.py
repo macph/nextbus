@@ -102,16 +102,12 @@ def set_night_times(load_db):
     db.session.commit()
 
 
-def _expected_journeys(first_id, first_departure):
+def _expected_journeys(first_departure):
     # Journeys for service 645 and outbound direction which are half hourly.
-    rows = []
-    for i in range(13):
-        rows.append((
-            first_id + i,
-            first_departure + datetime.timedelta(minutes=30) * i
-        ))
-
-    return rows
+    return [
+        (400012 + i, first_departure + i * datetime.timedelta(minutes=30))
+        for i in range(13)
+    ]
 
 
 def _set_journeys():
@@ -132,7 +128,6 @@ def test_journeys_sunday_gmt(load_db):
     result = query.all()
 
     assert result == _expected_journeys(
-        400012,
         datetime.datetime(2019, 3, 3, 8, 30, tzinfo=GMT)
     )
 
@@ -146,7 +141,6 @@ def test_journeys_sunday_bst(load_db):
     result = query.all()
 
     assert result == _expected_journeys(
-        400012,
         datetime.datetime(2019, 4, 7, 8, 30, tzinfo=BST)
     )
 
@@ -171,16 +165,14 @@ def test_journeys_bank_holiday(load_db):
     result = query.all()
 
     assert result == _expected_journeys(
-        400012,
         datetime.datetime(2019, 4, 22, 8, 30, tzinfo=BST)
     )
 
 
 def test_journeys_bank_holiday_override(load_db):
     # Override Easter Monday, id 4
-    bh = models.BankHolidays(journey_ref=400012, operational=False,
-                             holidays=1 << 4)
-    db.session.add(bh)
+    journey = models.Journey.query.get(400012)
+    journey.exclude_holidays = 1 << 4
     db.session.commit()
 
     date = datetime.date(2019, 4, 22)
@@ -332,7 +324,6 @@ def test_journeys_no_dst(set_night_times):
     result = query.all()
 
     assert result == _expected_journeys(
-        400012,
         datetime.datetime(2019, 3, 24, 0, 15, tzinfo=GMT)
     )
 

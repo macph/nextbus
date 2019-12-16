@@ -1028,14 +1028,26 @@ class Journey(db.Model):
     days = db.Column(db.SmallInteger, db.CheckConstraint("days < 256"),
                      nullable=False)
     weeks = db.Column(db.SmallInteger, db.CheckConstraint("weeks < 32"))
+    # Include and exclude bank holidays with bit arrays
+    include_holidays = db.Column(db.Integer, nullable=False)
+    exclude_holidays = db.Column(db.Integer, nullable=False)
+
     note_code = db.Column(db.Text)
     note_text = db.Column(db.Text)
 
-    holiday_dates = db.relationship(
-        "BankHolidayDate", secondary="bank_holidays",
-        secondaryjoin="BankHolidays.holidays.op('&')("
-                      "literal(1).op('<<')(BankHolidayDate.holiday_ref)"
-                      ") > 0",
+    include_holiday_dates = db.relationship(
+        "BankHolidayDate",
+        foreign_keys=[include_holidays],
+        primaryjoin="Journey.include_holidays.op('&', is_comparison=True)("
+                    "literal(1).op('<<')(BankHolidayDate.holiday_ref)) > 0",
+        viewonly=True,
+        lazy="raise"
+    )
+    exclude_holiday_dates = db.relationship(
+        "BankHolidayDate",
+        foreign_keys=[exclude_holidays],
+        primaryjoin="Journey.exclude_holidays.op('&', is_comparison=True)("
+                    "literal(1).op('<<')(BankHolidayDate.holiday_ref)) > 0",
         viewonly=True,
         lazy="raise"
     )
@@ -1117,17 +1129,3 @@ class SpecialPeriod(db.Model):
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date, nullable=False)
     operational = db.Column(db.Boolean, nullable=False)
-
-
-class BankHolidays(db.Model):
-    """ Bank holidays associated with journeys """
-    __tablename__ = "bank_holidays"
-
-    holidays = db.Column(db.Integer, index=True, primary_key=True,
-                         autoincrement=False)
-    journey_ref = db.Column(
-        db.Integer,
-        db.ForeignKey("journey.id", ondelete="CASCADE"),
-        primary_key=True, index=True
-    )
-    operational = db.Column(db.Boolean)

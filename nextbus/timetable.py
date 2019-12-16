@@ -50,6 +50,9 @@ def _query_journeys(service_id, direction, date):
     ).alias("departures")
     departure = db.column("departures")
 
+    IncludeBankHoliday = db.aliased(models.BankHolidayDate)
+    ExcludeBankHoliday = db.aliased(models.BankHolidayDate)
+
     # Find all journeys and their departures
     journeys = (
         db.session.query(models.Journey.id.label("journey_id"),
@@ -67,14 +70,16 @@ def _query_journeys(service_id, direction, date):
         )
         # Match bank holidays on the same day
         .outerjoin(
-            models.BankHolidays,
-            models.Journey.id == models.BankHolidays.journey_ref
+            IncludeBankHoliday,
+            _in_bit_array(models.Journey.include_holidays,
+                          IncludeBankHoliday.holiday_ref) &
+            (IncludeBankHoliday.date == p_date)
         )
         .outerjoin(
-            models.BankHolidayDate,
-            _in_bit_array(models.BankHolidays.holidays,
-                          models.BankHolidayDate.holiday_ref) &
-            (models.BankHolidayDate.date == p_date)
+            ExcludeBankHoliday,
+            _in_bit_array(models.Journey.exclude_holidays,
+                          ExcludeBankHoliday.holiday_ref) &
+            (ExcludeBankHoliday.date == p_date)
         )
         # Match organisations working/holiday periods - can be operational
         # during holiday or working periods associated with organisation so
@@ -123,7 +128,7 @@ def _query_journeys(service_id, direction, date):
             # - Run or not run on specific weeks of month
             # - Run or not run on specific days of week
             models.SpecialPeriod.id.isnot(None) |
-            models.BankHolidayDate.date.isnot(None) |
+            IncludeBankHoliday.date.isnot(None) |
             (models.Journey.weeks.is_(None) |
              _in_bit_array(models.Journey.weeks, week)) &
             _in_bit_array(models.Journey.days, weekday)
@@ -138,12 +143,12 @@ def _query_journeys(service_id, direction, date):
             db.case([
                 (models.SpecialPeriod.id.isnot(None),
                  models.SpecialPeriod.operational),
-                (models.BankHolidayDate.holiday_ref.isnot(None),
-                 models.BankHolidays.operational),
+                (ExcludeBankHoliday.holiday_ref.isnot(None), db.false()),
+                (IncludeBankHoliday.holiday_ref.isnot(None), db.true()),
                 (models.OperatingPeriod.id.isnot(None) &
                  models.ExcludedDate.id.is_(None),
                  models.Organisations.operational)
-            ], else_=True)
+            ], else_=db.true())
         ))
     )
 

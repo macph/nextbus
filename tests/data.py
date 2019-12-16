@@ -368,6 +368,8 @@ TEST_DATA = {
             "departure": datetime.time(8, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -379,6 +381,8 @@ TEST_DATA = {
             "departure": datetime.time(9, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -390,6 +394,8 @@ TEST_DATA = {
             "departure": datetime.time(9, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -401,6 +407,8 @@ TEST_DATA = {
             "departure": datetime.time(10, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -412,6 +420,8 @@ TEST_DATA = {
             "departure": datetime.time(10, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -423,6 +433,8 @@ TEST_DATA = {
             "departure": datetime.time(11, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -434,6 +446,8 @@ TEST_DATA = {
             "departure": datetime.time(11, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -445,6 +459,8 @@ TEST_DATA = {
             "departure": datetime.time(12, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -456,6 +472,8 @@ TEST_DATA = {
             "departure": datetime.time(12, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -467,6 +485,8 @@ TEST_DATA = {
             "departure": datetime.time(13, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -478,6 +498,8 @@ TEST_DATA = {
             "departure": datetime.time(13, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -489,6 +511,8 @@ TEST_DATA = {
             "departure": datetime.time(14, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -500,6 +524,8 @@ TEST_DATA = {
             "departure": datetime.time(14, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -511,6 +537,8 @@ TEST_DATA = {
             "departure": datetime.time(9, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -522,6 +550,8 @@ TEST_DATA = {
             "departure": datetime.time(9, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -533,6 +563,8 @@ TEST_DATA = {
             "departure": datetime.time(10, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -544,6 +576,8 @@ TEST_DATA = {
             "departure": datetime.time(10, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -555,6 +589,8 @@ TEST_DATA = {
             "departure": datetime.time(11, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -566,6 +602,8 @@ TEST_DATA = {
             "departure": datetime.time(11, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -577,6 +615,8 @@ TEST_DATA = {
             "departure": datetime.time(12, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -588,6 +628,8 @@ TEST_DATA = {
             "departure": datetime.time(12, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -599,6 +641,8 @@ TEST_DATA = {
             "departure": datetime.time(13, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -610,6 +654,8 @@ TEST_DATA = {
             "departure": datetime.time(13, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -621,6 +667,8 @@ TEST_DATA = {
             "departure": datetime.time(14, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -632,6 +680,8 @@ TEST_DATA = {
             "departure": datetime.time(14, 30, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
         },
@@ -643,140 +693,10 @@ TEST_DATA = {
             "departure": datetime.time(15, 0, 0),
             "days": 128,
             "weeks": None,
+            "include_holidays": 112,
+            "exclude_holidays": 0,
             "note_code": None,
             "note_text": None
-        }
-    ],
-    "bank_holidays": [
-        {
-            "journey_ref": 400012,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400013,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400014,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400015,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400016,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400017,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400018,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400019,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400020,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400021,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400022,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400023,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400024,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400025,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400026,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400027,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400028,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400029,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400030,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400031,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400032,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400033,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400034,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400035,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400036,
-            "operational": True,
-            "holidays": 112
-        },
-        {
-            "journey_ref": 400037,
-            "operational": True,
-            "holidays": 112
         }
     ]
 }

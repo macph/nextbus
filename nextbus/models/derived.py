@@ -359,7 +359,18 @@ class FTS(utils.DerivedModel):
 
     @classmethod
     def insert_new(cls, connection):
-        return _select_fts_vectors()
+        statements = _select_fts_vectors()
+        service = statements.pop(-1)
+
+        count_services = db.select([db.func.count()]).select_from(Service)
+        services = connection.execute(count_services).scalar()
+
+        step = 1000
+        for offset in range(0, services, step):
+            range_ = (Service.id >= offset) & (Service.id < offset + step)
+            statements.append(service.where(range_))
+
+        return statements
 
     def __repr__(self):
         return f"<FTS({self.table_name!r}, {self.code!r})>"

@@ -1,10 +1,8 @@
 """
 Database model extensions for the nextbus package.
-
-SQLAlchemy materialized view code based on code from the following:
-http://www.jeffwidman.com/blog/847/using-sqlalchemy-to-create-and-manage-postgresql-materialized-views/
-https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/Views
 """
+from abc import abstractmethod
+
 import sqlalchemy as sa
 import sqlalchemy.ext.compiler as sa_compiler
 
@@ -16,106 +14,40 @@ def table_name(model):
     return db.literal_column(f"'{model.__tablename__}'")
 
 
-class _CreateMatView(sa.schema.DDLElement):
-    """ Creates materialized view with a command. """
-    def __init__(self, name, selectable, with_data=False):
-        self.name = name
-        self.selectable = selectable
-        self.with_data = with_data
-
-
-class _DropMatView(sa.schema.DDLElement):
-    """ Drops materialized view with a command. """
-    def __init__(self, name):
-        self.name = name
-
-
-class _RefreshMatView(sa.schema.DDLElement):
-    """ Drops materialized view with a command. """
-    def __init__(self, name, concurrently=False):
-        self.name = name
-        self.concurrently = concurrently
-
-
-@sa_compiler.compiles(_CreateMatView)
-def _compile_create_mat_view(clause, compiler):
-    name = compiler.preparer.quote(clause.name)
-    selectable = compiler.sql_compiler.process(clause.selectable,
-                                               literal_binds=True)
-    with_data = "DATA" if clause.with_data else "NO DATA"
-
-    return (
-        f"CREATE MATERIALIZED VIEW {name} AS {selectable} WITH {with_data}"
-    )
-
-
-@sa_compiler.compiles(_DropMatView)
-def _compile_drop_mat_view(clause, compiler):
-    name = compiler.preparer.quote(clause.name)
-
-    return f"DROP MATERIALIZED VIEW IF EXISTS {name}"
-
-
-@sa_compiler.compiles(_RefreshMatView)
-def _compile_refresh_mat_view(clause, compiler):
-    concurrently = "CONCURRENTLY" if clause.concurrently else ""
-    name = compiler.preparer.quote(clause.name)
-
-    return f"REFRESH MATERIALIZED VIEW {concurrently} {name}"
-
-
-def create_mat_view(name, selectable, metadata=db.metadata):
-    """ Creates a table based on the materialized view selectable and adds
-        events for ``db.create_all()`` and ``db.drop_all()``.
-
-        :param name: Name of materialized view
-        :param selectable: Query object
-        :param metadata: Metadata object, by default it is the same as used by
-        the application
-        :returns: A ``Table`` object corresponding to the materialized view
-    """
-    # Separate metadata for this table, to avoid inclusion in db.create_all()
-    _metadata = db.MetaData()
-    table = db.Table(name, _metadata)
-
-    # Add columns based on selectable
-    for col in selectable.columns:
-        column = db.Column(col.name, col.type, primary_key=col.primary_key)
-        table.append_column(column)
-
-    # Set view to be created and dropped at same time as metadata
-    @db.event.listens_for(metadata, "after_create")
-    def create_view(_, connection, **kw):
-        connection.execute(_CreateMatView(name, selectable))
-        # Add indexes after metadata created
-        for idx in table.indexes:
-            idx.create(connection)
-
-    @db.event.listens_for(metadata, "before_drop")
-    def drop_view(_, connection, **kw):
-        connection.execute(_DropMatView(name))
-
-    return table
-
-
-class MaterializedView(db.Model):
-    """ ORM class for a materialized view. """
+class DerivedModel(db.Model):
     __abstract__ = True
 
     @classmethod
-    def refresh(cls, concurrently=False):
-        """ Refreshes materialized view. Must be committed in a transaction. """
-        name = cls.__table__.fullname
+    @abstractmethod
+    def insert_new(cls, connection):
+        """ Returns a list of selectables which will be used to update
+            model with new rows.
+        """
+        pass
 
-        db.session.flush()
-        db.session.execute(_RefreshMatView(name, concurrently))
+    @classmethod
+    def refresh(cls, connection):
+        """ Delete existing rows and inserted updated rows from selectable. """
+        columns = [c.key for c in cls.__table__.columns]
+        connection.execute(cls.__table__.delete())
+        for statement in cls.insert_new(connection):
+            connection.execute(
+                cls.__table__.insert().from_select(columns, statement)
+            )
 
 
-def refresh_mat_views(concurrently=False):
+def refresh_derived_models(connection=None):
     """ Refresh all materialized views declared with db.Model. """
-    for m in db.Model._decl_class_registry.values():
-        if hasattr(m, "__table__") and issubclass(m, MaterializedView):
-            m.refresh(concurrently)
+    def _refresh_models(c):
+        for m in db.Model._decl_class_registry.values():
+            if hasattr(m, "__table__") and issubclass(m, DerivedModel):
+                m.refresh(c)
+
+    if connection is None:
+        with db.engine.begin() as conn:
+            _refresh_models(conn)
+    else:
+        _refresh_models(connection)
 
 
 class _ValuesClause(sa.sql.FromClause):

@@ -21,6 +21,9 @@ _pattern = db.table("journey_pattern", db.column("id"),
                     db.column("service_ref"))
 _link = db.table("journey_link", db.column("pattern_ref"),
                  db.column("stop_point_ref"))
+_pair = db.table("service_pair", db.column("service0"), db.column("service1"),
+                 db.column("direction0"), db.column("direction1"),
+                 db.column("similarity"))
 
 
 class ServiceMode(db.Model):
@@ -853,25 +856,25 @@ class Service(db.Model):
         """
         id_ = db.bindparam("id", self.id)
         similar0 = (
-            db.session.query(ServicePair.service0.label("id"),
-                             ServicePair.direction0.label("direction"))
-            .filter(ServicePair.service1 == id_)
+            db.session.query(_pair.c.service0.label("id"),
+                             _pair.c.direction0.label("direction"))
+            .filter(_pair.c.service1 == id_)
         )
         similar1 = (
-            db.session.query(ServicePair.service1.label("id"),
-                             ServicePair.direction1.label("direction"))
-            .filter(ServicePair.service0 == id_)
+            db.session.query(_pair.c.service1.label("id"),
+                             _pair.c.direction1.label("direction"))
+            .filter(_pair.c.service0 == id_)
         )
 
         if direction is not None:
             dir_ = db.bindparam("dir", direction)
-            similar0 = similar0.filter(ServicePair.direction1 == dir_)
-            similar1 = similar1.filter(ServicePair.direction0 == dir_)
+            similar0 = similar0.filter(_pair.c.direction1 == dir_)
+            similar1 = similar1.filter(_pair.c.direction0 == dir_)
 
         if threshold is not None:
             value = db.bindparam("threshold", threshold)
-            similar0 = similar0.filter(ServicePair.similarity > value)
-            similar1 = similar1.filter(ServicePair.similarity > value)
+            similar0 = similar0.filter(_pair.c.similarity > value)
+            similar1 = similar1.filter(_pair.c.similarity > value)
 
         service = db.aliased(self, name="service")
         similar = db.union_all(similar0, similar1).alias()
@@ -894,28 +897,6 @@ class Service(db.Model):
                       similar.c.direction)
             .all()
         )
-
-
-class ServicePair(db.Model):
-    """ Pairs of services sharing stops, used to find similar services. """
-    __tablename__ = "service_pair"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    service0 = db.Column(db.Integer,
-                         db.ForeignKey("service.id", ondelete="CASCADE"),
-                         nullable=False, index=True)
-    direction0 = db.Column(db.Boolean, nullable=False, index=True)
-    count0 = db.Column(db.Integer, nullable=False)
-    service1 = db.Column(db.Integer,
-                         db.ForeignKey("service.id", ondelete="CASCADE"),
-                         nullable=False, index=True)
-    direction1 = db.Column(db.Boolean, nullable=False, index=True)
-    count1 = db.Column(db.Integer, nullable=False)
-    similarity = db.Column(db.Float, nullable=False)
-
-    __table_args__ = (
-        db.CheckConstraint("service0 < service1"),
-    )
 
 
 class JourneyPattern(db.Model):

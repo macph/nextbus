@@ -4,7 +4,10 @@ CLI commands for the nextbus app.
 import os
 
 import click
+from flask import current_app
 from flask.cli import FlaskGroup
+
+from nextbus import models, populate
 
 
 def run_cli_app():
@@ -133,10 +136,6 @@ class MutexOption(click.Option):
 @click.pass_context
 def populate(ctx, **kw):
     """ Calls the populate functions for filling the database with data. """
-    from flask import current_app
-    from nextbus import models, populate
-    from nextbus.populate import file_ops, utils
-
     if kw["all_d"]:
         options = {o: True for o in "gnpotm"}
     else:
@@ -154,9 +153,9 @@ def populate(ctx, **kw):
 
     if any(options.values()):
         if options["b"]:
-            file_ops.backup_database(path=kw["backup_f"])
+            populate.backup_database(path=kw["backup_f"])
         if options["r"]:
-            file_ops.restore_database(path=kw["restore_f"])
+            populate.restore_database(path=kw["restore_f"])
         if options["g"]:
             populate.commit_nptg_data(archive=kw["nptg_f"])
         if options["n"]:
@@ -174,8 +173,7 @@ def populate(ctx, **kw):
             populate.modify_data()
         # Update views after population
         if options["g"] or options["n"] or options["m"] or options["t"]:
-            with utils.database_session():
-                current_app.logger.info("Refreshing materialized views")
-                models.utils.refresh_mat_views()
+            current_app.logger.info("Refreshing materialized views")
+            models.refresh_derived_models()
     else:
         click.echo(ctx.get_help())

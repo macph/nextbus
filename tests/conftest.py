@@ -146,10 +146,10 @@ def db_status():
 
 def _load_db_data():
     """ Loads test data into DB. """
-    for table, data in TEST_DATA.items():
-        db.session.execute(db.metadata.tables[table].insert().values(data))
-    models.utils.refresh_mat_views()
-    db.session.commit()
+    with db.engine.begin() as connection:
+        for table, data in TEST_DATA.items():
+            connection.execute(db.metadata.tables[table].insert().values(data))
+        models.refresh_derived_models(connection)
 
 
 @pytest.fixture(scope="module")
@@ -160,7 +160,7 @@ def _db_loaded(app, db_status):
             db.create_all()
             _load_db_data()
             db_status.loaded = True
-            yield
+            yield db
         finally:
             db.session.remove()
             db.drop_all()
@@ -171,7 +171,7 @@ def _db_loaded(app, db_status):
 def db_loaded(_db_loaded):
     """ Runs test with loaded database in separate sessions. """
     try:
-        yield
+        yield _db_loaded
     finally:
         db.session.remove()
 

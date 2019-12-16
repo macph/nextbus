@@ -3,6 +3,7 @@ Materialized views for the nextbus package.
 """
 import functools
 
+from flask import current_app
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.types import UserDefinedType
 
@@ -12,47 +13,6 @@ from nextbus.models.tables import (
     Region, AdminArea, District, Locality, StopArea, StopPoint,
     JourneyPattern, JourneyLink, Service, Operator, LocalOperator
 )
-
-
-def _select_natural_sort():
-    stop_ind = db.select([StopPoint.short_ind.label("string")])
-    service_line = db.select([Service.line.label("string")])
-    other_num = db.select([db.func.generate_series(0, 100).cast(db.Text)
-                           .label("string")])
-    num = db.union(stop_ind, service_line, other_num).alias("num")
-
-    regex = (
-        db.func.regexp_matches(num.c.string, r"0*(\d+)|(\D+)", "g")
-        .alias("r")
-    )
-    # Make a column alias with text array type
-    r = db.column("r", type_=db.ARRAY(db.Text, dimensions=1))
-
-    # If not numeric, convert to uppercase
-    r_upper = db.func.upper(r[2])
-    # Add number of digits to numbers so they are sorted naturally
-    # eg 4294967296 -> 10 digits -> 2 digits so is converted to 2104294967296
-    r_len = db.func.length(r[1]).cast(db.Text)
-    r_len_len = db.func.length(r_len).cast(db.Text)
-    r_concat = r_len.concat(r_len_len).concat(r[1])
-
-    index = db.func.coalesce(r_upper, r_concat)
-    index = db.func.convert_to(index, "SQL_ASCII")
-    index = db.func.string_agg(index, "\\x00")
-    index = db.func.coalesce(index, "")
-
-    select_index = db.select([index]).select_from(regex)
-
-    query = (
-        db.select([num.c.string.label("string"), select_index.label("index")])
-        .select_from(num)
-    )
-
-    # Set columns manually
-    query.c.string.primary_key = True
-    query.c.index.type = db.LargeBinary
-
-    return query
 
 
 def _tsvector_column(*columns):
@@ -231,7 +191,7 @@ def _select_fts_vectors():
             .label("admin_areas"),
             _tsvector_column(
                 (StopPoint.name, "B"),
-                (StopPoint.street, "B"),
+                (db.func.coalesce(StopPoint.street, ""), "B"),
                 (Locality.name, "C"),
                 (db.func.coalesce(District.name, ""), "D"),
                 (AdminArea.name, "D")
@@ -293,21 +253,9 @@ def _select_fts_vectors():
         .group_by(Service.id)
     )
 
-    selectable = db.union_all(region, admin_area, district, locality, stop_area,
-                              stop_point, service)
-    selectable.c.code.primary_key = True
-
-    return selectable
-
-
-class NaturalSort(utils.MaterializedView):
-    """ Sorts indicators and lines naturally via a join with this view. """
-    __table__ = utils.create_mat_view("natural_sort", _select_natural_sort())
-
-    __table_args__ = (
-        db.Index("ix_natural_sort_string", "string", unique=True),
-        db.Index("ix_natural_sort_index", "index")
-    )
+    return [
+        region, admin_area, district, locality, stop_area, stop_point, service
+    ]
 
 
 def _test_query(query):
@@ -326,37 +274,77 @@ class TSQUERY(UserDefinedType):
         return "TSQUERY"
 
 
-class FTS(utils.MaterializedView):
-    """ Materialized view for full text searching.
+class NaturalSort(utils.DerivedModel):
+    """ Sorts indicators and lines naturally via a join with this view. """
+    __tablename__ = "natural_sort"
 
-        Columns:
-        - ``table_name`` Name of the table this row comes from
-        - ``code`` Primary key for row
-        - ``name`` Name of area/locality/stop
-        - ``indicator`` Indicator for stop point, number of stops for stop area,
-        line for service or empty for other results
-        - ``street`` Street stop point is on; empty for other results
-        - ``stop_type`` Type of stop or area
-        - ``locality_name`` Locality name for stop points and areas; empty for
-        other results
-        - ``district_name`` District name for localities and stops; empty for
-        other results
-        - ``admin_area_ref`` Admin area code for filtering on search page
-        - ``admin_area_name`` Name of admin area for filtering on search page
-        - ``admin_areas`` Array of admin area refs to filter with
-        - ``vector`` The tsvector value to be searched over
+    string = db.Column(db.Text, primary_key=True)
+    index = db.Column(db.LargeBinary, index=True)
+
+    @classmethod
+    def insert_new(cls, connection):
+        stop_ind = db.select([StopPoint.short_ind.label("string")])
+        service_line = db.select([Service.line.label("string")])
+        other_num = db.select([db.func.generate_series(0, 100).cast(db.Text)
+                              .label("string")])
+        num = db.union(stop_ind, service_line, other_num).alias("num")
+
+        regex = (
+            db.func.regexp_matches(num.c.string, r"0*(\d+)|(\D+)", "g")
+                .alias("r")
+        )
+        # Make a column alias with text array type
+        r = db.column("r", type_=db.ARRAY(db.Text, dimensions=1))
+
+        # If not numeric, convert to uppercase
+        r_upper = db.func.upper(r[2])
+        # Add number of digits to numbers so they are sorted naturally
+        # eg 4294967296 -> 10 digits -> 2 digits therefore 2104294967296
+        r_len = db.func.length(r[1]).cast(db.Text)
+        r_len_len = db.func.length(r_len).cast(db.Text)
+        r_concat = r_len.concat(r_len_len).concat(r[1])
+
+        index = db.func.coalesce(r_upper, r_concat)
+        index = db.func.convert_to(index, "SQL_ASCII")
+        index = db.func.string_agg(index, "\\x00")
+        index = db.func.coalesce(index, "")
+
+        select_index = db.select([index]).select_from(regex)
+
+        return [
+            db.select([
+                num.c.string.label("string"), select_index.label("index")
+            ])
+            .select_from(num)
+        ]
+
+
+class FTS(utils.DerivedModel):
+    """ Materialized view for full text searching.
 
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
         to ``A`` respectively.
     """
-    __table__ = utils.create_mat_view("fts", _select_fts_vectors())
+    __tablename__ = "fts"
+
+    table_name = db.Column(db.Text, index=True, primary_key=True)
+    code = db.Column(db.Text, index=True, primary_key=True)
+    name = db.Column(db.Text, nullable=False)
+    indicator = db.Column(db.Text)
+    street = db.Column(db.Text)
+    stop_type = db.Column(db.Text)
+    stop_area_ref = db.Column(db.Text)
+    locality_name = db.Column(db.Text)
+    district_name = db.Column(db.Text)
+    admin_area_ref = db.Column(db.VARCHAR(3))
+    admin_area_name = db.Column(db.Text)
+    admin_areas = db.Column(pg.ARRAY(db.Text, dimensions=1), nullable=False)
+    vector = db.Column(pg.TSVECTOR, nullable=False)
 
     # Unique index for table_name + code required for concurrent refresh
     __table_args__ = (
-        db.Index("ix_fts_table", "table_name"),
-        db.Index("ix_fts_code", "code"),
         db.Index("ix_fts_unique", "table_name", "code", unique=True),
-        db.Index("ix_fts_vector_gin", "tsvector", postgresql_using="gin"),
+        db.Index("ix_fts_vector_gin", "vector", postgresql_using="gin"),
         db.Index("ix_fts_areas_gin", "admin_areas", postgresql_using="gin")
     )
 
@@ -368,6 +356,10 @@ class FTS(utils.MaterializedView):
 
     DICTIONARY = "english"
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
+
+    @classmethod
+    def insert_new(cls, connection):
+        return _select_fts_vectors()
 
     def __repr__(self):
         return f"<FTS({self.table_name!r}, {self.code!r})>"
@@ -495,3 +487,121 @@ class FTS(utils.MaterializedView):
         areas = dict(result.areas) if result.areas is not None else {}
 
         return groups, areas
+
+
+class ServicePair(utils.DerivedModel):
+    """ Pairs of services sharing stops, used to find similar services. """
+    __tablename__ = "service_pair"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    service0 = db.Column(db.Integer,
+                         db.ForeignKey("service.id", ondelete="CASCADE"),
+                         nullable=False, index=True)
+    direction0 = db.Column(db.Boolean, nullable=False, index=True)
+    count0 = db.Column(db.Integer, nullable=False)
+    service1 = db.Column(db.Integer,
+                         db.ForeignKey("service.id", ondelete="CASCADE"),
+                         nullable=False, index=True)
+    direction1 = db.Column(db.Boolean, nullable=False, index=True)
+    count1 = db.Column(db.Integer, nullable=False)
+    similarity = db.Column(db.Float, nullable=False)
+
+    __table_args__ = (
+        db.CheckConstraint("service0 < service1"),
+    )
+
+    @classmethod
+    def insert_new(cls, connection):
+        """ Uses existing service data to update list of pairs of similar
+            services.
+        """
+        service = Service.__table__
+        pattern = JourneyPattern.__table__
+        link = JourneyLink.__table__
+        pairs = cls.__table__
+
+        # Temporary table for all services, direction and stops they call at
+        service_stops = db.Table(
+            "service_stops",
+            db.MetaData(),
+            db.Column("id", db.Integer, autoincrement=False, index=True),
+            db.Column("stop_point_ref", db.Text, nullable=True, index=True),
+            db.Column("outbound", db.Boolean, nullable=False, index=True),
+            db.Column("inbound", db.Boolean, nullable=False, index=True),
+            prefixes=["TEMPORARY"],
+            postgresql_on_commit="DROP"
+        )
+        fill_service_stops = service_stops.insert().from_select(
+            ["id", "stop_point_ref", "outbound", "inbound"],
+            db.select([
+                service.c.id,
+                db.cast(link.c.stop_point_ref, db.Text),
+                db.func.bool_or(~pattern.c.direction),
+                db.func.bool_or(pattern.c.direction)
+            ])
+            .select_from(
+                service
+                .join(pattern, service.c.id == pattern.c.service_ref)
+                .join(link, pattern.c.id == link.c.pattern_ref)
+            )
+            .where(link.c.stop_point_ref.isnot(None))
+            .group_by(service.c.id, db.cast(link.c.stop_point_ref, db.Text))
+        )
+
+        # Find all services sharing at least one stop
+        ss0 = service_stops.alias("ss0")
+        ss1 = service_stops.alias("ss1")
+        shared = (
+            db.select([ss0.c.id.label("id0"), ss1.c.id.label("id1")])
+            .distinct()
+            .select_from(ss0.join(
+                ss1,
+                (ss0.c.id < ss1.c.id) &
+                (ss0.c.stop_point_ref == ss1.c.stop_point_ref)
+            ))
+            .alias("t")
+        )
+
+        # Iterate over possible combinations of directions
+        directions = (
+            db.select([db.column("d", db.Integer)])
+            .select_from(db.func.generate_series(0, 3).alias("d"))
+            .alias("d")
+        )
+
+        # For each service, find all stops and count them
+        select_a = db.select([service_stops.c.stop_point_ref]).where(
+            (service_stops.c.id == shared.c.id0) &
+            ((directions.c.d.op("&")(1) > 0) & service_stops.c.inbound |
+             (directions.c.d.op("&")(1) == 0) & service_stops.c.outbound)
+        ).correlate(shared, directions)
+        select_b = db.select([service_stops.c.stop_point_ref]).where(
+            (service_stops.c.id == shared.c.id1) &
+            ((directions.c.d.op("&")(2) > 0) & service_stops.c.inbound |
+             (directions.c.d.op("&")(2) == 0) & service_stops.c.outbound)
+        ).correlate(shared, directions)
+        select_c = select_a.intersect(select_b)
+
+        count = db.func.count(db.literal_column("*")).label("count")
+        la = db.select([count]).select_from(select_a.alias("a")).lateral("a")
+        lb = db.select([count]).select_from(select_b.alias("b")).lateral("b")
+        lc = db.select([count]).select_from(select_c.alias("c")).lateral("c")
+
+        current_app.logger.info("Querying all services and stops they call at")
+        service_stops.create(connection)
+        connection.execute(fill_service_stops)
+
+        return [
+            db.select([
+                db.func.row_number().over(),
+                shared.c.id0,
+                (directions.c.d.op("&")(1) > 0).label("dir0"),
+                la.c.count,
+                shared.c.id1,
+                (directions.c.d.op("&")(2) > 0).label("dir1"),
+                lb.c.count,
+                db.cast(lc.c.count, db.Float) /
+                db.func.least(la.c.count, lb.c.count)
+            ])
+            .where((la.c.count > 0) & (lb.c.count > 0) & (lc.c.count > 0))
+        ]

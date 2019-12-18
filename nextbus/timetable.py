@@ -205,6 +205,7 @@ def _query_times(service_id, direction, date):
             models.Journey.note_code,
             models.Journey.note_text,
             models.JourneyLink.stop_point_ref,
+            models.StopPoint.active,
             models.JourneyLink.timing_point,
             # Journey may call or not call at this stop point
             db.func.coalesce(models.JourneySpecificLink.stopping,
@@ -223,6 +224,10 @@ def _query_times(service_id, direction, date):
         .join(models.JourneyPattern.local_operator)
         .join(models.LocalOperator.operator)
         .join(models.JourneyPattern.links)
+        .outerjoin(
+            models.StopPoint,
+            models.JourneyLink.stop_point_ref == models.StopPoint.atco_code
+        )
         .outerjoin(jl_start, models.Journey.start_run == jl_start.id)
         .outerjoin(jl_end, models.Journey.end_run == jl_end.id)
         .outerjoin(
@@ -265,9 +270,7 @@ def _query_timetable(service_id, direction, date):
             .label("depart")
         )
         .select_from(times)
-        .join(models.StopPoint,
-              times.c.stop_point_ref == models.StopPoint.atco_code)
-        .filter(models.StopPoint.active, times.c.stopping)
+        .filter(times.c.active, times.c.stopping)
         .order_by(times.c.departure, times.c.journey_id, times.c.sequence)
     )
 

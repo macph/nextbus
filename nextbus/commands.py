@@ -114,6 +114,10 @@ class MutexOption(click.Option):
 @click.option("--modify", "-m", "modify", cls=MutexOption, is_flag=True,
               exclude=("all_d",),
               help="Modify values in existing data with modify.xml.")
+@click.option("--refresh", "-f", "refresh", cls=MutexOption, is_flag=True,
+              exclude=("restore", "restore_f"),
+              help="Refresh derived models using existing data. Active if any"
+                   "population options are selected as well.")
 @click.option("--backup", "-b", "backup", cls=MutexOption, is_flag=True,
               exclude=("backup_f",),
               help="Back up database before populating database.")
@@ -124,13 +128,13 @@ class MutexOption(click.Option):
 @click.option("--restore", "-r", "restore", cls=MutexOption, is_flag=True,
               exclude=("all_d", "nptg_d", "nptg_f", "naptan_d", "naptan_f",
                        "nspl_d", "nspl_f", "noc_d", "noc_f", "tnds_d", "tnds_f",
-                       "modify", "backup", "backup_f", "restore_f"),
+                       "modify", "refresh", "backup", "backup_f", "restore_f"),
               help="Restore database before populating database.")
 @click.option("--restore-path", "-R", "restore_f", cls=MutexOption,
               default=None, type=click.Path(),
               exclude=("all_d", "nptg_d", "nptg_f", "naptan_d", "naptan_f",
                        "nspl_d", "nspl_f", "noc_d", "noc_f", "tnds_d", "tnds_f",
-                       "modify", "backup", "backup_f", "restore"),
+                       "modify", "refresh", "backup", "backup_f", "restore"),
               help="Restore database from a specified dump file before "
                    "populating database.")
 @click.pass_context
@@ -145,7 +149,8 @@ def populate(ctx, **kw):
             "p": kw["nspl_d"] or kw["nspl_f"] is not None,
             "o": kw["noc_d"] or kw["noc_f"] is not None,
             "t": kw["tnds_d"] or kw["tnds_f"] is not None,
-            "m": kw["modify"]
+            "m": kw["modify"],
+            "f": kw["refresh"]
         }
 
     options["b"] = kw["backup"] or kw["backup_f"] is not None
@@ -172,8 +177,8 @@ def populate(ctx, **kw):
         if options["m"]:
             populate.modify_data()
         # Update views after population
-        if options["g"] or options["n"] or options["m"] or options["t"]:
-            current_app.logger.info("Refreshing materialized views")
+        if any(options[o] for o in "gnmtf"):
+            current_app.logger.info("Refreshing derived models")
             models.refresh_derived_models()
     else:
         click.echo(ctx.get_help())

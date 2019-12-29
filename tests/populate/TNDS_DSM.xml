@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TransXChange xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.transxchange.org.uk/ http://www.transxchange.org.uk/schema/2.1/TransXChange_general.xsd" CreationDateTime="2019-12-05T15:02:28.3736Z" ModificationDateTime="2019-12-05T15:02:28.3736Z" Modification="new" RevisionNumber="3" FileName="tfl_66-DSM-_-y05-1.xml" SchemaVersion="2.1" RegistrationDocument="false" xmlns="http://www.transxchange.org.uk/">
+  <StopPoints>
+    <AnnotatedStopPointRef>
+      <StopPointRef>490000015G</StopPointRef>
+      <CommonName>Barking Station</CommonName>
+      <Indicator>Stop G</Indicator>
+      <LocalityName>Barking (London)</LocalityName>
+      <LocalityQualifier>Greater London</LocalityQualifier>
+    </AnnotatedStopPointRef>
+    <AnnotatedStopPointRef>
+      <StopPointRef>490008638S</StopPointRef>
+      <CommonName>Greatfields Park</CommonName>
+      <Indicator>Stop P</Indicator>
+      <LocalityName>Barking (London)</LocalityName>
+      <LocalityQualifier>Greater London</LocalityQualifier>
+    </AnnotatedStopPointRef>
+    <AnnotatedStopPointRef>
+      <StopPointRef>490020305W</StopPointRef>
+      <CommonName>DAGENHAM SUNDAY MARKET</CommonName>
+      <Indicator>-&gt;W</Indicator>
+      <LocalityName>Creekmouth</LocalityName>
+      <LocalityQualifier>Greater London</LocalityQualifier>
+    </AnnotatedStopPointRef>
+    <AnnotatedStopPointRef>
+      <StopPointRef>490008638N</StopPointRef>
+      <CommonName>Greatfields Park</CommonName>
+      <Indicator>Stop N</Indicator>
+      <LocalityName>Barking (London)</LocalityName>
+      <LocalityQualifier>Greater London</LocalityQualifier>
+    </AnnotatedStopPointRef>
+  </StopPoints>
+  <RouteSections>
+    <RouteSection id="RS_66-DSM-_-y05-1-O-1">
+      <RouteLink id="RL_66-DSM-_-y05-1-O-1-1">
+        <From>
+          <StopPointRef>490000015G</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>490008638S</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+      <RouteLink id="RL_66-DSM-_-y05-1-O-1-2">
+        <From>
+          <StopPointRef>490008638S</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>490020305W</StopPointRef>
+        </To>
+        <Direction>outbound</Direction>
+      </RouteLink>
+    </RouteSection>
+    <RouteSection id="RS_66-DSM-_-y05-1-I-2">
+      <RouteLink id="RL_66-DSM-_-y05-1-I-2-1">
+        <From>
+          <StopPointRef>490020305W</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>490008638N</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+      <RouteLink id="RL_66-DSM-_-y05-1-I-2-2">
+        <From>
+          <StopPointRef>490008638N</StopPointRef>
+        </From>
+        <To>
+          <StopPointRef>490000015G</StopPointRef>
+        </To>
+        <Direction>inbound</Direction>
+      </RouteLink>
+    </RouteSection>
+  </RouteSections>
+  <Routes>
+    <Route id="R_66-DSM-_-y05-1-O-1">
+      <PrivateCode>R_66-DSM-_-y05-1-O-1</PrivateCode>
+      <Description>Barking Station - Dagenham Sunday Market</Description>
+      <RouteSectionRef>RS_66-DSM-_-y05-1-O-1</RouteSectionRef>
+    </Route>
+    <Route id="R_66-DSM-_-y05-1-I-2">
+      <PrivateCode>R_66-DSM-_-y05-1-I-2</PrivateCode>
+      <Description>Dagenham Sunday Market - Barking Station</Description>
+      <RouteSectionRef>RS_66-DSM-_-y05-1-I-2</RouteSectionRef>
+    </Route>
+  </Routes>
+  <JourneyPatternSections>
+    <JourneyPatternSection id="JPS_66-DSM-_-y05-1-1-1-O">
+      <JourneyPatternTimingLink id="JPL_66-DSM-_-y05-1-1-O-1-2">
+        <From SequenceNumber="1">
+          <Activity>pickUp</Activity>
+          <StopPointRef>490000015G</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </From>
+        <To SequenceNumber="2">
+          <Activity>pickUp</Activity>
+          <StopPointRef>490008638S</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>RL_66-DSM-_-y05-1-O-1-1</RouteLinkRef>
+        <RunTime>PT4M36S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPL_66-DSM-_-y05-1-1-O-1-3">
+        <From SequenceNumber="2">
+          <Activity>pickUp</Activity>
+          <StopPointRef>490008638S</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To SequenceNumber="3">
+          <Activity>setDown</Activity>
+          <StopPointRef>490020305W</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </To>
+        <RouteLinkRef>RL_66-DSM-_-y05-1-O-1-2</RouteLinkRef>
+        <RunTime>PT10M24S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+    <JourneyPatternSection id="JPS_66-DSM-_-y05-1-1-2-I">
+      <JourneyPatternTimingLink id="JPL_66-DSM-_-y05-1-1-I-2-2">
+        <From SequenceNumber="1">
+          <Activity>pickUp</Activity>
+          <StopPointRef>490020305W</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </From>
+        <To SequenceNumber="2">
+          <Activity>setDown</Activity>
+          <StopPointRef>490008638N</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </To>
+        <RouteLinkRef>RL_66-DSM-_-y05-1-I-2-1</RouteLinkRef>
+        <RunTime>PT9M8S</RunTime>
+      </JourneyPatternTimingLink>
+      <JourneyPatternTimingLink id="JPL_66-DSM-_-y05-1-1-I-2-3">
+        <From SequenceNumber="2">
+          <Activity>setDown</Activity>
+          <StopPointRef>490008638N</StopPointRef>
+          <TimingStatus>OTH</TimingStatus>
+        </From>
+        <To SequenceNumber="3">
+          <Activity>setDown</Activity>
+          <StopPointRef>490000015G</StopPointRef>
+          <TimingStatus>PTP</TimingStatus>
+        </To>
+        <RouteLinkRef>RL_66-DSM-_-y05-1-I-2-2</RouteLinkRef>
+        <RunTime>PT5M52S</RunTime>
+      </JourneyPatternTimingLink>
+    </JourneyPatternSection>
+  </JourneyPatternSections>
+  <Operators>
+    <Operator id="OId_ATC">
+      <NationalOperatorCode>ATCS</NationalOperatorCode>
+      <OperatorCode>ATC</OperatorCode>
+      <OperatorShortName>At Coaches</OperatorShortName>
+      <OperatorNameOnLicence>At Coaches</OperatorNameOnLicence>
+      <TradingName>At Coaches</TradingName>
+    </Operator>
+  </Operators>
+  <Services>
+    <Service>
+      <ServiceCode>66-DSM-_-y05-1</ServiceCode>
+      <PrivateCode>66-DSM-_-y05-1</PrivateCode>
+      <Lines>
+        <Line id="66-DSM-_-y05-1">
+          <LineName>Dagenham Sunday Market Shuttle</LineName>
+        </Line>
+      </Lines>
+      <OperatingPeriod>
+        <StartDate>2019-12-08</StartDate>
+        <EndDate>2020-05-31</EndDate>
+      </OperatingPeriod>
+      <OperatingProfile>
+        <RegularDayType>
+          <DaysOfWeek>
+            <Sunday />
+          </DaysOfWeek>
+        </RegularDayType>
+        <SpecialDaysOperation>
+          <DaysOfOperation>
+            <DateRange>
+              <StartDate>2020-05-08</StartDate>
+              <EndDate>2020-05-08</EndDate>
+            </DateRange>
+          </DaysOfOperation>
+        </SpecialDaysOperation>
+        <BankHolidayOperation>
+          <DaysOfOperation>
+            <BoxingDay />
+            <NewYearsDay />
+            <EasterMonday />
+            <SpringBank />
+          </DaysOfOperation>
+          <DaysOfNonOperation>
+            <ChristmasDay />
+            <GoodFriday />
+            <MayDay />
+          </DaysOfNonOperation>
+        </BankHolidayOperation>
+      </OperatingProfile>
+      <RegisteredOperatorRef>OId_ATC</RegisteredOperatorRef>
+      <StopRequirements>
+        <NoNewStopsRequired />
+      </StopRequirements>
+      <Mode>bus</Mode>
+      <Description>Barking - Dagenham Sunday Market</Description>
+      <StandardService>
+        <Origin>Barking Station</Origin>
+        <Destination>Dagenham Sunday Market</Destination>
+        <JourneyPattern id="JP_66-DSM-_-y05-1-1-O-1">
+          <Direction>outbound</Direction>
+          <Operational>
+            <VehicleType>
+              <VehicleTypeCode>DD</VehicleTypeCode>
+              <Description>Double Decker, 1-Man</Description>
+            </VehicleType>
+          </Operational>
+          <RouteRef>R_66-DSM-_-y05-1-O-1</RouteRef>
+          <JourneyPatternSectionRefs>JPS_66-DSM-_-y05-1-1-1-O</JourneyPatternSectionRefs>
+        </JourneyPattern>
+        <JourneyPattern id="JP_66-DSM-_-y05-1-1-I-2">
+          <Direction>inbound</Direction>
+          <Operational>
+            <VehicleType>
+              <VehicleTypeCode>DD</VehicleTypeCode>
+              <Description>Double Decker, 1-Man</Description>
+            </VehicleType>
+          </Operational>
+          <RouteRef>R_66-DSM-_-y05-1-I-2</RouteRef>
+          <JourneyPatternSectionRefs>JPS_66-DSM-_-y05-1-1-2-I</JourneyPatternSectionRefs>
+        </JourneyPattern>
+      </StandardService>
+    </Service>
+  </Services>
+  <VehicleJourneys>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-1-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-1-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>08:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-2-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-2-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>09:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-3-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-3-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>09:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-4-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-4-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>10:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-5-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-5-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>10:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-6-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-6-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>11:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-7-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-7-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>11:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-8-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-8-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>12:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-9-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-9-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>12:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-10-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-10-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>13:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-11-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-11-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>13:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-12-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-12-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>14:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-13-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-13-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-O-1</JourneyPatternRef>
+      <DepartureTime>14:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-14-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-14-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>09:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-15-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-15-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>09:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-16-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-16-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>10:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-17-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-17-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>10:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-18-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-18-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>11:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-19-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-19-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>11:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-20-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-20-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>12:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-21-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-21-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>12:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-22-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-22-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>13:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-23-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-23-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>13:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-24-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-24-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>14:00:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-25-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-25-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>14:30:00</DepartureTime>
+    </VehicleJourney>
+    <VehicleJourney>
+      <PrivateCode>tfl-66-DSM-_-y05-1-26-Su</PrivateCode>
+      <Operational>
+        <VehicleType>
+          <VehicleTypeCode>DD</VehicleTypeCode>
+          <Description>Double Decker, 1-Man</Description>
+        </VehicleType>
+      </Operational>
+      <VehicleJourneyCode>VJ_66-DSM-_-y05-1-26-Su</VehicleJourneyCode>
+      <ServiceRef>66-DSM-_-y05-1</ServiceRef>
+      <LineRef>66-DSM-_-y05-1</LineRef>
+      <JourneyPatternRef>JP_66-DSM-_-y05-1-1-I-2</JourneyPatternRef>
+      <DepartureTime>15:00:00</DepartureTime>
+    </VehicleJourney>
+  </VehicleJourneys>
+</TransXChange>

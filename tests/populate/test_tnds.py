@@ -1,22 +1,27 @@
 """
 Testing TNDS population.
 """
+import datetime
 from importlib.resources import open_binary
 import os
 
 import lxml.etree as et
 import pytest
 
-from nextbus.populate.utils import xslt_func, xslt_transform
+from nextbus import models
+from nextbus.populate.utils import (
+    collect_xml_data, populate_database, xslt_func, xslt_transform
+)
 from nextbus.populate.tnds import (
-    bank_holidays, days_week, weeks_month, format_description, short_description,
-    ServiceCodes, RowIds
+    bank_holidays, days_week, weeks_month, format_description,
+    setup_tnds_functions, short_description, ServiceCodes, RowIds
 )
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 TNDS_OUT = os.path.join(TEST_DIR, "TNDS_data.xml")
-TNDS_RAW = os.path.join(TEST_DIR, "TNDS.xml")
+TNDS_RAW = os.path.join(TEST_DIR, "TNDS_test.xml")
+TNDS_DSM = os.path.join(TEST_DIR, "TNDS_DSM.xml")
 
 
 @pytest.mark.parametrize("days, expected", [
@@ -163,6 +168,8 @@ def test_transform_tnds(asserts, xslt, row_ids, service_codes):
                             file="SVRYSBO120A.xml")
     expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
 
+    print(et.tostring(output, pretty_print=True))
+
     asserts.xml_elements_equal(output.getroot(), expected.getroot())
 
 
@@ -201,3 +208,86 @@ def test_transform_tnds_wrong_type(asserts, xslt, row_ids):
     output = xslt_transform(raw, xslt, region="Y", file="SVRYSBO120.xml")
 
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
+
+
+def _as_dict(instance):
+    return {k: v for k, v in instance.__dict__.items()
+            if k != "_sa_instance_state"}
+
+
+def test_update_tnds_data(db_loaded, row_ids, service_codes):
+    with open_binary("nextbus.populate", "tnds.xslt") as file_:
+        xslt = et.XSLT(et.parse(file_))
+
+    # All relevant data already exists for Dagenham Sunday market shuttle;
+    # just overwrite route data using a newer file
+    file_name = "66-DSM-_-y05-1"
+    setup_tnds_functions()
+    data = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
+    populate_database(
+        collect_xml_data(data),
+        delete=True,
+        exclude=(models.Operator, models.LocalOperator)
+    )
+
+    assert _as_dict(models.Service.query.one()) == {
+        "id": 1,
+        "code": "dagenham-sunday-market-shuttle",
+        "line": "Dagenham Sunday Market Shuttle",
+        "description": "Barking – Dagenham Sunday Market",
+        "short_description": "Barking – Dagenham Sunday Market",
+        "mode": 1,
+        "filename": file_name
+    }
+
+    patterns = (
+        models.JourneyPattern.query
+        .order_by(models.JourneyPattern.id)
+        .all()
+    )
+    assert len(patterns) == 2
+    assert _as_dict(patterns[0]) == dict(
+        id=1,
+        origin="Barking Station",
+        destination="Dagenham Sunday Market",
+        service_ref=1,
+        direction=False,
+        date_start=datetime.date(2019, 12, 8),
+        date_end=datetime.date(2020, 5, 31),
+        local_operator_ref="ATC",
+        region_ref="L"
+    )
+
+    journeys = (
+        models.Journey.query
+        .order_by(models.Journey.id)
+        .all()
+    )
+    assert len(journeys) == 26
+    assert _as_dict(journeys[0]) == dict(
+        id=1,
+        pattern_ref=1,
+        start_run=None,
+        end_run=None,
+        departure=datetime.time(8, 30),
+        days=0b10000000,
+        weeks=None,
+        include_holidays=0b0000010001010010,
+        exclude_holidays=0b0000001000101000,
+        note_code=None,
+        note_text=None
+    )
+
+    special_days = (
+        models.SpecialPeriod.query
+        .order_by(models.SpecialPeriod.id)
+        .all()
+    )
+    assert len(special_days) == 26
+    assert _as_dict(special_days[0]) == dict(
+        id=1,
+        journey_ref=1,
+        date_start=datetime.date(2020, 5, 8),
+        date_end=datetime.date(2020, 5, 8),
+        operational=True
+    )

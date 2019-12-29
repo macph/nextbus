@@ -470,6 +470,8 @@
     <departure>12:19:00</departure>
     <days>126</days>
     <weeks/>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -481,6 +483,8 @@
     <departure>14:19:00</departure>
     <days>126</days>
     <weeks/>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -492,6 +496,8 @@
     <departure>16:19:00</departure>
     <days>190</days>
     <weeks>5</weeks>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -503,6 +509,8 @@
     <departure>18:19:00</departure>
     <days>254</days>
     <weeks/>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>65274</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -514,6 +522,8 @@
     <departure>18:19:00</departure>
     <days>0</days>
     <weeks/>
+    <include_holidays>65274</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -525,6 +535,8 @@
     <departure>14:32:00</departure>
     <days>62</days>
     <weeks/>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -536,6 +548,8 @@
     <departure>16:32:00</departure>
     <days>254</days>
     <weeks/>
+    <include_holidays>0</include_holidays>
+    <exclude_holidays>1786</exclude_holidays>
     <note_code>SCHD</note_code>
     <note_text>School Days Only</note_text>
   </Journey>
@@ -547,6 +561,8 @@
     <departure>16:32:00</departure>
     <days>0</days>
     <weeks/>
+    <include_holidays>1776</include_holidays>
+    <exclude_holidays>0</exclude_holidays>
     <note_code/>
     <note_text/>
   </Journey>
@@ -780,24 +796,4 @@
     <date_end>2018-04-03</date_end>
     <operational>1</operational>
   </SpecialPeriod>
-  <BankHolidays>
-    <holidays>65274</holidays>
-    <journey_ref>4</journey_ref>
-    <operational>0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holidays>65274</holidays>
-    <journey_ref>5</journey_ref>
-    <operational>1</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holidays>1786</holidays>
-    <journey_ref>7</journey_ref>
-    <operational>0</operational>
-  </BankHolidays>
-  <BankHolidays>
-    <holidays>1776</holidays>
-    <journey_ref>8</journey_ref>
-    <operational>1</operational>
-  </BankHolidays>
 </Data>

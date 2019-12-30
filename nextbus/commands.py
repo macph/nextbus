@@ -61,7 +61,8 @@ class MutexOption(click.Option):
         return super().handle_parse_result(ctx, opts, args)
 
 
-@cli.command(help="Populate NaPTAN, NPTG and NSPL data. To download and "
+@cli.command(name="populate",
+             help="Populate NaPTAN, NPTG and NSPL data. To download and "
              "populate the database with everything use "
              "'nxb populate --all'.")
 @click.option("--all", "all_d", cls=MutexOption, is_flag=True,
@@ -138,7 +139,7 @@ class MutexOption(click.Option):
               help="Restore database from a specified dump file before "
                    "populating database.")
 @click.pass_context
-def populate(ctx, **kw):
+def populate_cmd(ctx, **kw):
     """ Calls the populate functions for filling the database with data. """
     if kw["all_d"]:
         options = {o: True for o in "gnpotm"}

@@ -7,11 +7,48 @@ import sqlalchemy as sa
 import sqlalchemy.ext.compiler as sa_compiler
 
 from nextbus import db
+from nextbus.logger import app_logger
 
 
 def table_name(model):
     """ Returns column with literal name of model table. """
     return db.literal_column(f"'{model.__tablename__}'")
+
+
+def _iter_models(match=None):
+    for m in getattr(db.Model, "_decl_class_registry").values():
+        if hasattr(m, "__table__") and (match is None or issubclass(m, match)):
+            yield m
+
+
+def drop_indexes(bind=None, models=None, exclude_unique=False):
+    """ Find all indexes held by models, drop them and return properties."""
+    connection = bind or db.engine
+    found = models or _iter_models()
+    dropped = set()
+    for m in found:
+        for i in m.__table__.indexes:
+            if exclude_unique and i.unique:
+                app_logger.info(f"Skipping unique index {i.name!r}")
+                continue
+            else:
+                app_logger.info(f"Dropping index {i.name!r}")
+                dropped.add(i)
+                i.drop(connection)
+
+    return dropped
+
+
+def restore_indexes(bind=None, indexes=None):
+    connection = bind or db.engine
+    if indexes:
+        to_restore = set(indexes)
+    else:
+        to_restore = set().union(*(m.__table__.indexes for m in _iter_models()))
+
+    for i in to_restore:
+        app_logger.info(f"Recreating index {i.name!r}")
+        i.create(connection)
 
 
 class DerivedModel(db.Model):
@@ -39,9 +76,8 @@ class DerivedModel(db.Model):
 def refresh_derived_models(connection=None):
     """ Refresh all materialized views declared with db.Model. """
     def _refresh_models(c):
-        for m in db.Model._decl_class_registry.values():
-            if hasattr(m, "__table__") and issubclass(m, DerivedModel):
-                m.refresh(c)
+        for m in _iter_models(DerivedModel):
+            m.refresh(c)
 
     if connection is None:
         with db.engine.begin() as conn:

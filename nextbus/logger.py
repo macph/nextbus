@@ -9,19 +9,16 @@ import os
 app_logger = logging.getLogger("nextbus")
 
 
-def _filter_sqlalchemy_log(level):
-    """ Returns a function that filters SQLAlchemy records by setting a higher
-        threshold.
+class _FilterSQLLog(logging.Filter):
+    """ Filter out all INFO records for SQLAlchemy logs.
 
         This helps prevent clutter in the console, for example not showing INFO
         records for SQL queries even though the console handler has already
         been set to INFO.
     """
-    def filter_sqlalchemy_log(record):
-        return not ("sqlalchemy.engine" in record.name
-                    and record.levelno < level)
-
-    return filter_sqlalchemy_log
+    def filter(self, record):
+        return not ("sqlalchemy.engine" in record.name and
+                    record.levelno < logging.WARNING)
 
 
 BRIEF = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
@@ -36,15 +33,19 @@ PROD_LOG_CONFIG = {
         "precise": {"format": PRECISE}
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler",
-                    "formatter": "brief",
-                    "level": "INFO"},
-        "file":    {"class": "logging.handlers.RotatingFileHandler",
-                    "backupCount": 4,
-                    "filename": "nxb.log",
-                    "formatter": "precise",
-                    "level": "INFO",
-                    "maxBytes": 2 * 1024 * 1024}
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "brief",
+            "level": "INFO"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "backupCount": 4,
+            "filename": "nxb.log",
+            "formatter": "precise",
+            "level": "INFO",
+            "maxBytes": 2 * 1024 * 1024
+        }
     },
     "root": {
         "handlers": ["console", "file"],
@@ -56,23 +57,26 @@ DEBUG_LOG_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
     "filters": {
-        "sqlalchemy_warn": {"()": _filter_sqlalchemy_log,
-                            "level": logging.WARNING}
+        "sqlalchemy_warn": {"()": _FilterSQLLog}
     },
     "formatters": {
         "brief": {"format": BRIEF},
         "precise": {"format": PRECISE}
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler",
-                    "filters": ["sqlalchemy_warn"],
-                    "formatter": "brief",
-                    "level": "DEBUG"},
-        "file":    {"class": "logging.FileHandler",
-                    "filename": "nxb_debug.log",
-                    "formatter": "precise",
-                    "level": "DEBUG",
-                    "mode": "w"}
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["sqlalchemy_warn"],
+            "formatter": "brief",
+            "level": "DEBUG"
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "nxb_debug.log",
+            "formatter": "precise",
+            "level": "DEBUG",
+            "mode": "w"
+        }
     },
     "root": {
         "handlers": ["console", "file"],
@@ -99,4 +103,4 @@ def load_config(app):
                 data["filename"]
             )
 
-    logging.config.dictConfig(PROD_LOG_CONFIG)
+    logging.config.dictConfig(config)

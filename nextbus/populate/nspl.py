@@ -68,10 +68,11 @@ def _get_dict_local_authorities():
     return local_authorities
 
 
-def commit_nspl_data(path=None):
+def populate_nspl_data(connection, path=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
 
+        :param connection: Connection for population.
         :param path: Path for JSON file. If None, initiates download from the
         Camden Open Data API.
     """
@@ -98,6 +99,7 @@ def commit_nspl_data(path=None):
         })
 
     utils.populate_database(
+        connection,
         {models.Postcode: postcodes},
         delete=True
     )

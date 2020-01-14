@@ -3,8 +3,8 @@ Testing NSPL database population..
 """
 import os
 
-from nextbus import models
-from nextbus.populate.nspl import commit_nspl_data
+from nextbus import db, models
+from nextbus.populate.nspl import populate_nspl_data
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -12,7 +12,8 @@ NSPL = os.path.join(TEST_DIR, "NSPL.json")
 
 
 def test_commit_nspl_data(load_db):
-    commit_nspl_data(NSPL)
+    with db.engine.begin() as connection:
+        populate_nspl_data(connection, NSPL)
 
     count = models.Postcode.query.count()
     assert count == 100

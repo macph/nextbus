@@ -4,10 +4,9 @@ CLI commands for the nextbus app.
 import os
 
 import click
-from flask import current_app
 from flask.cli import FlaskGroup
 
-from nextbus import models, populate
+from nextbus import populate
 
 
 def run_cli_app():
@@ -141,45 +140,38 @@ class MutexOption(click.Option):
 @click.pass_context
 def populate_cmd(ctx, **kw):
     """ Calls the populate functions for filling the database with data. """
-    if kw["all_d"]:
-        options = {o: True for o in "gnpotm"}
-    else:
-        options = {
-            "g": kw["nptg_d"] or kw["nptg_f"] is not None,
-            "n": kw["naptan_d"] or kw["naptan_f"] is not None,
-            "p": kw["nspl_d"] or kw["nspl_f"] is not None,
-            "o": kw["noc_d"] or kw["noc_f"] is not None,
-            "t": kw["tnds_d"] or kw["tnds_f"] is not None,
-            "m": kw["modify"],
-            "f": kw["refresh"]
-        }
+    options = {
+        "g": kw["all_d"] or kw["nptg_d"] or kw["nptg_f"] is not None,
+        "n": kw["all_d"] or kw["naptan_d"] or kw["naptan_f"] is not None,
+        "p": kw["all_d"] or kw["nspl_d"] or kw["nspl_f"] is not None,
+        "o": kw["all_d"] or kw["noc_d"] or kw["noc_f"] is not None,
+        "t": kw["all_d"] or kw["tnds_d"] or kw["tnds_f"] is not None,
+        "m": kw["all_d"] or kw["modify"],
+        "f": kw["all_d"] or kw["refresh"],
+        "b": kw["backup"] or kw["backup_f"] is not None,
+        "r": kw["restore"] or kw["restore_f"] is not None
+    }
 
-    options["b"] = kw["backup"] or kw["backup_f"] is not None
-    options["r"] = kw["restore"] or kw["restore_f"] is not None
-
-    if any(options.values()):
-        if options["b"]:
-            populate.backup_database(path=kw["backup_f"])
-        if options["r"]:
-            populate.restore_database(path=kw["restore_f"])
-        if options["g"]:
-            populate.commit_nptg_data(archive=kw["nptg_f"])
-        if options["n"]:
-            populate.commit_naptan_data(archive=kw["naptan_f"])
-        if options["p"]:
-            populate.commit_nspl_data(path=kw["nspl_f"])
-        if options["o"]:
-            populate.commit_noc_data(path=kw["noc_f"])
-        if options["t"]:
-            # If using --all and TNDS credentials not loaded just log warning
-            populate.commit_tnds_data(directory=kw["tnds_f"],
-                                      delete=not kw["tnds_keep"],
-                                      warn=kw["all_d"])
-        if options["m"]:
-            populate.modify_data()
-        # Update views after population
-        if any(options[o] for o in "gnmtf"):
-            current_app.logger.info("Refreshing derived models")
-            models.refresh_derived_models()
+    if options["r"]:
+        populate.restore_database(path=kw["restore_f"])
+    elif any(options.values()):
+        populate.run_population(
+            backup=options["b"],
+            backup_path=kw["backup_f"],
+            nptg=options["g"],
+            nptg_path=kw["nptg_f"],
+            naptan=options["n"],
+            naptan_path=kw["naptan_f"],
+            nspl=options["p"],
+            nspl_path=kw["nspl_f"],
+            noc=options["o"],
+            noc_path=kw["noc_f"],
+            tnds=options["t"],
+            tnds_directory=kw["tnds_f"],
+            tnds_keep=kw["tnds_keep"],
+            tnds_warn_ftp=kw["all_d"],
+            modify=options["m"],
+            refresh=options["f"]
+        )
     else:
         click.echo(ctx.get_help())

@@ -160,7 +160,7 @@ def _db_loaded(app, db_status):
             db.create_all()
             _load_db_data()
             db_status.loaded = True
-            yield db
+            yield
         finally:
             db.session.remove()
             db.drop_all()

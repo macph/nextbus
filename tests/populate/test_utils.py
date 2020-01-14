@@ -6,7 +6,7 @@ import lxml.etree as et
 import psycopg2
 import pytest
 
-from nextbus import models
+from nextbus import db, models
 import nextbus.populate.utils as pop_utils
 
 
@@ -117,6 +117,7 @@ XML_TWO = (b"<Data><Region><code>NW</code><name>North West</name></Region>"
 EXPECTED_NW = {"code": "NW", "name": "North West"}
 EXPECTED_Y = {"code": "Y", "name": "Yorkshire"}
 
+
 def test_collect_items(with_app):
     data = pop_utils.collect_xml_data(et.ElementTree(et.fromstring(XML_TWO)))
     assert data == {models.Region: [EXPECTED_NW, EXPECTED_Y]}
@@ -127,10 +128,12 @@ EXPECTED = [("NW", "North West"), ("Y", "Yorkshire")]
 
 
 def test_commit_data(load_db):
-    pop_utils.populate_database(
-        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
-        delete=False
-    )
+    with db.engine.begin() as connection:
+        pop_utils.populate_database(
+            connection,
+            {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+            delete=False
+        )
 
     regions = models.Region.query.order_by("code").all()
     assert [(r.code, r.name) for r in regions] == EXISTING + EXPECTED
@@ -138,10 +141,12 @@ def test_commit_data(load_db):
 
 def test_commit_data_overwrite(load_db):
     l_modified = {"code": "L", "name": "London"}
-    pop_utils.populate_database(
-        {models.Region: [l_modified]},
-        overwrite=True
-    )
+    with db.engine.begin() as connection:
+        pop_utils.populate_database(
+            connection,
+            {models.Region: [l_modified]},
+            overwrite=True
+        )
 
     regions = models.Region.query.order_by("code").all()
     expected = [EXISTING[0], ("L", "London")]
@@ -149,29 +154,33 @@ def test_commit_data_overwrite(load_db):
 
 
 def test_commit_data_delete(load_db):
-    pop_utils.populate_database(
-        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
-        delete=True
-    )
+    with db.engine.begin() as connection:
+        pop_utils.populate_database(
+            connection,
+            {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+            delete=True
+        )
 
     regions = models.Region.query.order_by("code").all()
     assert [(r.code, r.name) for r in regions] == EXPECTED
 
 
 def test_commit_data_delete_excluded(load_db):
-    pop_utils.populate_database(
-        {models.Region: [EXPECTED_NW, EXPECTED_Y]},
-        delete=True,
-        exclude=[models.Region]
-    )
+    with db.engine.begin() as connection:
+        pop_utils.populate_database(
+            connection,
+            {models.Region: [EXPECTED_NW, EXPECTED_Y]},
+            delete=True,
+            exclude=[models.Region]
+        )
 
     regions = models.Region.query.order_by("code").all()
     assert [(r.code, r.name) for r in regions] == EXISTING + EXPECTED
 
 
 def test_commit_data_truncate_cascade(load_db):
-    with pop_utils.database_connection() as conn:
-        pop_utils.truncate(conn, models.Region.__table__)
+    with db.engine.begin() as connection:
+        pop_utils.truncate(connection, models.Region.__table__)
 
     regions = models.Region.query.order_by("code").all()
     assert not regions
@@ -179,9 +188,9 @@ def test_commit_data_truncate_cascade(load_db):
 
 def test_commit_data_truncate_no_cascade(load_db):
     message = "cannot truncate a table referenced in a foreign key constraint"
-    with pytest.raises(psycopg2.NotSupportedError, match=message):
-        with pop_utils.database_connection() as conn:
-            pop_utils.truncate(conn, models.Region.__table__, cascade=False)
+    with db.engine.begin() as connection, \
+            pytest.raises(psycopg2.NotSupportedError, match=message):
+        pop_utils.truncate(connection, models.Region.__table__, cascade=False)
 
     regions = models.Region.query.order_by("code").all()
     assert regions

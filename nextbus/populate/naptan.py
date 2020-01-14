@@ -146,22 +146,24 @@ def _setup_naptan_functions():
         return ind_parser(indicator)
 
 
-def _remove_stop_areas():
+def _remove_stop_areas(connection):
     """ Remove all stop areas without associated stop points. """
-    query_stop_area_del = (
-        db.session.query(models.StopArea.code)
-        .outerjoin(models.StopArea.stop_points)
-        .filter(models.StopPoint.atco_code.is_(None))
-        .subquery()
+    orphan_stop_areas = (
+        db.select([models.StopArea.code])
+        .select_from(
+            models.StopArea.__table__
+            .outerjoin(models.StopPoint,
+                       models.StopArea.code == models.StopPoint.stop_area_ref)
+        )
+        .where(models.StopPoint.atco_code.is_(None))
+        .alias("orphan_stop_areas")
     )
 
-    with utils.database_session():
-        utils.logger.info("Deleting orphaned stop areas")
-        query = (
-            models.StopArea.query
-            .filter(models.StopArea.code.in_(query_stop_area_del))
-        )
-        query.delete(synchronize_session="fetch")
+    utils.logger.info("Deleting orphaned stop areas")
+    connection.execute(
+        db.delete(models.StopArea)
+        .where(models.StopArea.code.in_(orphan_stop_areas))
+    )
 
 
 def _find_stop_area_mode(query_result, ref):
@@ -193,7 +195,7 @@ def _find_stop_area_mode(query_result, ref):
     return update_areas, invalid_areas
 
 
-def _find_locality_min_distance(ambiguous_areas):
+def _find_locality_distance(connection, ambiguous_areas):
     """ Finds the minimum distance between stop areas and localities for these
         with ambiguous localities.
     """
@@ -202,22 +204,26 @@ def _find_locality_min_distance(ambiguous_areas):
         db.func.power(models.StopArea.northing - models.Locality.northing, 2)
     )
     # Do another query over list of areas to find distance
-    query_dist = (
-        db.session.query(
+    query_distances = connection.execute(
+        db.select([
             models.StopArea.code.label("code"),
             models.Locality.code.label("locality"),
             distance.label("distance")
-        )
-        .select_from(models.StopPoint)
+        ])
         .distinct(models.StopArea.code, models.Locality.code)
-        .join(models.StopPoint.locality)
-        .join(models.StopPoint.stop_area)
-        .filter(models.StopPoint.stop_area_ref.in_(ambiguous_areas))
+        .select_from(
+            models.StopPoint.__table__
+            .join(models.Locality,
+                  models.StopPoint.locality_ref == models.Locality.code)
+            .join(models.StopArea,
+                  models.StopPoint.stop_area_ref == models.StopArea.code)
+        )
+        .where(models.StopPoint.stop_area_ref.in_(ambiguous_areas))
     )
 
     # Group by stop area and locality reference
     stop_areas = collections.defaultdict(dict)
-    for row in query_dist.all():
+    for row in query_distances:
         stop_areas[row.code][row.locality] = row.distance
 
     # Check each area and find the minimum distance
@@ -243,79 +249,95 @@ def _find_locality_min_distance(ambiguous_areas):
     return update_areas
 
 
-def _set_stop_area_locality():
+def _set_stop_area_locality(connection):
     """ Add locality info based on stops contained within the stop areas. """
     # Find stop areas with associated locality codes
-    query = (
-        db.session.query(
-            models.StopArea.code.label("code"),
-            models.StopPoint.locality_ref.label("ref"),
-            db.func.count(models.StopPoint.locality_ref).label("count")
+    with connection.begin():
+        query_stop_areas = connection.execute(
+            db.select([
+                models.StopArea.code.label("code"),
+                models.StopPoint.locality_ref.label("ref"),
+                db.func.count(models.StopPoint.locality_ref).label("count")
+            ])
+            .select_from(
+                models.StopArea.__table__
+                .join(models.StopPoint,
+                      models.StopArea.code == models.StopPoint.stop_area_ref)
+            )
+            .group_by(models.StopArea.code, models.StopPoint.locality_ref)
         )
-        .select_from(models.StopPoint)
-        .join(models.StopPoint.stop_area)
-        .group_by(models.StopArea.code, models.StopPoint.locality_ref)
-    )
-    # Find locality for each stop area that contain the most stops
-    areas, ambiguous = _find_stop_area_mode(query.all(), "locality_ref")
+        stop_areas = query_stop_areas.fetchall()
+        # Find locality for each stop area that contain the most stops
+        areas, ambiguous = _find_stop_area_mode(stop_areas, "locality_ref")
 
-    # if still ambiguous, measure distance between stop area and each locality
-    # and add to above
-    if ambiguous:
-        add_areas = _find_locality_min_distance(ambiguous.keys())
-        areas.extend(add_areas)
+        # if still ambiguous, measure distance between stop area and each
+        # locality and add to above
+        if ambiguous:
+            add_areas = _find_locality_distance(connection, ambiguous.keys())
+            areas.extend(add_areas)
 
-    with utils.database_session():
         utils.logger.info("Adding locality codes to stop areas")
-        db.session.bulk_update_mappings(models.StopArea, areas)
+        for a in areas:
+            connection.execute(
+                db.update(models.StopArea)
+                .values({"locality_ref": a["locality_ref"]})
+                .where(models.StopArea.code == a["code"])
+            )
 
 
-def _set_tram_admin_area():
+def _set_tram_admin_area(connection):
     """ Set admin area ref for tram stops and areas to be the same as their
         localities.
     """
     tram_area = "147"
 
-    # Update stop points
-    select_ref = (
-        db.session.query(models.Locality.admin_area_ref)
-        .filter(models.Locality.code == models.StopPoint.locality_ref)
-        .as_scalar()
-    )
+    with connection.begin():
+        # Update stop points
+        admin_area_ref = (
+            db.select([models.Locality.admin_area_ref])
+            .where(models.Locality.code == models.StopPoint.locality_ref)
+            .as_scalar()
+        )
 
-    with utils.database_session():
         utils.logger.info("Updating tram stops with admin area ref")
-        query = (
-            db.session.query(models.StopPoint)
-            .filter(models.StopPoint.admin_area_ref == tram_area)
+        connection.execute(
+            db.update(models.StopPoint)
+            .values({models.StopPoint.admin_area_ref: admin_area_ref})
+            .where(models.StopPoint.admin_area_ref == tram_area)
         )
-        query.update({models.StopPoint.admin_area_ref: select_ref},
-                     synchronize_session=False)
 
-    # Find stop areas with associated admin area codes
-    query = (
-        db.session.query(
-            models.StopArea.code.label("code"),
-            models.StopPoint.admin_area_ref.label("ref"),
-            db.func.count(models.StopPoint.admin_area_ref).label("count")
+        # Find stop areas with associated admin area codes
+        stop_areas = connection.execute(
+            db.select([
+                models.StopArea.code.label("code"),
+                models.StopPoint.admin_area_ref.label("ref"),
+                db.func.count(models.StopPoint.admin_area_ref).label("count")
+            ])
+            .select_from(
+                models.StopArea.__table__
+                .join(models.StopPoint,
+                      models.StopArea.code == models.StopPoint.stop_area_ref)
+            )
+            .where(models.StopArea.admin_area_ref == tram_area)
+            .group_by(models.StopArea.code, models.StopPoint.admin_area_ref)
         )
-        .select_from(models.StopPoint)
-        .join(models.StopPoint.stop_area)
-        .filter(models.StopArea.admin_area_ref == tram_area)
-        .group_by(models.StopArea.code, models.StopPoint.admin_area_ref)
-    )
-    areas, ambiguous = _find_stop_area_mode(query.all(), "admin_area_ref")
+        areas, ambiguous = _find_stop_area_mode(stop_areas.fetchall(),
+                                                "admin_area_ref")
 
-    with utils.database_session():
         utils.logger.info("Adding locality codes to stop areas")
-        db.session.bulk_update_mappings(models.StopArea, areas)
+        for a in areas:
+            connection.execute(
+                db.update(models.StopArea)
+                .values({"admin_area_ref": a["admin_area_ref"]})
+                .where(models.StopArea.code == a["code"])
+            )
 
-    for area, areas in ambiguous.items():
-        utils.logger.warning(f"Area {area}: ambiguous admin areas {areas}")
+        for area, areas in ambiguous.items():
+            utils.logger.warning(f"Area {area}: ambiguous admin areas {areas}")
 
 
 def _iter_xml(source, **kw):
-    """ Iterates over each element in a file.
+    """ Iterates over each element in a file using SAX.
 
         https://www.ibm.com/developerworks/xml/library/x-hiperfparse/
     """
@@ -331,29 +353,39 @@ def _iter_xml(source, **kw):
         utils.logger.info(m)
 
 
-def _split_naptan_file(area_codes, source, directory):
-    """ Takes file object for a XML file, iterate over and append to new files
-        in directory.
-    """
-    utils.logger.info(f"Acquiring namespace for XML file {source.name!r}")
+def _find_xml_namespace(source):
+    """ Find the namespace for a XML file using SAX. """
+    utils.logger.info(f"Acquiring namespace for {source.name!r}")
     source.seek(0)
-    ns = ""
+    namespace = ""
     for event, obj in _iter_xml(source, events=("start-ns", "end")):
         if event == "start-ns" and obj[0] == "":
-            ns = "{" + obj[1] + "}"
+            namespace = obj[1]
             break
+    source.seek(0)
 
-    stop_point = ns + "StopPoint"
-    stop_area = ns + "StopArea"
-    admin_area_ref = ns + "AdministrativeAreaRef"
+    return namespace
+
+
+def _split_naptan_file(area_codes, source, directory):
+    """ Splits a NaPTAN XML file into multiple files and saved in a directory.
+
+        :param area_codes: Admin area codes to split files by. Any areas not in
+        list are ignored.
+        :param source: A XML file.
+        :param directory: Directory to save new files to.
+    """
+    ns = _find_xml_namespace(source)
+    stop_point = "{" + ns + "}" + "StopPoint"
+    stop_area = "{" + ns + "}" + "StopArea"
+    admin_area_ref = "{" + ns + "}" + "AdministrativeAreaRef"
 
     base_name = os.path.splitext(os.path.basename(source.name))[0]
     current_name = None
     data = None
     root = None
 
-    utils.logger.info(f"Iterating over and splitting {source.name!r}")
-    source.seek(0)
+    utils.logger.info(f"Splitting {source.name!r}")
     for event, obj in _iter_xml(
         source,
         events=("end",),
@@ -366,8 +398,11 @@ def _split_naptan_file(area_codes, source, directory):
         new_name = f"{base_name}_{ref.text}.xml"
         if new_name != current_name:
             if root is not None:
+                # Save recently accrued data to file before switching to a
+                # different area
                 data.write(os.path.join(directory, current_name))
             current_name = new_name
+            # Open element tree from existing file or recreate from source
             if current_name in os.listdir(directory):
                 data = et.parse(os.path.join(directory, current_name))
                 root = data.getroot()
@@ -377,18 +412,20 @@ def _split_naptan_file(area_codes, source, directory):
                 root.set("FileName", current_name)
                 data = et.ElementTree(root)
 
+        # StopPoint and StopArea elements reside in StopPoints and StopAreas
+        # collections respectively. Check if they exist and recreate from source
         parent = obj.getparent()
-        new = root.find(parent.tag)
-        if new is None:
-            new = et.SubElement(root, parent.tag, parent.attrib, parent.nsmap)
+        coll = root.find(parent.tag)
+        if coll is None:
+            coll = et.SubElement(root, parent.tag, parent.attrib, parent.nsmap)
 
-        new.append(copy.copy(obj))
+        coll.append(copy.copy(obj))
 
     if root is not None:
         data.write(os.path.join(directory, current_name))
 
 
-def split_naptan_data(areas, original, new):
+def _split_naptan_data(areas, original, new):
     """ Splits large NaPTAN XML file into several smaller ones, grouped by admin
         area code and saved in a new archive.
 
@@ -410,31 +447,28 @@ def split_naptan_data(areas, original, new):
                 zf.write(os.path.join(temp_d, f), f)
 
 
-def commit_naptan_data(archive=None, list_files=None, split=True):
+def populate_naptan_data(connection, archive=None, list_files=None, split=True):
     """ Convert NaPTAN data (stop points and areas) to database objects and
         commit them to the application database.
 
+        :param connection: Connection for population
         :param archive: Path to zipped archive file for NaPTAN XML files.
         :param list_files: List of file paths for NaPTAN XML files.
         :param split: Splits NaPTAN XML files in archive by admin area code. Has
         no effect if list_files is used.
     """
     # Get complete list of ATCO admin areas and localities from NPTG data
-    with db.engine.connect() as conn:
-        query_area = conn.execute(db.select([models.AdminArea.code]))
-        query_local = conn.execute(db.select([models.Locality.code]))
-
-        areas = [a[0] for a in query_area.fetchall()]
-        localities = [local[0] for local in query_local.fetchall()]
-
-    root = current_app.config["ROOT_DIRECTORY"]
+    query_area = connection.execute(db.select([models.AdminArea.code]))
+    query_local = connection.execute(db.select([models.Locality.code]))
+    areas = [a[0] for a in query_area]
+    localities = [local[0] for local in query_local]
 
     if not areas or not localities:
         raise ValueError("NPTG tables are not populated; stop point data "
                          "cannot be added without the required locality data. "
                          "Populate the database with NPTG data first.")
 
-    downloaded = None
+    root = current_app.config["ROOT_DIRECTORY"]
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -442,16 +476,15 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
     elif list_files is not None:
         path = None
     else:
-        path = downloaded = file_ops.download(
+        path = file_ops.download(
             NAPTAN_URL,
             directory=os.path.join(root, "temp"),
             params={"format": "xml"}
         )
 
-    split_path = None
     if path is not None and split:
         split_path = os.path.join(root, "temp", "NaPTAN_split.zip")
-        split_naptan_data(areas, path, split_path)
+        _split_naptan_data(areas, path, split_path)
         path = split_path
 
     if path is not None:
@@ -462,27 +495,25 @@ def commit_naptan_data(archive=None, list_files=None, split=True):
     # Go through data and create objects for committing to database
     _setup_naptan_functions()
 
+    metadata = utils.reflect_metadata(connection)
     with open_binary("nextbus.populate", "naptan.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
-    metadata = utils.reflect_metadata()
-    delete = True
-    for file_ in iter_files:
+
+    deleted = False
+    for i, file_ in enumerate(iter_files):
         file_name = file_.name if hasattr(file_, "name") else file_
         utils.logger.info(f"Parsing file {file_name!r}")
         utils.populate_database(
+            connection,
             utils.collect_xml_data(utils.xslt_transform(file_, xslt)),
             metadata=metadata,
-            delete=delete
+            delete=not deleted
         )
-        delete = False
+        deleted = True
 
+
+def process_naptan_data(connection):
     # Remove all orphaned stop areas and add localities to other stop areas
-    _remove_stop_areas()
-    _set_stop_area_locality()
-    _set_tram_admin_area()
-
-    if downloaded is not None:
-        utils.logger.info(f"New file {downloaded!r} downloaded; can be deleted")
-    if split_path is not None:
-        utils.logger.info(f"New archive {split_path!r} created; can be deleted")
-    utils.logger.info("NaPTAN population done")
+    _remove_stop_areas(connection)
+    _set_stop_area_locality(connection)
+    _set_tram_admin_area(connection)

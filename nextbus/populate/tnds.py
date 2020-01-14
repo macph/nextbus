@@ -21,14 +21,13 @@ SPLIT_PLACES = re.compile(r"\s+-\s+|-\s+|\s+-")
 FIND_EXTRA = re.compile(r"(.+\S),(\S.+)")
 
 
-def _get_regions():
+def _get_regions(connection):
     """ Get list of regions in database excluding GB. If no regions are found,
         a ValueError is raised.
     """
-    with utils.database_connection() as conn:
-        query_regions = conn.execute(
-            db.select([models.Region.code]).where(models.Region.code != "GB")
-        )
+    query_regions = connection.execute(
+        db.select([models.Region.code]).where(models.Region.code != "GB")
+    )
     regions = [r[0] for r in query_regions]
 
     if not regions:
@@ -37,8 +36,11 @@ def _get_regions():
     return regions
 
 
-def download_tnds_files():
+def _download_tnds_files(regions):
     """ Download TNDS files from FTP server. """
+    if not regions:
+        return {}
+
     user = current_app.config.get("TNDS_USERNAME")
     password = current_app.config.get("TNDS_PASSWORD")
     if not user or not password:
@@ -46,7 +48,6 @@ def download_tnds_files():
                          "password to access the TNDS FTP server. See the "
                          "Traveline website for more details.")
 
-    regions = _get_regions()
     paths = {}
     utils.logger.info(f"Opening FTP connection {TNDS_URL!r} with credentials")
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
@@ -132,8 +133,9 @@ class RowIds:
         several files, with the associated journey patterns having unique IDs
         within only these documents.
     """
-    def __init__(self, check_existing=True):
+    def __init__(self, connection, check_existing=True):
         self._id = {}
+        self._conn = connection
         self.existing = check_existing
 
         # Register XSLT functions
@@ -147,7 +149,7 @@ class RowIds:
         if self.existing and model is not None:
             # Get maximum ID integer from table and start off from there
             query = db.select([db.func.max(model.id)])
-            max_ = db.engine.execute(query).scalar()
+            max_ = self._conn.execute(query).scalar()
             start = max_ + 1 if max_ is not None else start
 
         return start
@@ -404,12 +406,11 @@ def bank_holidays(_, nodes, region):
     return hols
 
 
-def setup_tnds_functions():
+def setup_tnds_functions(connection):
     """ Finds all existing stop points in database, setting up XSLT functions.
     """
-    with utils.database_connection() as conn:
-        query_operators = conn.execute(db.select([models.Operator.code]))
-        query_stops = conn.execute(db.select([models.StopPoint.atco_code]))
+    query_operators = connection.execute(db.select([models.Operator.code]))
+    query_stops = connection.execute(db.select([models.StopPoint.atco_code]))
     set_operators = {o.code for o in query_operators}
     set_stops = {c.atco_code for c in query_stops}
     set_not_exists = set()
@@ -434,7 +435,7 @@ def setup_tnds_functions():
         return exists
 
 
-def _delete_empty_services():
+def _delete_empty_services(connection):
     """ Delete services and associated operators if all stop point references
         are null - eg when including a metro route where all stop points are
         not in the existing database.
@@ -465,7 +466,7 @@ def _delete_empty_services():
         organisations.c.org_ref == organisation.c.code
     )
 
-    with utils.database_connection() as connection:
+    with connection.begin():
         utils.logger.info("Querying journey patterns without stop point "
                           "references")
         # All associated journey links and journeys will be deleted too
@@ -490,9 +491,10 @@ def _delete_empty_services():
                           f"deleted")
 
 
-def commit_tnds_data(directory=None, delete=True, warn=False):
+def populate_tnds_data(connection, directory=None, delete=True, warn=False):
     """ Commits TNDS data to database.
 
+        :param connection: Connection for population.
         :param directory: Directory where zip files with TNDS XML documents and
         named after region codes are contained. If None, they will be
         downloaded.
@@ -502,9 +504,10 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
     """
     data = None
     if directory is None:
+        regions = _get_regions(connection)
         try:
             # Download required files and get region code from each filename
-            data = download_tnds_files()
+            data = _download_tnds_files(regions)
         except ValueError:
             if warn:
                 utils.logger.warn("No TNDS FTP credentials are specified in "
@@ -512,7 +515,7 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
             else:
                 raise
     else:
-        regions = _get_regions()
+        regions = _get_regions(connection)
         data = {}
         for r in regions:
             file_ = r + ".zip"
@@ -529,24 +532,25 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
             "contain any suitable archives or their downloads failed."
         )
 
-    setup_tnds_functions()
-    row_ids = RowIds(check_existing=not delete)
+    setup_tnds_functions(connection)
+    row_ids = RowIds(connection, check_existing=not delete)
     ServiceCodes()
 
     # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
-    metadata = utils.reflect_metadata()
+    metadata = utils.reflect_metadata(connection)
     with open_binary("nextbus.populate", "tnds.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
 
     del_ = delete
     for region, archive in data.items():
         for file_ in file_ops.iter_archive(archive):
-            path = os.path.join(archive, file_.name)
+            path = os.path.join(os.path.basename(archive), file_.name)
             utils.logger.info(f"Parsing file {path!r}")
             data = utils.xslt_transform(file_, xslt, region=region,
                                         file=file_.name)
             utils.populate_database(
+                connection,
                 utils.collect_xml_data(data),
                 metadata=metadata,
                 delete=del_,
@@ -555,4 +559,6 @@ def commit_tnds_data(directory=None, delete=True, warn=False):
             row_ids.clear()
             del_ = False
 
-    _delete_empty_services()
+
+def process_tnds_data(connection):
+    _delete_empty_services(connection)

@@ -8,7 +8,7 @@ import os
 import lxml.etree as et
 import pytest
 
-from nextbus import models
+from nextbus import db, models
 from nextbus.populate.utils import (
     collect_xml_data, populate_database, xslt_func, xslt_transform
 )
@@ -144,12 +144,17 @@ def test_service_code_incremenet(service_codes):
 
 
 @pytest.fixture
-def row_ids():
-    # Set up functions to assign IDs
-    return RowIds(check_existing=False)
+def mock_ids(load_db):
+    # Set up functions to assign IDs but don't call database
+    def return_one(_): return 1
+
+    row_ids = RowIds(None, check_existing=False)
+    row_ids._get_sequence = return_one
+
+    return row_ids
 
 
-def always_true(_, *args):
+def always_true(*_):
     return True
 
 
@@ -163,7 +168,7 @@ def xslt():
     return xslt
 
 
-def test_transform_tnds(asserts, xslt, row_ids, service_codes):
+def test_transform_tnds(asserts, xslt, mock_ids, service_codes):
     output = xslt_transform(et.parse(TNDS_RAW), xslt, region="Y",
                             file="SVRYSBO120A.xml")
     expected = et.parse(TNDS_OUT, parser=et.XMLParser(remove_blank_text=True))
@@ -173,7 +178,7 @@ def test_transform_tnds(asserts, xslt, row_ids, service_codes):
     asserts.xml_elements_equal(output.getroot(), expected.getroot())
 
 
-def test_transform_alt_description(asserts, xslt, row_ids, service_codes):
+def test_transform_alt_description(asserts, xslt, mock_ids, service_codes):
     data = et.parse(TNDS_RAW)
     ns = {"txc": data.xpath("namespace-uri()")}
     description = data.xpath(
@@ -191,7 +196,7 @@ def test_transform_alt_description(asserts, xslt, row_ids, service_codes):
     asserts.xml_elements_equal(output.getroot(), expected.getroot())
 
 
-def test_transform_tnds_empty(asserts, xslt, row_ids):
+def test_transform_tnds_empty(asserts, xslt, mock_ids):
     # Set modification to 'delete' - should be excluded
     raw = et.parse(TNDS_RAW)
     raw.getroot().set("Modification", "Delete")
@@ -200,7 +205,7 @@ def test_transform_tnds_empty(asserts, xslt, row_ids):
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
 
 
-def test_transform_tnds_wrong_type(asserts, xslt, row_ids):
+def test_transform_tnds_wrong_type(asserts, xslt, mock_ids):
     # Set service mode to ferry - should be excluded
     raw = et.parse(TNDS_RAW)
     ns = {"t": raw.xpath("namespace-uri()")}
@@ -215,20 +220,23 @@ def _as_dict(instance):
             if k != "_sa_instance_state"}
 
 
-def test_update_tnds_data(db_loaded, row_ids, service_codes):
+def test_update_tnds_data(load_db, service_codes):
     with open_binary("nextbus.populate", "tnds.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
 
     # All relevant data already exists for Dagenham Sunday market shuttle;
     # just overwrite route data using a newer file
     file_name = "66-DSM-_-y05-1"
-    setup_tnds_functions()
-    data = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
-    populate_database(
-        collect_xml_data(data),
-        delete=True,
-        exclude=(models.Operator, models.LocalOperator)
-    )
+    with db.engine.begin() as connection:
+        setup_tnds_functions(connection)
+        RowIds(connection, check_existing=False)
+        data = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
+        populate_database(
+            connection,
+            collect_xml_data(data),
+            delete=True,
+            exclude=(models.Operator, models.LocalOperator)
+        )
 
     assert _as_dict(models.Service.query.one()) == {
         "id": 1,

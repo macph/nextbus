@@ -13,9 +13,12 @@ from nextbus import db, models
 from nextbus.populate.utils import xslt_transform
 from nextbus.populate.naptan import (
     _create_ind_parser, _remove_stop_areas, _set_stop_area_locality,
-    _setup_naptan_functions, split_naptan_data, commit_naptan_data
+    _setup_naptan_functions, _split_naptan_data, populate_naptan_data,
+    process_naptan_data
 )
-from nextbus.populate.nptg import _remove_districts, commit_nptg_data
+from nextbus.populate.nptg import (
+    _remove_districts, populate_nptg_data, process_nptg_data
+)
 
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -134,7 +137,8 @@ def test_remove_districts(load_db):
     assert [(d.code, d.name) for d in districts] == expected
 
     # Remove orphaned districts
-    _remove_districts()
+    with db.engine.begin() as connection:
+        _remove_districts(connection)
     districts = models.District.query.order_by("code").all()
     expected = [("276", "Barking and Dagenham")]
     assert [(d.code, d.name) for d in districts] == expected
@@ -147,9 +151,12 @@ def test_add_locality(load_db):
     stop_areas = models.StopArea.query.order_by("code").all()
     expected = [("490G00008638", None), ("490G00015G", None)]
     assert [(sa.code, sa.locality_ref) for sa in stop_areas] == expected
+    # Close session so SQLAlchemy doesn't retrieve same results from cache
+    db.session.close()
 
     # Identify the locality code and add it
-    _set_stop_area_locality()
+    with db.engine.begin() as connection:
+        _set_stop_area_locality(connection)
     stop_areas = models.StopArea.query.order_by("code").all()
     expected = [("490G00008638", "N0059951"), ("490G00015G", "N0059951")]
     assert [(sa.code, sa.locality_ref) for sa in stop_areas] == expected
@@ -190,7 +197,8 @@ def test_add_locality_multiple(load_db):
     expected = [("490008638N", "E0033933"), ("490008638S", "N0059951")]
     assert query_stop_points() == expected
 
-    _set_stop_area_locality()
+    with db.engine.begin() as connection:
+        _set_stop_area_locality(connection)
     # Stop area should have new locality_ref while stop points unchanged
     assert models.StopArea.query.get("490G00008638").locality_ref == "N0059951"
     assert query_stop_points() == expected
@@ -212,7 +220,8 @@ def test_remove_areas(load_db):
     db.session.add(new_stop_area)
     db.session.commit()
 
-    _remove_stop_areas()
+    with db.engine.begin() as connection:
+        _remove_stop_areas(connection)
     # Now check the stop areas; there should be only two
     stop_areas = models.StopArea.query.order_by("code").all()
     expected = [("490G00008638", "Greatfields Park"),
@@ -221,7 +230,9 @@ def test_remove_areas(load_db):
 
 
 def test_commit_nptg_data(create_db):
-    commit_nptg_data(list_files=[NPTG_RAW])
+    with db.engine.begin() as connection:
+        populate_nptg_data(connection, list_files=[NPTG_RAW])
+        process_nptg_data(connection)
 
     data = {
         "r": db.session.query(models.Region.code).order_by("code").all(),
@@ -248,7 +259,7 @@ def test_split_naptan_xml_data(with_app, asserts):
     with zipfile.ZipFile(incoming, "w") as zp:
         zp.write(NAPTAN_RAW, os.path.basename(NAPTAN_RAW))
 
-    split_naptan_data(areas, incoming, outgoing)
+    _split_naptan_data(areas, incoming, outgoing)
 
     with zipfile.ZipFile(outgoing) as zp:
         assert set(zp.namelist()) == {"Naptan_099.xml", "Naptan_147.xml"}
@@ -265,8 +276,9 @@ def test_split_naptan_xml_data(with_app, asserts):
 
 
 def test_commit_naptan_data_no_nptg(create_db):
-    with pytest.raises(ValueError, match="NPTG tables are not populated"):
-        commit_naptan_data(list_files=[NAPTAN_RAW])
+    with db.engine.begin() as connection, \
+            pytest.raises(ValueError, match="NPTG tables are not populated"):
+        populate_naptan_data(connection, list_files=[NAPTAN_RAW])
 
 
 NAPTAN_EXPECTED = {
@@ -299,14 +311,21 @@ def _collect_naptan_data():
 
 
 def test_commit_naptan_data(create_db):
-    commit_nptg_data(list_files=[NPTG_RAW])
-    commit_naptan_data(list_files=[NAPTAN_RAW])
+    with db.engine.begin() as connection:
+        populate_nptg_data(connection, list_files=[NPTG_RAW])
+        process_nptg_data(connection)
+        populate_naptan_data(connection, list_files=[NAPTAN_RAW])
+        process_naptan_data(connection)
 
     assert _collect_naptan_data() == NAPTAN_EXPECTED
 
 
 def test_commit_naptan_data_multiple_files(create_db):
-    commit_nptg_data(list_files=[NPTG_RAW])
-    commit_naptan_data(list_files=[NAPTAN_RAW_099, NAPTAN_RAW_147])
+    with db.engine.begin() as connection:
+        populate_nptg_data(connection, list_files=[NPTG_RAW])
+        process_nptg_data(connection)
+        populate_naptan_data(connection,
+                             list_files=[NAPTAN_RAW_099, NAPTAN_RAW_147])
+        process_naptan_data(connection)
 
     assert _collect_naptan_data() == NAPTAN_EXPECTED

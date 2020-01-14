@@ -14,11 +14,6 @@ NOC_URL = r"https://www.travelinedata.org.uk/noc/api/1.0/nocrecords.xml"
 REGEX_OP_WEBSITE = re.compile(r"^[^#]*#(.+)#[^#]*$")
 
 
-def download_noc_data():
-    """ Downloads NOC data as a XML file. """
-    return file_ops.download(NOC_URL, directory="temp")
-
-
 @utils.xslt_text_func
 def scrub_whitespace(_, text):
     """ Replaces all whitespace with a single space each. """
@@ -33,10 +28,11 @@ def format_website(_, text):
     return match.group(1) if match else ""
 
 
-def commit_noc_data(path=None):
+def populate_noc_data(connection, path=None):
     """ Convert NOC data (service operators) to database objects and commit them
         to the application database.
 
+        :param connection: Connection for population.
         :param path: Path to raw data in XML form
     """
     if path is None:
@@ -58,7 +54,9 @@ def commit_noc_data(path=None):
 
     with open_binary("nextbus.populate", "noc.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
+
     utils.populate_database(
+        connection,
         utils.collect_xml_data(utils.xslt_transform(data, xslt)),
         delete=True
     )

@@ -2,7 +2,6 @@
 Utilities for the populate subpackage.
 """
 import collections
-import contextlib
 import csv
 import functools
 import io
@@ -29,43 +28,10 @@ logger = logger.app_logger.getChild("populate")
 logger.setLevel(logging.INFO)
 
 
-@contextlib.contextmanager
-def database_session():
-    """ Commits changes to database within context, or rollback changes and
-        raise exception if it runs into one, before closing the session.
-
-        With SQLAlchemy's autocommit config set to True, the begin() method is
-        unnecessary.
-    """
-    try:
-        yield
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        logger.error("An error occurred during the transaction", exc_info=1)
-        raise
-    finally:
-        db.session.remove()
-
-
-@contextlib.contextmanager
-def database_connection():
-    """ Opens a connection to database and commits changes within context.
-        Changes are rolled back and exceptions raised if any errors are
-        encountered.
-    """
-    try:
-        with db.engine.begin() as connection:
-            yield connection
-    except Exception:
-        logger.error("An error occurred during the transaction", exc_info=1)
-        raise
-
-
-def reflect_metadata():
+def reflect_metadata(bind):
     """ Retrieves metadata from the DB. """
     metadata = db.MetaData()
-    metadata.reflect(db.engine)
+    metadata.reflect(bind)
 
     return metadata
 
@@ -220,9 +186,10 @@ def collect_xml_data(xml_data):
 
 def truncate(connection, table, cascade=True):
     """ Deletes data from a table using `TRUNCATE`. """
-    str_truncate = "TRUNCATE {} CASCADE;" if cascade else "TRUNCATE {};"
-    table_name = psycopg2.sql.Identifier(table.name)
-    statement = psycopg2.sql.SQL(str_truncate).format(table_name)
+    statement = (
+        psycopg2.sql.SQL("TRUNCATE {} CASCADE" if cascade else "TRUNCATE {}")
+        .format(psycopg2.sql.Identifier(table.name))
+    )
 
     with connection.connection.cursor() as cursor:
         cursor.execute(statement)
@@ -238,12 +205,15 @@ def _iter_every(iterable, length):
 
 
 def _copy_executor(table, null_value):
-    s_table = psycopg2.sql.Identifier(table.name)
-    s_null = psycopg2.sql.Literal(null_value)
-    copy_stmt = psycopg2.sql.SQL("COPY {} FROM STDIN WITH CSV HEADER NULL {}")
+    statement = (
+        psycopg2.sql.SQL("COPY {} FROM STDIN WITH CSV HEADER NULL {}")
+        .format(
+            psycopg2.sql.Identifier(table.name),
+            psycopg2.sql.Literal(null_value)
+        )
+    )
 
     def execute_copy(cursor, file_):
-        statement = copy_stmt.format(s_table, s_null)
         try:
             cursor.copy_expert(statement, file_)
         except Exception:
@@ -286,10 +256,10 @@ def _copy(connection, table, entries):
         paths = []
         try:
             for section in _iter_every(entries, ROW_LIMIT):
-                desc, path = tempfile.mkstemp()
+                fd, path = tempfile.mkstemp()
                 paths.append(path)
                 # newline="" required to make CSV writing work
-                with open(desc, "w", newline="") as buf:
+                with open(fd, "w", newline="") as buf:
                     data = csv.DictWriter(buf, columns)
                     data.writeheader()
                     data.writerows(map(convert_null, section))
@@ -305,20 +275,17 @@ def _copy(connection, table, entries):
                 os.remove(path)
 
 
+def _temp_table_name(table):
+    return table.name + "_temp"
+
+
 def _temp_table(metadata, table):
     """ Creates a temporary table from an existing table. """
-    # Find a suitable temporary table name
-    num = 0
-    temp_name = f"{table.name}_{num}"
-    while temp_name in metadata.tables:
-        num += 1
-        temp_name = f"{table.name}_{num}"
-
     new_columns = (db.Column(c.name, c.type, autoincrement=False)
                    for c in table.columns if not c.autoincrement)
 
     return db.Table(
-        temp_name,
+        _temp_table_name(table),
         metadata,
         *new_columns,
         prefixes=["TEMPORARY"],
@@ -333,45 +300,53 @@ def _populate_table(connection, metadata, model, entries, overwrite=False,
     """
     if not entries:
         return
+
     table = metadata.tables[model.__table__.name]
-    temp_table = _temp_table(metadata, table)
-    temp_table.create(connection)
-
-    if delete_first:
-        logger.debug(f"Truncating table {table.name}")
-        truncate(connection, table)
-
-    logger.debug(f"Copying {len(entries)} rows to table {table.name} via "
-                 f"{temp_table.name}")
-    # Add entries to temporary table using COPY
-    _copy(connection, temp_table, entries)
-    # Insert entries from temporary table into main table avoiding conflicts
-    insert = (
-        postgresql.insert(table)
-        .from_select([c.name for c in temp_table.columns],
-                     db.select([temp_table]))
-    )
-    if overwrite and not delete_first:
-        p_key = table.primary_key.name
-        columns = {c.name: getattr(insert.excluded, c.name)
-                   for c in temp_table.columns}
-        insert = insert.on_conflict_do_update(constraint=p_key, set_=columns)
+    new_name = _temp_table_name(table)
+    if new_name in metadata.tables:
+        temp_table = metadata.tables[new_name]
     else:
-        insert = insert.on_conflict_do_nothing()
+        temp_table = _temp_table(metadata, table)
 
-    connection.execute(insert)
-    metadata.remove(temp_table)
+    with connection.begin():
+        temp_table.create(connection, checkfirst=True)
+        truncate(connection, temp_table)
+
+        if delete_first:
+            logger.debug(f"Truncating table {table.name}")
+            truncate(connection, table)
+
+        logger.debug(f"Copying {len(entries)} rows to table {table.name} via "
+                     f"{temp_table.name}")
+        # Add entries to temporary table using COPY
+        _copy(connection, temp_table, entries)
+        # Insert entries from temporary table into main table avoiding conflicts
+        insert = (
+            postgresql.insert(table)
+            .from_select([c.name for c in temp_table.columns],
+                         db.select([temp_table]))
+        )
+        if overwrite and not delete_first:
+            p_key = table.primary_key.name
+            cols = {c.name: getattr(insert.excluded, c.name)
+                    for c in temp_table.columns}
+            insert = insert.on_conflict_do_update(constraint=p_key, set_=cols)
+        else:
+            insert = insert.on_conflict_do_nothing()
+
+        connection.execute(insert)
 
 
-def populate_database(data, metadata=None, overwrite=False, delete=False,
-                      exclude=None):
+def populate_database(connection, data, metadata=None, overwrite=False,
+                      delete=False, exclude=None):
     """ Populates the database using a dictionary of models and lists of
         entries.
     """
     if not data:
         return
-    metadata_ = reflect_metadata() if metadata is None else metadata
-    with database_connection() as connection:
+
+    metadata_ = reflect_metadata(connection) if metadata is None else metadata
+    with connection.begin():
         for model, entries in data.items():
             del_ = delete and (exclude is None or model not in exclude)
             _populate_table(connection, metadata_, model, entries, overwrite,

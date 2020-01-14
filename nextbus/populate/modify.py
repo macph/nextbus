@@ -14,13 +14,19 @@ from nextbus.populate import utils
 logger = utils.logger.getChild("modify")
 
 
-def _create_row(model, element):
+def _match_attr(model, attr):
+    match_attr = (getattr(model, k) == v for k, v in attr.items())
+    return db.and_(*match_attr)
+
+
+def _create_row(connection, model, element):
     """ Adds new row to table with data from this element whose subelements
         have the same tags as table columns.
 
         Data whose columns match DateTime columns will be converted to DateTime
         objects.
 
+        :param connection: Connection for population.
         :param model: The database model class.
         :param element: A ``create`` XML element.
         :returns: Number of rows created.
@@ -37,14 +43,15 @@ def _create_row(model, element):
         if isinstance(column.type, db.DateTime) and data.get(key) is not None:
             data[key] = dp.parse(data[key])
 
-    db.session.add(model(**data))
+    connection.execute(db.insert(model).values(data))
 
     return 1
 
 
-def _delete_row(model, element):
+def _delete_row(connection, model, element):
     """ Deletes rows from table matching attributes from this element.
 
+        :param connection: Connection for population.
         :param model: The database model class.
         :param element: A ``delete`` XML element.
         :returns: Number of rows deleted.
@@ -54,17 +61,21 @@ def _delete_row(model, element):
         raise ValueError("Each <delete> element requires at least one XML "
                          "attribute to filter rows.")
 
-    count = model.query.filter_by(**element.attrib).delete()
+    delete_row = connection.execute(
+        db.delete(model).where(_match_attr(model, element.attrib))
+    )
+    count = delete_row.rowcount
     if count == 0:
         logger.warning(f"{name}: No rows matching {element.attrib} found.")
 
     return count
 
 
-def _replace_row(model, element):
+def _replace_row(connection, model, element):
     """ Replaces values for rows in tables matching attributes from this
         element.
 
+        :param connection: Connection for population.
         :param model: The database model class.
         :param element: A ``replace`` XML element.
         :returns: Number of rows replaced.
@@ -74,8 +85,10 @@ def _replace_row(model, element):
         raise ValueError("Each <replace> element requires at least one XML "
                          "attribute to filter rows.")
 
-    matching = model.query.filter_by(**element.attrib)
-    matching_entries = matching.all()
+    matching = connection.execute(
+        db.select([model.__table__]).where(_match_attr(model, element.attrib))
+    )
+    matching_entries = matching.fetchall()
     if not matching_entries:
         logger.warning(f"{name}: No rows matching {element.attrib} found.")
         return 0
@@ -105,12 +118,17 @@ def _replace_row(model, element):
 
     if updated_values:
         # Update matched entries
-        return matching.update(updated_values)
+        update_matching = connection.execute(
+            db.update(model)
+            .values(updated_values)
+            .where(_match_attr(model, element.attrib))
+        )
+        return update_matching.rowcount
     else:
         return 0
 
 
-def modify_data(xml_file=None):
+def modify_data(connection, xml_file=None):
     """ Function to modify data after population from creating, deleting and
         replacing rows with a XML file.
 
@@ -137,14 +155,14 @@ def modify_data(xml_file=None):
 
     logger.info("Processing populated data")
     c, d, r = 0, 0, 0
-    for table in list_tables:
-        model = getattr(models, table.get("model"))
-        with utils.database_session():
+    with connection.begin():
+        for table in list_tables:
+            model = getattr(models, table.get("model"))
             for element in table.xpath("create"):
-                c += _create_row(model, element)
+                c += _create_row(connection, model, element)
             for element in table.xpath("delete"):
-                d += _delete_row(model, element)
+                d += _delete_row(connection, model, element)
             for element in table.xpath("replace"):
-                r += _replace_row(model, element)
+                r += _replace_row(connection, model, element)
 
     logger.info(f"Rows: {c} created, {d} deleted and {r} replaced.")

@@ -67,10 +67,6 @@ a:hover {
   border-color: #FF9800;
 }
 
-a:visited {
-  color: inherit;
-}
-
 input,
 button,
 label {

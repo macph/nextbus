@@ -1453,7 +1453,7 @@ def service_stop_list(service_id, direction):
 def service_json(service_code, reverse, max_columns=MAX_COLUMNS):
     """ Creates geometry JSON data for map.
 
-        :param service_id: Service ID.
+        :param service_code: Service ID.
         :param reverse: Groups journey patterns by direction - False for
         outbound and True for inbound.
         :param max_columns: Maximum columns before giving up on drawing graph

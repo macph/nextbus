@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nextbus"
-version = "0.9.7"
+version = "0.9.8"
 description = "Live bus times for Great Britain"
 authors = ["macph <macph@users.noreply.github.com>"]
 license = "MIT"

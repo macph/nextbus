@@ -11,7 +11,7 @@ RUN set -ex \
 # Required libraries installed in /usr/lib
 ENV LD_LIBRARY_PATH /usr/lib
 # Set poetry version
-ENV POETRY_VERSION 0.12.17
+ENV POETRY_VERSION 1.0.0
 ENV PYTHONDONTWRITEBYTECODE 1
 
 RUN pip3 install "poetry==$POETRY_VERSION"

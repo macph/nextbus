@@ -50,6 +50,7 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
         if modify:
             modify_data(connection)
 
-        if will_modify or refresh:
+    if will_modify or refresh:
+        with db.engine.begin() as connection:
             logger.info("Refreshing derived models")
             models.refresh_derived_models(connection)

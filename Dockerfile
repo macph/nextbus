@@ -14,19 +14,28 @@ ENV LD_LIBRARY_PATH /usr/lib
 ENV POETRY_VERSION 1.0.0
 ENV PYTHONDONTWRITEBYTECODE 1
 
-RUN pip3 install "poetry==$POETRY_VERSION"
-
-WORKDIR /app
-COPY pyproject.toml poetry.lock /app/
-
-# Install required packages - need to build lxml and psycopg2 with muslc
+# Install Poetry - cffi is a dependency and needs to be built using libffi
 RUN set -ex \
     && apk update \
     && apk add --no-cache --virtual .build-deps \
         gcc \
         musl-dev \
         python3-dev \
-    && poetry config settings.virtualenvs.in-project true \
+        libffi-dev \
+    && pip3 install "poetry==$POETRY_VERSION" \
+    && apk del --no-cache .build-deps
+
+WORKDIR /app
+COPY pyproject.toml poetry.lock /app/
+
+# Install dependencies for app - lxml and psycopg2 needs to be built
+RUN set -ex \
+    && apk update \
+    && apk add --no-cache --virtual .build-deps \
+        gcc \
+        musl-dev \
+        python3-dev \
+    && poetry config virtualenvs.in-project true \
     && poetry install --no-dev --no-interaction --no-ansi \
     && apk del --no-cache .build-deps
 

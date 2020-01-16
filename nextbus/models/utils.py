@@ -4,6 +4,7 @@ Database model extensions for the nextbus package.
 from abc import abstractmethod
 
 import sqlalchemy as sa
+import sqlalchemy.exc as sa_exc
 import sqlalchemy.ext.compiler as sa_compiler
 
 from nextbus import db
@@ -31,10 +32,9 @@ def drop_indexes(bind=None, models=None, exclude_unique=False):
             if exclude_unique and i.unique:
                 app_logger.info(f"Skipping unique index {i.name!r}")
                 continue
-            else:
-                app_logger.info(f"Dropping index {i.name!r}")
-                dropped.add(i)
-                i.drop(connection)
+            app_logger.info(f"Dropping index {i.name!r}")
+            i.drop(connection)
+            dropped.add(i)
 
     return dropped
 
@@ -48,7 +48,10 @@ def restore_indexes(bind=None, indexes=None):
 
     for i in to_restore:
         app_logger.info(f"Recreating index {i.name!r}")
-        i.create(connection)
+        try:
+            i.create(connection)
+        except sa_exc.ProgrammingError:
+            app_logger.warning(f"Error recreating index {i.name!r}", exc_info=1)
 
 
 class DerivedModel(db.Model):

@@ -195,6 +195,31 @@ def truncate(connection, table, cascade=True):
         cursor.execute(statement)
 
 
+def acquire_table_lock(connection, table, mode="ACCESS EXCLUSIVE"):
+    """ Executes ``LOCK TABLE ...`` for a table in a transaction. """
+    if not connection.in_transaction():
+        raise RuntimeError("LOCK requires a running transaction.")
+
+    modes = [
+        "ACCESS SHARE",
+        "ROW SHARE",
+        "ROW EXCLUSIVE",
+        "SHARE UPDATE EXCLUSIVE"
+        "SHARE",
+        "SHARE ROW EXCLUSIVE",
+        "EXCLUSIVE",
+        "ACCESS EXCLUSIVE",
+    ]
+    index = modes.index(mode.upper())
+    statement = (
+        psycopg2.sql.SQL("LOCK TABLE {} IN " + modes[index] + " MODE")
+        .format(psycopg2.sql.Identifier(table.name))
+    )
+
+    with connection.connection.cursor() as cursor:
+        cursor.execute(statement)
+
+
 def _iter_every(iterable, length):
     """ Generator for iterable split into lists with maximum length. """
     iterator = iter(iterable)
@@ -314,6 +339,7 @@ def _populate_table(connection, metadata, model, entries, overwrite=False,
 
         if delete_first:
             logger.debug(f"Truncating table {table.name}")
+            acquire_table_lock(connection, table)
             truncate(connection, table)
 
         logger.debug(f"Copying {len(entries)} rows to table {table.name} via "

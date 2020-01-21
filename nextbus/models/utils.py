@@ -16,16 +16,17 @@ def table_name(model):
     return db.literal_column(f"'{model.__tablename__}'")
 
 
-def _iter_models(match=None):
+def iter_models(match=None):
     for m in getattr(db.Model, "_decl_class_registry").values():
         if hasattr(m, "__table__") and (match is None or issubclass(m, match)):
             yield m
 
 
-def drop_indexes(bind=None, models=None, exclude_unique=False):
+def drop_indexes(bind=None, models=None, exclude_unique=False,
+                 include_missing=False):
     """ Find all indexes held by models, drop them and return properties."""
     connection = bind or db.engine
-    found = models or _iter_models()
+    found = models or iter_models()
     dropped = set()
     for m in found:
         for i in m.__table__.indexes:
@@ -33,8 +34,17 @@ def drop_indexes(bind=None, models=None, exclude_unique=False):
                 app_logger.info(f"Skipping unique index {i.name!r}")
                 continue
             app_logger.info(f"Dropping index {i.name!r}")
-            i.drop(connection)
-            dropped.add(i)
+            try:
+                i.drop(connection)
+            except sa_exc.ProgrammingError:
+                app_logger.warning(f"Error dropping index {i.name!r}",
+                                   exc_info=1)
+                is_dropped = False
+            else:
+                is_dropped = True
+
+            if is_dropped or include_missing:
+                dropped.add(i)
 
     return dropped
 
@@ -44,7 +54,7 @@ def restore_indexes(bind=None, indexes=None):
     if indexes:
         to_restore = set(indexes)
     else:
-        to_restore = set().union(*(m.__table__.indexes for m in _iter_models()))
+        to_restore = set().union(*(m.__table__.indexes for m in iter_models()))
 
     for i in to_restore:
         app_logger.info(f"Recreating index {i.name!r}")
@@ -79,7 +89,7 @@ class DerivedModel(db.Model):
 def refresh_derived_models(connection=None):
     """ Refresh all materialized views declared with db.Model. """
     def _refresh_models(c):
-        for m in _iter_models(DerivedModel):
+        for m in iter_models(DerivedModel):
             m.refresh(c)
 
     if connection is None:

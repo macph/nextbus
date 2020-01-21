@@ -195,7 +195,7 @@ def truncate(connection, table, cascade=True):
         cursor.execute(statement)
 
 
-def acquire_table_lock(connection, table, mode="ACCESS EXCLUSIVE"):
+def acquire_table_lock(connection, table, mode=None):
     """ Executes ``LOCK TABLE ...`` for a table in a transaction. """
     if not connection.in_transaction():
         raise RuntimeError("LOCK requires a running transaction.")
@@ -210,7 +210,7 @@ def acquire_table_lock(connection, table, mode="ACCESS EXCLUSIVE"):
         "EXCLUSIVE",
         "ACCESS EXCLUSIVE",
     ]
-    index = modes.index(mode.upper())
+    index = modes.index(mode.upper() if mode else "ACCESS EXCLUSIVE")
     statement = (
         psycopg2.sql.SQL("LOCK TABLE {} IN " + modes[index] + " MODE")
         .format(psycopg2.sql.Identifier(table.name))
@@ -218,6 +218,11 @@ def acquire_table_lock(connection, table, mode="ACCESS EXCLUSIVE"):
 
     with connection.connection.cursor() as cursor:
         cursor.execute(statement)
+
+
+def lock_all_tables(connection, mode=None):
+    for m in models.iter_models():
+        acquire_table_lock(connection, m.__table__, mode)
 
 
 def _iter_every(iterable, length):
@@ -339,7 +344,6 @@ def _populate_table(connection, metadata, model, entries, overwrite=False,
 
         if delete_first:
             logger.debug(f"Truncating table {table.name}")
-            acquire_table_lock(connection, table)
             truncate(connection, table)
 
         logger.debug(f"Copying {len(entries)} rows to table {table.name} via "

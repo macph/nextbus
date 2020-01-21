@@ -6,7 +6,7 @@ from nextbus.populate.nspl import populate_nspl_data
 from nextbus.populate.noc import populate_noc_data
 from nextbus.populate.tnds import populate_tnds_data, process_tnds_data
 from nextbus.populate.modify import modify_data
-from nextbus.populate.utils import logger
+from nextbus.populate.utils import lock_all_tables, logger
 
 
 def run_population(*, backup=False, backup_path=None, nptg=False,
@@ -20,35 +20,36 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
     will_populate = any((nptg, naptan, nspl, noc, tnds))
     will_modify = will_populate or modify
 
-    with db.engine.begin() as connection:
-        if will_populate:
-            dropped = models.drop_indexes(connection, exclude_unique=True)
-        else:
-            dropped = None
+    if will_populate:
+        dropped = models.drop_indexes(exclude_unique=True, include_missing=True)
+        try:
+            with db.engine.begin() as connection:
+                lock_all_tables(connection)
+                if nptg:
+                    populate_nptg_data(connection, nptg_path)
+                if naptan:
+                    populate_naptan_data(connection, naptan_path)
+                if nspl:
+                    populate_nspl_data(connection, nspl_path)
+                if noc:
+                    populate_noc_data(connection, noc_path)
+                if tnds:
+                    populate_tnds_data(connection, tnds_directory,
+                                       delete=not tnds_keep, warn=tnds_warn_ftp)
+        finally:
+            if dropped:
+                models.restore_indexes(indexes=dropped)
 
-        if nptg:
-            populate_nptg_data(connection, nptg_path)
-        if naptan:
-            populate_naptan_data(connection, naptan_path)
-        if nspl:
-            populate_nspl_data(connection, nspl_path)
-        if noc:
-            populate_noc_data(connection, noc_path)
-        if tnds:
-            populate_tnds_data(connection, tnds_directory,
-                               delete=not tnds_keep, warn=tnds_warn_ftp)
-
-        if dropped:
-            models.restore_indexes(connection, dropped)
-
-        if nptg:
-            process_nptg_data(connection)
-        if naptan:
-            process_naptan_data(connection)
-        if tnds:
-            process_tnds_data(connection)
-        if modify:
-            modify_data(connection)
+    if will_modify:
+        with db.engine.begin() as connection:
+            if nptg:
+                process_nptg_data(connection)
+            if naptan:
+                process_naptan_data(connection)
+            if tnds:
+                process_tnds_data(connection)
+            if modify:
+                modify_data(connection)
 
     if will_modify or refresh:
         with db.engine.begin() as connection:

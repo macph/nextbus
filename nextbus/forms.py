@@ -86,9 +86,8 @@ class SelectDate(FlaskForm):
         if self._start is not None and field.data < self._start:
             raise validators.ValidationError(
                 f"Timetable data for this service is available from "
-                f"{_date_long_form(self._end)}."
+                f"{_date_long_form(self._start)}."
             )
-
         if self._end is not None and field.data > self._end:
             raise validators.ValidationError(
                 f"Timetable data for this service is available up to "

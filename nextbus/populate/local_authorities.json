@@ -1694,11 +1694,11 @@
         "district_code": "135"
     },
     {
-        "la_name": "Aylesbury Vale",
-        "la_code": "E07000004",
+        "la_name": "Buckinghamshire",
+        "la_code": "E06000060",
         "admin_area_code": "070",
         "atco_area_code": "040",
-        "district_code": "8"
+        "district_code": null
     },
     {
         "la_name": "Perth and Kinross",
@@ -1743,13 +1743,6 @@
         "district_code": "30"
     },
     {
-        "la_name": "Chiltern",
-        "la_code": "E07000005",
-        "admin_area_code": "070",
-        "atco_area_code": "040",
-        "district_code": "45"
-    },
-    {
         "la_name": "Scottish Borders",
         "la_code": "S12000026",
         "admin_area_code": "115",
@@ -1792,13 +1785,6 @@
         "district_code": "178"
     },
     {
-        "la_name": "South Bucks",
-        "la_code": "E07000006",
-        "admin_area_code": "070",
-        "atco_area_code": "040",
-        "district_code": "173"
-    },
-    {
         "la_name": "Shetland Islands",
         "la_code": "S12000027",
         "admin_area_code": "137",
@@ -1811,13 +1797,6 @@
         "admin_area_code": "089",
         "atco_area_code": "270",
         "district_code": "227"
-    },
-    {
-        "la_name": "Wycombe",
-        "la_code": "E07000007",
-        "admin_area_code": "070",
-        "atco_area_code": "040",
-        "district_code": "237"
     },
     {
         "la_name": "Sheffield",

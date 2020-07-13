@@ -1,47 +1,21 @@
-FROM python:3.8-alpine as base
+FROM python:3.8-slim-buster AS base
 
-# Need shared libraries for python C extensions
-RUN set -ex \
-    && apk update \
-    && apk add --no-cache \
-        postgresql-dev \
-        libxml2-dev \
-        libxslt-dev
-
-# Required libraries installed in /usr/lib
-ENV LD_LIBRARY_PATH /usr/lib
 # Set poetry version
-ENV POETRY_VERSION 1.0.0
+ENV POETRY_VERSION 1.0.9
+ENV POETRY_VIRTUALENVS_IN_PROJECT 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# Install Poetry - cffi is a dependency and needs to be built using libffi
-RUN set -ex \
-    && apk update \
-    && apk add --no-cache --virtual .build-deps \
-        gcc \
-        musl-dev \
-        python3-dev \
-        libffi-dev \
-    && pip3 install "poetry==$POETRY_VERSION" \
-    && apk del --no-cache .build-deps
+# Install Poetry
+RUN pip3 install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 
-# Install dependencies for app - lxml and psycopg2 needs to be built
-RUN set -ex \
-    && apk update \
-    && apk add --no-cache --virtual .build-deps \
-        gcc \
-        musl-dev \
-        python3-dev \
-    && poetry config virtualenvs.in-project true \
-    && poetry install --no-dev --no-interaction --no-ansi \
-    && apk del --no-cache .build-deps
-
+# Install dependencies for app
+RUN poetry install --no-dev --no-interaction --no-ansi
 RUN pip3 uninstall --yes poetry
 
-# Copy over app data
+# Copy over app data and reinstall
 COPY . .
 
 # Expose port 8000 to reverse proxy

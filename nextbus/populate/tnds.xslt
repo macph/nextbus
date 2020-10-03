@@ -157,22 +157,27 @@
   <xsl:template name="stop_timing">
     <xsl:param name="timing"/>
     <xsl:choose>
-      <xsl:when test="boolean($timing='PTP')">
+      <xsl:when test="boolean($timing='PTP' or $timing='principleTimingPoint')">
         <timing_point>1</timing_point>
         <principal_point>1</principal_point>
       </xsl:when>
-      <xsl:when test="boolean($timing='PPT')">
+      <xsl:when test="boolean($timing='PPT' or $timing='principlePoint')">
         <timing_point>0</timing_point>
         <principal_point>1</principal_point>
       </xsl:when>
-      <xsl:when test="boolean($timing='TIP')">
+      <xsl:when test="boolean($timing='TIP' or $timing='timeInfoPoint')">
         <timing_point>1</timing_point>
         <principal_point>0</principal_point>
       </xsl:when>
-      <xsl:when test="boolean($timing='OTH')">
+      <xsl:when test="boolean($timing='OTH' or $timing='otherPoint')">
         <timing_point>0</timing_point>
         <principal_point>0</principal_point>
       </xsl:when>
+      <xsl:otherwise>
+        <!-- default value TIP -->
+        <timing_point>1</timing_point>
+        <principal_point>0</principal_point>
+      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
@@ -357,6 +362,7 @@
           </xsl:call-template>
         </xsl:for-each>
       </xsl:when>
+      <xsl:otherwise/>
     </xsl:choose>
   </xsl:template>
 

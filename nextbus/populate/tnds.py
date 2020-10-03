@@ -570,8 +570,8 @@ def populate_tnds_data(connection, directory=None, delete=True, warn=False):
 
     # Check if operators exist first
     operators_exist = connection.execute(
-        db.exists(db.select([models.Operator.code]))
-    )
+        db.exists(db.select([models.Operator.code])).select()
+    ).scalar()
     if not operators_exist:
         raise ValueError(
             "No operators were found. The TNDS dataset requires the database "

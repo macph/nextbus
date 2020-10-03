@@ -125,9 +125,13 @@ class IndexList:
         self._map.clear()
 
 
+class RowIdError(ValueError):
+    """ Error raised when ID does not exist for a model. """
+    pass
+
+
 class RowIds:
-    """ Create XSLT functions to assign each row for journey patterns, sections
-        and links an unique ID.
+    """ Assigns unique serial IDs to each entry for relations.
 
         A service in the TNDS dataset has its own XML file or split up across
         several files, with the associated journey patterns having unique IDs
@@ -138,12 +142,8 @@ class RowIds:
         self._conn = connection
         self.existing = check_existing
 
-        # Register XSLT functions
-        utils.xslt_text_func(self.add_id)
-        utils.xslt_text_func(self.get_id)
-
     def _get_sequence(self, model_name):
-        """ Check database to find max value to start from or use 1. """
+        """ Check database to find next ID to use, or one if empty. """
         start = 1
         model = getattr(models, model_name, None)
         if self.existing and model is not None:
@@ -154,7 +154,7 @@ class RowIds:
 
         return start
 
-    def add_id(self, _, name, *ids):
+    def add_id(self, name, *ids):
         """ Adds IDs (eg file name, code) to list, returning an integer ID. """
         if name not in self._id:
             # Find the initial sequence and set up list
@@ -169,10 +169,10 @@ class RowIds:
 
         return new_id
 
-    def get_id(self, _, name, *ids):
+    def get_id(self, name, *ids):
         """ Gets integer ID for IDs (eg file name, code) """
         if name not in self._id or ids not in self._id[name]:
-            raise ValueError(f"IDs {ids!r} does not exist for model {name!r}.")
+            raise RowIdError(f"IDs {ids!r} does not exist for model {name!r}.")
 
         got_id = self._id[name].get(tuple(map(str, ids)))
         utils.logger.debug(f"Retrieved ID {got_id} for {name} and identifiers "
@@ -184,6 +184,23 @@ class RowIds:
         """ Clear all stored values in each IndexList. """
         for ids in self._id.values():
             ids.clear()
+
+
+def setup_row_ids(connection, check_existing=True):
+    """ Set up XSLT functions for row ID methods. """
+    row_ids = RowIds(connection, check_existing)
+
+    @utils.xslt_text_func
+    def add_id(_, name, *ids):
+        """ Creates ID for an unique combination of strings (eg code). """
+        return row_ids.add_id(name, *ids)
+
+    @utils.xslt_text_func
+    def get_id(_, name, *ids):
+        """ Gets an integer ID for an unique combination of strings (eg code). """
+        return row_ids.get_id(name, *ids)
+
+    return row_ids
 
 
 @utils.xslt_text_func
@@ -251,9 +268,8 @@ class ServiceCodes:
 
     def __init__(self):
         self._unique = collections.defaultdict(int)
-        utils.xslt_text_func(self.service_code)
 
-    def service_code(self, _, line, description):
+    def service_code(self, line, description):
         """ Creates unique code based on line name and description. """
         line_name = self.NON_WORDS.sub("-", line.lower())
         components = [line_name]
@@ -269,6 +285,15 @@ class ServiceCodes:
             key += f"-{self._unique[key]}"
 
         return key
+
+
+def setup_service_codes():
+    """ Set up service code generation with a XSLT function. """
+    codes = ServiceCodes()
+
+    @utils.xslt_text_func
+    def service_code(_, line, description):
+        return codes.service_code(line, description)
 
 
 @utils.xslt_text_func
@@ -406,33 +431,44 @@ def bank_holidays(_, nodes, region):
     return hols
 
 
-def setup_tnds_functions(connection):
-    """ Finds all existing stop points in database, setting up XSLT functions.
+class ExistingStops:
+    """ Finds all existing stop points in database and compare with those found
+        in TNDS data.
     """
-    query_operators = connection.execute(db.select([models.Operator.code]))
-    query_stops = connection.execute(db.select([models.StopPoint.atco_code]))
-    set_operators = {o.code for o in query_operators}
-    set_stops = {c.atco_code for c in query_stops}
-    set_not_exists = set()
+    def __init__(self, connection):
+        query_stops = connection.execute(
+            db.select([models.StopPoint.atco_code])
+        )
+        self.stops = {c.atco_code for c in query_stops}
+        self.not_exists = set()
 
-    if not set_stops:
-        raise ValueError("No stop points were found. The TNDS dataset requires "
-                         "the database to be populated from NaPTAN data first.")
-    if not set_operators:
-        raise ValueError("No operators were found. The TNDS dataset requires "
-                         "the database to be populated from NOC data first.")
+        if not self.stops:
+            raise ValueError(
+                "No stop points were found. The TNDS dataset requires the "
+                "database to be populated from NaPTAN data first."
+            )
 
-    @utils.xslt_text_func
-    def stop_exists(_, file_, code):
-        """ Check if stop point exists. """
-        nonlocal set_not_exists
-        exists = code in set_stops
-        if not exists and code not in set_not_exists:
-            set_not_exists.add(code)
+    def stop_exists(self, file_, code):
+        """ Check if stop point ATCO code exists in set, and emit warning once if it
+            does not.
+        """
+        exists = code in self.stops
+        if not exists and code not in self.not_exists:
+            self.not_exists.add(code)
             utils.logger.warning(f"Stop ATCO code {code!r} in file {file_!r} "
                                  f"does not exist.")
 
         return exists
+
+
+def setup_stop_exists(connection):
+    """ Set up the stop_exists() XSLT function. """
+    es = ExistingStops(connection)
+
+    @utils.xslt_text_func
+    def stop_exists(_, file_, code):
+        """ Check if stop point exists. """
+        return es.stop_exists(file_, code)
 
 
 def _delete_empty_services(connection):
@@ -532,9 +568,19 @@ def populate_tnds_data(connection, directory=None, delete=True, warn=False):
             "contain any suitable archives or their downloads failed."
         )
 
-    setup_tnds_functions(connection)
-    row_ids = RowIds(connection, check_existing=not delete)
-    ServiceCodes()
+    # Check if operators exist first
+    operators_exist = connection.execute(
+        db.exists(db.select([models.Operator.code]))
+    )
+    if not operators_exist:
+        raise ValueError(
+            "No operators were found. The TNDS dataset requires the database "
+            "to be populated from NOC data first."
+        )
+
+    row_ids = setup_row_ids(connection, check_existing=not delete)
+    setup_stop_exists(connection)
+    setup_service_codes()
 
     # We don't want to delete any NOC data if they have been added
     excluded = models.Operator, models.LocalOperator
@@ -547,15 +593,20 @@ def populate_tnds_data(connection, directory=None, delete=True, warn=False):
         for file_ in file_ops.iter_archive(archive):
             path = os.path.join(os.path.basename(archive), file_.name)
             utils.logger.info(f"Parsing file {path!r}")
-            data = utils.xslt_transform(file_, xslt, region=region,
-                                        file=file_.name)
-            utils.populate_database(
-                connection,
-                utils.collect_xml_data(data),
-                metadata=metadata,
-                delete=del_,
-                exclude=excluded
-            )
+            try:
+                data = utils.xslt_transform(file_, xslt, region=region,
+                                            file=file_.name)
+            except RowIdError:
+                # IDs do not match in XML file; log error and move on
+                utils.logger.error(f"Invalid IDs in file {path!r}", exc_info=1)
+            else:
+                utils.populate_database(
+                    connection,
+                    utils.collect_xml_data(data),
+                    metadata=metadata,
+                    delete=del_,
+                    exclude=excluded
+                )
             row_ids.clear()
             del_ = False
 

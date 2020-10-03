@@ -1,7 +1,6 @@
 """
 Utilities for the populate subpackage.
 """
-import collections
 import csv
 import functools
 import io
@@ -171,10 +170,12 @@ def collect_xml_data(xml_data):
         Each element within the root are expected to have the same name as
         models.
     """
-    collected = collections.OrderedDict()
+    # Python >=3.7 guarantees dict is ordered by insertion
+    collected = {}
     for element in xml_data.getroot():
-        model = getattr(models, element.tag, None)
-        if model is None:
+        try:
+            model = getattr(models, element.tag)
+        except AttributeError:
             raise ValueError(f"Element {element} does not match an existing "
                              f"model name.")
         if model not in collected:

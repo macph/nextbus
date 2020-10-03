@@ -14,7 +14,8 @@ from nextbus.populate.utils import (
 )
 from nextbus.populate.tnds import (
     bank_holidays, days_week, weeks_month, format_description,
-    setup_tnds_functions, short_description, ServiceCodes, RowIds
+    setup_stop_exists, short_description, ServiceCodes, RowIds, setup_row_ids,
+    setup_service_codes
 )
 
 
@@ -131,16 +132,16 @@ def service_codes():
     ("5", "Inverness – Balloch or Croy", "5-inverness-balloch-croy")
 ])
 def test_service_code(service_codes, line, description, expected):
-    assert service_codes.service_code(None, line, description) == expected
+    assert service_codes.service_code(line, description) == expected
 
 
 def test_service_code_incremenet(service_codes):
     get_code = service_codes.service_code
     line = "120"
     description = "Halfway – Fulwood"
-    assert get_code(None, line, description) == "120-halfway-fulwood"
-    assert get_code(None, line, description) == "120-halfway-fulwood-2"
-    assert get_code(None, line, description) == "120-halfway-fulwood-3"
+    assert get_code(line, description) == "120-halfway-fulwood"
+    assert get_code(line, description) == "120-halfway-fulwood-2"
+    assert get_code(line, description) == "120-halfway-fulwood-3"
 
 
 @pytest.fixture
@@ -148,22 +149,25 @@ def mock_ids(load_db):
     # Set up functions to assign IDs but don't call database
     def return_one(_): return 1
 
-    row_ids = RowIds(None, check_existing=False)
+    row_ids = setup_row_ids(None, check_existing=False)
     row_ids._get_sequence = return_one
 
     return row_ids
 
 
-def always_true(*_):
-    return True
+def setup_mock_stop_exists():
+    @xslt_func
+    def stop_exists(*_):
+        return True
 
 
 @pytest.fixture
 def xslt():
     with open_binary("nextbus.populate", "tnds.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
-    # Replicate functions which check for existing stops and operators
-    xslt_func["stop_exists"] = always_true
+    # Replicate functions which check for existing stops
+    setup_mock_stop_exists()
+    setup_service_codes()
 
     return xslt
 
@@ -228,7 +232,7 @@ def test_update_tnds_data(load_db, service_codes):
     # just overwrite route data using a newer file
     file_name = "66-DSM-_-y05-1"
     with db.engine.begin() as connection:
-        setup_tnds_functions(connection)
+        setup_stop_exists(connection)
         RowIds(connection, check_existing=False)
         data = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
         populate_database(

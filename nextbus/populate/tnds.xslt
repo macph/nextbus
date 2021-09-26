@@ -11,7 +11,7 @@
 
   <xsl:param name="operators" select="txc:TransXChange/txc:Operators/txc:Operator"/>
   <xsl:param name="services" select="txc:TransXChange/txc:Services/txc:Service[txc:StandardService]
-    [txc:Mode[.='underground' or .='metro' or .='bus' or .='coach' or .='tram']]"/>
+    [not(txc:Mode) or txc:Mode[.='underground' or .='metro' or .='bus' or .='coach' or .='tram']]"/>
   <xsl:param name="patterns" select="$services/txc:StandardService/txc:JourneyPattern"/>
   <xsl:param name="journey_links" select="txc:TransXChange/txc:JourneyPatternSections/txc:JourneyPatternSection/txc:JourneyPatternTimingLink"/>
 
@@ -62,7 +62,13 @@
         <code><xsl:value-of select="txc:NationalOperatorCode"/></code>
         <region_ref><xsl:value-of select="$region"/></region_ref>
         <name><xsl:value-of select="txc:OperatorShortName"/></name>
-        <mode><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></mode>
+        <mode>
+          <xsl:choose>
+            <!-- Default mode 1 (bus) -->
+            <xsl:when test="not($mode)">1</xsl:when>
+            <xsl:otherwise><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></xsl:otherwise>
+          </xsl:choose>
+        </mode>
       </Operator>
     </xsl:if>
   </xsl:template>
@@ -92,7 +98,13 @@
       <line><xsl:value-of select="$line"/></line>
       <description><xsl:value-of select="$desc"/></description>
       <short_description><xsl:value-of select="func:short_description($desc)"/></short_description>
-      <mode><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></mode>
+      <mode>
+        <xsl:choose>
+          <!-- Default mode 1 (bus) -->
+          <xsl:when test="not($mode)">1</xsl:when>
+          <xsl:otherwise><xsl:value-of select="$set_mode_ids/mode[.=$mode]/@id"/></xsl:otherwise>
+        </xsl:choose>
+      </mode>
       <filename><xsl:value-of select="$file"/></filename>
     </Service>
   </xsl:template>

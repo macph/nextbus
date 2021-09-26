@@ -209,7 +209,7 @@ def test_transform_tnds_empty(asserts, xslt, mock_ids):
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
 
 
-def test_transform_tnds_wrong_type(asserts, xslt, mock_ids):
+def test_transform_tnds_wrong_mode(asserts, xslt, mock_ids):
     # Set service mode to ferry - should be excluded
     raw = et.parse(TNDS_RAW)
     ns = {"t": raw.xpath("namespace-uri()")}
@@ -217,6 +217,17 @@ def test_transform_tnds_wrong_type(asserts, xslt, mock_ids):
     output = xslt_transform(raw, xslt, region="Y", file="SVRYSBO120.xml")
 
     asserts.xml_elements_equal(output.getroot(), et.XML("<Data/>"))
+
+
+def test_transform_tnds_missing_mode(asserts, xslt, mock_ids):
+    # Remove service mode - this should default to bus (1)
+    raw = et.parse(TNDS_RAW)
+    ns = {"t": raw.xpath("namespace-uri()")}
+    mode = raw.xpath("//t:Service/t:Mode", namespaces=ns)[0]
+    mode.getparent().remove(mode)
+
+    output = xslt_transform(raw, xslt, region="Y", file="SVRYSBO120.xml")
+    assert output.xpath("/Data/Service/mode")[0].text == "1"
 
 
 def _as_dict(instance):

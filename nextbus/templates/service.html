@@ -50,12 +50,14 @@
       </ul>
       {%- endif %}
       <section>
+        {% if dest.origin|length > 0 and dest.destination|length > 0 %}
         <dl class="description-list">
           <dt>From</dt>
           <dd><strong>{{ dest.origin|join(" / ") }}</strong></dd>
           <dt>To</dt>
           <dd><strong>{{ dest.destination|join(" / ") }}</strong></dd>
         </dl>
+        {% endif %}
         <div id="diag" class="diagram" data-layout="{{ layout|tojson|forceescape }}"></div>
         {% if sequence|length > 0 -%}
         {% call(s) f.print_list(sequence, class='list-relative', name='listStops') -%}

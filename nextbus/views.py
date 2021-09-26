@@ -566,10 +566,14 @@ def service(service_code, reverse=None):
                                 reverse=is_reverse))
 
     destinations = {
-        "origin": {p.origin for p in sv.patterns
-                   if p.direction == is_reverse},
-        "destination": {p.destination for p in sv.patterns
-                        if p.direction == is_reverse}
+        "origin": {
+            p.origin for p in sv.patterns
+            if p.direction == is_reverse and p.origin is not None
+        },
+        "destination": {
+            p.destination for p in sv.patterns
+            if p.direction == is_reverse and p.destination is not None
+        }
     }
     similar = sv.similar(is_reverse, 0.5)
 

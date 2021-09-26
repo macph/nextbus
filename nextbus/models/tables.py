@@ -916,8 +916,8 @@ class JourneyPattern(db.Model):
     __tablename__ = "journey_pattern"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    origin = db.Column(db.Text, nullable=False)
-    destination = db.Column(db.Text, nullable=False)
+    origin = db.Column(db.Text)
+    destination = db.Column(db.Text)
 
     service_ref = db.Column(
         db.Integer,

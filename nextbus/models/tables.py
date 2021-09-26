@@ -357,6 +357,7 @@ class StopArea(db.Model):
     stop_count = db.deferred(
         db.select([db.cast(db.func.count(), db.Text)])
         .where((_stop_point.c.stop_area_ref == code) & _stop_point.c.active)
+        .scalar_subquery()
     )
 
     stop_points = db.relationship(
@@ -381,8 +382,10 @@ def _array_lines(code):
         )
         .where(_link.c.stop_point_ref == code)
         .group_by(_service.c.line)
-        .order_by(db.select([_natural_sort.c.index])
-                  .where(_natural_sort.c.string == _service.c.line))
+        .order_by(
+            db.select([_natural_sort.c.index])
+            .where(_natural_sort.c.string == _service.c.line)
+            .scalar_subquery())
         .as_scalar()
     )
 
@@ -427,8 +430,11 @@ class StopPoint(db.Model):
     modified = db.deferred(db.Column(db.DateTime))
 
     # Access to index for natural sort - only need it for ordering queries
-    ind_index = db.deferred(db.select([_natural_sort.c.index])
-                            .where(_natural_sort.c.string == short_ind))
+    ind_index = db.deferred(
+        db.select([_natural_sort.c.index])
+        .where(_natural_sort.c.string == short_ind)
+        .scalar_subquery()
+    )
     # Distinct list of lines serving this stop
     lines = db.deferred(_array_lines(atco_code))
 
@@ -798,11 +804,17 @@ class Service(db.Model):
     )
 
     # Access to index for natural sort
-    line_index = db.deferred(db.select([_natural_sort.c.index])
-                             .where(_natural_sort.c.string == line))
+    line_index = db.deferred(
+        db.select([_natural_sort.c.index])
+        .where(_natural_sort.c.string == line)
+        .scalar_subquery()
+    )
     # Get mode name for service
-    mode_name = db.deferred(db.select([ServiceMode.name])
-                            .where(ServiceMode.id == mode))
+    mode_name = db.deferred(
+        db.select([ServiceMode.name])
+        .where(ServiceMode.id == mode)
+        .scalar_subquery()
+    )
 
     patterns = db.relationship("JourneyPattern", backref="service",
                                innerjoin=True, lazy="raise")
@@ -876,7 +888,7 @@ class Service(db.Model):
             similar0 = similar0.filter(_pair.c.similarity > value)
             similar1 = similar1.filter(_pair.c.similarity > value)
 
-        service = db.aliased(self, name="service")
+        service = db.aliased(Service, name="service")
         similar = db.union_all(similar0, similar1).alias()
 
         return (

@@ -17,7 +17,9 @@ def table_name(model):
 
 
 def iter_models(match=None):
-    for m in getattr(db.Model, "_decl_class_registry").values():
+    sa_registry = getattr(db.Model, "_sa_registry")
+    class_registry = getattr(sa_registry, "_class_registry")
+    for m in class_registry.values():
         if hasattr(m, "__table__") and (match is None or issubclass(m, match)):
             yield m
 

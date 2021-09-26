@@ -3,6 +3,7 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 """
 import collections
 import copy
+import re
 from importlib.resources import open_binary
 import functools
 import operator
@@ -136,14 +137,21 @@ def _create_ind_parser():
 
 
 def _setup_naptan_functions():
-    """ Sets up XSLT extension functions to parse indicators for stop points.
+    """ Sets up XSLT extension functions to parse names and indicators for stop
+        points.
     """
     ind_parser = _create_ind_parser()
+    # Replace multiple spaces or no spaces with ' / '.
+    name_regex = re.compile(r"\s{2,}|(?<=\w)/(?=\w)")
 
     @utils.xslt_text_func
     def parse_ind(_, indicator):
         """ Shortens indicator for display. """
         return ind_parser(indicator)
+
+    @utils.xslt_text_func
+    def replace_name(_, name):
+        return name_regex.sub(" / ", name)
 
 
 def _remove_stop_areas(connection):

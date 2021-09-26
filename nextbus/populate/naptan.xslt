@@ -26,7 +26,7 @@
   <xsl:template match="n:StopArea">
     <StopArea>
       <code><xsl:value-of select="func:upper(n:StopAreaCode)"/></code>
-      <name><xsl:value-of select="func:replace(n:Name, '  ', ' / ')"/></name>
+      <name><xsl:value-of select="func:replace_name(n:Name)"/></name>
       <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <stop_area_type>
         <xsl:choose>
@@ -70,7 +70,7 @@
       <atco_code><xsl:value-of select="func:upper(n:AtcoCode)"/></atco_code>
       <naptan_code><xsl:value-of select="func:lower(n:NaptanCode)"/></naptan_code>
       <!-- Forward slash character is not allowed in NaPTAN data; was removed leaving 2 spaces -->
-      <name><xsl:value-of select="func:replace(n:Descriptor/n:CommonName, '  ', ' / ')"/></name>
+      <name><xsl:value-of select="func:replace_name(n:Descriptor/n:CommonName)"/></name>
       <landmark>
         <xsl:call-template name="stop-descriptor">
           <xsl:with-param name="desc" select="n:Descriptor/n:Landmark"/>

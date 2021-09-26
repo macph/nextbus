@@ -6,7 +6,13 @@
 
 {% block content %}
 <main>
-  <h1>Postcode {{ postcode.text }}, {{ postcode.district.name|d(postcode.admin_area.name) }} </h1>
+  {% if postcode.district %}
+  <h1>Postcode {{ postcode.text }}, {{ postcode.district.name }} </h1>
+  {% elif postcode.admin_area %}
+  <h1>Postcode {{ postcode.text }}, {{ postcode.admin_area.name }} </h1>
+  {% else %}
+  <h1>Postcode {{ postcode.text }}</h1>
+  {% endif %}
   <section>
     {% if list_stops|length > 0 %}
     <div class="h2-inline">

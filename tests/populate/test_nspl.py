@@ -19,5 +19,5 @@ def test_commit_nspl_data(load_db):
     assert count == 100
 
     pc = models.Postcode.query.get("IG117RX")
-    expected = ("IG117RX", "IG11 7RX", "082", "276")
+    expected = ("IG117RX", "IG11 7RX", None, None)
     assert (pc.index, pc.text, pc.admin_area_ref, pc.district_ref) == expected

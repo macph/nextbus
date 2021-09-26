@@ -52,22 +52,6 @@ def _download_nspl_data():
     return new
 
 
-def _get_dict_local_authorities():
-    """ Opens JSON file with local authority data and create a dict with local
-        authority codes as keys.
-
-        :returns: Dict with local authority codes as keys
-    """
-    with open_text("nextbus.populate", "local_authorities.json") as file_:
-        la_data = json.load(file_)
-
-    local_authorities = {}
-    for row in la_data:
-        local_authorities[row.pop("la_code")] = row
-
-    return local_authorities
-
-
 def populate_nspl_data(connection, path=None):
     """ Converts NSPL data (postcodes) to database objects and commit them
         to the working database.
@@ -83,19 +67,15 @@ def populate_nspl_data(connection, path=None):
         data = json.load(json_file)
 
     postcodes = []
-    local_authorities = _get_dict_local_authorities()
     utils.logger.info(f"Parsing {len(data)} postcodes")
     for row in data:
-        local_authority = local_authorities[row["local_authority_code"]]
         postcodes.append({
-            "index":            "".join(row["postcode_3"].split()),
-            "text":             row["postcode_3"],
-            "admin_area_ref":   local_authority["admin_area_code"],
-            "district_ref":     local_authority["district_code"],
-            "easting":          row["easting"],
-            "northing":         row["northing"],
-            "longitude":        row["longitude"],
-            "latitude":         row["latitude"]
+            "index": "".join(row["postcode_3"].split()),
+            "text": row["postcode_3"],
+            "easting": row["easting"],
+            "northing": row["northing"],
+            "longitude": row["longitude"],
+            "latitude": row["latitude"]
         })
 
     utils.populate_database(

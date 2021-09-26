@@ -689,7 +689,7 @@ class Postcode(db.Model):
     admin_area_ref = db.Column(
         db.VARCHAR(3),
         db.ForeignKey("admin_area.code", ondelete="CASCADE"),
-        nullable=False, index=True
+        index=True
     )
     district_ref = db.Column(
         db.VARCHAR(3),

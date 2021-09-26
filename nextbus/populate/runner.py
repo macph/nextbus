@@ -1,5 +1,6 @@
 from nextbus import db, models
 from nextbus.populate.file_ops import backup_database
+from nextbus.populate.holidays import populate_holiday_data
 from nextbus.populate.nptg import populate_nptg_data, process_nptg_data
 from nextbus.populate.naptan import populate_naptan_data, process_naptan_data
 from nextbus.populate.nspl import populate_nspl_data
@@ -34,6 +35,7 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
                 if noc:
                     populate_noc_data(connection, noc_path)
                 if tnds:
+                    populate_holiday_data(connection)
                     populate_tnds_data(connection, tnds_directory,
                                        delete=not tnds_keep, warn=tnds_warn_ftp)
         finally:

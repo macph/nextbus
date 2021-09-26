@@ -102,12 +102,11 @@ class MutexOption(click.Option):
 @click.option("--tnds", "-t", "tnds_d", cls=MutexOption, is_flag=True,
               exclude=("all_d", "tnds_f", "restore", "restore_f"),
               help="Download TNDS data and add to database.")
-@click.option("--tnds-dir", "-T", "tnds_f", cls=MutexOption, default=None,
-              type=click.Path(file_okay=False, exists=True),
+@click.option("--tnds-path", "-T", "tnds_f", cls=MutexOption, default=None,
               exclude=("all_d", "tnds_d", "restore", "restore_f"),
-              help="Add TNDS services data from zip files in specified "
-                   "directory with the same names as NPTG region codes, eg "
-                   "'L.zip'.")
+              help="Add TNDS services data from one or more zip files with the "
+                   "same names as NPTG region codes, eg 'L.zip'. Glob "
+                   "expansion is supported.")
 @click.option("--keep-tnds", "tnds_keep", is_flag=True,
               help="Don't delete existing TNDS data (eg when adding other "
                    "regions).")
@@ -167,7 +166,7 @@ def populate_cmd(ctx, **kw):
             noc=options["o"],
             noc_path=kw["noc_f"],
             tnds=options["t"],
-            tnds_directory=kw["tnds_f"],
+            tnds_path=kw["tnds_f"],
             tnds_keep=kw["tnds_keep"],
             tnds_warn_ftp=kw["all_d"],
             modify=options["m"],

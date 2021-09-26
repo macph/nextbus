@@ -3,6 +3,7 @@ Populate bus route and timetable data from TNDS.
 """
 import collections
 import ftplib
+import glob
 import os
 import re
 from importlib.resources import open_binary
@@ -64,6 +65,49 @@ def _download_tnds_files(regions):
             paths[region] = file_path
 
     return paths
+
+
+def _get_archives(connection, path=None, warn=False):
+    """ Find and get all archives matching regions. """
+    regions = _get_regions(connection)
+    data = None
+
+    if path is None:
+        try:
+            # Download required files and get region code from each filename
+            data = _download_tnds_files(regions)
+        except ValueError:
+            if warn:
+                utils.logger.warn("No TNDS FTP credentials are specified in "
+                                  "config; skipping over TNDS population.")
+                return
+            else:
+                raise
+    else:
+        data = {}
+        # Find all files matching glob and match them with region codes
+        for match in glob.iglob(path):
+            base_name = os.path.basename(match)
+            name, ext = os.path.splitext(base_name)
+            if ext.lower() != ".zip" or name not in regions:
+                continue
+            if name in data:
+                raise ValueError(f"Multiple files found matching {base_name!r}")
+            data[name] = match
+
+        for r in regions:
+            if r not in data:
+                utils.logger.warning(
+                    f"No archive found for region {r} matching {path!r}"
+                )
+
+    if not data:
+        raise ValueError(
+            "No files were passed - either the path specified did not "
+            "match any suitable archive files or the downloads failed."
+        )
+
+    return data
 
 
 class IndexList:
@@ -527,46 +571,21 @@ def _delete_empty_services(connection):
                           f"deleted")
 
 
-def populate_tnds_data(connection, directory=None, delete=True, warn=False):
+def populate_tnds_data(connection, path=None, delete=True, warn=False):
     """ Commits TNDS data to database.
 
         :param connection: Connection for population.
-        :param directory: Directory where zip files with TNDS XML documents and
-        named after region codes are contained. If None, they will be
-        downloaded.
+        :param path: Path for zip files with TNDS XML documents and named
+        after region codes. Global expansion is supported - all unique files
+        matching region codes will be used. The archives will be downloaded if
+        this is None.
         :param delete: Truncate all data from TNDS tables before populating.
         :param warn: Log warning if no FTP credentials exist. If False an error
         will be raised instead.
     """
-    data = None
-    if directory is None:
-        regions = _get_regions(connection)
-        try:
-            # Download required files and get region code from each filename
-            data = _download_tnds_files(regions)
-        except ValueError:
-            if warn:
-                utils.logger.warn("No TNDS FTP credentials are specified in "
-                                  "config; skipping over TNDS population.")
-            else:
-                raise
-    else:
-        regions = _get_regions(connection)
-        data = {}
-        for r in regions:
-            file_ = r + ".zip"
-            path = os.path.join(directory, file_)
-            if os.path.exists(path):
-                data[r] = path
-            else:
-                utils.logger.warning(f"Archive {file_!r} not found in "
-                                     f"directory {directory!r}.")
-
-    if not data:
-        raise ValueError(
-            "No files were passed - either the directory specified did not "
-            "contain any suitable archives or their downloads failed."
-        )
+    data = _get_archives(connection, path, warn)
+    if data is None:
+        return
 
     # Check if operators exist first
     operators_exist = connection.execute(

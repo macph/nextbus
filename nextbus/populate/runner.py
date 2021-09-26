@@ -13,7 +13,7 @@ from nextbus.populate.utils import lock_all_tables, logger
 def run_population(*, backup=False, backup_path=None, nptg=False,
                    nptg_path=None, naptan=False, naptan_path=False, nspl=False,
                    nspl_path=None, noc=False, noc_path=None, tnds=False,
-                   tnds_directory=None, tnds_keep=False, tnds_warn_ftp=False,
+                   tnds_path=None, tnds_keep=False, tnds_warn_ftp=False,
                    modify=False, refresh=False):
     if backup:
         backup_database(backup_path)
@@ -36,7 +36,7 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
                     populate_noc_data(connection, noc_path)
                 if tnds:
                     populate_holiday_data(connection)
-                    populate_tnds_data(connection, tnds_directory,
+                    populate_tnds_data(connection, tnds_path,
                                        delete=not tnds_keep, warn=tnds_warn_ftp)
         finally:
             if dropped:

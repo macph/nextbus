@@ -4,7 +4,6 @@
 
 html {
   font-family: 'Inter', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10';
   font-size: 62.5%;
   color: #212121;
 }
@@ -942,6 +941,13 @@ section {
   overflow: hidden;
 }
 
+.list > li {
+  /* Prevent elements breaking up between columns */
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  break-inside: avoid-column;
+}
+
 .list-relative {
   position: relative;
 }
@@ -968,10 +974,6 @@ section {
   display: flex;
   align-items: center;
   padding: 0.5rem 2rem;
-  /* Prevent elements breaking up between columns */
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
-  break-inside: avoid-column;
   border: none;
 
   color: inherit;
@@ -1455,7 +1457,6 @@ section {
 
 .leaflet-container {
   font-family: 'Inter', sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv05', 'cv10';
 }
 
 .leaflet-container a {

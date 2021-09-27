@@ -235,20 +235,22 @@ def _as_dict(instance):
             if k != "_sa_instance_state"}
 
 
-def test_update_tnds_data(load_db, service_codes):
+def test_update_tnds_data(load_db):
     with open_binary("nextbus.populate", "tnds.xslt") as file_:
         xslt = et.XSLT(et.parse(file_))
+    setup_service_codes()
 
     # All relevant data already exists for Dagenham Sunday market shuttle;
     # just overwrite route data using a newer file
     file_name = "66-DSM-_-y05-1"
     with db.engine.begin() as connection:
         setup_stop_exists(connection)
-        RowIds(connection, check_existing=False)
-        data = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
+        setup_row_ids(connection, check_existing=False)
+        transformed = xslt_transform(TNDS_DSM, xslt, region="L", file=file_name)
+        data = collect_xml_data(transformed)
         populate_database(
             connection,
-            collect_xml_data(data),
+            data,
             delete=True,
             exclude=(models.Operator, models.LocalOperator)
         )

@@ -87,6 +87,12 @@ def set_cache_control(response):
 
 
 @page.app_template_global()
+def datetime_now():
+    """ Get the current datetime. """
+    return datetime.datetime.now(GB_TZ)
+
+
+@page.app_template_global()
 def modify_query(**values):
     """ Jinja function to modify a query URL by replacing query string
         parameters with keyword arguments.

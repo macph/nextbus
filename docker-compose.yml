@@ -1,13 +1,9 @@
 version: "3"
 services:
   postgres:
-    image: postgres:11-alpine
-    environment:
-      LANG: "en_GB.UTF-8"
-      LANGUAGE: "en_GB.UTF-8"
-      POSTGRES_USER: "prod"
-      POSTGRES_PASSWORD: "hello_world"
-      POSTGRES_DB: "nextbus"
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
     volumes:
       - ./temp:/temp
       - ~/postgres-data:/var/lib/postgresql/data
@@ -26,8 +22,8 @@ services:
     restart: always
   nginx:
     build:
-      context: ./
-      dockerfile: ./nginx/Dockerfile
+      context: .
+      dockerfile: docker/nginx/Dockerfile
     ports:
       - "80:80"
     volumes:

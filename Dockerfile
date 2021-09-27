@@ -1,19 +1,22 @@
-FROM python:3.9-slim-buster AS base
+FROM python:3.9-slim-bullseye AS base
 
 # Set poetry version
-ENV POETRY_VERSION 1.0.9
+ENV POETRY_VERSION 1.1.10
 ENV POETRY_VIRTUALENVS_IN_PROJECT 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# Install Poetry
-RUN pip3 install "poetry==$POETRY_VERSION"
+# Set up virtualenv for Poetry and install it
+RUN python -m venv /poetry
+RUN /poetry/bin/pip3 install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 
 # Install dependencies for app
-RUN poetry install --no-dev --no-interaction --no-ansi
-RUN pip3 uninstall --yes poetry
+RUN /poetry/bin/poetry install --no-dev --no-interaction --no-ansi
+
+# Remove Poetry venv
+RUN rm -r /poetry
 
 # Copy over app data and reinstall
 COPY . .

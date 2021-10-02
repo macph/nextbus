@@ -456,7 +456,7 @@ def test_timetable_sunday(load_db):
     assert tt.notes == {}
     assert tt.head == [(400012 + i, "ATC", None) for i in range(13)]
 
-    assert [r.stop for r in tt.rows] == ["490000015G", "490008638S"]
+    assert [r.stop.atco_code for r in tt.rows] == ["490000015G", "490008638S"]
     assert [len(r.times) for r in tt.rows] == [13, 13]
     # Test first journey in timetable
     assert [r.times[0] for r in tt.rows] == [

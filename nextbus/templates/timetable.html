@@ -84,7 +84,7 @@
         {% endif %}
         {%- set timing = namespace(first=false, last=true) -%}
         {%- for r in timetable.rows %}
-        {%- set stop = timetable.stops[r.stop] -%}
+        {%- set stop = r.stop -%}
         {%- if r == timetable.timed_rows|first -%}{%- set timing.first = true -%}{%- endif -%}
         {%- if r == timetable.timed_rows|last -%}{%- set timing.last = false -%}{%- endif -%}
         {%- set row_class = ' timetable-row-timed' if r.timing else (' timetable-row-hidden' if timing.first and timing.last else '') -%}

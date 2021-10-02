@@ -27,6 +27,9 @@ class Config(object):
     PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60
     # With permanent cookie, only update if necessary
     SESSION_REFRESH_EACH_REQUEST = False
+    # Set same-site policy for cookies as 'Lax'.
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
 
     # Enables geolocation on webpages, which requires HTTPS
     GEOLOCATION_ENABLED = False

@@ -12,8 +12,6 @@ MIN_GROUPED = 72
 MAX_DIST = 500
 
 # Aliases for tables or views not yet defined
-_natural_sort = db.table("natural_sort", db.column("string"),
-                         db.column("index"))
 _stop_point = db.table("stop_point", db.column("atco_code"),
                        db.column("stop_area_ref"), db.column("active"))
 _service = db.table("service", db.column("id"), db.column("line"))
@@ -185,7 +183,7 @@ class AdminArea(db.Model):
                                 lazy="raise")
     stop_points = db.relationship(
         "StopPoint", backref="admin_area", innerjoin=True,
-        order_by="StopPoint.name, StopPoint.ind_index", lazy="raise"
+        order_by="StopPoint.name, StopPoint.short_ind", lazy="raise"
     )
     stop_areas = db.relationship("StopArea", backref="admin_area",
                                  innerjoin=True, order_by="StopArea.name",
@@ -263,7 +261,7 @@ class Locality(db.Model):
     modified = db.deferred(db.Column(db.DateTime))
 
     stop_points = db.relationship(
-        "StopPoint", order_by="StopPoint.name, StopPoint.ind_index",
+        "StopPoint", order_by="StopPoint.name, StopPoint.short_ind",
         back_populates="locality", lazy="raise"
     )
     stop_areas = db.relationship("StopArea", backref="locality",
@@ -319,12 +317,10 @@ class Locality(db.Model):
             subquery = stops_outside_areas.union(stop_areas).subquery()
             query = (
                 db.session.query(subquery)
-                .join(_natural_sort,
-                      _natural_sort.c.string == subquery.c.short_ind)
-                .order_by(subquery.c.name, _natural_sort.c.index)
+                .order_by(subquery.c.name, subquery.c.short_ind)
             )
         else:
-            query = stops.order_by(StopPoint.name, StopPoint.ind_index)
+            query = stops.order_by(StopPoint.name, StopPoint.short_ind)
 
         return query.all()
 
@@ -362,7 +358,7 @@ class StopArea(db.Model):
 
     stop_points = db.relationship(
         "StopPoint", backref="stop_area",
-        order_by="StopPoint.name, StopPoint.ind_index", lazy="raise"
+        order_by="StopPoint.name, StopPoint.short_ind", lazy="raise"
     )
 
     def __repr__(self):
@@ -382,10 +378,7 @@ def _array_lines(code):
         )
         .where(_link.c.stop_point_ref == code)
         .group_by(_service.c.line)
-        .order_by(
-            db.select([_natural_sort.c.index])
-            .where(_natural_sort.c.string == _service.c.line)
-            .scalar_subquery())
+        .order_by(_service.c.line)
         .as_scalar()
     )
 
@@ -404,7 +397,12 @@ class StopPoint(db.Model):
     street = db.Column(db.Text)
     crossing = db.Column(db.Text)
     indicator = db.Column(db.Text, default="", nullable=False)
-    short_ind = db.Column(db.Text, index=True, default="", nullable=False)
+    short_ind = db.Column(
+        db.Text(collation="utf8_numeric"),
+        index=True,
+        default="",
+        nullable=False
+    )
     locality_ref = db.Column(
         db.VARCHAR(8),
         db.ForeignKey("locality.code", ondelete="CASCADE"),
@@ -429,12 +427,6 @@ class StopPoint(db.Model):
     northing = db.deferred(db.Column(db.Integer, nullable=False))
     modified = db.deferred(db.Column(db.DateTime))
 
-    # Access to index for natural sort - only need it for ordering queries
-    ind_index = db.deferred(
-        db.select([_natural_sort.c.index])
-        .where(_natural_sort.c.string == short_ind)
-        .scalar_subquery()
-    )
     # Distinct list of lines serving this stop
     lines = db.deferred(_array_lines(atco_code))
 
@@ -449,7 +441,7 @@ class StopPoint(db.Model):
             db.remote(active)
         ),
         uselist=True,
-        order_by="StopPoint.name, StopPoint.ind_index",
+        order_by="StopPoint.name, StopPoint.short_ind",
         lazy="raise"
     )
     links = db.relationship("JourneyLink", backref="stop_point", lazy="raise")
@@ -618,7 +610,7 @@ class StopPoint(db.Model):
             .outerjoin(LocalOperator.operator)
             .filter(JourneyLink.stop_point_ref == self.atco_code)
             .group_by(service.id, JourneyPattern.direction)
-            .order_by(service.line_index, service.description,
+            .order_by(service.line, service.description,
                       JourneyPattern.direction)
         )
 
@@ -794,7 +786,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
     code = db.Column(db.Text, index=True, nullable=True, unique=True)
     filename = db.Column(db.Text)
-    line = db.Column(db.Text, nullable=False)
+    line = db.Column(db.Text(collation="utf8_numeric"), nullable=False)
     description = db.Column(db.Text, nullable=False)
     short_description = db.Column(db.Text, nullable=False)
     mode = db.Column(
@@ -803,12 +795,6 @@ class Service(db.Model):
         nullable=False, index=True
     )
 
-    # Access to index for natural sort
-    line_index = db.deferred(
-        db.select([_natural_sort.c.index])
-        .where(_natural_sort.c.string == line)
-        .scalar_subquery()
-    )
     # Get mode name for service
     mode_name = db.deferred(
         db.select([ServiceMode.name])
@@ -821,7 +807,7 @@ class Service(db.Model):
     operators = db.relationship(
         "Operator",
         backref=db.backref("services", uselist=True, viewonly=True,
-                           order_by="Service.line_index, Service.description"),
+                           order_by="Service.line, Service.description"),
         primaryjoin="Service.id == JourneyPattern.service_ref",
         secondary="join(JourneyPattern, LocalOperator, "
                   "(JourneyPattern.local_operator_ref == LocalOperator.code) & "
@@ -834,7 +820,7 @@ class Service(db.Model):
     regions = db.relationship(
         "Region",
         backref=db.backref("services", uselist=True,
-                           order_by="Service.line_index, Service.description"),
+                           order_by="Service.line, Service.description"),
         primaryjoin="Service.id == JourneyPattern.service_ref",
         secondary="journey_pattern",
         secondaryjoin="JourneyPattern.region_ref == Region.code",
@@ -905,8 +891,7 @@ class Service(db.Model):
                   (service.id == JourneyPattern.service_ref) &
                   (similar.c.direction == JourneyPattern.direction))
             .group_by(service, similar.c.direction, JourneyPattern.direction)
-            .order_by(service.line_index, service.description,
-                      similar.c.direction)
+            .order_by(service.line, service.description, similar.c.direction)
             .all()
         )
 

@@ -368,7 +368,7 @@ def _group_lines_stops(list_stops):
         .filter(models.JourneyLink.stop_point_ref.in_(stops))
         .group_by(models.Service.code, models.Service.line,
                   models.JourneyPattern.direction)
-        .order_by(models.Service.line_index, models.JourneyPattern.direction)
+        .order_by(models.Service.line, models.JourneyPattern.direction)
         .all()
     )
 
@@ -446,7 +446,7 @@ def stop_area(stop_area_code):
         .options(db.undefer(models.StopPoint.lines))
         .filter(models.StopPoint.stop_area_ref == area.code,
                 models.StopPoint.active)
-        .order_by(models.StopPoint.ind_index)
+        .order_by(models.StopPoint.short_ind)
         .all()
     )
     groups = _group_lines_stops(stops)

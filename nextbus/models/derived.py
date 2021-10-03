@@ -274,51 +274,6 @@ class TSQUERY(UserDefinedType):
         return "TSQUERY"
 
 
-class NaturalSort(utils.DerivedModel):
-    """ Sorts indicators and lines naturally via a join with this view. """
-    __tablename__ = "natural_sort"
-
-    string = db.Column(db.Text, primary_key=True)
-    index = db.Column(db.LargeBinary, index=True)
-
-    @classmethod
-    def insert_new(cls, connection):
-        stop_ind = db.select([StopPoint.short_ind.label("string")])
-        service_line = db.select([Service.line.label("string")])
-        other_num = db.select([db.func.generate_series(0, 100).cast(db.Text)
-                              .label("string")])
-        num = db.union(stop_ind, service_line, other_num).alias("num")
-
-        regex = (
-            db.func.regexp_matches(num.c.string, r"0*(\d+)|(\D+)", "g")
-                .alias("r")
-        )
-        # Make a column alias with text array type
-        r = db.column("r", type_=db.ARRAY(db.Text, dimensions=1))
-
-        # If not numeric, convert to uppercase
-        r_upper = db.func.upper(r[2])
-        # Add number of digits to numbers so they are sorted naturally
-        # eg 4294967296 -> 10 digits -> 2 digits therefore 2104294967296
-        r_len = db.func.length(r[1]).cast(db.Text)
-        r_len_len = db.func.length(r_len).cast(db.Text)
-        r_concat = r_len.concat(r_len_len).concat(r[1])
-
-        index = db.func.coalesce(r_upper, r_concat)
-        index = db.func.convert_to(index, "SQL_ASCII")
-        index = db.func.string_agg(index, "\\x00")
-        index = db.func.coalesce(index, "")
-
-        select_index = db.select([index]).select_from(regex)
-
-        return [
-            db.select([
-                num.c.string.label("string"), select_index.label("index")
-            ])
-            .select_from(num)
-        ]
-
-
 class FTS(utils.DerivedModel):
     """ Materialized view for full text searching.
 
@@ -330,7 +285,7 @@ class FTS(utils.DerivedModel):
     table_name = db.Column(db.Text, index=True, primary_key=True)
     code = db.Column(db.Text, index=True, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    indicator = db.Column(db.Text)
+    indicator = db.Column(db.Text(collation="utf8_numeric"))
     street = db.Column(db.Text)
     stop_type = db.Column(db.Text)
     stop_area_ref = db.Column(db.Text)
@@ -439,7 +394,6 @@ class FTS(utils.DerivedModel):
         match = (
             cls.query
             .options(db.defer(cls.vector), db.defer(cls.admin_areas))
-            .outerjoin(NaturalSort, cls.indicator == NaturalSort.string)
             .filter(
                 cls.match(query),
                 # Ignore stops whose stop areas already match
@@ -448,7 +402,7 @@ class FTS(utils.DerivedModel):
                     (fts_sa.code == cls.stop_area_ref)
                 )
             )
-            .order_by(db.desc(rank), cls.name, NaturalSort.index)
+            .order_by(db.desc(rank), cls.name, cls.indicator)
         )
         # Add filters for groups or admin area
         match = cls._apply_filters(match, groups, admin_areas)

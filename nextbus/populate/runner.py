@@ -22,8 +22,7 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
     will_modify = will_populate or modify
 
     if will_populate:
-        dropped = models.drop_indexes(exclude_unique=True, include_missing=True)
-        try:
+        with models.drop_indexes(exclude_unique=True, include_missing=True):
             with db.engine.begin() as connection:
                 lock_all_tables(connection)
                 if nptg:
@@ -38,9 +37,6 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
                     populate_holiday_data(connection)
                     populate_tnds_data(connection, tnds_path,
                                        delete=not tnds_keep, warn=tnds_warn_ftp)
-        finally:
-            if dropped:
-                models.restore_indexes(indexes=dropped)
 
     if will_modify:
         with db.engine.begin() as connection:

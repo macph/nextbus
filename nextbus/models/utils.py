@@ -4,11 +4,13 @@ Database model extensions for the nextbus package.
 from abc import abstractmethod
 
 import sqlalchemy as sa
-import sqlalchemy.exc as sa_exc
+import sqlalchemy.exc
 import sqlalchemy.ext.compiler as sa_compiler
 
 from nextbus import db
 from nextbus.logger import app_logger
+
+logger = app_logger.getChild("models")
 
 
 def table_name(model):
@@ -24,47 +26,59 @@ def iter_models(match=None):
             yield m
 
 
+class _DropIndexes:
+    """ Context manager for dropping and restoring indexes. """
+    def __init__(self, bind=None, models=None, exclude_unique=False,
+                 include_missing=False):
+        self._bind = bind or db.engine
+        self._models = list(models if models is not None else iter_models())
+        self._exclude_unique = exclude_unique
+        self._include_missing = include_missing
+        self._dropped = set()
+
+    def __enter__(self):
+        for model in self._models:
+            for index in model.__table__.indexes:
+                self._drop_index(index)
+
+    def _drop_index(self, index):
+        if self._exclude_unique and index.unique:
+            logger.info(f"Skipping unique index {index.name!r}")
+            return
+
+        logger.info(f"Dropping index {index.name!r}")
+        try:
+            index.drop(self._bind)
+        except sqlalchemy.exc.ProgrammingError:
+            logger.warning(
+                f"Error dropping index {index.name!r}",
+                exc_info=1
+            )
+            is_dropped = False
+        else:
+            is_dropped = True
+
+        if is_dropped or self._include_missing:
+            self._dropped.add(index)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        while self._dropped:
+            index = self._dropped.pop()
+            logger.info(f"Recreating index {index.name!r}")
+            try:
+                index.create(self._bind)
+            except sqlalchemy.exc.ProgrammingError:
+                logger.warning(
+                    f"Error recreating index {index.name!r}",
+                    exc_info=1
+                )
+
+
 def drop_indexes(bind=None, models=None, exclude_unique=False,
                  include_missing=False):
-    """ Find all indexes held by models, drop them and return properties."""
-    connection = bind or db.engine
-    found = models or iter_models()
-    dropped = set()
-    for m in found:
-        for i in m.__table__.indexes:
-            if exclude_unique and i.unique:
-                app_logger.info(f"Skipping unique index {i.name!r}")
-                continue
-            app_logger.info(f"Dropping index {i.name!r}")
-            try:
-                i.drop(connection)
-            except sa_exc.ProgrammingError:
-                app_logger.warning(f"Error dropping index {i.name!r}",
-                                   exc_info=1)
-                is_dropped = False
-            else:
-                is_dropped = True
-
-            if is_dropped or include_missing:
-                dropped.add(i)
-
-    return dropped
-
-
-def restore_indexes(bind=None, indexes=None):
-    connection = bind or db.engine
-    if indexes:
-        to_restore = set(indexes)
-    else:
-        to_restore = set().union(*(m.__table__.indexes for m in iter_models()))
-
-    for i in to_restore:
-        app_logger.info(f"Recreating index {i.name!r}")
-        try:
-            i.create(connection)
-        except sa_exc.ProgrammingError:
-            app_logger.warning(f"Error recreating index {i.name!r}", exc_info=1)
-
+    """ Creates a context manager for dropping and restring specified indexes.
+    """
+    return _DropIndexes(bind, models, exclude_unique, include_missing)
 
 class DerivedModel(db.Model):
     __abstract__ = True

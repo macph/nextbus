@@ -115,8 +115,8 @@ class MutexOption(click.Option):
               help="Modify values in existing data with modify.xml.")
 @click.option("--refresh", "-f", "refresh", cls=MutexOption, is_flag=True,
               exclude=("restore", "restore_f"),
-              help="Refresh derived models using existing data. Active if any"
-                   "population options are selected as well.")
+              help="Refresh models and columns using existing data. Active if "
+                   "any population options are selected as well.")
 @click.option("--backup", "-b", "backup", cls=MutexOption, is_flag=True,
               exclude=("backup_f",),
               help="Back up database before populating database.")

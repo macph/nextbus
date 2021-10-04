@@ -149,7 +149,7 @@ def _load_db_data():
     with db.engine.begin() as connection:
         for table, data in TEST_DATA.items():
             connection.execute(db.metadata.tables[table].insert().values(data))
-        models.refresh_derived_models(connection)
+        models.data.refresh(connection)
 
 
 @pytest.fixture(scope="module")

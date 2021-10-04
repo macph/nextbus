@@ -3,7 +3,6 @@ Materialized views for the nextbus package.
 """
 import functools
 
-from flask import current_app
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.types import UserDefinedType
 
@@ -274,7 +273,7 @@ class TSQUERY(UserDefinedType):
         return "TSQUERY"
 
 
-class FTS(utils.DerivedModel):
+class FTS(db.Model):
     """ Materialized view for full text searching.
 
         All rankings are done with weights 0.125, 0.25, 0.5 and 1.0 for ``D``
@@ -311,21 +310,6 @@ class FTS(utils.DerivedModel):
 
     DICTIONARY = "english"
     WEIGHTS = "{0.125, 0.25, 0.5, 1.0}"
-
-    @classmethod
-    def insert_new(cls, connection):
-        statements = _select_fts_vectors()
-        service = statements.pop(-1)
-
-        count_services = db.select([db.func.count()]).select_from(Service)
-        services = connection.execute(count_services).scalar()
-
-        step = 1000
-        for offset in range(0, services, step):
-            range_ = (Service.id >= offset) & (Service.id < offset + step)
-            statements.append(service.where(range_))
-
-        return statements
 
     def __repr__(self):
         return f"<FTS({self.table_name!r}, {self.code!r})>"
@@ -454,7 +438,23 @@ class FTS(utils.DerivedModel):
         return groups, areas
 
 
-class ServicePair(utils.DerivedModel):
+@utils.data.register_model(FTS)
+def insert_fts_rows(connection):
+    statements = _select_fts_vectors()
+    service = statements.pop(-1)
+
+    count_services = db.select([db.func.count()]).select_from(Service)
+    services = connection.execute(count_services).scalar()
+
+    step = 1000
+    for offset in range(0, services, step):
+        range_ = (Service.id >= offset) & (Service.id < offset + step)
+        statements.append(service.where(range_))
+
+    return statements
+
+
+class ServicePair(db.Model):
     """ Pairs of services sharing stops, used to find similar services. """
     __tablename__ = "service_pair"
 
@@ -475,98 +475,100 @@ class ServicePair(utils.DerivedModel):
         db.CheckConstraint("service0 < service1"),
     )
 
-    @classmethod
-    def insert_new(cls, connection):
-        """ Uses existing service data to update list of pairs of similar
-            services.
-        """
-        service = Service.__table__
-        pattern = JourneyPattern.__table__
-        link = JourneyLink.__table__
-        pairs = cls.__table__
 
-        # Temporary table for all services, direction and stops they call at
-        service_stops = db.Table(
-            "service_stops",
-            db.MetaData(),
-            db.Column("id", db.Integer, autoincrement=False, index=True),
-            db.Column("stop_point_ref", db.Text, nullable=True, index=True),
-            db.Column("outbound", db.Boolean, nullable=False, index=True),
-            db.Column("inbound", db.Boolean, nullable=False, index=True),
-            prefixes=["TEMPORARY"],
-            postgresql_on_commit="DROP"
+@utils.data.register_model(ServicePair)
+def insert_service_pairs(connection):
+    """ Uses existing service data to update list of pairs of similar
+        services.
+    """
+    service = Service.__table__
+    pattern = JourneyPattern.__table__
+    link = JourneyLink.__table__
+
+    # Temporary table for all services, direction and stops they call at
+    service_stops = db.Table(
+        "service_stops",
+        db.MetaData(),
+        db.Column("id", db.Integer, autoincrement=False, index=True),
+        db.Column("stop_point_ref", db.Text, nullable=True, index=True),
+        db.Column("outbound", db.Boolean, nullable=False, index=True),
+        db.Column("inbound", db.Boolean, nullable=False, index=True),
+        prefixes=["TEMPORARY"],
+        postgresql_on_commit="DROP"
+    )
+    fill_service_stops = service_stops.insert().from_select(
+        ["id", "stop_point_ref", "outbound", "inbound"],
+        db.select([
+            service.c.id,
+            db.cast(link.c.stop_point_ref, db.Text),
+            db.func.bool_or(~pattern.c.direction),
+            db.func.bool_or(pattern.c.direction)
+        ])
+        .select_from(
+            service
+            .join(pattern, service.c.id == pattern.c.service_ref)
+            .join(link, pattern.c.id == link.c.pattern_ref)
         )
-        fill_service_stops = service_stops.insert().from_select(
-            ["id", "stop_point_ref", "outbound", "inbound"],
-            db.select([
-                service.c.id,
-                db.cast(link.c.stop_point_ref, db.Text),
-                db.func.bool_or(~pattern.c.direction),
-                db.func.bool_or(pattern.c.direction)
-            ])
-            .select_from(
-                service
-                .join(pattern, service.c.id == pattern.c.service_ref)
-                .join(link, pattern.c.id == link.c.pattern_ref)
-            )
-            .where(link.c.stop_point_ref.isnot(None))
-            .group_by(service.c.id, db.cast(link.c.stop_point_ref, db.Text))
-        )
+        .where(link.c.stop_point_ref.isnot(None))
+        .group_by(service.c.id, db.cast(link.c.stop_point_ref, db.Text))
+    )
 
-        # Find all services sharing at least one stop
-        ss0 = service_stops.alias("ss0")
-        ss1 = service_stops.alias("ss1")
-        shared = (
-            db.select([ss0.c.id.label("id0"), ss1.c.id.label("id1")])
-            .distinct()
-            .select_from(ss0.join(
-                ss1,
-                (ss0.c.id < ss1.c.id) &
-                (ss0.c.stop_point_ref == ss1.c.stop_point_ref)
-            ))
-            .alias("t")
-        )
+    # Find all services sharing at least one stop
+    ss0 = service_stops.alias("ss0")
+    ss1 = service_stops.alias("ss1")
+    shared = (
+        db.select([ss0.c.id.label("id0"), ss1.c.id.label("id1")])
+        .distinct()
+        .select_from(ss0.join(
+            ss1,
+            (ss0.c.id < ss1.c.id) &
+            (ss0.c.stop_point_ref == ss1.c.stop_point_ref)
+        ))
+        .alias("t")
+    )
 
-        # Iterate over possible combinations of directions
-        directions = (
-            db.select([db.column("d", db.Integer)])
-            .select_from(db.func.generate_series(0, 3).alias("d"))
-            .alias("d")
-        )
+    # Iterate over possible combinations of directions
+    directions = (
+        db.select([db.column("d", db.Integer)])
+        .select_from(db.func.generate_series(0, 3).alias("d"))
+        .alias("d")
+    )
 
-        # For each service, find all stops and count them
-        select_a = db.select([service_stops.c.stop_point_ref]).where(
-            (service_stops.c.id == shared.c.id0) &
-            ((directions.c.d.op("&")(1) > 0) & service_stops.c.inbound |
-             (directions.c.d.op("&")(1) == 0) & service_stops.c.outbound)
-        ).correlate(shared, directions)
-        select_b = db.select([service_stops.c.stop_point_ref]).where(
-            (service_stops.c.id == shared.c.id1) &
-            ((directions.c.d.op("&")(2) > 0) & service_stops.c.inbound |
-             (directions.c.d.op("&")(2) == 0) & service_stops.c.outbound)
-        ).correlate(shared, directions)
-        select_c = select_a.intersect(select_b)
+    # For each service, find all stops and count them
+    select_a = db.select([service_stops.c.stop_point_ref]).where(
+        (service_stops.c.id == shared.c.id0) &
+        ((directions.c.d.op("&")(1) > 0) & service_stops.c.inbound |
+         (directions.c.d.op("&")(1) == 0) & service_stops.c.outbound)
+    ).correlate(shared, directions)
+    select_b = db.select([service_stops.c.stop_point_ref]).where(
+        (service_stops.c.id == shared.c.id1) &
+        ((directions.c.d.op("&")(2) > 0) & service_stops.c.inbound |
+         (directions.c.d.op("&")(2) == 0) & service_stops.c.outbound)
+    ).correlate(shared, directions)
+    select_c = select_a.intersect(select_b)
 
-        count = db.func.count(db.literal_column("*")).label("count")
-        la = db.select([count]).select_from(select_a.alias("a")).lateral("a")
-        lb = db.select([count]).select_from(select_b.alias("b")).lateral("b")
-        lc = db.select([count]).select_from(select_c.alias("c")).lateral("c")
+    count = db.func.count(db.literal_column("*")).label("count")
+    la = db.select([count]).select_from(select_a.alias("a")).lateral("a")
+    lb = db.select([count]).select_from(select_b.alias("b")).lateral("b")
+    lc = db.select([count]).select_from(select_c.alias("c")).lateral("c")
 
-        current_app.logger.info("Querying all services and stops they call at")
-        service_stops.create(connection)
-        connection.execute(fill_service_stops)
+    utils.logger.info(
+        "Querying all services and stops they call at to find similar services"
+    )
+    service_stops.create(connection)
+    connection.execute(fill_service_stops)
 
-        return [
-            db.select([
-                db.func.row_number().over(),
-                shared.c.id0,
-                (directions.c.d.op("&")(1) > 0).label("dir0"),
-                la.c.count,
-                shared.c.id1,
-                (directions.c.d.op("&")(2) > 0).label("dir1"),
-                lb.c.count,
-                db.cast(lc.c.count, db.Float) /
-                db.func.least(la.c.count, lb.c.count)
-            ])
-            .where((la.c.count > 0) & (lb.c.count > 0) & (lc.c.count > 0))
-        ]
+    return [
+        db.select([
+            db.func.row_number().over(),
+            shared.c.id0,
+            (directions.c.d.op("&")(1) > 0).label("dir0"),
+            la.c.count,
+            shared.c.id1,
+            (directions.c.d.op("&")(2) > 0).label("dir1"),
+            lb.c.count,
+            db.cast(lc.c.count, db.Float) /
+            db.func.least(la.c.count, lb.c.count)
+        ])
+        .where((la.c.count > 0) & (lb.c.count > 0) & (lc.c.count > 0))
+    ]

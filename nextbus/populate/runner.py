@@ -52,4 +52,4 @@ def run_population(*, backup=False, backup_path=None, nptg=False,
     if will_modify or refresh:
         with db.engine.begin() as connection:
             logger.info("Refreshing derived models")
-            models.refresh_derived_models(connection)
+            models.data.refresh(connection)

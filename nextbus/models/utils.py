@@ -1,11 +1,7 @@
 """
 Database model extensions for the nextbus package.
 """
-from abc import abstractmethod
-
-import sqlalchemy as sa
 import sqlalchemy.exc
-import sqlalchemy.ext.compiler as sa_compiler
 
 from nextbus import db
 from nextbus.logger import app_logger
@@ -80,83 +76,69 @@ def drop_indexes(bind=None, models=None, exclude_unique=False,
     """
     return _DropIndexes(bind, models, exclude_unique, include_missing)
 
-class DerivedModel(db.Model):
-    __abstract__ = True
 
-    @classmethod
-    @abstractmethod
-    def insert_new(cls, connection):
-        """ Returns a list of selectables which will be used to update
-            model with new rows.
+class _ModelData:
+    """ Holds a collection of registered model data handlers. """
+    def __init__(self):
+        self._models = []
+        self._columns = []
+
+    def register_model(self, model):
+        """ Register a handler for refreshing rows for a table from selectables.
         """
-        pass
+        def register(func):
+            logger.debug(f"Registering handler for model {model!r}")
+            self._models.append((model, func))
+            return func
 
-    @classmethod
-    def refresh(cls, connection):
-        """ Delete existing rows and inserted updated rows from selectable. """
-        columns = [c.key for c in cls.__table__.columns]
-        connection.execute(cls.__table__.delete())
-        for statement in cls.insert_new(connection):
-            connection.execute(
-                cls.__table__.insert().from_select(columns, statement)
+        return register
+
+    def register_columns(self, model, *columns):
+        """ Register a handler for refreshing columns for in a table.
+        """
+        if not columns:
+            raise ValueError("At least one column expected")
+
+        set_columns = set(columns)
+        existing = {c.name for c in model.__table__.columns}
+        keys = {k.name for k in model.__table__.primary_key}
+
+        if set_columns - existing:
+            raise ValueError(f"Columns {columns!r} must match model {model}")
+        if set_columns & keys:
+            raise ValueError("Primary keys cannot be used for data generation")
+
+        def register(func):
+            logger.debug(
+                f"Registering handler for model {model!r} and columns "
+                f"{set_columns!r}"
             )
+            self._columns.append((model, keys, set_columns, func))
+            pass
+
+        return register
+
+    def refresh(self, connection):
+        """ Refresh all registered models and columns. """
+        for model, func in self._models:
+            columns = [c.key for c in model.__table__.columns]
+
+            logger.debug(f"Deleting all rows for model {model!r}")
+            connection.execute(model.__table__.delete())
+
+            for statement in func(connection):
+                logger.info(f"Inserting rows for model {model!r}")
+                connection.execute(
+                    model.__table__.insert().from_select(columns, statement)
+                )
+
+        for model, keys, columns, func in self._columns:
+            table = model.__table__
+            for inner in func(connection):
+                logger.info(f"Updating columns {columns!r} for model {model!r}")
+                values = {c: inner.columns[c] for c in columns}
+                where = db.and_(*(table.c[k] == inner.c[k] for k in keys))
+                connection.execute(table.update().values(**values).where(where))
 
 
-def refresh_derived_models(connection=None):
-    """ Refresh all materialized views declared with db.Model. """
-    def _refresh_models(c):
-        for m in iter_models(DerivedModel):
-            m.refresh(c)
-
-    if connection is None:
-        with db.engine.begin() as conn:
-            _refresh_models(conn)
-    else:
-        _refresh_models(connection)
-
-
-class _ValuesClause(sa.sql.FromClause):
-    """ Represents a VALUES expression in a FROM clause. """
-    named_with_column = True
-
-    def __init__(self, columns, *args, alias_name=None, **kw):
-        self._column_args = columns
-        self.list = args
-        self.alias_name = self.name = alias_name
-
-    def _populate_column_collection(self):
-        for column in self._column_args:
-            column._make_proxy(self, column.name)
-
-
-@sa_compiler.compiles(_ValuesClause)
-def _compile_values(element, compiler, asfrom=False, **kw):
-    """ Crates VALUES expression from list of columns and list of tuples. """
-
-    def print_value(value, column):
-        type_ = column.type if value is not None else db.NULLTYPE
-        str_value = compiler.process(db.bindparam(None, value, type_=type_))
-
-        return str_value + "::" + str(column.type)
-
-    expression = "VALUES " + ", ".join(
-        "(" + ", ".join(
-            print_value(value, column)
-            for value, column in zip(row, element.columns)
-        ) + ")"
-        for row in element.list
-    )
-
-    if asfrom and element.alias_name is not None:
-        name = compiler.preparer.quote(element.alias_name)
-        columns = ", ".join(column.name for column in element.columns)
-        expression = f"({expression}) AS {name} ({columns})"
-    elif asfrom:
-        expression = "(" + expression + ")"
-
-    return expression
-
-
-def values(columns, *args, alias_name=None):
-    """ Creates a VALUES expression for use in FROM clauses. """
-    return _ValuesClause(columns, *args, alias_name=alias_name)
+data = _ModelData()

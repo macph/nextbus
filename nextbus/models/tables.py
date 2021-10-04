@@ -1000,7 +1000,12 @@ class JourneySpecificLink(db.Model):
 
 
 class Journey(db.Model):
-    """ Individual vehicle journey for a service. """
+    """ Individual vehicle journey for a service.
+
+        Calculating the run times for a journey requires joining journey pattern
+        links multiple times which can be computationally and memory-intensive.
+        Use a JSONB column to store this data after population.
+    """
     __tablename__ = "journey"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)
@@ -1032,6 +1037,8 @@ class Journey(db.Model):
     note_code = db.Column(db.Text)
     note_text = db.Column(db.Text)
 
+    data = db.deferred(db.Column(pg.JSONB, nullable=True))
+
     include_holiday_dates = db.relationship(
         "BankHolidayDate",
         foreign_keys=[include_holidays],
@@ -1050,6 +1057,137 @@ class Journey(db.Model):
     )
     special_days = db.relationship("SpecialPeriod", backref="journey",
                                    lazy="raise")
+
+    @classmethod
+    def record_set(cls, column=None):
+        """ Get the defined record set from the JSON data in the links column.
+        """
+        return (
+            db.func.jsonb_to_recordset(column or cls.data)
+            .table_valued(
+                db.column("stop_point_ref", db.Text),
+                db.column("timing_point", db.Boolean),
+                db.column("stopping", db.Boolean),
+                db.column("sequence", db.Integer),
+                db.column("arrive", db.Interval),
+                db.column("depart", db.Interval)
+            )
+            .render_derived("data", with_types=True)
+        )
+
+
+@utils.data.register_columns(Journey, "data")
+def insert_journey_data(connection):
+    # Split the queries into each region
+    result = connection.execute(db.select([Region.code])).all()
+    return [_create_journey_data_query(r[0]) for r in result]
+
+
+def _create_journey_data_query(region):
+    zero = db.cast("0", db.Interval)
+    # For each link, add running and wait intervals from journey-specific link,
+    # journey pattern link or zero if both are null
+    sum_coalesced_times = db.func.sum(
+        db.func.coalesce(
+            JourneySpecificLink.run_time,
+            JourneyLink.run_time,
+            zero,
+        ) +
+        db.func.coalesce(
+            JourneySpecificLink.wait_arrive,
+            JourneyLink.wait_arrive,
+            zero,
+        ) +
+        db.func.coalesce(
+            JourneySpecificLink.wait_leave,
+            JourneyLink.wait_leave,
+            zero,
+        )
+    )
+
+    # Sum all running and wait intervals from preceding rows plus this row's
+    # running interval for arrival time
+    arrive = (
+        sum_coalesced_times.over(
+            partition_by=Journey.id,
+            order_by=JourneyLink.sequence,
+            rows=(None, -1)
+        ) +
+        db.func.coalesce(
+            JourneySpecificLink.run_time,
+            JourneyLink.run_time,
+            zero,
+        )
+    )
+    # Sum all running and wait intervals from preceding rows and this row
+    depart = sum_coalesced_times.over(
+        partition_by=Journey.id,
+        order_by=JourneyLink.sequence,
+        rows=(None, 0)
+    )
+    last_sequence = (
+        db.func.max(JourneyLink.sequence).over(partition_by=Journey.id)
+    )
+
+    jl_start = db.aliased(JourneyLink)
+    jl_end = db.aliased(JourneyLink)
+
+    times = (
+        db.select([
+            Journey.id,
+            JourneyLink.stop_point_ref,
+            JourneyLink.timing_point,
+            # Journey may call or not call at this stop point
+            db.func.coalesce(
+                JourneySpecificLink.stopping,
+                JourneyLink.stopping
+            ).label("stopping"),
+            JourneyLink.sequence,
+            # Find arrival time if not first stop in journey
+            db.case([(JourneyLink.sequence == 1, None)],
+                    else_=arrive).label("arrive"),
+            # Find departure time if not last stop in journey
+            db.case([(JourneyLink.sequence == last_sequence, None)],
+                    else_=depart).label("depart"),
+        ])
+        .select_from(Journey)
+        .join(Journey.pattern)
+        .join(JourneyPattern.links)
+        .outerjoin(jl_start, Journey.start_run == jl_start.id)
+        .outerjoin(jl_end, Journey.end_run == jl_end.id)
+        .outerjoin(
+            JourneySpecificLink,
+            (Journey.id == JourneySpecificLink.journey_ref) &
+            (JourneyLink.id == JourneySpecificLink.link_ref)
+        )
+        # Truncate journey pattern if journey has starting or ending dead runs
+        .where(
+            JourneyPattern.region_ref == region,
+            jl_start.id.is_(None) |
+            (JourneyLink.sequence >= jl_start.sequence),
+            jl_end.id.is_(None) |
+            (JourneyLink.sequence <= jl_end.sequence)
+        )
+        .cte("times")
+    )
+
+    # Take the record set from the CTE and build a JSON array of objects
+    build_object = db.func.jsonb_build_object(
+        "stop_point_ref",
+        times.c.stop_point_ref,
+        "timing_point",
+        times.c.timing_point,
+        "stopping",
+        times.c.stopping,
+        "sequence",
+        times.c.sequence,
+        "arrive",
+        times.c.arrive,
+        "depart",
+        times.c.depart
+    )
+    array = db.func.jsonb_agg(build_object).label("data")
+    return db.select([times.c.id, array]).group_by(times.c.id)
 
 
 class Organisation(db.Model):

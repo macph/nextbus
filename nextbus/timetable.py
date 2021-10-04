@@ -7,15 +7,14 @@ import functools
 from nextbus import db, graph, models
 
 
-_ZERO = db.bindparam("zero", 0)
-_HOUR = db.bindparam("hour", "1 hour")
+_ONE_HOUR = db.cast(db.literal_column("'1 hour'"), db.Interval)
 _GB_TZ = db.bindparam("gb", "Europe/London")
 _UTC_TZ = db.bindparam("utc", "UTC")
 _TRUNCATE_MIN = db.bindparam("trunc_min", "minute")
 _FORMAT_TIME = db.bindparam("format_time", "HH24MI")
 
 
-def _in_bit_array(array, col):
+def _bit_array_contains(array, col):
     """ SQL expression for matching integer with a bit array, equivalent to
         `(1 << col) & array > 0`.
     """
@@ -33,6 +32,163 @@ def _format_time(timestamp):
     )
 
 
+def _get_departure_range(timestamp, name):
+    """ Get reference to generated table with timestamp range between 1 hour
+        before and 1 hour after the given timestamp (without time zone).
+
+        This is used to include or exclude local timestamps if it happens to be
+        within one of the DST changeover periods. Normally, there will be three
+        timestamps (with time zone) with only the middle time used, but if it
+        is, say, 0130 on the last Sunday of October the start and end times will
+        be 0030 BST and 0230 GMT respectively, four hours apart. 0130 BST and
+        0130 GMT can then be retained as they match 0130.
+    """
+    return db.func.generate_series(
+        db.func.timezone(_GB_TZ, timestamp) - _ONE_HOUR,
+        db.func.timezone(_GB_TZ, timestamp) + _ONE_HOUR,
+        _ONE_HOUR,
+    ).alias(name)
+
+
+def _filter_journey_dates(query, date):
+    """ Join multiple tables used to filter journeys by valid dates (eg week
+        days, bank holidays or organisation working days).
+
+        It is assumed the Journey and JourneyPattern models are in the FROM
+        clause or joined, and the query is grouped by the journey ID.
+    """
+    # Aggregate the matching bank holidays and operational periods before
+    # joining laterally. If they were joined first the query planner may pick a
+    # slower plan to compensate for the row count 'blowing up', but in practice
+    # the actual number of matching rows is very low.
+
+    # Match special period if they fall within inclusive date range
+    matching_periods = (
+        db.select([
+            db.func.bool_and(models.SpecialPeriod.operational)
+            .label("is_operational")
+        ])
+        .select_from(models.SpecialPeriod)
+        .where(
+            models.SpecialPeriod.journey_ref == models.Journey.id,
+            models.SpecialPeriod.date_start <= date,
+            models.SpecialPeriod.date_end >= date,
+        )
+        .lateral("matching_periods")
+    )
+    query = query.join(matching_periods, db.true())
+
+    # Match bank holidays on the same day
+    matching_bank_holidays = (
+        db.select([
+            db.func.bool_and(
+                _bit_array_contains(
+                    models.Journey.include_holidays,
+                    models.BankHolidayDate.holiday_ref,
+                ),
+            ).label("is_operational"),
+            db.func.bool_or(
+                _bit_array_contains(
+                    models.Journey.exclude_holidays,
+                    models.BankHolidayDate.holiday_ref,
+                ),
+            ).label("not_operational")
+        ])
+        .select_from(models.BankHolidayDate)
+        .where(models.BankHolidayDate.date == date)
+        .lateral("matching_bank_holidays")
+    )
+    query = query.join(matching_bank_holidays, db.true())
+
+    # Match organisations working/holiday periods - can be operational
+    # during holiday or working periods associated with organisation so
+    # working attributes need to match (eg journey running during holidays
+    # must match with operating periods for holidays or vice versa)
+    matching_organisations = (
+        db.select([
+            db.func.bool_and(
+                models.OperatingPeriod.id.isnot(None) &
+                models.ExcludedDate.id.is_(None) &
+                models.Organisations.operational
+            ).label("is_operational"),
+            db.func.bool_or(
+                models.OperatingPeriod.id.isnot(None) &
+                models.ExcludedDate.id.is_(None) &
+                db.not_(models.Organisations.operational)
+            ).label("not_operational")
+        ])
+        .select_from(models.Organisations)
+        .join(
+            models.Organisation,
+            models.Organisations.org_ref == models.Organisation.code,
+        )
+        .join(
+            models.OperatingPeriod,
+            db.and_(
+                models.Organisation.code == models.OperatingPeriod.org_ref,
+                models.Organisations.working == models.OperatingPeriod.working,
+                models.OperatingPeriod.date_start <= date,
+                models.OperatingPeriod.date_end.is_(None) |
+                (models.OperatingPeriod.date_end >= date),
+            ),
+        )
+        .outerjoin(
+            models.ExcludedDate,
+            db.and_(
+                models.Organisation.code == models.ExcludedDate.org_ref,
+                models.Organisations.working == models.ExcludedDate.working,
+                models.ExcludedDate.date == date,
+            )
+        )
+        .where(models.Organisations.journey_ref == models.Journey.id)
+        .lateral("matching_organisations")
+    )
+    query = query.join(matching_organisations, db.true())
+
+    # Find week of month (0 to 4) and day of week (Monday 1 to Sunday 7)
+    week = db.cast(db.extract("DAY", date), db.Integer) / db.literal_column("7")
+    weekday = db.cast(db.extract("ISODOW", date), db.Integer)
+
+    query = query.filter(
+        # Date must be within range for journey pattern, may be unbounded
+        models.JourneyPattern.date_start <= date,
+        models.JourneyPattern.date_end.is_(None) |
+        (models.JourneyPattern.date_end >= date),
+        # In order of precedence:
+        # - Do not run on special days
+        # - Do not run on bank holidays
+        # - Run on special days
+        # - Run on bank holidays
+        # - Do not run during organisation working or holiday periods
+        # - Run during organisation working or holiday periods
+        # - Run or not run on specific weeks of month
+        # - Run or not run on specific days of week
+        matching_periods.c.is_operational.isnot(None) |
+        matching_bank_holidays.c.is_operational.isnot(None) |
+        (models.Journey.weeks.is_(None) |
+         _bit_array_contains(models.Journey.weeks, week)) &
+        _bit_array_contains(models.Journey.days, weekday)
+    )
+
+    # Bank holidays and special dates have precedence over others so only
+    # include journeys if all references are either null or are operational.
+    # Include non-null references in WHERE so they can be checked here.
+    # Check organisation working/holiday periods here after grouping as
+    # there can be multiple periods for an organisation.
+    query = query.having(db.func.bool_and(
+        db.case([
+            (matching_periods.c.is_operational.isnot(None),
+             matching_periods.c.is_operational),
+            (matching_bank_holidays.c.not_operational, db.false()),
+            (matching_bank_holidays.c.is_operational, db.true()),
+            (matching_organisations.c.not_operational, db.false()),
+            (matching_organisations.c.is_operational, db.true()),
+        ], else_=db.true())
+    ))
+
+    return query
+
+
 def _query_journeys(service_id, direction, date):
     """ Creates query to find all IDs for journeys that run on a particular day.
 
@@ -45,23 +201,11 @@ def _query_journeys(service_id, direction, date):
     p_direction = db.bindparam("direction", direction)
     p_date = db.bindparam("date", date, type_=db.Date)
 
-    # Find week of month (0 to 4) and day of week (Monday 1 to Sunday 7)
-    week = db.cast(db.extract("DAY", p_date), db.Integer) / 7
-    weekday = db.cast(db.extract("ISODOW", p_date), db.Integer)
-
-    # PostgreSQL can repeat or skip times over daylight savings time changes in
-    # a time series so we generate timestamps from 1 hour before to 1 hour after
-    # and exclude times not matching the original departure time
-    one_hour = db.cast(_HOUR, db.Interval)
-    departures = db.func.generate_series(
-        db.func.timezone(_GB_TZ, p_date + models.Journey.departure) - one_hour,
-        db.func.timezone(_GB_TZ, p_date + models.Journey.departure) + one_hour,
-        one_hour,
-    ).alias("departures")
+    departures = _get_departure_range(
+        p_date + models.Journey.departure,
+        "departures"
+    )
     departure = db.column("departures")
-
-    include_bank_holiday = db.aliased(models.BankHolidayDate)
-    exclude_bank_holiday = db.aliased(models.BankHolidayDate)
 
     # Find all journeys and their departures
     journeys = (
@@ -73,232 +217,57 @@ def _query_journeys(service_id, direction, date):
         .join(models.JourneyPattern.journeys)
         # SQLAlchemy does not have CROSS JOIN so use INNER JOIN ON TRUE
         .join(departures, db.true())
-        # Match special period if they fall within date range
-        .outerjoin(
-            models.SpecialPeriod,
-            (models.Journey.id == models.SpecialPeriod.journey_ref) &
-            (models.SpecialPeriod.date_start <= p_date) &
-            (models.SpecialPeriod.date_end >= p_date)
-        )
-        # Match bank holidays on the same day
-        .outerjoin(
-            include_bank_holiday,
-            _in_bit_array(
-                models.Journey.include_holidays,
-                include_bank_holiday.holiday_ref
-            ) & (include_bank_holiday.date == p_date)
-        )
-        .outerjoin(
-            exclude_bank_holiday,
-            _in_bit_array(
-                models.Journey.exclude_holidays,
-                exclude_bank_holiday.holiday_ref
-            ) & (exclude_bank_holiday.date == p_date)
-        )
-        # Match organisations working/holiday periods - can be operational
-        # during holiday or working periods associated with organisation so
-        # working attributes need to match (eg journey running during holidays
-        # must match with operating periods for holidays or vice versa)
-        .outerjoin(
-            models.Organisations,
-            models.Journey.id == models.Organisations.journey_ref
-        )
-        .outerjoin(
-            models.Organisation,
-            models.Organisations.org_ref == models.Organisation.code
-        )
-        .outerjoin(
-            models.OperatingPeriod,
-            (models.Organisation.code == models.OperatingPeriod.org_ref) &
-            (models.Organisations.working == models.OperatingPeriod.working) &
-            (models.OperatingPeriod.date_start <= p_date) &
-            (models.OperatingPeriod.date_end.is_(None) |
-             (models.OperatingPeriod.date_end >= p_date))
-        )
-        .outerjoin(
-            models.ExcludedDate,
-            (models.Organisation.code == models.ExcludedDate.org_ref) &
-            (models.Organisations.working == models.ExcludedDate.working) &
-            (models.ExcludedDate.date == p_date)
-        )
         .filter(
             # Match journey patterns on service ID and direction
             models.JourneyPattern.service_ref == p_service_id,
             models.JourneyPattern.direction.is_(p_direction),
-            # Date must be within range for journey pattern, may be unbounded
-            models.JourneyPattern.date_start <= p_date,
-            models.JourneyPattern.date_end.is_(None) |
-            (models.JourneyPattern.date_end >= p_date),
             # Filter out generated times 1 hour before and after departures
             db.extract("HOUR", db.func.timezone(_GB_TZ, departure)) ==
             db.extract("HOUR", models.Journey.departure),
-            # In order of precedence:
-            # - Do not run on special days
-            # - Do not run on bank holidays
-            # - Run on special days
-            # - Run on bank holidays
-            # - Do not run during organisation working or holiday periods
-            # - Run during organisation working or holiday periods
-            # - Run or not run on specific weeks of month
-            # - Run or not run on specific days of week
-            models.SpecialPeriod.id.isnot(None) |
-            include_bank_holiday.date.isnot(None) |
-            (models.Journey.weeks.is_(None) |
-             _in_bit_array(models.Journey.weeks, week)) &
-            _in_bit_array(models.Journey.days, weekday)
         )
         .group_by(models.Journey.id, departure)
-        # Bank holidays and special dates have precedence over others so only
-        # include journeys if all references are either null or are operational
-        # Include non-null references in WHERE so they can be checked here
-        # Check organisation working/holiday periods here after grouping as
-        # there can be multiple periods for an organisation.
-        .having(db.func.bool_and(
-            db.case([
-                (models.SpecialPeriod.id.isnot(None),
-                 models.SpecialPeriod.operational),
-                (exclude_bank_holiday.holiday_ref.isnot(None), db.false()),
-                (include_bank_holiday.holiday_ref.isnot(None), db.true()),
-                (models.OperatingPeriod.id.isnot(None) &
-                 models.ExcludedDate.id.is_(None),
-                 models.Organisations.operational)
-            ], else_=db.true())
-        ))
     )
+
+    # Add filters for departure dates
+    journeys = _filter_journey_dates(journeys, p_date)
 
     return journeys
 
 
-def _query_times(service_id, direction, date):
-    """ Queries all times for journeys on a specific day. """
-    journeys = _query_journeys(service_id, direction, date).cte("journeys")
+def _query_timetable(service_id, direction, date):
+    """ Creates a timetable for a service in a set direction on a specific day.
+    """
+    journeys = _query_journeys(service_id, direction, date).cte("times")
+    # Join JSON record set on 'true' as SQLAlchemy does not support cross joins.
+    data = models.Journey.record_set()
 
-    zero = db.cast("0", db.Interval)
-    # For each link, add running and wait intervals from journey-specific link,
-    # journey pattern link or zero if both are null
-    sum_coalesced_times = db.func.sum(
-        db.func.coalesce(
-            models.JourneySpecificLink.run_time,
-            models.JourneyLink.run_time, zero
-        ) +
-        db.func.coalesce(
-            models.JourneySpecificLink.wait_arrive,
-            models.JourneyLink.wait_arrive, zero
-        ) +
-        db.func.coalesce(
-            models.JourneySpecificLink.wait_leave,
-            models.JourneyLink.wait_leave, zero
-        )
-    )
+    arrive = journeys.c.departure + data.c.arrive
+    depart = journeys.c.departure + data.c.depart
 
-    # Find last sequence number for each journey pattern
-    last_sequence = (
-        db.func.max(models.JourneyLink.sequence)
-        .over(partition_by=(journeys.c.journey_id, journeys.c.departure))
-    )
-
-    # Sum all running and wait intervals from preceding rows plus this row's
-    # running interval for arrival time
-    time_arrive = (
-        journeys.c.departure +
-        sum_coalesced_times.over(
-            partition_by=(journeys.c.journey_id, journeys.c.departure),
-            order_by=models.JourneyLink.sequence,
-            rows=(None, -1)
-        ) +
-        db.func.coalesce(
-            models.JourneySpecificLink.run_time,
-            models.JourneyLink.run_time, zero
-        )
-    )
-
-    # Sum all running and wait intervals from preceding rows and this row
-    time_depart = (
-        journeys.c.departure +
-        sum_coalesced_times.over(
-            partition_by=(journeys.c.journey_id, journeys.c.departure),
-            order_by=models.JourneyLink.sequence,
-            rows=(None, 0)
-        )
-    )
-
-    jl_start = db.aliased(models.JourneyLink)
-    jl_end = db.aliased(models.JourneyLink)
-
-    times = (
+    query = (
         db.session.query(
             journeys.c.journey_id,
             journeys.c.departure,
             models.LocalOperator.code.label("local_operator_code"),
             models.Operator.code.label("operator_code"),
             models.Operator.name.label("operator_name"),
-            models.Journey.note_code,
-            models.Journey.note_text,
-            models.JourneyLink.stop_point_ref,
-            models.JourneyLink.timing_point,
-            # Journey may call or not call at this stop point
-            db.func.coalesce(
-                models.JourneySpecificLink.stopping,
-                models.JourneyLink.stopping
-            ).label("stopping"),
-            models.JourneyLink.sequence,
-            # Find arrival time if not first stop in journey
-            db.case([(models.JourneyLink.sequence == 1, None)],
-                    else_=time_arrive).label("time_arrive"),
-            # Find departure time if not last stop in journey
-            db.case([(models.JourneyLink.sequence == last_sequence, None)],
-                    else_=time_depart).label("time_depart"),
+            models.Journey.note_code.label("note_code"),
+            models.Journey.note_text.label("note_text"),
+            data.c.stop_point_ref,
+            data.c.timing_point,
+            db.func.timezone(_UTC_TZ, arrive).label("utc_arrive"),
+            db.func.timezone(_UTC_TZ, depart).label("utc_depart"),
+            _format_time(db.func.timezone(_GB_TZ, arrive)).label("arrive"),
+            _format_time(db.func.timezone(_GB_TZ, depart)).label("depart")
         )
-        .select_from(models.Journey)
-        .join(journeys, models.Journey.id == journeys.c.journey_id)
+        .select_from(journeys)
+        .join(models.Journey, journeys.c.journey_id == models.Journey.id)
         .join(models.Journey.pattern)
         .join(models.JourneyPattern.local_operator)
         .join(models.LocalOperator.operator)
-        .join(models.JourneyPattern.links)
-        .outerjoin(jl_start, models.Journey.start_run == jl_start.id)
-        .outerjoin(jl_end, models.Journey.end_run == jl_end.id)
-        .outerjoin(
-            models.JourneySpecificLink,
-            (models.Journey.id == models.JourneySpecificLink.journey_ref) &
-            (models.JourneyLink.id == models.JourneySpecificLink.link_ref)
-        )
-        # Truncate journey pattern if journey has starting or ending dead runs
-        .filter(
-            jl_start.id.is_(None) |
-            (models.JourneyLink.sequence >= jl_start.sequence),
-            jl_end.id.is_(None) |
-            (models.JourneyLink.sequence <= jl_end.sequence)
-        )
-    )
-
-    return times
-
-
-def _query_timetable(service_id, direction, date):
-    """ Creates a timetable for a service in a set direction on a specific day.
-    """
-    times = _query_times(service_id, direction, date).cte("times")
-    query = (
-        db.session.query(
-            times.c.journey_id,
-            times.c.departure,
-            times.c.local_operator_code,
-            times.c.operator_code,
-            times.c.operator_name,
-            times.c.note_code,
-            times.c.note_text,
-            times.c.stop_point_ref,
-            times.c.timing_point,
-            db.func.timezone(_UTC_TZ, times.c.time_arrive).label("utc_arrive"),
-            db.func.timezone(_UTC_TZ, times.c.time_depart).label("utc_depart"),
-            _format_time(db.func.timezone(_GB_TZ, times.c.time_arrive))
-            .label("arrive"),
-            _format_time(db.func.timezone(_GB_TZ, times.c.time_depart))
-            .label("depart")
-        )
-        .select_from(times)
-        .filter(times.c.stop_point_ref.isnot(None), times.c.stopping)
-        .order_by(times.c.departure, times.c.journey_id, times.c.sequence)
+        .join(data, db.true())
+        .filter(data.c.stop_point_ref.isnot(None), data.c.stopping)
+        .order_by(journeys.c.departure, journeys.c.journey_id, data.c.sequence)
     )
 
     return query

@@ -273,6 +273,164 @@ def _query_timetable(service_id, direction, date):
     return query
 
 
+def _query_journeys_at_stop(atco_code):
+    """ Creates query for journeys stopping at a specified stop point. """
+    p_atco_code = db.bindparam("atco_code", atco_code)
+
+    data = models.Journey.record_set()
+    query = (
+        db.session.query(
+            models.Journey.id,
+            models.Journey.departure,
+            data.c.depart.label("t_offset"),
+        )
+        .select_from(models.Journey)
+        .join(models.Journey.pattern)
+        .join(models.JourneyPattern.links)
+        .join(
+            data,
+            db.and_(
+                data.c.stopping,
+                data.c.depart.isnot(None),
+                models.JourneyLink.sequence == data.c.sequence,
+            )
+        )
+        .filter(models.JourneyLink.stop_point_ref == p_atco_code)
+    )
+
+    return query
+
+
+def _query_next_services(atco_code, timestamp=None, interval=None):
+    """ Creates query for getting all services stopping at this stop point in an
+        interval.
+    """
+    if timestamp is None:
+        p_timestamp = db.func.now()
+    elif timestamp.tzinfo is None:
+        # Assume this is a local timestamp with GB timezone.
+        p_timestamp = db.func.timezone(_GB_TZ, db.bindparam("timestamp", timestamp))
+    else:
+        p_timestamp = db.bindparam("timestamp", timestamp)
+
+    if interval is None:
+        p_interval = _ONE_HOUR
+    else:
+        param = db.bindparam("interval", interval)
+        p_interval = db.cast(param, db.Interval)
+
+    journey_match = _query_journeys_at_stop(atco_code).cte("journey_match")
+
+    time_start = p_timestamp - journey_match.c.t_offset
+    time_end = time_start + p_interval
+    times = (
+        db.select([
+            time_start.label("utc_start"),
+            time_end.label("utc_end"),
+            db.func.timezone(_GB_TZ, time_start).label("local_start"),
+            db.func.timezone(_GB_TZ, time_end).label("local_end"),
+        ])
+        .correlate(journey_match)
+        .lateral("times")
+    )
+
+    local_start_date = db.cast(times.c.local_start, db.Date)
+    local_end_date = db.cast(times.c.local_end, db.Date)
+    local_start_time = db.cast(times.c.local_start, db.Time)
+    local_end_time = db.cast(times.c.local_end, db.Time)
+
+    journey_departure = (
+        db.session.query(
+            journey_match.c.id,
+            journey_match.c.t_offset,
+            times.c.utc_start,
+            times.c.utc_end,
+            db.case(
+                (
+                    (local_start_date == local_end_date) |
+                    (journey_match.c.departure > local_start_time),
+                    local_start_date
+                ),
+                else_=local_end_date,
+            ).label("date"),
+            journey_match.c.departure.label("time"),
+        )
+        .select_from(journey_match)
+        .join(times, db.true())
+        .filter(
+            (local_start_date == local_end_date) &
+            db.between(
+                journey_match.c.departure,
+                local_start_time,
+                local_end_time
+            ) |
+            (local_start_date < local_end_date) &
+            (
+                (journey_match.c.departure > local_start_time) |
+                (journey_match.c.departure < local_end_time)
+            )
+        )
+        .cte("journey_departure")
+    )
+
+    utc_departures = _get_departure_range(
+        journey_departure.c.date + journey_departure.c.time,
+        "utc_departure",
+    )
+    utc_departure = db.column("utc_departure")
+
+    journey_filter = _filter_journey_dates(
+        db.session.query(
+            journey_departure.c.id,
+            (utc_departure + journey_departure.c.t_offset).label("expected")
+        )
+        .select_from(journey_departure)
+        .join(
+            utc_departures,
+            db.between(
+                utc_departure,
+                journey_departure.c.utc_start,
+                journey_departure.c.utc_end,
+            )
+        )
+        .join(models.Journey, journey_departure.c.id == models.Journey.id)
+        .join(models.Journey.pattern)
+        .group_by(
+            journey_departure.c.id,
+            journey_departure.c.t_offset,
+            utc_departure
+        ),
+        journey_departure.c.date,
+    ).cte("journey_filter")
+
+    query = (
+        db.session.query(
+            models.Service.line.label("line"),
+            models.JourneyPattern.origin.label("origin"),
+            models.JourneyPattern.destination.label("destination"),
+            models.Operator.code.label("op_code"),
+            models.Operator.name.label("op_name"),
+            journey_filter.c.expected,
+            db.cast(db.extract("EPOCH", journey_filter.c.expected - p_timestamp), db.Integer).label("seconds")
+        )
+        .select_from(journey_filter)
+        .join(models.Journey, journey_filter.c.id == models.Journey.id)
+        .join(models.Journey.pattern)
+        .join(models.JourneyPattern.service)
+        .join(models.JourneyPattern.operator)
+        .order_by(journey_filter.c.expected)
+    )
+
+    return query
+
+
+def get_next_services(atco_code, timestamp=None, interval=None):
+    """ Get all services stopping at this stop point in an interval.
+    """
+    query = _query_next_services(atco_code, timestamp, interval)
+    return query.all()
+
+
 class TimetableStop:
     """ Represents a cell in the timetable with arrival, departure and timing
         status.

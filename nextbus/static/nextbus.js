@@ -2028,10 +2028,17 @@ function stopServiceFilter(list, groups) {
 }
 
 
+const DATA_NONE = 0;
+const DATA_TIMETABLED = 1;
+const DATA_LIVE = 2;
+const DATA_ESTIMATED = 3;
+
+
 /**
  * JSON data from API for live bus times data.
  * @typedef {{
  *     atcoCode: string,
+ *     live: boolean,
  *     smsCode: string,
  *     isoDate: string,
  *     localTime: string,
@@ -2086,7 +2093,7 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
     this.data = null;
 
     this.interval = null;
-    this.isLive = true;
+    this.status = DATA_NONE;
     this.loopActive = false;
     this.loopEnding = false;
 
@@ -2130,15 +2137,13 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
             }
             if (request.status === 200) {
                 self.data = JSON.parse(request.responseText);
-                self.isLive = true;
-                self.draw();
+                self.status = self.data.live ? DATA_LIVE : DATA_TIMETABLED;
             } else if (self.data != null) {
-                self.isLive = false;
-                self.draw();
+                self.status = DATA_ESTIMATED;
             } else {
-                self.isLive = false;
-                self.headingTime.textContent = 'No data available';
+                self.status = DATA_NONE;
             }
+            self.draw();
             if (typeof after !== 'undefined') {
                 after(self.atcoCode);
             }
@@ -2151,7 +2156,7 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
      * Refreshes table with new data
      */
     this.draw = function() {
-        if (!self.isLive) {
+        if (self.status === DATA_ESTIMATED) {
             self.estimate();
         }
         if (self.data != null && self.data.services.length > 0) {
@@ -2166,11 +2171,17 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
 
     /**
      * Gets class name for this journey
-     * @param {boolean} isLive Whether this particular journey is tracked or not
+     * @param {boolean} status Whether this particular journey is tracked or not
      * @private
      */
-    this._classLive = function(isLive) {
-        return (!isLive) ? '' : (self.isLive) ? 'departure-live' : 'departure-estimated';
+    this._classLive = function(status) {
+        if (status && self.status === DATA_LIVE) {
+            return 'departure-live';
+        } else if (status && self.status === DATA_ESTIMATED) {
+            return 'departure-estimated';
+        } else {
+            return '';
+        }
     };
 
     /**
@@ -2178,7 +2189,17 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
      * @private
      */
     this._drawTable = function() {
-        let message = (self.isLive) ? 'Live times at ' : 'Estimated times from ';
+        let message;
+        if (self.status === DATA_TIMETABLED) {
+            message = 'Timetabled times at ';
+        } else if (self.status === DATA_LIVE) {
+            message = 'Live times at ';
+        } else if (self.status === DATA_ESTIMATED) {
+            message = 'Estimated times from ';
+        } else {
+            self.headingTime.textContent = 'No data available';
+            return;
+        }
         self.headingTime.textContent = message + self.data.localTime;
 
         let table = element('table', {className: 'departures'});
@@ -2244,7 +2265,7 @@ function LiveData(atcoCode, adminAreaCode, operators, container, time, countdown
      */
     this._drawEmpty = function() {
         removeSubElements(self.container);
-        if (self.isLive) {
+        if (self.status !== DATA_ESTIMATED) {
             self.headingTime.textContent = 'No services expected at ' + self.data.localTime;
         } else {
             self.headingTime.textContent = 'No services found';

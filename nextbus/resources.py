@@ -53,7 +53,7 @@ def stop_get_times(atco_code=None):
         return bad_request(404, f"ATCO code {atco_code!r} does not exist.")
 
     try:
-        times = live.get_nextbus_times(atco_code)
+        times = live.get_times(atco_code)
     except (HTTPError, ValueError):
         # Error came up when accessing the external API or it can't be accessed
         current_app.logger.error(

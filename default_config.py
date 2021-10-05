@@ -33,7 +33,7 @@ class Config(object):
 
     # Enables geolocation on webpages, which requires HTTPS
     GEOLOCATION_ENABLED = False
-    # Requests data from API if True, else use local sample for testing
+    # Requests data from API if True, else use timetabled data
     TRANSPORT_API_ACTIVE = False
     # ID for Transport API
     TRANSPORT_API_ID = None

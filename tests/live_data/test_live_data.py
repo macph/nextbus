@@ -98,6 +98,7 @@ def test_live_stop_live(api_data):
 def test_live_json(api_data):
     expected = {
         "atcoCode": "490000015G",
+        "live": True,
         "smsCode": "53272",
         "isoDate": "2019-06-02T08:25:45+00:00",
         "localTime": "09:25",
@@ -128,6 +129,7 @@ def test_live_json_threshold(api_data):
     # Setting max minutes to 10 should filter out the last departure
     assert tapi.LiveData(api_data).to_json(max_minutes=10) == {
         "atcoCode": "490000015G",
+        "live": True,
         "smsCode": "53272",
         "isoDate": "2019-06-02T08:25:45+00:00",
         "localTime": "09:25",
@@ -152,6 +154,7 @@ def test_live_json_out_of_date(api_data):
     })
     assert tapi.LiveData(api_data).to_json() == {
         "atcoCode": "490000015G",
+        "live": True,
         "smsCode": "53272",
         "isoDate": "2019-06-02T09:25:45+00:00",
         "localTime": "10:25",
@@ -183,6 +186,7 @@ def test_live_stop_ambiguous(api_data):
     assert service.seconds == 2355
     assert tapi.LiveData(api_data).to_json() == {
         "atcoCode": "490000015G",
+        "live": True,
         "smsCode": "53272",
         "isoDate": "2019-10-27T00:50:45+00:00",
         "localTime": "01:50",
@@ -239,20 +243,10 @@ def mock_request(monkeypatch, mock_response):
     return get
 
 
-def test_sample_data_ungrouped(with_app, mock_request):
+def test_live_data_inactive(with_app, mock_request):
     current_app.config["TRANSPORT_API_ACTIVE"] = False
-    sample_data = tapi.get_live_data("", group=False)
-
-    with open_text("nextbus.live", "tapi_live.json") as f:
-        assert sample_data == json.load(f)
-
-
-def test_sample_data_grouped(with_app, mock_request):
-    current_app.config["TRANSPORT_API_ACTIVE"] = False
-    sample_data = tapi.get_live_data("", group=True)
-
-    with open_text("nextbus.live", "tapi_live_group.json") as f:
-        assert sample_data == json.load(f)
+    with pytest.raises(ValueError, match="TRANSPORT_API_ACTIVE not set"):
+        tapi.get_live_data("", group=False)
 
 
 def test_live_data_data(with_app, mock_request):

@@ -1,17 +1,12 @@
 """
 Interacts with Transport API to retrieve live bus times data.
 """
-from importlib.resources import open_text
-import json
-
 import dateutil.parser
 import dateutil.tz
 import requests
 from flask import current_app
 
-
 GB_TZ = dateutil.tz.gettz("Europe/London")
-UTC = dateutil.tz.UTC
 
 URL_API = r"https://transportapi.com/v3/uk/bus/stop/{code}/live.json"
 URL_FCC = r"http://fcc.transportapi.com/v3/uk/bus/stop/{code}/live.json"
@@ -23,50 +18,46 @@ def get_live_data(atco_code, nextbuses=True, group=True, limit=6):
         loaded instead for testing.
 
         :param atco_code: The ATCO code for the bus/tram stop.
-        :param nextbuses: Use the NextBuses API to get live bus times. If
-        false, the timetabled information is retrieved instead.
+        :param nextbuses: Use the NextBuses API to get live bus times outside
+        the TfL area.
         :param group: Group services by their number, instead of having a time-
         ordered list.
         :param limit: Number of services to retrieve for each service number
         (or all if not grouping).
         :returns: a Python dict converted from JSON.
     """
-    if current_app.config.get("TRANSPORT_API_ACTIVE"):
-        parameters = {
-            "group": "yes" if group else "no",
-            "nextbuses": "yes" if nextbuses else "no",
-            "limit": limit
-        }
-        app_id = current_app.config.get("TRANSPORT_API_ID")
-        app_key = current_app.config.get("TRANSPORT_API_KEY")
-        if app_id and app_key:
-            # Use the Transport API with app ID and key
-            parameters["app_id"] = app_id
-            parameters["app_key"] = app_key
-            url = URL_API
-        else:
-            # Use the FCC (Future Capault Cities) API instead, intended for
-            # experimentation
-            url = URL_FCC
+    if not current_app.config.get("TRANSPORT_API_ACTIVE"):
+        raise ValueError("TRANSPORT_API_ACTIVE not set to True")
 
-        current_app.logger.debug(
-            f"Requesting live data for ATCO code {atco_code}"
-        )
-        req = requests.get(url.format(code=atco_code), params=parameters)
-        req.raise_for_status()
-        try:
-            data = req.json()
-        except ValueError as err:
-            raise ValueError("Data is expected to be in JSON format.") from err
-        if data.get("error") is not None:
-            raise ValueError("Error with data: " + data["error"])
-        current_app.logger.debug(f"Data received: {req.reason!r}")
-
+    parameters = {
+        "group": "yes" if group else "no",
+        "nextbuses": "yes" if nextbuses else "no",
+        "limit": limit
+    }
+    app_id = current_app.config.get("TRANSPORT_API_ID")
+    app_key = current_app.config.get("TRANSPORT_API_KEY")
+    if app_id and app_key:
+        # Use the Transport API with app ID and key
+        parameters["app_id"] = app_id
+        parameters["app_key"] = app_key
+        url = URL_API
     else:
-        file_name = "tapi_live_group.json" if group else "tapi_live.json"
-        with open_text("nextbus.live", file_name) as sample_file:
-            data = json.load(sample_file)
-        current_app.logger.debug(f"Received sample data from {file_name!r}")
+        # Use the FCC (Future Catapult Cities) API instead, intended for
+        # experimentation
+        url = URL_FCC
+
+    current_app.logger.debug(
+        f"Requesting live data for ATCO code {atco_code}"
+    )
+    response = requests.get(url.format(code=atco_code), params=parameters)
+    response.raise_for_status()
+    try:
+        data = response.json()
+    except ValueError as err:
+        raise ValueError("Data is expected to be in JSON format.") from err
+    if data.get("error") is not None:
+        raise ValueError("Error with data: " + data["error"])
+    current_app.logger.debug(f"Data received: {response.reason!r}")
 
     return data
 
@@ -153,7 +144,7 @@ class LiveData:
         self.datetime = dateutil.parser.parse(data["request_time"])
         if self.datetime.tzinfo is None:
             # Assume naive datetime is UTC
-            self.datetime = self.datetime.replace(tzinfo=UTC)
+            self.datetime = self.datetime.replace(tzinfo=dateutil.tz.UTC)
 
         self.services = self._group_journeys(data)
 
@@ -208,6 +199,7 @@ class LiveData:
 
         return {
             "atcoCode": self.atco_code,
+            "live": True,
             "smsCode": self.naptan_code,
             "isoDate": self.datetime.isoformat(),
             "localTime": self.datetime.astimezone(GB_TZ).strftime("%H:%M"),

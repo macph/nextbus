@@ -44,16 +44,28 @@ def set_cache_control(response):
 @api.route("/live/<atco_code>")
 def stop_get_times(atco_code=None):
     """ Requests and retrieve bus times. """
-    matching_stop = (db.session.query(models.StopPoint.atco_code)
-                     .filter_by(atco_code=atco_code).one_or_none())
+    matching_stop = (
+        db.session.query(models.StopPoint.atco_code)
+        .filter_by(atco_code=atco_code)
+        .one_or_none()
+    )
     if not matching_stop:
         current_app.logger.warning(
             f"API accessed with invalid ATCO code {atco_code!r}."
         )
         return bad_request(404, f"ATCO code {atco_code!r} does not exist.")
 
+    # Check whether live bus times can be requested
+    if current_app.config.get("TRANSPORT_API_ACTIVE"):
+        use_live = models.RequestLog.call(
+            current_app.config.get("TRANSPORT_API_LIMIT")
+        )
+        db.session.commit()
+    else:
+        use_live = False
+
     try:
-        times = live.get_times(atco_code)
+        times = live.get_times(atco_code, use_live)
     except (HTTPError, ValueError):
         # Error came up when accessing the external API or it can't be accessed
         current_app.logger.error(

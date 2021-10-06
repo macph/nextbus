@@ -1264,3 +1264,57 @@ class SpecialPeriod(db.Model):
     date_start = db.Column(db.Date, nullable=False)
     date_end = db.Column(db.Date, nullable=False)
     operational = db.Column(db.Boolean, nullable=False)
+
+
+class RequestLog(db.Model):
+    """ Keeps track of requests made to the live API every day. """
+    __tablename__ = "request_log"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)
+    last_called = db.Column(db.DateTime(timezone=True), nullable=False)
+    call_count = db.Column(db.Integer, nullable=False)
+
+    @classmethod
+    def call(cls, limit):
+        """ Request a call, checking whether it was within the daily limit.
+            :param limit: The limit on number of calls each day starting at
+            00:00 UTC. Ignored if is None or negative.
+        """
+        tz = db.bindparam("utc", "UTC")
+        one = db.literal_column("1")
+        today = db.func.date(db.func.timezone(tz, db.func.now()))
+        date_last_called = db.func.date(db.func.timezone(tz, cls.last_called))
+
+        statement = (
+            db.update(cls)
+            .values(
+                last_called=db.func.now(),
+                call_count=db.case(
+                    (date_last_called < today, one),
+                    else_=cls.call_count + one,
+                ),
+            )
+            .returning(cls.call_count)
+        )
+        count = db.session.execute(statement).scalar()
+
+        if limit is None or limit < 0:
+            utils.logger.debug(f"Request limit {limit!r} ignored")
+            return True
+        elif count <= limit:
+            utils.logger.debug(f"Request was allowed: {count} <= {limit}")
+            return True
+        else:
+            utils.logger.warning(f"Request limit exceeded: {count} > {limit}")
+            return False
+
+
+@db.event.listens_for(RequestLog.__table__, "after_create")
+def _insert_single_row(target, connection, **kw):
+    """ Insert the singular row required for updating request calls. """
+    statement = target.insert().values(
+        id=1,
+        last_called=db.func.now(),
+        call_count=0,
+    )
+    connection.execute(statement)

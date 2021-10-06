@@ -35,6 +35,9 @@ class Config(object):
     GEOLOCATION_ENABLED = False
     # Requests data from API if True, else use timetabled data
     TRANSPORT_API_ACTIVE = False
+    # Set a limit on the number of requests per day starting at 00:00 UTC
+    # Further requests will utilise timetabled data. Ignored if negative or None
+    TRANSPORT_API_LIMIT = None
     # ID for Transport API
     TRANSPORT_API_ID = None
     # Key for Transport API

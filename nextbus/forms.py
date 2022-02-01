@@ -2,13 +2,12 @@
 Forms for searching bus stops.
 """
 from flask_wtf import FlaskForm
-from wtforms import fields, validators, widgets
-import wtforms.fields.html5 as html5_fields
+from wtforms import fields, validators
 
 
 class SearchPlaces(FlaskForm):
     """ Full text search for places, stops and postcodes. """
-    search = html5_fields.SearchField(
+    search = fields.SearchField(
         "search", validators=[validators.InputRequired()]
     )
     submit = fields.SubmitField("Search")
@@ -57,7 +56,7 @@ class SelectDate(FlaskForm):
         """ Disable CSRF as this form uses GET. """
         csrf = False
 
-    date = html5_fields.DateField("date")
+    date = fields.DateField("date")
     _start = None
     _end = None
 

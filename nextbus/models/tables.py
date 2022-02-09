@@ -385,6 +385,9 @@ def _array_lines(code):
     return db.func.array(subquery)
 
 
+# TODO: Create many-to-many relationship between stop points and stop areas.
+
+
 class StopPoint(db.Model):
     """ NaPTAN stop points, eg bus stops. """
     __tablename__ = "stop_point"

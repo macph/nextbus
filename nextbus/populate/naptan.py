@@ -11,6 +11,8 @@ import os
 import tempfile
 import zipfile
 
+import convertbng.cutil
+import numpy as np
 from flask import current_app
 import lxml.etree as et
 import pyparsing as pp
@@ -152,6 +154,38 @@ def _setup_naptan_functions():
     @utils.xslt_text_func
     def replace_name(_, name):
         return name_regex.sub(" / ", name)
+
+
+@utils.xslt_text_func
+def latitude_longitude_to_easting(_, lat, lon):
+    """ Convert latitude and longitude to northing. """
+    return np.rint(_to_easting_northing(lat, lon)[0]).astype(int).item(0)
+
+
+@utils.xslt_text_func
+def latitude_longitude_to_northing(_, lat, lon):
+    """ Convert latitude and longitude to northing. """
+    return np.rint(_to_easting_northing(lat, lon)[1]).astype(int).item(0)
+
+
+@utils.xslt_text_func
+def easting_northing_to_longitude(_, easting, northing):
+    """ Convert easting and northing to longitude. """
+    return _to_lon_lat(easting, northing)[0].item(0)
+
+
+@utils.xslt_text_func
+def easting_northing_to_latitude(_, easting, northing):
+    """ Convert easting and northing to latitude. """
+    return _to_lon_lat(easting, northing)[1].item(0)
+
+
+def _to_easting_northing(lat, lon):
+    return convertbng.cutil.convert_bng((float(lon),), (float(lat),))
+
+
+def _to_lon_lat(easting, northing):
+    return convertbng.cutil.convert_lonlat((float(easting),), (float(northing),))
 
 
 def _remove_stop_areas(connection):

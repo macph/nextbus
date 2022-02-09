@@ -41,10 +41,7 @@
           <xsl:otherwise>0</xsl:otherwise>
         </xsl:choose>
       </active>
-      <easting><xsl:value-of select="n:Location/n:Translation/n:Easting"/></easting>
-      <northing><xsl:value-of select="n:Location/n:Translation/n:Northing"/></northing>
-      <longitude><xsl:value-of select="n:Location/n:Translation/n:Longitude"/></longitude>
-      <latitude><xsl:value-of select="n:Location/n:Translation/n:Latitude"/></latitude>
+      <xsl:apply-templates select="n:Location"/>
       <modified><xsl:value-of select="@ModificationDateTime"/></modified>
     </StopArea>
   </xsl:template>
@@ -97,10 +94,7 @@
         </xsl:otherwise>
       </xsl:choose>
       <locality_ref><xsl:value-of select="n:Place/n:NptgLocalityRef"/></locality_ref>
-      <easting><xsl:value-of select="n:Place/n:Location/n:Translation/n:Easting"/></easting>
-      <northing><xsl:value-of select="n:Place/n:Location/n:Translation/n:Northing"/></northing>
-      <longitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Longitude"/></longitude>
-      <latitude><xsl:value-of select="n:Place/n:Location/n:Translation/n:Latitude"/></latitude>
+      <xsl:apply-templates select="n:Place/n:Location"/>
       <stop_type><xsl:value-of select="n:StopClassification/n:StopType"/></stop_type>
       <active>
         <xsl:choose>
@@ -110,12 +104,44 @@
       </active>
       <bearing><xsl:value-of select=".//n:CompassPoint"/></bearing>
       <stop_area_ref>
-        <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef)))">
-          <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef)"/>
+        <!-- There can be multiple stop area references; select the first area -->
+        <xsl:if test="boolean(n:StopAreas/n:StopAreaRef) and boolean(key('key_stop_areas', func:upper(n:StopAreas/n:StopAreaRef[1])))">
+          <xsl:value-of select="func:upper(n:StopAreas/n:StopAreaRef[1])"/>
         </xsl:if>
       </stop_area_ref>
       <admin_area_ref><xsl:value-of select="n:AdministrativeAreaRef"/></admin_area_ref>
       <modified><xsl:value-of select="@ModificationDateTime"/></modified>
     </StopPoint>
+  </xsl:template>
+
+  <xsl:template match="n:Location">
+    <easting>
+      <xsl:choose>
+        <xsl:when test="n:Easting"><xsl:value-of select="n:Easting"/></xsl:when>
+        <xsl:when test="n:Translation/n:Easting"><xsl:value-of select="n:Translation/n:Easting"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="func:latitude_longitude_to_easting(n:Latitude, n:Longitude)"/></xsl:otherwise>
+      </xsl:choose>
+    </easting>
+    <northing>
+      <xsl:choose>
+        <xsl:when test="n:Northing"><xsl:value-of select="n:Northing"/></xsl:when>
+        <xsl:when test="n:Translation/n:Northing"><xsl:value-of select="n:Translation/n:Northing"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="func:latitude_longitude_to_northing(n:Latitude, n:Longitude)"/></xsl:otherwise>
+      </xsl:choose>
+    </northing>
+    <longitude>
+      <xsl:choose>
+        <xsl:when test="n:Longitude"><xsl:value-of select="n:Longitude"/></xsl:when>
+        <xsl:when test="n:Translation/n:Longitude"><xsl:value-of select="n:Translation/n:Longitude"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="func:easting_northing_to_longitude(n:Easting, n:Northing)"/></xsl:otherwise>
+      </xsl:choose>
+    </longitude>
+    <latitude>
+      <xsl:choose>
+        <xsl:when test="n:Latitude"><xsl:value-of select="n:Latitude"/></xsl:when>
+        <xsl:when test="n:Translation/n:Latitude"><xsl:value-of select="n:Translation/n:Latitude"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="func:easting_northing_to_latitude(n:Easting, n:Northing)"/></xsl:otherwise>
+      </xsl:choose>
+    </latitude>
   </xsl:template>
 </xsl:transform>

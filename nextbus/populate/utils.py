@@ -62,7 +62,7 @@ def _convert_to_text(result):
     elif isinstance(result, list) and len(result) == 1:
         node = result[0]
     elif isinstance(result, list):
-        raise ValueError("XPath query returned multiple elements.")
+        raise ValueError(f"XPath query returned multiple elements: {result!r}.")
     else:
         node = result
 

@@ -18,7 +18,9 @@ def _file_name(response):
     """ Gets the file name from the response header or the URL name. """
     content = response.headers.get("content-disposition")
     if content and "filename" in content:
-        file_name = re.search(r"filename=(.+)", content).group(1)
+        # Find string after 'filename=' and before ';', if any.
+        match = re.search(r"filename=([^;]+)", content)
+        file_name = match.group(1).strip().strip("\"").strip()
     else:
         # Get the path and split it to get the rightmost part
         path = urllib.parse.urlparse(response.url)[2]
@@ -38,7 +40,11 @@ def download(url, file_name=None, directory=None, **kw):
         :param kw: Keyword arguments for requests.get().
     """
     response = requests.get(url, stream=True, **kw)
+
     name = _file_name(response) if file_name is None else file_name
+    if not name:
+        raise ValueError(f"No name found in URL or headers for {url!r}.")
+
     full_path = os.path.join(directory, name)
 
     utils.logger.info(f"Downloading {name!r} from {url!r}")

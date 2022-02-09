@@ -19,7 +19,7 @@ from nextbus import db, models
 from nextbus.populate import file_ops, utils
 
 
-NAPTAN_URL = r"http://naptan.app.dft.gov.uk/DataRequest/Naptan.ashx"
+NAPTAN_URL = r"https://naptan.api.dft.gov.uk/v1/access-nodes"
 IND_MAX_CHARS = 5
 IND_MAX_WORDS = 2
 
@@ -487,11 +487,19 @@ def populate_naptan_data(connection, archive=None, list_files=None, split=True):
     elif list_files is not None:
         path = None
     else:
-        path = file_ops.download(
+        downloaded = file_ops.download(
             NAPTAN_URL,
             directory=temp,
-            params={"format": "xml"}
+            params={"dataFormat": "XML"}
         )
+
+        utils.logger.info(f"Zipping {downloaded!r}")
+        # The downloaded file is not zipped. Move it into an archive
+        path = os.path.join(temp, "NaPTAN.zip")
+        with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.write(downloaded)
+
+        os.remove(downloaded)
 
     if path is not None and split:
         split_path = os.path.join(temp, "NaPTAN_split.zip")

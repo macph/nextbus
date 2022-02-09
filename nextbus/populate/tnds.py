@@ -49,16 +49,16 @@ def _download_tnds_files(regions):
                          "password to access the TNDS FTP server. See the "
                          "Traveline website for more details.")
 
+    temp_directory = current_app.config.get("TEMP_DIRECTORY")
+    if not temp_directory:
+        raise ValueError("TEMP_DIRECTORY must be defined.")
+
     paths = {}
     utils.logger.info(f"Opening FTP connection {TNDS_URL!r} with credentials")
     with ftplib.FTP(TNDS_URL, user=user, passwd=password) as ftp:
         for region in regions:
             file_name = region + ".zip"
-            file_path = os.path.join(
-                current_app.config["ROOT_DIRECTORY"],
-                "temp",
-                file_name
-            )
+            file_path = os.path.join(temp_directory, file_name)
             utils.logger.info(f"Downloading file {file_name!r}")
             with open(file_path, "wb") as file_:
                 ftp.retrbinary("RETR " + file_name, file_.write)

@@ -10,20 +10,17 @@ RUN python -m venv /poetry
 RUN /poetry/bin/pip3 install "poetry==$POETRY_VERSION"
 
 WORKDIR /app
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock ./
 
-# Install dependencies for app
-RUN /poetry/bin/poetry install --no-dev --no-interaction --no-ansi
+# Install dependencies for app and remove poetry
+RUN /poetry/bin/poetry install --no-interaction --no-ansi && rm -r /poetry
 
-# Remove Poetry venv
-RUN rm -r /poetry
-
-# Copy over app data and reinstall
+# Copy over app data
 COPY . .
 
-# Expose port 8000 to reverse proxy
+# Set starting script as executable
+RUN chmod +x ./start.sh
+
+# Expose app through port 8000
 EXPOSE 8000
-
-ENV FLASK_ENV production
-
-CMD ["/app/.venv/bin/gunicorn", "wsgi:app"]
+CMD ["./start.sh"]

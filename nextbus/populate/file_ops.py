@@ -14,21 +14,6 @@ from flask import current_app
 from nextbus.populate import utils
 
 
-def _full_path(path=None):
-    """ Use the project directory for relative paths, or the absolute path. """
-    root = current_app.config.get("ROOT_DIRECTORY")
-    if root is None and not os.path.isabs(path):
-        raise ValueError("The ROOT_DIRECTORY option is not defined.")
-    elif path is None:
-        abs_path = root
-    elif os.path.isabs(path):
-        abs_path = path
-    else:
-        abs_path = os.path.join(root, path)
-
-    return abs_path
-
-
 def _file_name(response):
     """ Gets the file name from the response header or the URL name. """
     content = response.headers.get("content-disposition")
@@ -54,8 +39,7 @@ def download(url, file_name=None, directory=None, **kw):
     """
     response = requests.get(url, stream=True, **kw)
     name = _file_name(response) if file_name is None else file_name
-    dir_path = _full_path(directory)
-    full_path = os.path.join(dir_path, name)
+    full_path = os.path.join(directory, name)
 
     utils.logger.info(f"Downloading {name!r} from {url!r}")
     with open(full_path, 'wb') as out:
@@ -106,9 +90,8 @@ def backup_database(path=None):
     """
     url = _database_url()
     file_path = _database_path() if path is None else path
-    full_path = _full_path(file_path)
 
-    with open(full_path, 'wb') as dump:
+    with open(file_path, 'wb') as dump:
         process = subprocess.Popen(['pg_dump', '-Fc', str(url)], stdout=dump)
         utils.logger.info(f"Backing up database {repr(url)!r} to {file_path!r}")
         # Wait for process to finish
@@ -122,10 +105,9 @@ def restore_database(path=None):
     """
     url = _database_url()
     file_path = _database_path() if path is None else path
-    full_path = _full_path(file_path)
 
     process = subprocess.Popen(['pg_restore', '-c', '-Fc', '-d', str(url),
-                                full_path])
+                                file_path])
     utils.logger.info(f"Restoring database {repr(url)!r} from {file_path!r}")
     # Wait for process to finish
     process.communicate()

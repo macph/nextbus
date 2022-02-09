@@ -13,13 +13,7 @@ def run_cli_app():
     """ Runs app from CLI. """
     from nextbus import create_app
 
-    config = os.environ.get("APP_CONFIG")
-    if config:
-        app = create_app(config_file=config)
-    else:
-        app = create_app(config_obj="default_config.DevelopmentConfig")
-
-    return app
+    return create_app()
 
 
 @click.group(cls=FlaskGroup, create_app=run_cli_app)

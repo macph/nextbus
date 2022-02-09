@@ -250,8 +250,8 @@ def _copy_executor(table, null_value):
         except Exception:
             logger.error("Error with COPY", exc_info=1)
             error_path = os.path.join(
-                current_app.config["ROOT_DIRECTORY"],
-                "temp/error_data"
+                current_app.config["TEMP_DIRECTORY"],
+                "error_data"
             )
             with open(error_path, "w") as error_f:
                 file_.seek(0)

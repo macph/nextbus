@@ -4,6 +4,7 @@ Populate locality and stop point data with NPTG and NaPTAN datasets.
 from importlib.resources import open_binary
 
 import lxml.etree as et
+from flask import current_app
 
 from nextbus import db, models
 from nextbus.populate import file_ops, utils
@@ -40,6 +41,10 @@ def populate_nptg_data(connection, archive=None, list_files=None):
         :param archive: Path to zipped archive file for NPTG XML files.
         :param list_files: List of file paths for NPTG XML files.
     """
+    temp = current_app.config.get("TEMP_DIRECTORY")
+    if not temp:
+        raise ValueError("TEMP_DIRECTORY is not defined.")
+
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -47,7 +52,7 @@ def populate_nptg_data(connection, archive=None, list_files=None):
     elif list_files is not None:
         iter_files = iter(list_files)
     else:
-        downloaded = file_ops.download(NPTG_URL, directory="temp",
+        downloaded = file_ops.download(NPTG_URL, directory=temp,
                                        params={"format": "xml"})
         iter_files = file_ops.iter_archive(downloaded)
 

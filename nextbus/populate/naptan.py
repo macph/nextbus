@@ -476,7 +476,10 @@ def populate_naptan_data(connection, archive=None, list_files=None, split=True):
                          "cannot be added without the required locality data. "
                          "Populate the database with NPTG data first.")
 
-    root = current_app.config["ROOT_DIRECTORY"]
+    temp = current_app.config.get("TEMP_DIRECTORY")
+    if not temp:
+        raise ValueError("TEMP_DIRECTORY is not defined.")
+
     if archive is not None and list_files is not None:
         raise ValueError("Can't specify both archive file and list of files.")
     elif archive is not None:
@@ -486,12 +489,12 @@ def populate_naptan_data(connection, archive=None, list_files=None, split=True):
     else:
         path = file_ops.download(
             NAPTAN_URL,
-            directory=os.path.join(root, "temp"),
+            directory=temp,
             params={"format": "xml"}
         )
 
     if path is not None and split:
-        split_path = os.path.join(root, "temp", "NaPTAN_split.zip")
+        split_path = os.path.join(temp, "NaPTAN_split.zip")
         _split_naptan_data(areas, path, split_path)
         path = split_path
 

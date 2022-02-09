@@ -11,10 +11,6 @@ from nextbus import create_app, db, models
 from data import TEST_DATA
 
 
-MAIN = "SQLALCHEMY_DATABASE_URI"
-TEST = "TEST_DATABASE_URI"
-
-
 def _xml_elements_diffs(a, b, _root=None):
     """ Main function for assessing equality of XML elements.
 
@@ -94,31 +90,8 @@ def asserts():
 
 @pytest.fixture(scope="session")
 def app():
-    """ Creates app during test, using test database URI if applicable. """
-    config = os.environ.get("APP_CONFIG")
-    os.environ["FLASK_ENV"] = "development"
-    if config:
-        app = create_app(config_file=config)
-    else:
-        app = create_app(config_obj="default_config.TestConfig")
-
-    # Find the test database address
-    if not app.config.get(TEST):
-        raise ValueError(f"{TEST} is not set.")
-
-    if app.config.get(TEST) == app.config.get(MAIN):
-        raise ValueError(
-            f"The {TEST} and {MAIN} parameters must not be the same; the unit "
-            f"tests will commit destructive edits."
-        )
-
-    # Set SQLAlchemy database address to test database address
-    app.config[MAIN] = app.config.get(TEST)
-
-    assert app.config.get("DEBUG") is True
-    assert app.config.get("TESTING") is True
-
-    return app
+    """ Creates app for tests. """
+    return create_app()
 
 
 @pytest.fixture

@@ -2,11 +2,10 @@
 WSGI application for use by Gunicorn.
 """
 import logging
-import os
 
 from nextbus import create_app
 
-app = create_app(config_file=os.environ.get("APP_CONFIG"))
+app = create_app()
 
 if __name__ == "__main__":
     app.run()

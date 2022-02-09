@@ -5,6 +5,7 @@ from importlib.resources import open_binary
 import re
 
 import lxml.etree as et
+from flask import current_app
 
 from nextbus.populate import file_ops, utils
 
@@ -35,8 +36,12 @@ def populate_noc_data(connection, path=None):
         :param connection: Connection for population.
         :param path: Path to raw data in XML form
     """
+    temp = current_app.config.get("TEMP_DIRECTORY")
+    if not temp:
+        raise ValueError("TEMP_DIRECTORY is not defined.")
+
     if path is None:
-        file_path = file_ops.download(NOC_URL, directory="temp")
+        file_path = file_ops.download(NOC_URL, directory=temp)
     else:
         file_path = path
 

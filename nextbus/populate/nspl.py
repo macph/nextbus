@@ -1,7 +1,6 @@
 """
 Populate postcode data from NSPL.
 """
-from importlib.resources import open_text
 import json
 
 from flask import current_app
@@ -37,6 +36,11 @@ def _download_nspl_data():
         and while it is not necessary it will raise throttling limits on access
         to the API.
     """
+
+    temp = current_app.config.get("TEMP_DIRECTORY")
+    if not temp:
+        raise ValueError("TEMP_DIRECTORY is not defined.")
+
     token = current_app.config.get("CAMDEN_API_TOKEN")
     headers = {"X-App-Token": token} if token is not None else {}
     codes = [f"country_code='{c}'" for c in LIST_COUNTRIES]
@@ -46,7 +50,7 @@ def _download_nspl_data():
         "$where": f"({' OR '.join(codes)})",
         "$limit": 2000000
     }
-    new = file_ops.download(NSPL_API, file_name="nspl.json", directory="temp",
+    new = file_ops.download(NSPL_API, file_name="nspl.json", directory=temp,
                             headers=headers, params=params)
 
     return new

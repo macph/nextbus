@@ -11,14 +11,24 @@ services:
   nxb:
     build: .
     volumes:
-      - ./temp:/app/temp
-      - ./instance:/app/instance
-      - logs:/var/log
+      - ./temp:/temp
     environment:
-      APP_CONFIG: nxb_config.py
-      GUNICORN_CMD_ARGS: --config=instance/gu_config.py
+      FLASK_ENV: production
+      NXB_DATABASE_URI: postgresql://prod:hello_world@postgres:5432/nextbus
+      NXB_DATABASE_DUMP_PATH: /temp/nxb.db.dump
+      NXB_TEMP_DIRECTORY: /temp
+      NXB_SECRET_KEY: $NXB_SECRET_KEY
+      NXB_GEOLOCATION_ENABLED: $NXB_GEOLOCATION_ENABLED
+      NXB_TAPI_ACTIVE: $NXB_TAPI_ACTIVE
+      NXB_TAPI_LIMIT: $NXB_TAPI_LIMIT
+      NXB_TAPI_ID: $NXB_TAPI_ID
+      NXB_TNDS_USERNAME: $NXB_TNDS_USERNAME
+      NXB_TNDS_PASSWORD: $NXB_TNDS_PASSWORD
+      WEB_CONCURRENCY: 2
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
     restart: always
   nginx:
     build:
@@ -26,8 +36,6 @@ services:
       dockerfile: docker/nginx/Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - logs:/var/log
+    depends_on:
+      - nxb
     restart: always
-volumes:
-  logs: {}

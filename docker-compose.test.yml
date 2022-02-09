@@ -1,0 +1,15 @@
+version: "3"
+services:
+  postgres:
+    volumes:
+      - data:/var/lib/postgresql/data
+  nxb:
+    environment:
+      FLASK_ENV: development
+      FLASK_DEBUG: 1
+      PYTHONPATH: .
+    entrypoint:
+      - /app/.venv/bin/pytest
+      - .
+volumes:
+  data: {}

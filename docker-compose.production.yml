@@ -1,0 +1,17 @@
+version: "3"
+services:
+  postgres:
+    restart: always
+  nxb:
+    environment:
+      FLASK_ENV: production
+    restart: always
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - nxb
+    restart: always

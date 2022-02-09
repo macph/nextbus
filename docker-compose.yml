@@ -7,13 +7,11 @@ services:
     volumes:
       - ./temp:/temp
       - ~/postgres-data:/var/lib/postgresql/data
-    restart: always
   nxb:
     build: .
     volumes:
       - ./temp:/temp
     environment:
-      FLASK_ENV: production
       NXB_DATABASE_URI: postgresql://prod:hello_world@postgres:5432/nextbus
       NXB_DATABASE_DUMP_PATH: /temp/nxb.db.dump
       NXB_TEMP_DIRECTORY: /temp
@@ -29,13 +27,3 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
-    restart: always
-  nginx:
-    build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - nxb
-    restart: always

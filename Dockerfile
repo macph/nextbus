@@ -19,7 +19,7 @@ RUN /poetry/bin/poetry install --no-interaction --no-ansi && rm -r /poetry
 COPY . .
 
 # Set starting script as executable
-RUN chmod +x ./start.sh
+RUN chmod +x ./populate.sh ./start.sh
 
 # Expose app through port 8000
 EXPOSE 8000

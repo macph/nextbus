@@ -4,6 +4,9 @@ services:
     volumes:
       - data:/var/lib/postgresql/data
   nxb:
+    build:
+      context: .
+      target: test
     environment:
       FLASK_ENV: development
       FLASK_DEBUG: 1

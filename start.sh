@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Run any migrations before starting up web application
-./.venv/bin/python manage.py db upgrade
+set -ex
 
-./.venv/bin/gunicorn --bind=:8000 wsgi:app
+# Run any migrations before starting up web application
+/app/.venv/bin/python -m nextbus db upgrade
+/app/.venv/bin/gunicorn --bind=:8000 wsgi:app

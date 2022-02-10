@@ -8,7 +8,9 @@ services:
       - ./temp:/temp
       - ~/postgres-data:/var/lib/postgresql/data
   nxb:
-    build: .
+    build:
+      context: .
+      target: production
     volumes:
       - ./temp:/temp
     environment:

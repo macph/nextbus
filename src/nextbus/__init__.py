@@ -1,6 +1,8 @@
 """
 The nextbus package for live bus times in the UK.
 """
+import os.path
+
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +11,9 @@ from nextbus import logger
 
 
 db = SQLAlchemy()
-migrate = Migrate()
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+migrate = Migrate(directory=os.path.join(_ROOT, "alembic"))
 
 
 def create_app():

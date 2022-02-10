@@ -255,10 +255,12 @@ def _find_locality_distance(connection, ambiguous_areas):
         .distinct(models.StopArea.code, models.Locality.code)
         .select_from(
             models.StopPoint.__table__
-            .join(models.Locality,
-                  models.StopPoint.locality_ref == models.Locality.code)
-            .join(models.StopArea,
-                  models.StopPoint.stop_area_ref == models.StopArea.code)
+            .join(
+                models.Locality,
+                models.StopPoint.locality_ref == models.Locality.code)
+            .join(
+                models.StopArea,
+                models.StopPoint.stop_area_ref == models.StopArea.code)
         )
         .where(models.StopPoint.stop_area_ref.in_(ambiguous_areas))
     )
@@ -303,8 +305,9 @@ def _set_stop_area_locality(connection):
             ])
             .select_from(
                 models.StopArea.__table__
-                .join(models.StopPoint,
-                      models.StopArea.code == models.StopPoint.stop_area_ref)
+                .join(
+                    models.StopPoint,
+                    models.StopArea.code == models.StopPoint.stop_area_ref)
             )
             .group_by(models.StopArea.code, models.StopPoint.locality_ref)
         )
@@ -357,8 +360,9 @@ def _set_tram_admin_area(connection):
             ])
             .select_from(
                 models.StopArea.__table__
-                .join(models.StopPoint,
-                      models.StopArea.code == models.StopPoint.stop_area_ref)
+                .join(
+                    models.StopPoint,
+                    models.StopArea.code == models.StopPoint.stop_area_ref)
             )
             .where(models.StopArea.admin_area_ref == tram_area)
             .group_by(models.StopArea.code, models.StopPoint.admin_area_ref)

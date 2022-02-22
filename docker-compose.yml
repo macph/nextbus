@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 services:
   postgres:
     build:
@@ -22,6 +22,7 @@ services:
       NXB_TAPI_ACTIVE: $NXB_TAPI_ACTIVE
       NXB_TAPI_LIMIT: $NXB_TAPI_LIMIT
       NXB_TAPI_ID: $NXB_TAPI_ID
+      NXB_TAPI_KEY: $NXB_TAPI_KEY
       NXB_TNDS_USERNAME: $NXB_TNDS_USERNAME
       NXB_TNDS_PASSWORD: $NXB_TNDS_PASSWORD
       WEB_CONCURRENCY: 2
